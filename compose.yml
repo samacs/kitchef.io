@@ -1,0 +1,58 @@
+---
+name: kitchef
+
+x-postgres-env: &postgres-env
+  POSTGRES_USER: ${POSTGRES_USER:-kitchef}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kitchef}
+  POSTGRES_DB: ${POSTGRES_DB:-kitchef_development}
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: ./docker/postgres/Dockerfile
+      args:
+        POSTGRES_MAJOR: ${POSTGRES_MAJOR:-18}
+    image: ${DOCKER_REGISTRY:-kitchef.mx}/${DOCKER_REPOSITORY:-kitchef}-postgres:${TAG:-latest}
+    hostname: kitchef-postgres
+    container_name: kitchef-postgres
+    restart: unless-stopped
+    environment:
+      <<: *postgres-env
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
+      - ./docker/postgres/create_extensions.sql:/docker-entrypoint-initdb.d/20-create_extensions.sql:ro
+      - ./docker/postgres/.psqlrc:/root/.psqlrc:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  valkey:
+    build:
+      context: .
+      dockerfile: ./docker/valkey/Dockerfile
+      args:
+        VALKEY_MAJOR: ${VALKEY_MAJOR:-9}
+    image: ${DOCKER_REGISTRY:-kitchef.mx}/${DOCKER_REPOSITORY:-kitchef}-valkey:${TAG:-latest}
+    hostname: kitchef-valkey
+    container_name: kitchef-valkey
+    restart: unless-stopped
+    ports:
+      - "${VALKEY_PORT:-6379}:6379"
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  valkey-data:

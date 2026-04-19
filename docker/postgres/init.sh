@@ -1,0 +1,6 @@
+#!/bin/bash
+
+psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" <<-END
+    GRANT pg_monitor TO ${POSTGRES_USER};
+    ALTER USER ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';
+END

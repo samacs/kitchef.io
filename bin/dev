@@ -18,7 +18,7 @@ if command -v overmind >/dev/null 2>&1; then
   exec overmind start -f Procfile.dev "$@"
 else
   if ! gem list --exact --silent foreman >/dev/null 2>&1; then
-    echo "Instalando foreman..."
+    echo "Installing foreman..."
     gem install foreman
   fi
   exec foreman start -f Procfile.dev "$@"

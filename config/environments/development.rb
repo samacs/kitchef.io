@@ -37,13 +37,14 @@ Rails.application.configure do
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 
-  # Usamos lvh.me en desarrollo (resuelve a 127.0.0.1 y permite subdominios
-  # además de ser un host válido para redirecciones OAuth y webhooks).
+  # Use lvh.me in development (resolves to 127.0.0.1, supports subdomains, and
+  # is a valid host for OAuth redirect URIs and webhook targets — unlike
+  # `localhost`, which some third-party services reject).
   config.action_mailer.default_url_options = { host: "lvh.me", port: 3000, protocol: "https" }
 
-  # Permitimos lvh.me (y sus subdominios) para evitar bloqueos del middleware
-  # de Host Authorization. Mantenemos la protección activa; solo ampliamos
-  # la lista blanca.
+  # Allow lvh.me and its subdomains through Host Authorization. We keep the
+  # middleware enabled (defense against DNS rebinding); we only widen the
+  # allow-list.
   config.hosts << "lvh.me"
   config.hosts << /\A[a-z0-9-]+\.lvh\.me\z/
 
