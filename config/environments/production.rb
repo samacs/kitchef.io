@@ -46,11 +46,19 @@ Rails.application.configure do
   # Don't log any deprecations.
   config.active_support.report_deprecations = false
 
-  # Replace the default in-process memory cache store with a durable alternative.
-  # config.cache_store = :mem_cache_store
+  # Valkey-backed cache store (pair of pool/timeout values tuned for Puma
+  # workers — bump `pool:` if you raise RAILS_MAX_THREADS).
+  config.cache_store = :redis_cache_store, {
+    url: ENV.fetch("VALKEY_URL"),
+    pool: { size: ENV.fetch("RAILS_MAX_THREADS", 5).to_i, timeout: 1 },
+    connect_timeout: 1.0,
+    read_timeout:    1.0,
+    write_timeout:   1.0,
+    reconnect_attempts: 2
+  }
 
-  # Replace the default in-process and non-durable queuing backend for Active Job.
-  # config.active_job.queue_adapter = :resque
+  # Route Active Job through Sidekiq (configured in config/initializers/sidekiq.rb).
+  config.active_job.queue_adapter = :sidekiq
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.

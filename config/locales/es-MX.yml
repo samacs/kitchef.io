@@ -1,0 +1,74 @@
+es-MX:
+  hello: "Hola"
+
+  # Date / time formats — Mexican conventions.
+  # "12 de mayo de 2026" (long), "12/05/2026" (short).
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      short: "%d/%m/%y"
+      long: "%-d de %B de %Y"
+    day_names:     [domingo, lunes, martes, miércoles, jueves, viernes, sábado]
+    abbr_day_names: [dom, lun, mar, mié, jue, vie, sáb]
+    month_names:
+      - ~
+      - enero
+      - febrero
+      - marzo
+      - abril
+      - mayo
+      - junio
+      - julio
+      - agosto
+      - septiembre
+      - octubre
+      - noviembre
+      - diciembre
+    abbr_month_names:
+      - ~
+      - ene
+      - feb
+      - mar
+      - abr
+      - may
+      - jun
+      - jul
+      - ago
+      - sep
+      - oct
+      - nov
+      - dic
+
+  time:
+    formats:
+      default: "%-d de %B de %Y, %H:%M"
+      short: "%d/%m %H:%M"
+      long: "%-d de %B de %Y a las %H:%M"
+    am: "a.m."
+    pm: "p.m."
+
+  # Number / currency conventions — MXN, peso sign, comma thousands separator.
+  number:
+    format:
+      separator: "."
+      delimiter: ","
+      precision: 2
+    currency:
+      format:
+        format: "%u%n"
+        unit: "$"
+        separator: "."
+        delimiter: ","
+        precision: 2
+    human:
+      format:
+        delimiter: ","
+        precision: 1
+      storage_units:
+        format: "%n %u"
+        units:
+          byte: B
+          kb: KB
+          mb: MB
+          gb: GB
+          tb: TB

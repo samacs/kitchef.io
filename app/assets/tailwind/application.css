@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+/* Tailwind v4 content scanning. The default globs cover app/**, but ViewComponent
+   sidecar templates live under app/components and custom JS/Stimulus lives
+   under app/javascript — make both explicit. */
+@source "../../components/**/*.{rb,erb,html,html.erb}";
+@source "../../views/**/*.{erb,html,html.erb}";
+@source "../../helpers/**/*.rb";
+@source "../../javascript/**/*.js";
+
+/* Opt the `dark` class into dark-mode variant selection (Tailwind v4
+   otherwise requires `data-theme="dark"` or a media query). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens. `@theme` registers each token as both a CSS custom property
+   on :root and a Tailwind utility (bg-ink, text-accent, rounded-card, etc.).
+   Dark-mode overrides live in the `.dark { … }` block below and flip the
+   runtime value of the same custom properties.
+--------------------------------------------------------------------------- */
+@theme {
+  /* Font families. Load the Google Fonts <link> in the layout head. */
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-sans:  "Inter", -apple-system, system-ui, sans-serif;
+  --font-mono:  "JetBrains Mono", ui-monospace, monospace;
+
+  /* Ink (text) */
+  --color-ink:         #0E1714;
+  --color-ink-2:       #2F3A35;
+  --color-muted:       #6B7670;
+
+  /* Surface */
+  --color-bg:          #F8F6F1;
+  --color-bg-2:        #EFEBE3;
+  --color-surface:     #FFFFFF;
+
+  /* Lines */
+  --color-line:        #E4DED1;
+  --color-line-2:      #D0C9B8;
+
+  /* Accent (deep green) */
+  --color-accent:      #0A5A3C;
+  --color-accent-2:    #074830;
+  --color-accent-soft: #E3EDE6;
+
+  /* Status */
+  --color-pos:         #0A5A3C;
+  --color-warn:        #B04E0E;
+  --color-err:         #9B2B1E;
+
+  /* Status surfaces (DESIGN.md §2.2) */
+  --color-status-en-produccion-bg: #FFF1DD;
+  --color-status-en-produccion-fg: #B04E0E;
+  --color-status-nuevo-bg:         #E7F0FB;
+  --color-status-nuevo-fg:         #1F5BB8;
+  --color-status-atrasado-bg:      #FBE8E4;
+  --color-status-atrasado-fg:      #9B2B1E;
+
+  /* Radii */
+  --radius-pill:     99px;
+  --radius-input:    7px;
+  --radius-button:   9px;
+  --radius-card-sm:  10px;
+  --radius-card:     14px;
+  --radius-panel:    20px;
+  --radius-panel-lg: 24px;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(14, 23, 20, 0.06);
+  --shadow-lift: 0 8px 24px rgba(14, 23, 20, 0.10);
+  --shadow-hero: 0 40px 80px -30px rgba(14, 23, 20, 0.22), 0 8px 16px -8px rgba(14, 23, 20, 0.08);
+  --shadow-cta:  0 4px 20px rgba(10, 90, 60, 0.22);
+}
+
+/* Dark-mode overrides. These replace the values registered in @theme when
+   <html class="dark"> is set, so every utility automatically flips. */
+.dark {
+  --color-ink:         #F2EFE8;
+  --color-ink-2:       #CFC9BC;
+  --color-muted:       #8C8578;
+  --color-bg:          #0E1714;
+  --color-bg-2:        #152420;
+  --color-surface:     #1A2622;
+  --color-line:        #263531;
+  --color-line-2:      #344540;
+  --color-accent:      #3FAE7D;
+  --color-accent-2:    #6CC399;
+  --color-accent-soft: #12352A;
+
+  --color-status-en-produccion-bg: #3B2914;
+  --color-status-en-produccion-fg: #E8B574;
+  --color-status-nuevo-bg:         #132A47;
+  --color-status-nuevo-fg:         #7FAEEB;
+  --color-status-atrasado-bg:      #3A1C16;
+  --color-status-atrasado-fg:      #E58978;
+
+  --shadow-card: 0 0 0 1px var(--color-line);
+  --shadow-hero: 0 40px 80px -30px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--color-line);
+
+  color-scheme: dark;
+}
+
+/* Base layer — body defaults. */
+@layer base {
+  html {
+    background-color: var(--color-bg);
+    color: var(--color-ink-2);
+    font-family: var(--font-sans);
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink-2);
+  }
+}

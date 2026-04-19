@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es-MX">
   <head>
     <title><%= content_for(:title) || "Kitchef" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -9,20 +9,26 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
+    <%# Pre-paint theme bootstrap. Classic script (not an ES module) loaded
+        synchronously so the .dark class is applied before first paint. The
+        runtime toggle logic lives in the theme Stimulus controller. %>
+    <%= javascript_include_tag "theme_bootstrap" %>
+
     <%= yield :head %>
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased">
     <%= yield %>
   </body>
 </html>

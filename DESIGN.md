@@ -1,195 +1,135 @@
 # Kitchef — Design Guidelines
 
-> **La cocina de tu negocio.** A design system rooted in the Mexican home kitchen — warm, grounded, phone-first. This document translates the visual language of the landing page into a Tailwind CSS implementation spec.
+> **El sistema operativo de tu cocina.** Kitchef is a LatAm-fintech-grade tool for independent home cooks in México. The visual language is warm-technical, Spanish-native, aspirational-professional — think Kueski / Nu / Mercado Pago, not cottage-food marketplace. This document is the single source of truth for color, type, spacing, components, and copy.
+
+Reference files:
+- `Kitchef Landing Page.html` — primary landing (split hero + bento + dashboard preview)
+- `Kitchef Dashboard.html` — in-product surface (what the cocinera uses daily)
 
 ---
 
 ## 1. Design Principles
 
-1. **Mexican, not translated-Mexican.** Peso signs, colonia names, and second-person familiar (`tú`). No SaaS tropes.
-2. **Warm > sterile.** Masa off-whites, terracotta earth, no pure white, no pure black.
-3. **Phone-first.** Every component must read at 360px wide before anything else.
-4. **Confident but humble.** Serif headlines carry pride; sans body stays grounded.
-5. **Generous whitespace, short line-length.** Body copy caps around `max-w-prose`.
+1. **Treat her as a CEO.** The cocinera is a business owner. Interfaces communicate precision, numbers, reliability — not coziness.
+2. **Warm-technical.** Serif headlines + mono accents + near-white surfaces. Professional without being cold.
+3. **Mexican, not translated-Mexican.** Peso signs, colonia names, `tú` (never `usted`), names like Carmen / Lupita / Elena / Marisol.
+4. **Real data over decoration.** Every visual surface shows actual numbers (pedidos, margen, pesos) — never lorem-ipsum or stock imagery.
+5. **One strong accent, held back.** Deep green carries everything. No rainbow palettes, no gradient backgrounds, no emoji-as-UI.
+6. **Generous whitespace, grounded type.** Body copy caps at `max-w-[620px]`. Section padding at least 72px.
 
 ---
 
 ## 2. Color System
 
-### 2.1 Semantic Tokens
+### 2.1 Tokens
 
-Use **semantic tokens** — never reach for raw hex in components. Define them in `tailwind.config.js` via CSS custom properties so they can flip between light/dark automatically.
-
-```js
-// tailwind.config.js
-module.exports = {
-  darkMode: 'class', // toggle via `dark` class on <html>
-  theme: {
-    extend: {
-      colors: {
-        // Brand
-        primary:       'rgb(var(--color-primary) / <alpha-value>)',
-        'primary-dark':'rgb(var(--color-primary-dark) / <alpha-value>)',
-        accent:        'rgb(var(--color-accent) / <alpha-value>)',
-
-        // Surfaces
-        bg:        'rgb(var(--color-bg) / <alpha-value>)',
-        surface:   'rgb(var(--color-surface) / <alpha-value>)',        // cards
-        'surface-alt':'rgb(var(--color-surface-alt) / <alpha-value>)', // cream section bg
-        'surface-input':'rgb(var(--color-surface-input) / <alpha-value>)',
-        'accent-tint':'rgb(var(--color-accent-tint) / <alpha-value>)', // primary @ 6%
-        chaos:     'rgb(var(--color-chaos) / <alpha-value>)',          // antes/después bg
-
-        // Text
-        heading:  'rgb(var(--color-heading) / <alpha-value>)',
-        body:     'rgb(var(--color-body) / <alpha-value>)',
-        muted:    'rgb(var(--color-muted) / <alpha-value>)',
-
-        // Borders / separators
-        border:    'rgb(var(--color-border) / <alpha-value>)',
-        separator: 'rgb(var(--color-separator) / <alpha-value>)',
-      },
-    },
-  },
-};
-```
-
-### 2.2 CSS Variables — Light
+Define as CSS custom properties; components never reference raw hex.
 
 ```css
-/* app.css */
 :root {
-  /* Terracotta (default) */
-  --color-primary:        196  101  74;   /* #C4654A */
-  --color-primary-dark:   168   80  58;   /* #A8503A */
-  --color-accent:          91  127  94;   /* #5B7F5E nopal */
+  /* Ink */
+  --ink:         #0E1714;   /* primary text, near-black warm */
+  --ink-2:       #2F3A35;   /* secondary text, paragraph */
+  --muted:       #6B7670;   /* labels, captions, meta */
 
-  /* Surfaces — warm, domestic, NEVER pure white */
-  --color-bg:             250  246  240;  /* masa */
-  --color-surface:        255  255  255;
-  --color-surface-alt:    245  240  232;  /* cream */
-  --color-surface-input:  250  250  250;
-  --color-accent-tint:    238  243  238;
-  --color-chaos:          240  235  227;
-
-  /* Text */
-  --color-heading:         61   43   31;  /* mole */
-  --color-body:            92   64   51;
-  --color-muted:          138  126  118;
+  /* Surface */
+  --bg:          #F8F6F1;   /* page — bone off-white, NEVER pure white */
+  --bg-2:        #EFEBE3;   /* subtle zone: table headers, code blocks, chart grids */
+  --surface:     #FFFFFF;   /* cards — pure white is okay ON bone */
 
   /* Lines */
-  --color-border:         232  226  218;
-  --color-separator:      238  238  238;
+  --line:        #E4DED1;   /* primary dividers + card borders */
+  --line-2:      #D0C9B8;   /* hover / stronger dividers */
+
+  /* Accent */
+  --accent:      #0A5A3C;   /* deep green — CTAs, active states, metric deltas */
+  --accent-2:    #074830;   /* hover, pressed */
+  --accent-soft: #E3EDE6;   /* accent @ 6% — tag backgrounds, chart fills */
+
+  /* Status */
+  --pos:         #0A5A3C;   /* positive — same hue as accent by design */
+  --warn:        #B04E0E;   /* attention: pending, atrasado */
+  --err:         #9B2B1E;   /* destructive: cancelado, falla */
 }
 
-/* Nopal palette variant — apply via `data-palette="nopal"` on <html> */
-[data-palette="nopal"] {
-  --color-primary:         91  127  94;
-  --color-primary-dark:    71  99   73;
-  --color-accent:         196  101  74;
-  --color-surface-alt:    238  243  238;
-  --color-accent-tint:    253  245  242;
-}
-```
-
-### 2.3 CSS Variables — Dark
-
-```css
 .dark {
-  --color-bg:              26   20   18;  /* warm near-black, NOT pure #000 */
-  --color-surface:         42   34   32;
-  --color-surface-alt:     35   29   26;
-  --color-surface-input:   35   29   26;
-  --color-accent-tint:     30   42   31;
-  --color-chaos:           35   29   26;
-
-  --color-heading:        245  240  232;  /* warm off-white */
-  --color-body:           196  186  176;
-  --color-muted:          138  126  118;
-
-  --color-border:          61   53   46;
-  --color-separator:       61   53   46;
-
-  /* Primary stays the same — terracotta reads beautifully on both modes */
-}
-
-.dark[data-palette="nopal"] {
-  --color-surface-alt:     26   35   28;
-  --color-accent-tint:     42   31   28;
+  --ink:         #F2EFE8;
+  --ink-2:       #CFC9BC;
+  --muted:       #8C8578;
+  --bg:          #0E1714;
+  --bg-2:        #152420;
+  --surface:     #1A2622;
+  --line:        #263531;
+  --line-2:      #344540;
+  --accent:      #3FAE7D;   /* lifts ~40% in dark for legibility */
+  --accent-2:    #6CC399;
+  --accent-soft: #12352A;
 }
 ```
 
-### 2.4 Status Badges (Pedidos)
+### 2.2 Status tokens — light + dark
 
-Status colors need dark-mode variants — avoid pastel backgrounds that glow.
+| Status     | Light bg        | Light fg      | Dark bg       | Dark fg       |
+|------------|-----------------|---------------|---------------|---------------|
+| Listo      | `--accent-soft` | `--accent`    | `--accent-soft` | `--accent-2` |
+| En producción | `#FFF1DD`    | `--warn`      | `#3B2914`     | `#E8B574`     |
+| Nuevo      | `#E7F0FB`       | `#1F5BB8`     | `#132A47`     | `#7FAEEB`     |
+| Atrasado   | `#FBE8E4`       | `--err`       | `#3A1C16`     | `#E58978`     |
 
-| Status     | Light bg  | Light text | Dark bg   | Dark text |
-| ---------- | --------- | ---------- | --------- | --------- |
-| Pagado     | `#E8F5E9` | `#2E7D32`  | `#1B3A1B` | `#2E7D32` |
-| Pendiente  | `#FFF3E0` | `#E65100`  | `#3A2010` | `#E65100` |
-| Confirmado | `#E3F2FD` | `#1565C0`  | `#102540` | `#1565C0` |
+Render as pill: `font-size: 10.5px; padding: 2px 8px; border-radius: 99px;` with a 5px dot prefix.
 
-Define as utility classes:
+### 2.3 Don'ts
 
-```css
-@layer utilities {
-  .badge-pagado     { @apply bg-[#E8F5E9] text-[#2E7D32] dark:bg-[#1B3A1B]; }
-  .badge-pendiente  { @apply bg-[#FFF3E0] text-[#E65100] dark:bg-[#3A2010]; }
-  .badge-confirmado { @apply bg-[#E3F2FD] text-[#1565C0] dark:bg-[#102540]; }
-}
-```
-
-### 2.5 Don'ts
-
-- ❌ Pure `#FFFFFF` or `#000000` anywhere
-- ❌ Purple, gradients with multiple saturated stops, "3D blob" colors
-- ❌ High-saturation accent colors beyond primary
-- ❌ `gray-*` utility scale — we ship semantic tokens only
+- ❌ Pure `#FFFFFF` for page background — always bone (`--bg`)
+- ❌ Pure `#000000` anywhere
+- ❌ Terracotta, cream, mole browns (previous direction — retired)
+- ❌ Purple, teal, multi-stop gradients
+- ❌ Gradient backgrounds on CTAs — solid green, full-strength
+- ❌ More than one semantic color on a single screen
 
 ---
 
 ## 3. Typography
 
-### 3.1 Font Stack
+### 3.1 Font stack
 
 ```html
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link
-  href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,800&family=General+Sans:wght@400;500;600;700&display=swap"
-  rel="stylesheet"
-/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 ```
 
-```js
-// tailwind.config.js
-fontFamily: {
-  serif: ['Fraunces', 'Georgia', 'serif'],
-  sans:  ['"General Sans"', '-apple-system', 'system-ui', 'sans-serif'],
-},
+```css
+--serif: 'Instrument Serif', Georgia, serif;   /* headlines, metric values */
+--sans:  'Inter', -apple-system, system-ui, sans-serif;  /* UI + body */
+--mono:  'JetBrains Mono', ui-monospace, monospace;       /* prices, deltas, kickers, timestamps */
 ```
 
-### 3.2 Type Scale
+> **Why this stack:** Instrument Serif is a modern editorial serif with a single weight (400) and a strong italic. The italic is an intentional expressive tool — use it for key brand words. Inter handles UI density. JetBrains Mono signals "data" in dashboards. No Fraunces, no General Sans, no system fonts as primary.
 
-Headlines always `font-serif`. UI and body always `font-sans`.
+### 3.2 Scale
 
-| Usage           | Class                                                                                 | Notes                |
-| --------------- | ------------------------------------------------------------------------------------- | -------------------- |
-| Hero H1         | `font-serif font-bold text-4xl md:text-6xl leading-[1.1] tracking-tight text-heading` | `text-wrap: pretty;` |
-| Section H2      | `font-serif font-bold text-3xl md:text-[42px] tracking-tight text-heading`            | center-aligned       |
-| Feature H3      | `font-serif font-bold text-2xl md:text-3xl leading-tight text-heading`                |                      |
-| Lead paragraph  | `text-base md:text-xl leading-relaxed text-body`                                      | `max-w-prose`        |
-| Body            | `text-base leading-relaxed text-body`                                                 |                      |
-| Label / eyebrow | `text-xs font-semibold uppercase tracking-[0.1em] text-muted`                         |                      |
-| Micro / caption | `text-xs text-muted`                                                                  |                      |
+| Usage                    | CSS                                                                                   | Notes                                        |
+|--------------------------|---------------------------------------------------------------------------------------|----------------------------------------------|
+| Display (hero H1)        | `font-family:serif; weight:400; font-size:clamp(44px,6.2vw,78px); line-height:1.15; letter-spacing:-.02em; padding-bottom:.15em` | Italic descenders need the padding. |
+| Section H2               | `serif; 400; clamp(34px,4.2vw,52px); line-height:1.04; letter-spacing:-.02em`         |                                              |
+| Card H3                  | `serif; 400; 28px; line-height:1.1; letter-spacing:-.015em`                           |                                              |
+| Metric value (serif)     | `serif; 400; 22–54px; letter-spacing:-.01em`                                          | Pair with mono delta.                         |
+| Body / lede              | `sans; 400; 17–18px; line-height:1.55; color:var(--ink-2); max-width:620px`           |                                              |
+| UI text                  | `sans; 500; 13–14px; line-height:1.4`                                                 |                                              |
+| Label / eyebrow          | `mono; 500; 11.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent)` | Prefix with a 20px horizontal rule.        |
+| Price / delta / code     | `mono; 500; 11–14px; letter-spacing:.02em`                                            |                                              |
+| Micro caption            | `sans; 500; 12px; color:var(--muted)`                                                 |                                              |
 
-Always pair serif headings with `tracking-tight` (`-0.02em`). Body copy uses default tracking.
+### 3.3 Italic as an expressive tool
 
-### 3.3 Copy Tone
+Wrap exactly **one** word per headline in `<em>` — and style it `font-style: italic; color: var(--accent)`. Pick the word that carries the pivot: "el sistema operativo de tu _cocina_," "tu semana, _visible_," "sin _comisión_." Over-use flattens the effect.
 
-- Second-person familiar: `tú`, never `usted`
-- Plain Mexican Spanish: `pedidos`, `anticipo`, `entrega`, `colonia`, `platillo`, `margen`
-- No translated-from-English phrasing. If it sounds like Shopify-in-Spanish, rewrite.
-- The word `cocina` should appear more often than `negocio`.
+### 3.4 Copy tone
+
+- `tú`, never `usted`
+- Plain Mexican Spanish: `pedidos`, `anticipo`, `entrega`, `colonia`, `platillo`, `margen`, `atrasado`
+- Aspirational-professional: "Tu cocina merece un sistema, no un cuaderno." Never cute, never folksy.
+- Banned: *workflow, optimize, empower, leverage, platform, solution, AI, powered, seamless*. Replace with concrete verbs from her world.
 
 ---
 
@@ -197,312 +137,285 @@ Always pair serif headings with `tracking-tight` (`-0.02em`). Body copy uses def
 
 ### 4.1 Radii
 
-Radii are **token-driven** because they're a Tweak. Default is 14px.
+| Element                  | Radius |
+|--------------------------|--------|
+| Pills / badges / dots    | `99px` |
+| Form inputs / small btns | `7px`  |
+| Buttons                  | `9px`  |
+| Cards (small)            | `10px` |
+| Cards (standard)         | `14–16px` |
+| Large panels (hero dash, CTA block) | `20–24px` |
 
-```js
-borderRadius: {
-  card:   'var(--radius-card, 0.875rem)',   // 14px
-  button: 'var(--radius-card, 0.875rem)',
-  panel:  'calc(var(--radius-card, 0.875rem) + 0.5rem)',
-  inner:  'calc(var(--radius-card, 0.875rem) - 0.25rem)',
-  pill:   '9999px',
-}
-```
-
-Usage:
-- Cards: `rounded-card`
-- Outer frames (antes/después, pricing): `rounded-panel`
-- Chips, peso pills, badges: `rounded-pill`
+**No `2xl` bubble corners.** Nothing rounder than 24px.
 
 ### 4.2 Shadows
 
-Keep shadows soft and low. Dark mode doubles opacity.
+Light mode uses soft, low shadows. Dark mode replaces shadow with a visible border.
 
-```js
-boxShadow: {
-  card:    '0 2px 8px rgba(0,0,0,0.06)',
-  lifted:  '0 8px 32px rgba(0,0,0,0.08)',
-  hero:    '0 40px 80px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.08)',
-  cta:     '0 4px 20px rgba(196,101,74,0.27)',  // primary @ 27%
-}
+```css
+--sh-card:  0 2px 8px rgba(14,23,20,.06);
+--sh-lift:  0 8px 24px rgba(14,23,20,.10);
+--sh-hero:  0 40px 80px -30px rgba(14,23,20,.22), 0 8px 16px -8px rgba(14,23,20,.08);
+
+.dark --sh-card: 0 0 0 1px var(--line);
+.dark --sh-hero: 0 40px 80px -30px rgba(0,0,0,.6), 0 0 0 1px var(--line);
 ```
 
-For CTA glow in dark mode, use `shadow-cta` unchanged — the primary is the same hue.
+### 4.3 Layout
 
-### 4.3 Layout Spacing
-
-- Section vertical padding: `py-20 md:py-24`
-- Section horizontal: `px-5 sm:px-8 lg:px-20`
-- Max content width: `max-w-[1200px] mx-auto`
-- Narrow content (FAQ, CTA): `max-w-[700px]` or `max-w-[560px]`
-- Gap between feature rows: `gap-20`
-- Card interior padding: `p-4` (compact) / `p-7` (standard) / `p-8` (pricing)
+- Container: `max-width: 1240px; padding: 0 28px`
+- Section vertical padding: `96px` desktop / `64px` mobile
+- Bento card min-height: `280px`
+- Card interior: `28px` (standard) / `16px` (compact) / `48px` (showcase block)
+- Gap between bento cards: `14px`
+- Pedido row padding: `9–10px 14px`
 
 ---
 
 ## 5. Component Patterns
 
-### 5.1 Primary Button
+### 5.1 Button
 
-```html
-<button class="
-  inline-flex items-center justify-center
-  bg-primary hover:bg-primary-dark
-  text-white font-bold text-[17px]
-  px-9 py-4 rounded-button
-  shadow-cta transition
-  hover:-translate-y-px
-  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg
-">
-  Empieza gratis
-</button>
+```css
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 600 14px/1 var(--sans);
+  padding: 10px 18px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink);
+  transition: border-color .15s, background .15s, transform .1s;
+}
+.btn:hover   { border-color: var(--line-2); }
+.btn:active  { transform: translateY(.5px); }
+.btn-primary { background: var(--accent); color: #F8F6F1; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+.btn-ghost   { background: transparent; border-color: transparent; }
+.btn-sm      { padding: 7px 13px; font-size: 13px; }
 ```
 
-### 5.2 Secondary Button
+### 5.2 Pill / badge
 
-```html
-<button class="
-  inline-flex items-center justify-center
-  bg-transparent text-heading
-  border-2 border-primary/20 hover:border-primary
-  font-semibold px-7 py-3.5 rounded-button
-  transition
-">
-  Ver cómo funciona ↓
-</button>
+```css
+.pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 500 12px/1 var(--sans);
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink-2);
+}
+.pill.accent { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
 ```
 
 ### 5.3 Card
 
-```html
-<article class="
-  bg-surface rounded-card p-4
-  shadow-card
-  text-sm
-">
-  …
-</article>
+```css
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px;
+  display: flex; flex-direction: column; gap: 14px;
+}
 ```
 
-### 5.4 Pedido card (key pattern — used throughout)
+Standard anatomy:
+1. Icon badge (34×34, `--accent-soft` background) — optional
+2. Mono kicker (label)
+3. Serif H3 with italic pivot-word
+4. Sans paragraph at 14.5px / 1.55
+5. Data visual or list (actual interface, not lorem)
+
+### 5.4 Pedido row (used across landing + dashboard)
 
 ```html
-<article class="bg-surface rounded-card p-4 shadow-card">
-  <div class="flex items-center justify-between mb-1">
-    <span class="font-bold text-heading">Doña Carmen</span>
-    <span class="badge-pagado text-[11px] font-semibold px-2 py-0.5 rounded-pill">
-      Pagado
-    </span>
+<div class="row">
+  <div>
+    <div class="who">Doña Carmen</div>
+    <div class="what">Tamales verdes · 2kg</div>
   </div>
-  <p class="text-body leading-relaxed">2 kg tamales verdes + 1 kg rajas</p>
-  <div class="flex items-center justify-between mt-1.5 text-xs text-muted">
-    <span>sáb 3pm</span>
-    <span class="font-bold text-heading">$650</span>
-  </div>
-</article>
-```
-
-### 5.5 Section Header
-
-```html
-<header class="mb-10 md:mb-14 text-center">
-  <h2 class="font-serif font-bold text-3xl md:text-[42px] tracking-tight text-heading">
-    El cambio que se siente
-  </h2>
-  <p class="mt-3 text-base text-muted max-w-prose mx-auto">
-    …
-  </p>
-</header>
-```
-
-### 5.6 Pricing Card (Popular variant)
-
-```html
-<div class="
-  relative flex-1 min-w-[300px] max-w-[380px]
-  bg-surface rounded-panel p-8
-  border-2 border-primary
-  shadow-[0_8px_32px_rgba(var(--color-primary)/0.13)]
-">
-  <span class="
-    absolute -top-3 right-5
-    bg-primary text-white text-[11px] font-bold uppercase tracking-[0.05em]
-    px-3.5 py-1 rounded-pill
-  ">Popular</span>
-  …
+  <span class="st ok"><i></i> Listo</span>
+  <span class="amt">$650</span>
 </div>
 ```
 
-### 5.7 FAQ Accordion
-
-```html
-<details class="group border-b border-separator">
-  <summary class="
-    list-none flex items-center justify-between
-    py-5 cursor-pointer
-    font-semibold text-heading
-  ">
-    ¿Cobran comisión sobre mis ventas?
-    <span class="text-primary text-2xl transition-transform group-open:rotate-45">+</span>
-  </summary>
-  <p class="pb-5 text-body leading-relaxed">…</p>
-</details>
+```css
+.row {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.row .who  { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .what { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .amt  { font-family: var(--mono); font-size: 12.5px; font-weight: 500; }
+.st        { font: 500 10.5px/1 var(--sans); padding: 2px 8px; border-radius: 99px; display: inline-flex; align-items: center; gap: 5px; }
+.st i      { width: 5px; height: 5px; border-radius: 99px; background: currentColor; }
+.st.ok     { background: var(--accent-soft); color: var(--accent); }
+.st.wait   { background: #FFF1DD; color: var(--warn); }
+.st.new    { background: #E7F0FB; color: #1F5BB8; }
 ```
 
-Use native `<details>` for progressive enhancement. Animate `max-height` via CSS `interpolate-size: allow-keywords` or a Headless UI disclosure if you need fine control.
+### 5.5 Stat card (metric)
+
+Serif value + mono delta. Always both.
+
+```html
+<div class="dash-stat">
+  <div class="lbl">Ventas</div>
+  <div class="val">$13,400 <span class="delta">↑ 18%</span></div>
+</div>
+```
+
+```css
+.lbl   { font: 500 11px/1 var(--sans); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.val   { font: 400 24px/1 var(--serif); color: var(--ink); letter-spacing: -.01em; display:flex; align-items:baseline; gap:6px; }
+.delta { font: 500 11px/1 var(--mono); color: var(--pos); }
+```
+
+### 5.6 Section header
+
+```html
+<div class="sec-intro">
+  <div class="kicker">Una herramienta, cuatro oficios</div>
+  <h2>Lo que antes te tomaba <em>horas</em>, ahora son minutos.</h2>
+  <p>…lede…</p>
+</div>
+```
+
+```css
+.kicker { display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin-bottom:16px; }
+.kicker::before { content:""; width:20px; height:1px; background:var(--accent); }
+```
+
+### 5.7 Pricing card
+
+Three tiers: **Libreta** (free) / **Cocina** (popular) / **Taller**. Popular variant inverts to ink background — never accent, never gradient.
+
+### 5.8 FAQ accordion
+
+Native `<details>`. Plus icon rotates 45° on open and turns accent. No chevrons.
 
 ---
 
-## 6. Dark Mode
+## 6. Dashboard patterns
 
-### 6.1 Strategy
+The dashboard uses the same tokens with tighter spacing.
 
-- **Class-based** (`darkMode: 'class'`) — flip `dark` on `<html>`.
-- **Three-state toggle**: Auto (default) → Light → Dark. Persist choice in `localStorage('theme')`.
-- Detect system preference via `matchMedia('(prefers-color-scheme: dark)')` when mode is `auto`.
+### 6.1 Shell
 
-### 6.2 Inline script (runs before React hydrates — no FOUC)
+- **Sidebar** 240px wide, `--bg-2` background, serif logo, sans nav items, mono label on section dividers.
+- **Top bar** 56px, sticky, border-bottom, contains breadcrumb + search + date range + theme toggle.
+- **Content** max-width none; pad 28px; bento grids where possible.
 
-```html
-<script>
-  (function() {
-    const stored = localStorage.getItem('theme'); // 'light' | 'dark' | 'auto' | null
-    const system = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isDark = stored === 'dark' || ((stored === 'auto' || !stored) && system);
-    if (isDark) document.documentElement.classList.add('dark');
-  })();
-</script>
-```
+### 6.2 Data density
 
-### 6.3 Toggle Button
+- Default row height 44px; compact mode 36px. Expose as Tweak.
+- Tables: `--bg-2` header, mono monetary columns, sans text columns.
+- Charts: `--accent` stroke, `--accent-soft` fill, `--line` gridlines at 33% increments.
 
-Sits in the nav. Icon reflects current state: `◐` (auto) / `☀` (light) / `🌙` (dark). Cycles on click.
+### 6.3 Empty states
 
-```html
-<button
-  aria-label="Cambiar modo"
-  class="
-    inline-flex items-center justify-center
-    w-9 h-9 rounded-lg
-    border border-black/10 dark:border-white/10
-    hover:bg-surface transition
-  ">
-  <!-- icon -->
-</button>
-```
+Serif headline ("Nada por aquí todavía"), sans sub, single primary CTA. Never illustrations of boxes.
+
+### 6.4 Status everywhere
+
+Every pedido, pago, producción item shows a status pill (§2.2). Never color-only — always label + dot.
 
 ---
 
-## 7. Palette Switching (Tweak)
+## 7. Dark mode
 
-Same mechanism as dark mode — a `data-palette="terracotta|nopal"` attribute on `<html>`. Override variables per palette as shown in §2.2. Only these two palettes ship.
+Three-state toggle: **auto → light → dark**. Persists in `localStorage('kitchef_theme')`. System preference listened for when `auto`.
+
+```js
+const stored = localStorage.getItem('kitchef_theme') || 'auto';
+function apply(mode){
+  const sys = matchMedia('(prefers-color-scheme: dark)').matches;
+  const dark = mode === 'dark' || (mode === 'auto' && sys);
+  document.documentElement.classList.toggle('dark', dark);
+}
+```
+
+Inline in `<head>` before paint to avoid FOUC.
 
 ---
 
-## 8. Responsive Breakpoints
+## 8. Responsive
 
-Default Tailwind breakpoints, with one rule:
-
-> **The hero must look right at `sm:` first.** Desktop is icing.
-
-- Mobile (default): stack everything, phone mockup below copy
-- `md:` (768px): two columns return, feature rows alternate sides
-- `lg:` (1024px): full horizontal padding, nav links visible
-- Below `md`, collapse nav links into a hamburger, keep only the Empieza gratis CTA and the dark-mode toggle visible
+| Breakpoint | Behavior                                                                      |
+|-----------:|-------------------------------------------------------------------------------|
+| `≥1000px`  | Two-column hero, 2×2 bento, 3-column pricing, side-by-side showcase           |
+| `<1000px`  | H1 caps at 16ch; hero stacks (photo + dash max-width 620px); bento collapses to 1 col |
+| `<680px`   | Nav links hide → hamburger; dashboard stats stack; rails stack                |
+| `<560px`   | Dashboard sidebar → bottom tab bar                                            |
 
 ---
 
 ## 9. Motion
 
-Keep it subtle. Every transition uses:
-
-```css
-transition: all 200ms ease;
-```
-
-- Buttons: `hover:-translate-y-px` + `hover:bg-primary-dark`
-- Cards: no hover state unless the whole card is a link
-- Nav: `backdrop-blur-md` appears after `scrollY > 40`
-- FAQ chevron: `rotate-45` on open, 300ms
-- Pricing toggle: 300ms ease on knob `left`
-- Theme/palette swap: `transition-colors duration-[400ms]` on the root
-
-Avoid: long animations, parallax, spring-heavy entrances, auto-playing hero video.
+- Transition duration: `150ms` for UI state (hover/focus), `250ms` for accordion/toggle, `400ms` for theme swap
+- Easing: `ease` default, `ease-out` on entrances, no spring bounces
+- Buttons: no translate on hover (retired); `:active` gets `translateY(.5px)`
+- Charts: no entrance animation — numbers should feel factual, not marketed
+- Forbidden: parallax, auto-playing video, spring-scaling cards, confetti
 
 ---
 
-## 10. Accessibility Checklist
+## 10. Accessibility
 
-- Color contrast on body text: ≥ 4.5:1 in both modes (verify `body` on `bg` and `surface`)
-- Focus rings: always visible — `focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg`
-- Dark-mode toggle: `aria-label` + live region announcing new mode
-- FAQ: native `<details>` or `aria-expanded` if custom
-- Phone mockup is decorative — mark its container `aria-hidden="true"` and keep a text description of the feature above it
-- All pedido-card examples use real names — keep in examples, but ensure screen readers aren't overwhelmed: wrap illustrative blocks in `role="img"` with `aria-label="Ejemplo de pedido en Kitchef"`
-
----
-
-## 11. Content Rules (for engineering copy reviews)
-
-- Prices always render with peso sign + MXN implied: `$25`, `$249 MXN/mes`. Never `MX$` or `USD`.
-- Names in examples: Carmen, Lupita, Elena, Marisol, Doña + surname variants. Never María García.
-- Colonias: Condesa, Del Valle, Chapalita, San Pedro, Roma.
-- Numbers: tamal `$25–35`, pastel completo `$650–850`, meal-prep semanal `$1,500–2,500`.
-- Banned words: *workflow, optimize, empower, leverage, platform, solution, AI, powered*. Replace each with a concrete verb from her world.
+- Body contrast ≥ 4.5:1 both modes (verified: `--ink-2` on `--bg` ≈ 10.2:1, on dark ≈ 9.8:1)
+- Focus ring: `outline: 2px solid var(--accent); outline-offset: 2px`
+- Status: never color-only — always label + dot
+- Theme toggle: `aria-label="Cambiar modo"` with live-region announcement on change
+- FAQ: native `<details>` for progressive enhancement
+- Charts: `<svg role="img" aria-labelledby="…">` with a textual summary
 
 ---
 
-## 12. File Structure (suggested)
+## 11. Content rules (copy reviews)
+
+- Prices: `$25`, `$249 MXN/mes`. Never `MX$`, never `USD`, never unitless `249`.
+- Names: Carmen, Lupita, Elena, Marisol, Sofía, Doña + surname initial. Never "María García", never anglicized.
+- Colonias: Condesa, Del Valle, Chapalita, San Pedro, Roma Sur, Narvarte, Escandón.
+- Realistic dish prices: tamal `$25–35`, pastel completo `$650–850`, meal-prep semanal `$1,500–2,500`.
+- Realistic volumes: 20–120 pedidos/mes, margen 38–72%, ventas semana `$4,000–24,000`.
+- Time: 24h clock in timestamps (`14:30`), 12h in conversational copy ("a las 2 de la tarde").
+- Dates: `Lun 13 abr` / `13 abr 2026`. Never `04/13`.
+
+---
+
+## 12. Token cheat sheet
 
 ```
-src/
-├── app/
-│   └── layout.tsx            # injects theme script, html[lang="es"]
-├── components/
-│   ├── ui/
-│   │   ├── Button.tsx
-│   │   ├── Card.tsx
-│   │   ├── Badge.tsx
-│   │   └── ThemeToggle.tsx
-│   ├── sections/
-│   │   ├── Hero.tsx
-│   │   ├── Antes.tsx
-│   │   ├── Features.tsx
-│   │   ├── SocialProof.tsx
-│   │   ├── NoCommissionBanner.tsx
-│   │   ├── Pricing.tsx
-│   │   ├── FAQ.tsx
-│   │   └── FinalCTA.tsx
-│   └── phone/
-│       └── PhoneMockup.tsx
-├── styles/
-│   └── globals.css           # token definitions (§2.2, §2.3)
-└── lib/
-    └── theme.ts              # system-detection + localStorage
+bg          var(--bg)         page
+bg-2        var(--bg-2)       zones
+surface     var(--surface)    cards
+ink         var(--ink)        primary text
+ink-2       var(--ink-2)      body
+muted       var(--muted)      labels
+line        var(--line)       divider
+accent      var(--accent)     CTA + metric delta
+accent-soft var(--accent-soft) tag bg + chart fill
+pos / warn / err              status
 ```
 
 ---
 
-## 13. Quick Reference — Token Cheat Sheet
+## 13. File structure
 
 ```
-bg-bg                 page background
-bg-surface            cards
-bg-surface-alt        social-proof & FAQ section bg (cream)
-bg-accent-tint        small tinted blocks inside cards
-
-text-heading          serif H1/H2/H3, strong UI
-text-body             paragraph copy
-text-muted            labels, captions, meta
-
-border-border         card borders
-border-separator      in-card dividers, FAQ rows
-
-bg-primary            CTAs, accents, active toggle
-text-primary          links, small accent text
-border-primary        outlined buttons, popular pricing card
+/
+├── DESIGN.md                        ← this file
+├── Kitchef Landing Page.html        ← marketing
+├── Kitchef Dashboard.html           ← product
+└── components/
+    └── ios-frame.jsx                ← (reference only — landing is responsive web)
 ```
 
 ---
 
-*Last updated April 2026 — Kitchef v2 reference: `Kitchef Landing Page v2.html`.*
+*Last revised April 2026. Supersedes all previous versions (terracotta/Fraunces/General Sans). Current direction: **deep green on bone, Instrument Serif + Inter + JetBrains Mono, LatAm fintech grade.***

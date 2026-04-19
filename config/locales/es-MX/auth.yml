@@ -1,0 +1,38 @@
+es-MX:
+  sessions:
+    new:
+      title: "Entra a tu cocina"
+      email_placeholder: "Tu correo"
+      password_placeholder: "Tu contraseña"
+      submit: "Entrar"
+      forgot_password: "¿Olvidaste tu contraseña?"
+    create:
+      invalid_credentials: "Correo o contraseña incorrectos. Inténtalo de nuevo."
+      rate_limited: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo."
+
+  passwords:
+    invalid_token: "Este enlace ya expiró o no es válido. Pide otro."
+    new:
+      title: "Recupera tu contraseña"
+      email_placeholder: "Tu correo"
+      submit: "Enviar instrucciones"
+    edit:
+      title: "Define tu nueva contraseña"
+      password_placeholder: "Nueva contraseña"
+      password_confirmation_placeholder: "Confírmala"
+      submit: "Guardar contraseña"
+    create:
+      notice: "Si encontramos tu correo, te enviamos las instrucciones para recuperar tu contraseña."
+      rate_limited: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo."
+    update:
+      notice: "Contraseña actualizada. Ya puedes entrar."
+      mismatch: "Las contraseñas no coinciden. Vuelve a intentarlo."
+
+  passwords_mailer:
+    reset:
+      subject: "Recupera tu contraseña de Kitchef"
+      greeting: "Hola,"
+      intro: "Para restablecer tu contraseña, abre este enlace:"
+      link_text: "Restablecer contraseña"
+      expiry: "El enlace expira en %{duration}."
+      signature: "— El equipo de Kitchef"

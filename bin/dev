@@ -17,7 +17,7 @@ export SSL_KEY_FILE="${SSL_KEY_FILE:-./ssl/lvh.me.key}"
 if command -v overmind >/dev/null 2>&1; then
   exec overmind start -f Procfile.dev "$@"
 else
-  if ! gem list --exact --silent foreman >/dev/null 2>&1; then
+  if ! gem list foreman -i --silent; then
     echo "Installing foreman..."
     gem install foreman
   fi

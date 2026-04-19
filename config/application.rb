@@ -28,15 +28,31 @@ module Kitchef
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
-    # Configuration for the application, engines, and railties goes here.
-    #
-    # These settings can be overridden in specific environments using the files
-    # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
+    # Locale and timezone — Kitchef ships as es-MX only and stores timestamps
+    # in UTC while presenting them in America/Mexico_City. We fall back to the
+    # generic `es` locale (provided by the rails-i18n gem) for anything we
+    # haven't localized specifically.
+    config.i18n.default_locale = :"es-MX"
+    config.i18n.available_locales = [ :"es-MX", :es ]
+    config.i18n.fallbacks = { "es-MX": [ :es ] }
+    config.i18n.load_path += Dir[Rails.root.join("config/locales/**/*.{rb,yml}")]
+    config.time_zone = "America/Mexico_City"
+    config.active_record.default_timezone = :utc
 
-    # Don't generate system test files.
-    config.generators.system_tests = nil
+    # Our own domain lives under app/ per convention; add the directories we
+    # introduce in Phase 5+ so autoloading picks them up without fuss.
+    config.autoload_paths += %W[
+      #{config.root}/app/commands
+      #{config.root}/app/queries
+      #{config.root}/app/services
+    ]
+
+    # Keep generators quiet — no system tests, no helpers, no fixtures (we
+    # defer testing to a later milestone).
+    config.generators do |g|
+      g.system_tests = nil
+      g.helper = false
+      g.test_framework = nil
+    end
   end
 end
