@@ -1,2 +1,2 @@
-web: env RUBY_DEBUG_OPEN=true bin/rails server
+web: bin/rails server -b "ssl://0.0.0.0:${PORT:-3000}?key=${SSL_KEY_FILE}&cert=${SSL_CERT_FILE}"
 css: bin/rails tailwindcss:watch

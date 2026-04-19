@@ -1,12 +1,25 @@
 #!/usr/bin/env sh
 
-if gem list --silent --installed foreman
-then
-  exec foreman start -f Procfile.dev "$@"
+export PGGSSENCMODE="disable"
+
+# Default to port 3000 if not specified
+export PORT="${PORT:-3000}"
+
+# Let the debug gem allow remote connections,
+# but avoid loading until `debugger` is called
+export RUBY_DEBUG_OPEN="true"
+export RUBY_DEBUG_LAZY="true"
+
+# Use lvh.me for local development (see ./ssl/)
+export SSL_CERT_FILE="${SSL_CERT_FILE:-./ssl/lvh.me.pem}"
+export SSL_KEY_FILE="${SSL_KEY_FILE:-./ssl/lvh.me.key}"
+
+if command -v overmind >/dev/null 2>&1; then
+  exec overmind start -f Procfile.dev "$@"
 else
-  echo "Foreman no está instalado. Instálalo con:"
-  echo ""
-  echo "    gem install foreman"
-  echo ""
-  exit 1
+  if ! gem list --exact --silent foreman >/dev/null 2>&1; then
+    echo "Instalando foreman..."
+    gem install foreman
+  fi
+  exec foreman start -f Procfile.dev "$@"
 fi
