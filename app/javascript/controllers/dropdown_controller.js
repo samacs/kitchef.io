@@ -58,6 +58,13 @@ export default class extends Controller {
     }
     this.beforeNavigation = () => this.close()
 
+    // Recompute the menu's max-height whenever the viewport changes size
+    // or orientation — keeps the panel from overshooting the viewport on
+    // rotation (the landscape-mobile clipping reported in QA).
+    this.onViewportChange = () => {
+      if (this.isOpen) this.#applyMaxHeight()
+    }
+
     // Listen globally only while open — bound in #open / detached in #close.
     this.isOpen = false
   }
@@ -79,6 +86,11 @@ export default class extends Controller {
     if (this.isOpen) return
     this.isOpen = true
     this.menuTarget.hidden = false
+    // Cap the panel to the available vertical space before it paints so
+    // long menus (sidebar nav mirrored into the mobile drawer, user menu
+    // with a dozen items) scroll inside their own box instead of getting
+    // clipped at the viewport edge.
+    this.#applyMaxHeight()
     // Two animation frames so the transition runs from the closed state.
     requestAnimationFrame(() => requestAnimationFrame(() => this.#setClosedState(false)))
     this.#setExpanded(true)
@@ -95,7 +107,13 @@ export default class extends Controller {
     // Delay the `hidden` flip until after the transition so the animation
     // plays. 160ms matches the 150ms duration in the component + a frame.
     this.hideTimeout = window.setTimeout(() => {
-      if (!this.isOpen) this.menuTarget.hidden = true
+      if (!this.isOpen) {
+        this.menuTarget.hidden = true
+        // Release the inline max-height so the panel picks a fresh one
+        // the next time it opens (the trigger may have moved, the
+        // viewport may have rotated).
+        this.menuTarget.style.maxHeight = ""
+      }
     }, 160)
     if (restoreFocus) this.#focusTrigger()
   }
@@ -151,7 +169,9 @@ export default class extends Controller {
 
   #items() {
     return Array.from(
-      this.menuTarget.querySelectorAll('[role="menuitem"]:not([disabled])')
+      this.menuTarget.querySelectorAll(
+        '[role="menuitem"]:not([disabled]), [role="menuitemradio"]:not([disabled])'
+      )
     )
   }
 
@@ -186,15 +206,40 @@ export default class extends Controller {
     else this.menuTarget.removeAttribute("data-closed")
   }
 
+  // Cap the menu to fit between the trigger and the appropriate viewport
+  // edge. `bottom_*` placements extend down from the trigger bottom;
+  // `top_*` placements extend up from the trigger top. The gutter
+  // matches the 8px offset plus a breathing margin so the panel never
+  // sits flush against the viewport boundary.
+  #applyMaxHeight() {
+    const trigger = this.#triggerElement() || this.triggerTarget
+    const rect = trigger.getBoundingClientRect()
+    const viewportH = window.innerHeight
+    const placement = this.placementValue || "bottom_end"
+    const gutter = this.offsetValue + 16
+
+    const available = placement.startsWith("top")
+      ? rect.top - gutter
+      : viewportH - rect.bottom - gutter
+
+    // Don't let the clamp go absurdly small — a sliver of a menu is
+    // worse than a tall scrollable one. 200px is the floor.
+    this.menuTarget.style.maxHeight = `${Math.max(200, Math.floor(available))}px`
+  }
+
   #attachGlobalListeners() {
     document.addEventListener("click", this.outsideClick, true)
     document.addEventListener("keydown", this.escape)
     document.addEventListener("turbo:before-render", this.beforeNavigation)
     document.addEventListener("turbo:before-cache", this.beforeNavigation)
+    window.addEventListener("resize", this.onViewportChange)
+    window.addEventListener("orientationchange", this.onViewportChange)
   }
 
   #detachGlobalListeners() {
     document.removeEventListener("click", this.outsideClick, true)
     document.removeEventListener("keydown", this.escape)
+    window.removeEventListener("resize", this.onViewportChange)
+    window.removeEventListener("orientationchange", this.onViewportChange)
   }
 }

@@ -91,6 +91,13 @@ module Ui
         menu_width,
         "bg-surface border border-line rounded-card-sm shadow-lift",
         "p-1.5 flex flex-col gap-px",
+        # Contain scroll inside the panel: overscroll-contain prevents the
+        # page from scrolling when the menu reaches its top/bottom, and
+        # overflow-y-auto lets long menus scroll internally. The actual
+        # max-height is set at runtime by the Stimulus controller from
+        # the space between the trigger and the viewport edge — this
+        # class list just enables the overflow machinery.
+        "overflow-y-auto overscroll-contain",
         "origin-top transition-[opacity,transform] duration-150",
         "data-[closed]:opacity-0 data-[closed]:scale-[0.98] data-[closed]:pointer-events-none",
         placement_classes,

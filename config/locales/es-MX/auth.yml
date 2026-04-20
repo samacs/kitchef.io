@@ -85,6 +85,7 @@ es-MX:
     settings: "Configuración"
     subscription: "Plan y facturación"
     storefront: "Ver menú público"
+    appearance: "Apariencia"
     sign_out: "Cerrar sesión"
 
   panel:

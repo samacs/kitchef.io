@@ -68,6 +68,43 @@
 
     <div class="mx-1 my-1 kc-rule"></div>
 
+    <%# ---- Theme segmented control (Auto / Claro / Oscuro) --------
+        A self-contained theme controller instance — the page may host
+        other theme toggles; they all share localStorage and stay in
+        sync via the storage event handler in the controller. %>
+    <div class="px-2.5 pt-2 pb-1.5">
+      <div class="font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase text-muted mb-1.5">
+        <%= t("user_menu.appearance") %>
+      </div>
+      <div data-controller="theme"
+           data-theme-storage-key-value="kitchef_theme"
+           data-theme-auto-label-value="<%= t("theme.auto") %>"
+           data-theme-light-label-value="<%= t("theme.light") %>"
+           data-theme-dark-label-value="<%= t("theme.dark") %>"
+           role="group"
+           aria-label="<%= t("user_menu.appearance") %>"
+           class="flex gap-0.5 p-1 rounded-[8px] bg-bg-2 border border-line">
+        <% [[:auto, :monitor, t("theme.auto")], [:light, :sun, t("theme.light")], [:dark, :moon, t("theme.dark")]].each do |mode, icon, label| %>
+          <button type="button"
+                  class="kc-theme-option"
+                  role="menuitemradio"
+                  tabindex="-1"
+                  aria-checked="false"
+                  data-theme-target="option"
+                  data-mode="<%= mode %>"
+                  data-action="click->theme#set"
+                  data-theme-mode-param="<%= mode %>">
+            <span class="kc-theme-option-icon inline-flex text-muted">
+              <%= helpers.icon(icon, size: :xs) %>
+            </span>
+            <span><%= label %></span>
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="mx-1 my-1 kc-rule"></div>
+
     <%= render Ui::MenuItemComponent.new(
           label: t("user_menu.sign_out"),
           icon: :log_out,

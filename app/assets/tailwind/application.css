@@ -188,4 +188,67 @@
     transition: color .15s;
   }
   .link:hover { color: var(--color-accent-2); }
+
+  /* ---- Drawer (Nav::DashboardDrawerComponent) ----------------------
+     Closed state is the default: backdrop invisible and click-through,
+     panel translated fully off-screen. The Stimulus controller adds
+     [data-open] on open so the transitions run. Panel sits outside any
+     backdrop-filter ancestor (see panel.html.erb) so position:fixed
+     anchors to the viewport instead of to the sticky top bar.
+
+     Scrim color is pinned to dark rgba values (not --color-ink with
+     alpha): `ink` flips to the near-white text color in dark mode, so
+     using it for the scrim would wash the backdrop out instead of
+     darkening it. Dark mode deepens the scrim further for readable
+     contrast against the already-dark surface. */
+  .kc-drawer-backdrop {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease-out;
+    background-color: rgba(14, 23, 20, 0.5);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .dark .kc-drawer-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  .kc-drawer-backdrop[data-open] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .kc-drawer-panel {
+    transform: translateX(-100%);
+    transition: transform .25s ease-out;
+  }
+  .kc-drawer-panel[data-open] {
+    transform: translateX(0);
+  }
+
+  /* Segmented theme control inside Nav::UserMenuComponent. Active
+     option gets a raised surface treatment so the chosen mode reads
+     instantly; inactive options sit flat on the bg-2 track. */
+  .kc-theme-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--color-ink-2);
+    background: transparent;
+    transition: background .15s, color .15s, box-shadow .15s;
+  }
+  .kc-theme-option:hover { color: var(--color-ink); }
+  .kc-theme-option[data-active] {
+    background: var(--color-surface);
+    color: var(--color-ink);
+    box-shadow: 0 1px 2px rgba(14, 23, 20, .06);
+  }
+  .kc-theme-option[data-active] .kc-theme-option-icon {
+    color: var(--color-accent);
+  }
 }

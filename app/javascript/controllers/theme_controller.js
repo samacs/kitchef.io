@@ -19,7 +19,11 @@ import { Controller } from "@hotwired/stimulus"
 // The button's [data-theme-mode] attribute reflects the current mode
 // (auto | light | dark) so CSS can swap icon / affordance per state.
 export default class extends Controller {
-  static targets = ["button", "label"]
+  // `option` targets are the three segmented-control buttons in the
+  // user-menu theme row (Auto / Claro / Oscuro). Each carries a
+  // `data-mode="auto|light|dark"` attribute; the active option gets a
+  // `[data-active]` attribute which the CSS uses to raise its surface.
+  static targets = ["button", "label", "option"]
 
   static values = {
     storageKey: { type: String, default: "kitchef_theme" },
@@ -50,6 +54,16 @@ export default class extends Controller {
     const order = ["auto", "light", "dark"]
     const next = order[(order.indexOf(this.#currentMode()) + 1) % order.length]
     this.#store(next)
+    this.#applyCurrent()
+  }
+
+  // Direct-select action for the segmented control inside the user menu.
+  // Each option carries `data-theme-mode-param="auto|light|dark"` which
+  // Stimulus exposes as event.params.mode.
+  set(event) {
+    const mode = event?.params?.mode
+    if (!["auto", "light", "dark"].includes(mode)) return
+    this.#store(mode)
     this.#applyCurrent()
   }
 
@@ -92,6 +106,25 @@ export default class extends Controller {
 
     if (this.hasLabelTarget && label) {
       this.labelTarget.textContent = label
+    }
+
+    // Mark the active option in the segmented control so CSS can raise
+    // its surface — no-op when this controller doesn't wrap a segmented
+    // control (e.g., the icon-button variant has only button/label).
+    if (this.hasOptionTarget) {
+      for (const option of this.optionTargets) {
+        const active = option.dataset.mode === mode
+        if (active) option.setAttribute("data-active", "")
+        else option.removeAttribute("data-active")
+        // Segmented options inside a menu are role="menuitemradio"; set
+        // aria-checked. Fall back to aria-pressed when the option is a
+        // standalone button outside a menu context.
+        if (option.getAttribute("role") === "menuitemradio") {
+          option.setAttribute("aria-checked", String(active))
+        } else {
+          option.setAttribute("aria-pressed", String(active))
+        }
+      }
     }
   }
 }
