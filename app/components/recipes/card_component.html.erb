@@ -1,0 +1,39 @@
+<%= link_to helpers.edit_recipe_path(recipe),
+      class: "group relative flex flex-col bg-surface border border-line rounded-card overflow-hidden shadow-card hover:border-line-2 hover:shadow-panel transition" do %>
+  <div class="relative aspect-[4/3] bg-bg-2 overflow-hidden">
+    <% if photo_url %>
+      <img src="<%= photo_url %>"
+           alt="<%= recipe.name %>"
+           loading="lazy"
+           class="w-full h-full object-cover" />
+    <% else %>
+      <div class="w-full h-full flex items-center justify-center text-muted">
+        <%= helpers.icon(:chef_hat, size: :lg) %>
+      </div>
+    <% end %>
+
+    <% if recipe.internal? %>
+      <span class="absolute top-2.5 right-2.5">
+        <%= render Ui::BadgeComponent.new(
+              label: t("recipes.internal_badge"),
+              status: :default,
+              dot: false) %>
+      </span>
+    <% end %>
+  </div>
+
+  <div class="flex flex-col gap-2 px-4 py-4">
+    <h3 class="font-serif text-[18px] leading-[1.2] text-ink line-clamp-2">
+      <%= recipe.name %>
+    </h3>
+    <div class="flex items-center justify-between gap-3">
+      <span class="font-mono text-[14px] font-medium text-ink">
+        <%= price_label %>
+      </span>
+      <%= render Ui::BadgeComponent.new(
+            label: category_label,
+            status: :default,
+            dot: false) %>
+    </div>
+  </div>
+<% end %>

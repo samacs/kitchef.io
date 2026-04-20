@@ -1,0 +1,18 @@
+<div class="bg-surface border border-line rounded-panel shadow-card p-10 sm:p-14 flex flex-col items-center text-center gap-5">
+  <span class="w-14 h-14 inline-flex items-center justify-center rounded-full bg-accent-soft text-accent">
+    <%= helpers.icon(:chef_hat, size: :lg) %>
+  </span>
+  <div class="flex flex-col gap-2 max-w-[42ch]">
+    <h2 class="font-serif text-[30px] sm:text-[34px] leading-[1.08] tracking-[-0.02em] text-ink">
+      <%= headline %>
+    </h2>
+    <p class="text-[15px] text-ink-2 leading-[1.55]">
+      <%= sub %>
+    </p>
+  </div>
+  <%= render Ui::ButtonComponent.new(
+        label: cta_label,
+        variant: :primary,
+        icon: :plus,
+        href: cta_href) %>
+</div>

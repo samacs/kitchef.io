@@ -1,5 +1,50 @@
-<%= render "shared/stub",
-  title: t("dashboard.title"),
-  kicker: Current.account.name,
-  meta: "#{Current.account.slug} · #{Current.account.to_param}",
-  body: t("dashboard.placeholder") %>
+<% content_for :title, t("dashboard.title") %>
+<% content_for :page_title, t("dashboard.title") %>
+<% content_for :page_subtitle, t("dashboard.subtitle") %>
+
+<% if flash[:notice].present? %>
+  <div class="mb-5">
+    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
+  </div>
+<% end %>
+
+<% if total_count.zero? %>
+  <%= render Recipes::EmptyStateComponent.new(
+        headline_key: "dashboard.empty_state.headline",
+        sub_key:      "dashboard.empty_state.sub",
+        cta_label_key: "dashboard.empty_state.cta",
+        cta_href: new_recipe_path) %>
+<% else %>
+  <section class="flex flex-col gap-5">
+    <div class="flex flex-col gap-2">
+      <%= render Ui::KickerComponent.new(text: t("dashboard.menu_section.kicker")) %>
+      <div class="flex items-end justify-between gap-3 flex-wrap">
+        <h2 class="font-serif text-[26px] leading-[1.1] tracking-[-0.01em] text-ink">
+          <%= t("dashboard.menu_section.title") %>
+        </h2>
+        <div class="flex items-center gap-4">
+          <span class="font-mono text-[13px] text-muted">
+            <%= t("dashboard.menu_section.stat", count: total_count) %>
+          </span>
+          <%= link_to t("dashboard.menu_section.see_all"),
+                recipes_path,
+                class: "text-[13px] font-medium text-accent hover:underline" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <% recipes.each do |item| %>
+        <%= render Recipes::CardComponent.new(recipe: item) %>
+      <% end %>
+    </div>
+
+    <div class="flex justify-center pt-2">
+      <%= render Ui::ButtonComponent.new(
+            label: t("dashboard.menu_section.cta"),
+            variant: :primary,
+            icon: :plus,
+            href: new_recipe_path) %>
+    </div>
+  </section>
+<% end %>

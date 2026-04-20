@@ -11,9 +11,12 @@ Sidekiq.configure_server do |config|
 
   # Jobs generating Active Storage URLs need host/port options because there's
   # no incoming request to pick them up from. Set them once on blob load so
-  # mailers and jobs produce correct absolute links.
+  # mailers and jobs produce correct absolute links. The authoritative source
+  # for URL options is `routes.default_url_options` — there is no
+  # `config.default_url_options`, so reading that raises NoMethodError and
+  # Sidekiq then fails to deserialize ActiveStorage job arguments.
   ActiveSupport.on_load(:active_storage_blob) do
-    ActiveStorage::Current.url_options = Rails.application.config.default_url_options
+    ActiveStorage::Current.url_options = Rails.application.routes.default_url_options
   end
 end
 

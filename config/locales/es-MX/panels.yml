@@ -3,6 +3,18 @@ es-MX:
     title: "Tu cocina hoy"
     subtitle: "Una vista de todo lo que pasa hoy"
     placeholder: "Aquí vivirán tu kanban de pedidos, tu producción de la semana y las métricas que importan. Por ahora es un lugar reservado."
+    menu_section:
+      kicker: "Tu menú"
+      title: "Tu menú"
+      stat:
+        one: "%{count} platillo"
+        other: "%{count} platillos"
+      see_all: "Ver todos"
+      cta: "Agregar platillo"
+    empty_state:
+      headline: "Empieza por tu primer platillo"
+      sub: "Agrega tu platillo estrella con foto y precio. Luego súmale los demás y arma tu menú en minutos."
+      cta: "Agregar platillo"
 
   stubs:
     in_development: "Esta sección está en construcción. Volverá con forma propia en el próximo módulo."
@@ -13,6 +25,60 @@ es-MX:
     title: "Clientes"
   recipes:
     title: "Recetario"
+    internal_badge: "Interna"
+    index:
+      title: "Tu recetario"
+      subtitle: "Todos los platillos que cocinas hoy"
+      cta: "Agregar platillo"
+      count:
+        one: "%{count} platillo"
+        other: "%{count} platillos"
+    new:
+      title: "Agregar platillo"
+      subtitle: "Foto, nombre y precio bastan"
+      kicker: "Nuevo platillo"
+      heading: "Cuéntanos de tu platillo"
+      lede: "Con la foto, el nombre y el precio ya puedes empezar a vender. Lo demás lo afinas después."
+    edit:
+      title: "Editar %{name}"
+      subtitle: "Cambia foto, nombre o precio"
+      kicker: "Editar"
+    form:
+      name_label: "Nombre del platillo"
+      name_placeholder: "Tamal verde"
+      sale_price_label: "Precio al cliente"
+      sale_price_placeholder: "0.00"
+      sale_price_hint: "En pesos mexicanos. Es lo que cobras a tus clientas por una porción."
+      category_label: "Categoría"
+      description_label: "Descripción (opcional)"
+      description_placeholder: |-
+        Masa nixtamalizada en casa, relleno de pollo con salsa verde.
+
+        ✔ Hoja de maíz
+        ✔ Sin conservadores
+      description_hint: "Hasta 500 caracteres. Usa saltos de línea o símbolos (✔, •, —) para darle forma."
+      photo_label: "Foto del platillo"
+      photo_upload: "Elige una foto"
+      photo_replace: "Cambiar foto"
+      photo_hint: "JPG, PNG, WebP o HEIC. Máximo 5 MB."
+      submit_create: "Agregar platillo"
+      submit_update: "Guardar cambios"
+      cancel: "Cancelar"
+      delete: "Eliminar platillo"
+      delete_confirm: "¿Eliminar este platillo? Podrás recuperarlo desde el historial."
+    create:
+      created: "Platillo agregado a tu recetario."
+    update:
+      updated: "Cambios guardados."
+    destroy:
+      discarded: "Platillo eliminado."
+    danger_zone:
+      title: "¿Ya no lo cocinas?"
+      sub: "Puedes eliminar este platillo y dejará de aparecer en tu menú. Lo conservamos en el historial por si cambias de opinión."
+    empty_state:
+      headline: "Tu recetario está vacío"
+      sub: "Agrega tu primer platillo para empezar a recibir pedidos. Lo verás aparecer en tu menú público."
+      cta: "Agregar platillo"
   ingredients:
     title: "Ingredientes"
   delivery_slots:
@@ -30,7 +96,7 @@ es-MX:
 
   reports:
     menu_engineering:
-      title: "Ingeniería del menú"
+      title: "Tu menú"
     finance:
       title: "Finanzas"
 
