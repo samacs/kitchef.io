@@ -20,7 +20,16 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased">
-    <%= yield %>
+  <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased flex flex-col">
+    <%= render Nav::MarketingHeaderComponent.new(
+          current_user: Current.user,
+          current_account: Current.account) %>
+
+    <%# Each static page renders its own <main> element. The body uses
+        flex-col so the footer sticks to the bottom of the viewport on
+        short pages. %>
+    <div class="flex-1"><%= yield %></div>
+
+    <%= render Nav::MarketingFooterComponent.new %>
   </body>
 </html>

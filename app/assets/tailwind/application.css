@@ -112,4 +112,143 @@
     background-color: var(--color-bg);
     color: var(--color-ink-2);
   }
+
+  /* Make form elements inherit the design-token palette by default so
+     raw `<input>` / `<select>` / `<textarea>` still look on-brand even
+     before they're wrapped in a component. Overridden by utility classes
+     where specific styling is needed. */
+  input, select, textarea {
+    font-family: inherit;
+  }
+
+  /* Tailwind v4 drops the legacy `cursor: pointer` default on buttons so
+     Preflight matches native browser behavior. We want the pointer back
+     on every clickable surface without having to sprinkle `cursor-pointer`
+     across every component. Mirror this for role-based clickables (menu
+     items in the user dropdown, custom role="button" triggers) and
+     <summary> so progressive-enhancement disclosure widgets feel right. */
+  button:not(:disabled),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="menuitem"]:not([aria-disabled="true"]),
+  summary {
+    cursor: pointer;
+  }
+
+  /* The .dark class lives on <html>; <body> gets the tokens below
+     regardless, so no dark-specific base rules are needed here. */
+}
+
+@layer components {
+  /* Theme toggle: three stacked icons, only the active mode shows. The
+     button's [data-theme-mode] attribute is written by
+     theme_controller.js on connect and on every cycle. Defaults to
+     showing the `auto` glyph so pre-hydration renders look correct. */
+  .kc-theme-glyph {
+    display: none;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  [data-theme-mode="auto"]  > .kc-theme-glyph[data-mode="auto"],
+  [data-theme-mode="light"] > .kc-theme-glyph[data-mode="light"],
+  [data-theme-mode="dark"]  > .kc-theme-glyph[data-mode="dark"] {
+    display: inline-flex;
+  }
+  /* Pre-hydration fallback — before theme_controller.js connects the
+     button has no [data-theme-mode] attribute, so show auto by default. */
+  [data-controller~="theme"]:not([data-theme-mode]) > .kc-theme-glyph[data-mode="auto"] {
+    display: inline-flex;
+  }
+
+  /* Hairline horizontal rule used in auth cards and dropdowns. */
+  .kc-rule {
+    height: 1px;
+    background-color: var(--color-line);
+  }
+
+  /* Glassy sticky nav background — matches the landing + dashboard
+     prototypes (rgba on bone light, rgba on near-black in dark). */
+  .kc-chrome {
+    background-color: color-mix(in oklab, var(--color-bg) 85%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Inline link styling used inside i18n-translated HTML strings where
+     Tailwind utilities can't be applied directly. */
+  .link {
+    color: var(--color-accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    transition: color .15s;
+  }
+  .link:hover { color: var(--color-accent-2); }
+
+  /* ---- Drawer (Nav::DashboardDrawerComponent) ----------------------
+     Closed state is the default: backdrop invisible and click-through,
+     panel translated fully off-screen. The Stimulus controller adds
+     [data-open] on open so the transitions run. Panel sits outside any
+     backdrop-filter ancestor (see panel.html.erb) so position:fixed
+     anchors to the viewport instead of to the sticky top bar.
+
+     Scrim color is pinned to dark rgba values (not --color-ink with
+     alpha): `ink` flips to the near-white text color in dark mode, so
+     using it for the scrim would wash the backdrop out instead of
+     darkening it. Dark mode deepens the scrim further for readable
+     contrast against the already-dark surface. */
+  .kc-drawer-backdrop {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease-out;
+    background-color: rgba(14, 23, 20, 0.5);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .dark .kc-drawer-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  .kc-drawer-backdrop[data-open] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .kc-drawer-panel {
+    transform: translateX(-100%);
+    transition: transform .25s ease-out;
+  }
+  .kc-drawer-panel[data-open] {
+    transform: translateX(0);
+  }
+
+  /* Segmented theme control inside Nav::UserMenuComponent. Active
+     option gets a raised surface treatment so the chosen mode reads
+     instantly; inactive options sit flat on the bg-2 track. */
+  .kc-theme-option {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--color-ink-2);
+    background: transparent;
+    transition: background .15s, color .15s, box-shadow .15s;
+  }
+  .kc-theme-option:hover { color: var(--color-ink); }
+  .kc-theme-option[data-active] {
+    background: var(--color-surface);
+    color: var(--color-ink);
+    box-shadow: 0 1px 2px rgba(14, 23, 20, .06);
+  }
+  .kc-theme-option[data-active] .kc-theme-option-icon {
+    color: var(--color-accent);
+  }
 }

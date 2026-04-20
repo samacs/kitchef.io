@@ -1,0 +1,74 @@
+<%# Drawer markup only — the Stimulus controller wraps everything in
+    the layout (panel.html.erb) so the hamburger trigger in the top bar
+    and this drawer share the same controller instance. %>
+
+<%# ---- Backdrop --------------------------------------------------- %>
+<div data-drawer-target="backdrop"
+     data-action="click->drawer#close"
+     class="kc-drawer-backdrop lg:hidden fixed inset-0 z-40"
+     aria-hidden="true"
+     hidden></div>
+
+<%# ---- Panel ----------------------------------------------------- %>
+<aside data-drawer-target="panel"
+       data-action="keydown->drawer#keydown"
+       role="dialog"
+       aria-modal="true"
+       aria-label="<%= t("panel.top_bar.open_sidebar") %>"
+       aria-hidden="true"
+       tabindex="-1"
+       hidden
+       class="kc-drawer-panel lg:hidden fixed top-0 left-0 bottom-0 z-50 w-[min(320px,85vw)] flex flex-col bg-bg-2 border-r border-line shadow-lift">
+  <%# Panel header: logo + close button %>
+  <div class="flex items-center justify-between gap-2 px-4 py-[14px] border-b border-line shrink-0">
+    <%= render Ui::LogoComponent.new(href: root_path) %>
+    <%= render Ui::IconButtonComponent.new(
+          icon: :x,
+          label: t("panel.top_bar.close_sidebar"),
+          size: :sm,
+          data: { action: "click->drawer#close" }) %>
+  </div>
+
+  <%# Panel nav (scrollable) %>
+  <nav class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3" aria-label="Panel">
+    <% helpers.panel_nav_sections.each_with_index do |section, idx| %>
+      <div class="<%= idx.zero? ? "" : "mt-4" %>">
+        <div class="px-3 pt-2 pb-2 font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase text-muted">
+          <%= section[:kicker] %>
+        </div>
+        <ul class="flex flex-col gap-[2px]">
+          <% section[:items].each do |item| %>
+            <% active = helpers.panel_nav_active?(item, current_path) %>
+            <li>
+              <%= link_to item.href,
+                    data: { action: "click->drawer#close" },
+                    class: [
+                      "flex items-center gap-[11px] px-3 py-[9px] rounded-[8px] text-[14px] transition-colors border",
+                      (active ? "bg-surface border-line text-ink font-semibold shadow-card" : "bg-transparent border-transparent text-ink-2 hover:text-ink hover:bg-[color-mix(in_oklab,var(--color-ink)_3%,transparent)] font-medium")
+                    ].join(" ") do %>
+                <span class="<%= active ? "text-accent" : "text-muted" %> inline-flex shrink-0">
+                  <%= helpers.icon(item.icon, size: :sm) %>
+                </span>
+                <span class="flex-1 truncate"><%= item.label %></span>
+                <% if item.badge.present? %>
+                  <span class="inline-flex items-center justify-center min-w-[18px] px-1.5 py-px rounded-pill bg-accent text-bg text-[10px] font-semibold">
+                    <%= item.badge %>
+                  </span>
+                <% end %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </nav>
+
+  <%# Panel footer: identity card opens its menu upward %>
+  <div class="p-3 border-t border-line shrink-0">
+    <%= render Nav::UserMenuComponent.new(
+          current_user: current_user,
+          current_account: current_account,
+          variant: :card,
+          placement: :top_start) %>
+  </div>
+</aside>

@@ -1,0 +1,115 @@
+<%= render Ui::DropdownComponent.new(placement: placement, menu_width: "w-[280px]", menu_class: "p-2") do |d| %>
+  <% d.with_trigger do %>
+    <% if variant == :card %>
+      <%# Sidebar identity card — full-width, name + plan, opens upward. %>
+      <button type="button"
+              class="group flex w-full items-center gap-2.5 p-[10px] rounded-[10px] bg-surface border border-line hover:border-line-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-2"
+              aria-label="<%= t("user_menu.trigger_label") %>">
+        <%= render Ui::AvatarComponent.new(name: display_name, size: :md) %>
+        <div class="min-w-0 flex-1 text-left">
+          <div class="text-[13px] font-semibold text-ink truncate"><%= display_name %></div>
+          <div class="text-[11px] text-muted font-mono truncate"><%= plan_label %></div>
+        </div>
+        <%= helpers.icon(:chevrons_up_down, size: :xs, class: "text-muted group-hover:text-ink-2 shrink-0") %>
+      </button>
+    <% else %>
+      <%# Chip variant — avatar + name (hidden under sm) + chevron. %>
+      <button type="button"
+              class="group inline-flex items-center gap-2 pl-[3px] pr-2.5 py-[3px] rounded-pill bg-surface border border-line hover:border-line-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+              aria-label="<%= t("user_menu.trigger_label") %>">
+        <%= render Ui::AvatarComponent.new(name: display_name, size: :sm) %>
+        <span class="hidden lg:inline text-[13px] font-medium text-ink max-w-[120px] truncate">
+          <%= current_user.name.first %>
+        </span>
+        <%= helpers.icon(:chevron_down, size: :xs, class: "text-muted group-hover:text-ink-2") %>
+      </button>
+    <% end %>
+  <% end %>
+
+  <% d.with_menu do %>
+    <%# ---- Identity header ---------------------------------------- %>
+    <div class="flex items-center gap-3 p-2.5">
+      <%= render Ui::AvatarComponent.new(name: display_name, size: :lg) %>
+      <div class="min-w-0 flex-1">
+        <div class="text-[13.5px] font-semibold text-ink truncate"><%= display_name %></div>
+        <div class="text-[11.5px] text-muted truncate"><%= email %></div>
+      </div>
+    </div>
+
+    <% if kitchen_name.present? %>
+      <div class="mx-2 mb-1 px-2.5 py-2 rounded-[7px] bg-bg-2 flex items-center justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <div class="text-[10.5px] font-mono tracking-[0.14em] uppercase text-muted">
+            <%= t("marketing.brand.name") %>
+          </div>
+          <div class="text-[13px] font-semibold text-ink truncate mt-0.5">
+            <%= kitchen_name %>
+          </div>
+        </div>
+        <span class="inline-flex items-center gap-1.5 px-2 py-[2px] rounded-pill bg-accent-soft text-accent text-[10.5px] font-medium leading-none whitespace-nowrap">
+          <span class="w-[5px] h-[5px] rounded-pill bg-current"></span>
+          <%= plan_label %>
+        </span>
+      </div>
+    <% end %>
+
+    <div class="mx-1 my-1 kc-rule"></div>
+
+    <%# ---- Actions ----------------------------------------------- %>
+    <%= render Ui::MenuItemComponent.new(label: t("user_menu.kitchen"),      icon: :home,         href: helpers.account_path) %>
+    <%= render Ui::MenuItemComponent.new(label: t("user_menu.settings"),     icon: :settings,     href: helpers.edit_account_path) %>
+    <%= render Ui::MenuItemComponent.new(label: t("user_menu.subscription"), icon: :credit_card,  href: helpers.subscription_path) %>
+    <% if current_account&.slug.present? %>
+      <%= render Ui::MenuItemComponent.new(
+            label: t("user_menu.storefront"), icon: :external_link,
+            href: helpers.storefront_path(slug: current_account.slug),
+            trailing: "↗") %>
+    <% end %>
+
+    <div class="mx-1 my-1 kc-rule"></div>
+
+    <%# ---- Theme segmented control (Auto / Claro / Oscuro) --------
+        A self-contained theme controller instance — the page may host
+        other theme toggles; they all share localStorage and stay in
+        sync via the storage event handler in the controller. %>
+    <div class="px-2.5 pt-2 pb-1.5">
+      <div class="font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase text-muted mb-1.5">
+        <%= t("user_menu.appearance") %>
+      </div>
+      <div data-controller="theme"
+           data-theme-storage-key-value="kitchef_theme"
+           data-theme-auto-label-value="<%= t("theme.auto") %>"
+           data-theme-light-label-value="<%= t("theme.light") %>"
+           data-theme-dark-label-value="<%= t("theme.dark") %>"
+           role="group"
+           aria-label="<%= t("user_menu.appearance") %>"
+           class="flex gap-0.5 p-1 rounded-[8px] bg-bg-2 border border-line">
+        <% [[:auto, :monitor, t("theme.auto")], [:light, :sun, t("theme.light")], [:dark, :moon, t("theme.dark")]].each do |mode, icon, label| %>
+          <button type="button"
+                  class="kc-theme-option"
+                  role="menuitemradio"
+                  tabindex="-1"
+                  aria-checked="false"
+                  data-theme-target="option"
+                  data-mode="<%= mode %>"
+                  data-action="click->theme#set"
+                  data-theme-mode-param="<%= mode %>">
+            <span class="kc-theme-option-icon inline-flex text-muted">
+              <%= helpers.icon(icon, size: :xs) %>
+            </span>
+            <span><%= label %></span>
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="mx-1 my-1 kc-rule"></div>
+
+    <%= render Ui::MenuItemComponent.new(
+          label: t("user_menu.sign_out"),
+          icon: :log_out,
+          href: helpers.destroy_session_path,
+          method: :delete,
+          danger: true) %>
+  <% end %>
+<% end %>

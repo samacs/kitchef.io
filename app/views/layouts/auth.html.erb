@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+  <head>
+    <title><%= content_for(:title) || "Kitchef" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= t('marketing.meta.default_description') %>">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= javascript_include_tag "theme_bootstrap" %>
+    <%= yield :head %>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased">
+    <%# Minimal auth chrome — logo left, back-to-home right, theme toggle.
+        Intentionally stripped down so the form is the visual center. %>
+    <header class="border-b border-line">
+      <div class="mx-auto max-w-[1240px] px-5 sm:px-7 py-[14px] flex items-center justify-between gap-4">
+        <%= render Ui::LogoComponent.new(href: root_path) %>
+
+        <div class="flex items-center gap-2">
+          <%= render Ui::ThemeToggleComponent.new %>
+          <%= link_to root_path,
+                class: "hidden sm:inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink transition-colors px-3 py-[8px] rounded-[7px] hover:bg-bg-2" do %>
+            <%= icon(:arrow_left, size: :xs) %>
+            <span><%= t("marketing.nav.back_home") %></span>
+          <% end %>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex items-center justify-center px-5 sm:px-7 py-10 sm:py-16 min-h-[calc(100vh-65px)]">
+      <%= yield %>
+    </main>
+  </body>
+</html>

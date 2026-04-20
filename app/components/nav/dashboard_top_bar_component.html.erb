@@ -1,0 +1,68 @@
+<header class="kc-chrome sticky top-0 z-30 border-b border-line">
+  <div class="px-5 lg:px-7 py-[14px] flex items-center gap-3 lg:gap-4 flex-wrap">
+    <%# ---- Mobile drawer trigger --------------------------------- %>
+    <%# The drawer itself is rendered at body level (panel.html.erb)
+        so it escapes the kc-chrome backdrop-filter stacking context.
+        This button fires the controller's `open` action — Stimulus
+        walks up to the ancestor <div data-controller="drawer"> that
+        wraps the layout. %>
+    <div class="lg:hidden">
+      <%= render Ui::IconButtonComponent.new(
+            icon: :menu,
+            label: t("panel.top_bar.open_sidebar"),
+            data: { action: "click->drawer#open" }) %>
+    </div>
+
+    <%# ---- Title + subtitle --------------------------------------- %>
+    <div class="min-w-0 flex-1 basis-[180px] order-none">
+      <h1 class="font-serif text-[24px] leading-[1.15] tracking-[-0.01em] text-ink truncate">
+        <%= display_title %>
+      </h1>
+      <p class="text-[12px] text-muted truncate mt-0.5">
+        <%= display_subtitle %>
+      </p>
+    </div>
+
+    <%# ---- Actions (stay on row 1 on mobile; search drops to row 2) %>
+    <div class="flex items-center gap-2 shrink-0 order-none">
+      <%# Theme toggle is moved into the user menu on mobile to keep
+          the top row from wrapping. Still visible on md+ where there's
+          plenty of horizontal space. %>
+      <div class="hidden md:inline-flex">
+        <%= render Ui::ThemeToggleComponent.new(size: :sm) %>
+      </div>
+
+      <%= render Ui::IconButtonComponent.new(icon: :bell, label: t("panel.top_bar.notifications"), size: :sm, badge: true) %>
+
+      <%# Primary action — pages override via content_for :page_action. %>
+      <% if content_for?(:page_action) %>
+        <%= yield :page_action %>
+      <% else %>
+        <%= link_to helpers.new_order_path,
+              class: "hidden sm:inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+          <%= helpers.icon(:plus, size: :xs) %>
+          <span><%= t("panel.top_bar.new_order") %></span>
+        <% end %>
+      <% end %>
+
+      <%# Compact user chip (desktop has it in the sidebar). %>
+      <div class="lg:hidden">
+        <%= render Nav::UserMenuComponent.new(
+              current_user: current_user,
+              current_account: current_account,
+              variant: :chip,
+              placement: :bottom_end) %>
+      </div>
+    </div>
+
+    <%# ---- Search: last on mobile (own row via basis-full), inline on sm+ %>
+    <div class="relative order-last sm:order-none basis-full sm:basis-auto sm:flex-[0_1_280px] sm:min-w-[180px]">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+        <%= helpers.icon(:search, size: :xs) %>
+      </span>
+      <input type="search"
+             placeholder="<%= t("panel.top_bar.search_placeholder") %>"
+             class="w-full pl-9 pr-3 py-2 bg-surface border border-line rounded-[8px] text-[13px] text-ink placeholder:text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors">
+    </div>
+  </div>
+</header>

@@ -17,6 +17,35 @@
     <%= javascript_importmap_tags %>
   </head>
   <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased">
-    <%= yield %>
+    <%# Single drawer controller wrapping both the drawer (rendered
+        first so its fixed backdrop+panel sit outside the top-bar's
+        backdrop-filter stacking context) and the main layout. The
+        hamburger trigger inside the top bar uses
+        `data-action="click->drawer#open"` — Stimulus walks up from the
+        trigger and finds this wrapper. `class: "contents"` keeps the
+        wrapper invisible to layout. %>
+    <div data-controller="drawer" class="contents">
+      <%= render Nav::DashboardDrawerComponent.new(
+            current_user: Current.user,
+            current_account: Current.account,
+            current_path: request.path) %>
+
+      <div class="flex min-h-screen">
+        <%= render Nav::DashboardSidebarComponent.new(
+              current_user: Current.user,
+              current_account: Current.account,
+              current_path: request.path) %>
+
+        <div class="flex-1 min-w-0 flex flex-col">
+          <%= render Nav::DashboardTopBarComponent.new(
+                current_user: Current.user,
+                current_account: Current.account,
+                title: content_for(:page_title),
+                subtitle: content_for(:page_subtitle)) %>
+
+          <main class="flex-1 px-5 lg:px-7 py-6 lg:py-8"><%= yield %></main>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
