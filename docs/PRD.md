@@ -247,7 +247,7 @@ Explicitly **not** building in v1, even if tempting:
 
 ## 8. Pricing & Monetization
 
-### Free tier — *Plan Básico*
+### Free tier — *Plan Gratis*
 - Up to **20 pedidos/month**
 - 1 operator (1 user)
 - Unlimited clients, recipes, ingredients
@@ -255,7 +255,7 @@ Explicitly **not** building in v1, even if tempting:
 - Kitchef branding on public storefront
 - **$0**
 
-### Pro tier — *Plan Profesional*
+### Paid tier — *Plan Pro*
 - Unlimited pedidos
 - Menu engineering insights
 - Production planning with delivery slot capacity
@@ -263,15 +263,7 @@ Explicitly **not** building in v1, even if tempting:
 - Remove Kitchef branding from public storefront
 - QR code generator
 - Priority email support
-- **$249 MXN/month** (or $2,490 MXN/year, 2 months free)
-
-### Fonda tier (future — v2.0)
-- Multi-employee (up to 5 users)
-- Per-role permissions (cashier, cook, admin)
-- CFDI/facturación integration
-- POS-style sales importer
-- Inventory with depletion
-- **$749 MXN/month**
+- **$150 MXN/month** (or $1,500 MXN/year, 2 months free)
 
 ### Payment rails (v1)
 - Stripe for card payments in MXN
@@ -344,7 +336,7 @@ All five modules above, free + Pro tiers, Stripe, Resend, Turbo real-time, publi
 ## 11. Risks & Open Questions
 
 ### Risks
-- **Willingness to pay at $249 MXN/month is unproven for this audience.** Mitigation: free tier with generous limit (20 pedidos) + clear upgrade moments.
+- **Willingness to pay at $150 MXN/month is unproven for this audience.** Mitigation: free tier with generous limit (20 pedidos) + clear upgrade moments.
 - **Acquisition is WhatsApp/Instagram organic, which is slow.** Mitigation: seed 20–30 founding operators with direct outreach before public launch; invest in content SEO around *"cómo vender comida desde casa"*.
 - **Support load for non-technical users could be high.** Mitigation: ruthless UX simplicity, in-app WhatsApp support channel, video walkthroughs.
 - **WhatsApp changes its deep-link or Business API terms.** Mitigation: we rely only on public `wa.me` URLs in v1; no API lock-in.

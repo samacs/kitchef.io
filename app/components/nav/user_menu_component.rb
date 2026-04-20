@@ -21,6 +21,14 @@ module Nav
     def display_name = current_user.name.to_s
     def email        = current_user.email_address.to_s
     def kitchen_name = current_account&.name
-    def plan_label   = t("user_menu.plan_free")  # TODO: read from active subscription
+
+    # Reads the live plan off the account's subscription. Falls back to
+    # `free` so unauthenticated chrome (or a half-created account that
+    # hasn't hit Subscription.create! yet) still renders a sensible
+    # "Plan Gratis" label instead of crashing on nil.
+    def plan_label
+      key = current_account&.subscription&.plan || "free"
+      t("user_menu.plan_#{key}")
+    end
   end
 end

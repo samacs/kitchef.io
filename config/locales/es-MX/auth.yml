@@ -77,9 +77,8 @@ es-MX:
 
   user_menu:
     trigger_label: "Abrir menú de usuario"
-    plan_free: "Plan Libreta"
-    plan_pro: "Plan Cocina"
-    plan_team: "Plan Taller"
+    plan_free: "Plan Gratis"
+    plan_pro: "Plan Pro"
     kitchen: "Mi cocina"
     settings: "Configuración"
     subscription: "Plan y facturación"

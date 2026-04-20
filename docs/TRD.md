@@ -1132,18 +1132,17 @@ ETag includes auth state so the same page doesn't serve the operator's signed-in
 
 ## 9. Billing — Stripe Subscription Flow
 
-### Plans (internal keys are English; brand names are rendered via I18n)
+### Plans (internal keys are English; display labels rendered via I18n)
 
-| Enum key | Display (brand) | Billing | Notes |
+| Enum key | Display | Billing | Notes |
 |---|---|---|---|
-| `free` | **Libreta** | no Stripe entry | free tier, 20 pedidos/month cap |
-| `pro`  | **Cocina**  | $249 MXN/mes    | main paid plan |
-| `team` | **Taller**  | reserved        | future team tier |
+| `free` | **Gratis** | no Stripe entry | entry tier, 20 pedidos/month cap |
+| `pro`  | **Pro**    | $150 MXN/mes    | single paid plan, uncapped |
 
 Display strings live under `t("subscription.plans.*")` in `config/locales/es-MX/domain.yml`. An annual variant of Pro ships as a second Stripe price ID against the same `plan: :pro` enum value.
 
 ### Flow
-1. Operator clicks *Mejorar a Cocina*.
+1. Operator clicks *Mejorar a Pro*.
 2. `Subscriptions::CreateCheckoutSession` command generates Stripe Checkout URL.
 3. Operator completes checkout in MXN.
 4. Stripe webhook `checkout.session.completed` → `Webhooks::StripeHandler` → `Subscriptions::ActivatePro` command updates the `Subscription` record.

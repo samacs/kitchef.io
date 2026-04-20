@@ -292,7 +292,7 @@ enum :method, { cash: 0, transfer: 1, card: 2, mercado_pago: 3, other: 99 }, pre
 # Order.state (AASM), Order.delivery_type, Order.source
 # Ingredient.category, Ingredient.unit
 # Recipe.category, Recipe.yield_unit
-# Subscription.plan — free/pro/team (brand names Libreta/Cocina/Taller via I18n)
+# Subscription.plan — free/pro (display "Gratis"/"Pro" via I18n)
 # Subscription.status
 ```
 
@@ -345,9 +345,9 @@ Images: max 5 MB, JPEG/PNG/WebP/HEIC, min 400×400. Variants: `thumb` (120×120)
 
 ## Billing
 
-Stripe in MXN. Free tier (*Libreta*, 20 pedidos/month) enforced internally. Pro (*Cocina*) at $249 MXN/month. No commission on operator sales, ever.
+Stripe in MXN. Two tiers: *Gratis* (free, 20 pedidos/month enforced internally) and *Pro* at $150 MXN/month. No commission on operator sales, ever.
 
-Subscription plan keys in code: `free`, `pro`, `team`. Display via `t("subscription.plans.free") → "Libreta"`, etc.
+Subscription plan keys in code: `free`, `pro`. Display via `t("subscription.plans.free") → "Gratis"`, `t("subscription.plans.pro") → "Pro"`.
 
 ## Reserved slugs
 
