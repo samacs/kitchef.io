@@ -127,7 +127,10 @@ Rails.application.routes.draw do
     post "/recipes/:recipe_id", to: "decomposition#create"
   end
 
-  resource :account,      only: %i[show edit update]
+  resource :account, only: %i[show edit update] do
+    delete :logo,  to: "accounts#destroy_logo",  as: :logo
+    delete :cover, to: "accounts#destroy_cover", as: :cover
+  end
   resource :subscription, only: %i[show new create destroy]
 
   # ---- Webhooks -------------------------------------------------------

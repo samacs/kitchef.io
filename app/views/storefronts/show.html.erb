@@ -1,0 +1,51 @@
+<% content_for :title, @storefront.name %>
+
+<main data-controller="storefront-cart" data-storefront-cart-slug-value="<%= @storefront.slug %>">
+  <%= render Storefronts::HeroComponent.new(storefront: @storefront, ordering_hours: @ordering_hours) %>
+
+  <%# Full menu. Grouped by recipe category in display-order; categories
+      with no published recipes are skipped. If the kitchen has no
+      published platillos yet, show a soft empty state so the page
+      doesn't look broken for Elena before she flips her first recipe
+      public. %>
+  <section id="menu" class="mx-auto mt-12 max-w-[1200px] px-5 scroll-mt-16">
+    <% if @recipes_by_category.empty? %>
+      <div class="rounded-[14px] border border-dashed border-line px-6 py-16 text-center">
+        <div class="font-serif text-[22px] text-ink"><%= t("storefronts.menu.empty_title") %></div>
+        <p class="mt-2 text-[13px] text-ink-2"><%= t("storefronts.menu.empty_body") %></p>
+      </div>
+    <% else %>
+      <div class="mb-5 flex items-end justify-between flex-wrap gap-4">
+        <div>
+          <div class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em]"
+               style="color: var(--brand-1);">
+            <span class="inline-block h-px w-5" style="background: var(--brand-1);"></span>
+            <%= t("storefronts.show.menu_kicker") %>
+          </div>
+          <h2 class="mt-1 font-serif text-[28px] leading-[1.05] tracking-tight text-ink">
+            <%= t("storefronts.show.menu_title_prefix") %>
+            <em style="color: var(--brand-1);"><%= t("storefronts.show.menu_title_accent") %></em>
+          </h2>
+        </div>
+      </div>
+
+      <% @recipes_by_category.each do |category, recipes| %>
+        <div class="mb-10">
+          <div class="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+            <span class="inline-block h-px w-4 bg-current"></span>
+            <%= t("recipe.categories.#{category}", default: category.to_s.humanize) %>
+          </div>
+          <div class="grid gap-[18px]" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
+            <% recipes.each do |recipe| %>
+              <%= render Storefronts::MenuCardComponent.new(recipe: recipe) %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </section>
+
+  <%= render Storefronts::InfoStripComponent.new(storefront: @storefront, ordering_hours: @ordering_hours) %>
+
+  <%= render Storefronts::CartDrawerComponent.new(storefront: @storefront) %>
+</main>

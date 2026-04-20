@@ -1,0 +1,10 @@
+---
+# sidekiq-cron schedule. Loaded by config/initializers/sidekiq.rb when this
+# file exists. Times are UTC — the cron library doesn't take a TZ per job,
+# so keep jobs self-interpreting of local time where it matters.
+
+pickup_reminder_scan:
+  description: "Ping operators + customers when a pickup pedido goes stale in 'ready'"
+  cron: "*/15 * * * *"
+  class: "PickupReminderScanJob"
+  queue: low

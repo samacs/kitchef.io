@@ -1,0 +1,28 @@
+<footer class="mt-24 border-t border-line bg-bg px-5 py-10">
+  <div class="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-5">
+    <div class="flex items-center gap-3">
+      <% if storefront.logo.attached? %>
+        <span class="w-8 h-8 rounded-[8px] overflow-hidden">
+          <%= image_tag storefront.logo.variant(:thumb), class: "w-full h-full object-cover", alt: "" %>
+        </span>
+      <% end %>
+      <div>
+        <div class="font-semibold text-ink text-[14px]"><%= storefront.name %></div>
+        <div class="text-[11px] text-muted font-mono">
+          <% if handle.present? %>@<%= handle %> · <% end %>
+          <%= [ storefront.public_profile.colonia, storefront.public_profile.city ].compact_blank.join(", ") %>
+        </div>
+      </div>
+    </div>
+
+    <% if show_attribution? %>
+      <div class="flex items-center gap-2 text-[11px] text-muted font-mono">
+        <%= t("storefronts.footer.powered_by") %>
+        <a href="<%= root_url %>" class="inline-flex items-center gap-1.5 text-ink font-sans font-bold tracking-[-0.02em] text-[13px] no-underline">
+          <span class="inline-flex w-[18px] h-[18px] items-center justify-center rounded-[5px] bg-accent text-bg font-serif italic text-[13px] leading-none">k</span>
+          Kitchef
+        </a>
+      </div>
+    <% end %>
+  </div>
+</footer>

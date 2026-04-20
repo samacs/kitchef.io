@@ -1,0 +1,13 @@
+<% if label.present? %>
+  <span
+    class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-medium"
+    style="<%= open_now? ? 'background: var(--brand-1-soft); color: var(--brand-1);' : 'background: var(--color-bg-2); color: var(--color-muted);' %>"
+  >
+    <span
+      class="inline-block w-[6px] h-[6px] rounded-full"
+      style="background: <%= open_now? ? 'var(--brand-1)' : 'var(--color-muted)' %>"
+      aria-hidden="true"
+    ></span>
+    <%= label %>
+  </span>
+<% end %>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_160100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -80,7 +80,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_150000) do
     t.string "street_address"
     t.datetime "updated_at", null: false
     t.index ["account_id", "email"], name: "index_clients_on_account_id_and_email"
-    t.index ["account_id", "phone_normalized"], name: "index_clients_on_account_id_and_phone_normalized"
+    t.index ["account_id", "phone_normalized"], name: "uniq_clients_account_phone_active", unique: true, where: "((phone_normalized IS NOT NULL) AND (discarded_at IS NULL))"
     t.index ["account_id"], name: "index_clients_on_account_id"
     t.index ["discarded_at"], name: "index_clients_on_discarded_at"
   end
@@ -199,6 +199,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_150000) do
     t.decimal "longitude", precision: 10, scale: 6
     t.text "notes"
     t.datetime "paid_at"
+    t.datetime "pickup_reminder_sent_at"
     t.integer "position"
     t.datetime "production_started_at"
     t.datetime "ready_at"
@@ -215,6 +216,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_150000) do
     t.index ["client_id"], name: "index_orders_on_client_id"
     t.index ["discarded_at"], name: "index_orders_on_discarded_at"
     t.index ["latitude", "longitude"], name: "index_orders_on_latitude_and_longitude"
+    t.index ["ready_at"], name: "idx_orders_pickup_reminder_pending", where: "(((state)::text = 'ready'::text) AND (delivery_type = 1) AND (pickup_reminder_sent_at IS NULL))"
     t.check_constraint "delivery_end_time IS NULL OR delivery_end_time >= 0 AND delivery_end_time <= 1440", name: "chk_orders_delivery_end_time_range"
     t.check_constraint "delivery_start_time IS NULL OR delivery_end_time IS NULL OR delivery_start_time < delivery_end_time", name: "chk_orders_delivery_start_before_end"
     t.check_constraint "delivery_start_time IS NULL OR delivery_start_time >= 0 AND delivery_start_time <= 1440", name: "chk_orders_delivery_start_time_range"

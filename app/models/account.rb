@@ -137,11 +137,26 @@ class Account < ApplicationRecord
   has_many :delivery_slots, dependent: :destroy
   has_one  :subscription,   dependent: :destroy
 
-  has_one_attached :logo
-  has_one_attached :cover_photo
+  # Variants match the three shapes the logo is rendered at across the
+  # app: operator-app header avatar, storefront header mark, and
+  # storefront hero badge. Declared on the attachment so `variant(:card)`
+  # works everywhere without per-call `variant(resize_to_limit: …)`.
+  has_one_attached :logo do |attachable|
+    attachable.variant :thumb, resize_to_fill: [ 120, 120 ]
+    attachable.variant :card,  resize_to_fill: [ 360, 360 ]
+    attachable.variant :hero,  resize_to_limit: [ 800, 800 ]
+  end
+
+  # Cover variants are landscape: `card` is the config-page preview
+  # thumbnail; `hero` is the storefront's full-bleed cover.
+  has_one_attached :cover_photo do |attachable|
+    attachable.variant :card, resize_to_fill: [ 640, 360 ]
+    attachable.variant :hero, resize_to_fill: [ 1600, 800 ]
+  end
 
   attribute :settings,       Accounts::Settings.to_type
   attribute :public_profile, Accounts::PublicProfile.to_type
+  attribute :branding,       Accounts::Branding.to_type
 
   validates :name, presence: true, length: { maximum: 80 }
   validates :slug,

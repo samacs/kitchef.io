@@ -164,6 +164,27 @@
     display: inline-flex;
   }
 
+  /* Storefront theme toggle — same stacked-glyph pattern as the
+     operator nav, but scoped so the storefront's icon-only square
+     button renders just one 16px SVG at a time. Only one glyph is
+     ever visible at a time (display toggled via [data-theme-mode]),
+     so we don't need absolute positioning — the button's flex
+     centering handles the layout and the SVG keeps its intrinsic
+     16×16 size instead of being stretched to fill the button. */
+  .kc-sf-glyph {
+    display: none;
+  }
+  [data-theme-mode="auto"]  > .kc-sf-glyph[data-mode="auto"],
+  [data-theme-mode="light"] > .kc-sf-glyph[data-mode="light"],
+  [data-theme-mode="dark"]  > .kc-sf-glyph[data-mode="dark"] {
+    display: inline-block;
+  }
+  /* Pre-hydration default: show the `auto` glyph until the Stimulus
+     controller connects and writes the real mode. */
+  [data-storefront-theme-target="toggle"]:not([data-theme-mode]) > .kc-sf-glyph[data-mode="auto"] {
+    display: inline-block;
+  }
+
   /* Hairline horizontal rule used in auth cards and dropdowns. */
   .kc-rule {
     height: 1px;

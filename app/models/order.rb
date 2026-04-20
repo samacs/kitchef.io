@@ -2,45 +2,47 @@
 #
 # Table name: orders
 #
-#  id                    :bigint           not null, primary key
-#  balance_cents         :bigint           default(0), not null
-#  cancel_reason_code    :string
-#  cancel_reason_note    :text
-#  canceled_at           :datetime
-#  city                  :string
-#  colonia               :string
-#  confirmed_at          :datetime
-#  delivered_at          :datetime
-#  delivery_address      :string
-#  delivery_date         :date             not null
-#  delivery_end_time     :integer
-#  delivery_notes        :text
-#  delivery_start_time   :integer
-#  delivery_type         :integer          default("delivery"), not null
-#  deposit_cents         :bigint           default(0), not null
-#  discarded_at          :datetime
-#  en_route_started_at   :datetime
-#  geocoded_at           :datetime
-#  geocoding_failed_at   :datetime
-#  latitude              :decimal(10, 6)
-#  longitude             :decimal(10, 6)
-#  notes                 :text
-#  paid_at               :datetime
-#  position              :integer
-#  production_started_at :datetime
-#  ready_at              :datetime
-#  source                :integer          default("storefront"), not null
-#  state                 :string           default("placed"), not null
-#  subtotal_cents        :bigint           default(0), not null
-#  tax_cents             :bigint           default(0), not null
-#  total_cents           :bigint           default(0), not null
-#  created_at            :datetime         not null
-#  updated_at            :datetime         not null
-#  account_id            :bigint           not null
-#  client_id             :bigint
+#  id                      :bigint           not null, primary key
+#  balance_cents           :bigint           default(0), not null
+#  cancel_reason_code      :string
+#  cancel_reason_note      :text
+#  canceled_at             :datetime
+#  city                    :string
+#  colonia                 :string
+#  confirmed_at            :datetime
+#  delivered_at            :datetime
+#  delivery_address        :string
+#  delivery_date           :date             not null
+#  delivery_end_time       :integer
+#  delivery_notes          :text
+#  delivery_start_time     :integer
+#  delivery_type           :integer          default("delivery"), not null
+#  deposit_cents           :bigint           default(0), not null
+#  discarded_at            :datetime
+#  en_route_started_at     :datetime
+#  geocoded_at             :datetime
+#  geocoding_failed_at     :datetime
+#  latitude                :decimal(10, 6)
+#  longitude               :decimal(10, 6)
+#  notes                   :text
+#  paid_at                 :datetime
+#  pickup_reminder_sent_at :datetime
+#  position                :integer
+#  production_started_at   :datetime
+#  ready_at                :datetime
+#  source                  :integer          default("storefront"), not null
+#  state                   :string           default("placed"), not null
+#  subtotal_cents          :bigint           default(0), not null
+#  tax_cents               :bigint           default(0), not null
+#  total_cents             :bigint           default(0), not null
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#  account_id              :bigint           not null
+#  client_id               :bigint
 #
 # Indexes
 #
+#  idx_orders_pickup_reminder_pending                 (ready_at) WHERE (((state)::text = 'ready'::text) AND (delivery_type = 1) AND (pickup_reminder_sent_at IS NULL))
 #  index_orders_on_account_id                         (account_id)
 #  index_orders_on_account_id_and_delivery_date       (account_id,delivery_date)
 #  index_orders_on_account_id_and_state_and_position  (account_id,state,position)
@@ -104,7 +106,16 @@ class Order < ApplicationRecord
 
   accepts_nested_attributes_for :items, allow_destroy: true, reject_if: :all_blank
 
+  # Operator kanban — refreshes every open dashboard tab for this account
+  # when any order in it mutates.
   broadcasts_refreshes_to ->(order) { [ order.account, :orders ] }
+
+  # Customer-facing per-order stream — the storefront confirmation page
+  # subscribes to this narrower channel so the customer sees state
+  # changes (Pedido → Confirmado → En producción → Listo → En camino →
+  # Entregado) morph live without also receiving unrelated orders from
+  # the same kitchen. Privacy + bandwidth.
+  broadcasts_refreshes_to ->(order) { [ order, :status ] }
 
   before_save :recompute_totals
 
@@ -185,16 +196,18 @@ class Order < ApplicationRecord
     end
   end
 
-  # AASM guard — ship makes no semantic sense for pickup orders, so
-  # `ready.may_fire_event?(:ship)` returns false on pickup pedidos and
-  # the primary-button helper falls through to `:deliver` for them.
+  # AASM guard — ship makes no semantic sense for pickup pedidos (the
+  # customer walks in at `ready`), so `ready.may_fire_event?(:ship)`
+  # returns false on pickup pedidos and the primary-button helper falls
+  # through to `:deliver` for them.
   def delivery? = delivery_type_delivery?
   def pickup?   = delivery_type_pickup?
 
   # Geocoding helpers. Only delivery-type pedidos with a usable address
-  # participate — pickup orders never need a runner-facing map, and an
-  # order without any street detail would just geocode to a broad city
-  # centroid (misleading for the runner's directions).
+  # participate — pickup orders never need a runner-facing map, shipping
+  # orders are routed by the courier (DiDi/Rappi/Estafeta), and an order
+  # without any street detail would just geocode to a broad city centroid
+  # (misleading for the runner's directions).
   def geocoding_address
     parts = [ delivery_address, colonia, city ].compact_blank
     return nil if parts.empty?
@@ -209,6 +222,15 @@ class Order < ApplicationRecord
   def needs_geocoding?
     delivery? && !canceled? && geocoding_address.present? && !geocoded?
   end
+
+  # Scope used by `PickupReminderScanJob` — pickup pedidos in `ready`
+  # whose `ready_at` timestamp is older than `cutoff_time` and that have
+  # not already been pinged. The scan is cheap because the partial index
+  # `idx_orders_pickup_reminder_pending` backs this exact predicate.
+  scope :awaiting_pickup_reminder, ->(cutoff_time) {
+    where(state: "ready", delivery_type: DELIVERY_TYPES[:pickup], pickup_reminder_sent_at: nil)
+      .where("ready_at < ?", cutoff_time)
+  }
 
   # Cooldown between failed attempts so GeocodeOrderJob doesn't hammer
   # Google on a permanently-bad address. After the cooldown the job

@@ -17,13 +17,25 @@ class Rack::Attack
   end
 
   ### Storefront orders are the highest-risk public write surface.
-  throttle("storefront-orders/ip", limit: 10, period: 10.minutes) do |req|
-    req.ip if req.post? && req.path.match?(%r{\A/[a-z0-9-]+/pedidos\z})
+  # The path is `/:slug/orders` (English) — the Spanish `/pedidos` variant
+  # was an older convention and never shipped. Tightened limit: 5 per 10 min
+  # per IP. Enough for a legitimate family ordering from one connection,
+  # tight enough to kill obvious spam + guard against brute-forcing the
+  # confirmation URL.
+  throttle("storefront-orders/ip", limit: 5, period: 10.minutes) do |req|
+    req.ip if req.post? && req.path.match?(%r{\A/[a-z0-9-]+/orders\z})
+  end
+
+  ### Guard against storefront confirmation URL enumeration. The prefixed
+  ### id is the access token; capping GETs on `/:slug/orders/:id` slows a
+  ### guessing attack without hurting a customer who re-opens her page.
+  throttle("storefront-order-show/ip", limit: 60, period: 10.minutes) do |req|
+    req.ip if req.get? && req.path.match?(%r{\A/[a-z0-9-]+/orders/[a-z0-9_-]+\z})
   end
 
   ### Rails 8 auth — block password spraying on the login endpoint.
   throttle("sessions/ip", limit: 20, period: 5.minutes) do |req|
-    req.ip if req.post? && req.path == "/entrar"
+    req.ip if req.post? && req.path == "/sign-in"
   end
 
   ### Webhook endpoints — Stripe will retry, but we cap per source IP anyway.

@@ -56,7 +56,34 @@ cocina_elena = Account.create!(
   owner: elena,
   name:  "Cocina de Elena",
   time_zone: "America/Mexico_City",
-  settings: { use_composable_recipes: false, onboarding_completed: true }
+  settings: { use_composable_recipes: false, onboarding_completed: true },
+  branding: {
+    palette: "bosque",
+    secondary_palette: "terracota",
+    hide_kitchef_branding: false
+  },
+  public_profile: {
+    tagline: "Tamales, pasteles y meal-prep · Condesa",
+    description: "Recetas de mi abuela, hechas con tiempo. Producto fresco, masa de nixtamal y envolturas traídas de Tabasco.",
+    phone: "+52 55 1234 5678",
+    whatsapp: "+52 55 1234 5678",
+    instagram: "cocinadeelena",
+    colonia: "Condesa",
+    city: "Ciudad de México",
+    fulfillment_types: "pickup,delivery",
+    delivery_zones: "Condesa, Roma Norte, Roma Sur, Del Valle, Narvarte",
+    payment_notes: "Te contacto por WhatsApp para confirmar el pago (efectivo o transferencia).",
+    pickup_reminder_hours: 4,
+    ordering_hours: {
+      "0" => "closed",
+      "1" => { "open" => "09:00", "close" => "18:00" },
+      "2" => { "open" => "09:00", "close" => "18:00" },
+      "3" => { "open" => "09:00", "close" => "18:00" },
+      "4" => { "open" => "09:00", "close" => "18:00" },
+      "5" => { "open" => "09:00", "close" => "20:00" },
+      "6" => { "open" => "08:00", "close" => "20:00" }
+    }.to_json
+  }
 )
 elena.update!(account: cocina_elena)
 
@@ -183,6 +210,33 @@ taqueria_mario = Account.create!(
     use_composable_recipes: true,
     composable_recipes_unlocked_at: 2.weeks.ago,
     onboarding_completed: true
+  },
+  branding: {
+    palette: "terracota",
+    secondary_palette: "mostaza",
+    hide_kitchef_branding: false
+  },
+  public_profile: {
+    tagline: "Tacos al pastor, arracheras, guisados · Providencia",
+    description: "De la barra al carbón. Carne marinada 24h, tortilla recién hecha y salsas de molcajete.",
+    phone: "+52 33 8765 4321",
+    whatsapp: "+52 33 8765 4321",
+    instagram: "taqueriadonmario",
+    colonia: "Providencia",
+    city: "Guadalajara",
+    fulfillment_types: "pickup,delivery",
+    delivery_zones: "Providencia, Chapalita, Santa Teresita, Arcos Vallarta, Jardines del Bosque",
+    payment_notes: "Anticipo del 50% para asegurar tu pedido. Te mando link de transferencia por WhatsApp.",
+    pickup_reminder_hours: 3,
+    ordering_hours: {
+      "0" => { "open" => "10:00", "close" => "18:00" },
+      "1" => "closed",
+      "2" => { "open" => "11:00", "close" => "22:00" },
+      "3" => { "open" => "11:00", "close" => "22:00" },
+      "4" => { "open" => "11:00", "close" => "22:00" },
+      "5" => { "open" => "11:00", "close" => "23:00" },
+      "6" => { "open" => "10:00", "close" => "23:00" }
+    }.to_json
   }
 )
 mario.update!(account: taqueria_mario)

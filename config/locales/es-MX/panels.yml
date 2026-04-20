@@ -307,6 +307,59 @@ es-MX:
     title: "Horarios de entrega"
   account:
     title: "Tu cocina"
+    page_title: "Tu cocina"
+    page_subtitle: "Configura cómo se ve tu tienda pública."
+    view_storefront: "Ver mi tienda"
+    saved: "Listo, tu cocina se actualizó."
+    save_error: "Revisa los campos marcados y vuelve a intentarlo."
+    logo_removed: "Quitaste el logo."
+    cover_removed: "Quitaste la portada."
+    autosave:
+      saving: "Guardando…"
+      saved: "Guardado"
+      error: "No se pudo guardar"
+    sections:
+      identity_kicker: "Identidad"
+      identity_title: "Cómo te presentas"
+      identity_lede: "Todo lo que tus clientes ven en tu tienda: nombre, frase, descripción, logo, portada y colores. Mira cómo va quedando aquí al lado."
+      contact_kicker: "Contacto"
+      contact_title: "Dónde te encuentran"
+      contact_lede: "Teléfono, WhatsApp, Instagram, zonas de entrega. Todo aparece en tu tienda pública."
+    preview:
+      kicker: "Vista previa"
+      empty_name: "Nombre de tu cocina"
+      empty_tagline: "Tu frase corta aparece aquí"
+      empty_description: "Cuéntales a tus clientes quién eres, qué cocinas y por qué lo haces."
+      cover_placeholder: "Sube una portada"
+      menu_cta: "Ver menú"
+      whatsapp_cta: "WhatsApp"
+    branding:
+      primary_label: "Color principal"
+      secondary_label: "Color secundario"
+      palette_hint: "Elige una paleta. Cada opción se ve bien en modo claro y oscuro."
+    fields:
+      name: "Nombre de tu cocina"
+      tagline: "Frase corta"
+      tagline_placeholder: "Ej: Tamales, pasteles y meal-prep · Condesa"
+      description: "Descripción"
+      description_placeholder: "Cuéntales a tus clientes quién eres, qué cocinas y por qué lo haces."
+      description_hint: "Hasta %{max} caracteres."
+      logo: "Logo"
+      logo_remove: "Quitar logo"
+      logo_remove_confirm: "¿Seguro que quieres quitar tu logo?"
+      cover: "Portada"
+      cover_remove: "Quitar portada"
+      cover_remove_confirm: "¿Seguro que quieres quitar tu portada?"
+      phone: "Teléfono"
+      whatsapp: "WhatsApp"
+      instagram: "Usuario de Instagram"
+      colonia: "Colonia"
+      city: "Ciudad"
+      delivery_zones: "Zonas de entrega"
+      delivery_zones_hint: "Separa las colonias con comas."
+      payment_notes: "Nota sobre el pago"
+      payment_notes_placeholder: "Ej: Te contacto por WhatsApp para confirmar el anticipo."
+      payment_notes_hint: "Se muestra al cliente al terminar su pedido."
   subscription:
     title: "Plan"
 
@@ -433,14 +486,8 @@ es-MX:
     errors:
       not_authorized: "Esta sección es solo para el equipo de Kitchef."
 
-  storefronts:
-    menu:
-      title: "Menú de %{kitchen}"
-    orders:
-      new_title: "Haz tu pedido"
-      created_title: "Pedido recibido"
-      show_title: "Detalles del pedido"
-    not_found:
-      title: "Esta cocina no existe"
-      lede: "Tal vez cambió de nombre, o la dirección tiene un error. Desde la página principal encontrarás todas las cocinas activas."
-      cta: "Ir al inicio"
+  # Storefronts subtree moved to config/locales/es-MX/storefronts.yml as
+  # the surface grew (checkout form, cart, confirmation, status timeline,
+  # fulfillment types, etc.). Keep this stub so any stale references
+  # don't crash before the migration settles — can be removed after a
+  # full grep confirms nothing reads panels.storefronts.*.

@@ -6,13 +6,28 @@ import { Controller } from "@hotwired/stimulus"
 // sit in sibling subtrees — their only contract is the event name and
 // payload shape.
 //
-// Event payload: { field: "name" | "slug" | "description" | "logo" | "cover",
-//                  value: string, url: string|null }
+// Event payload: { field, value, url }
+//   field: "name" | "tagline" | "description" | "logo" | "cover"
+//        | "palette" | "secondary_palette" | "theme_default"
+//   value: string (for text/radio) or filename (for file) or null
+//   url:   data URL (for file) or null
+//
+// The palette lookup table is injected via `data-live-preview-palettes-value`
+// on the root element so we never ship a duplicate client-side copy of
+// `Storefronts::Palette::PALETTES` — the server renders the same JSON
+// into a single `data-` attribute at response time.
 export default class extends Controller {
-  static targets = ["name", "slug", "description", "logo", "logoPlaceholder", "cover", "coverPlaceholder"]
-  static values  = {
+  static targets = [
+    "name", "slug", "tagline", "description",
+    "logo", "logoPlaceholder",
+    "cover", "coverPlaceholder"
+  ]
+
+  static values = {
     emptyName:        { type: String, default: "" },
-    emptyDescription: { type: String, default: "" }
+    emptyTagline:     { type: String, default: "" },
+    emptyDescription: { type: String, default: "" },
+    palettes:         { type: Object, default: {} }
   }
 
   connect() {
@@ -26,11 +41,14 @@ export default class extends Controller {
 
   #apply({ field, value, url }) {
     switch (field) {
-      case "name":        return this.#setName(value)
-      case "slug":        return this.#setSlug(value)
-      case "description": return this.#setDescription(value)
-      case "logo":        return this.#setImage(this.logoTarget, this.logoPlaceholderTarget, url)
-      case "cover":       return this.#setImage(this.coverTarget, this.coverPlaceholderTarget, url)
+      case "name":              return this.#setName(value)
+      case "slug":              return this.#setSlug(value)
+      case "tagline":           return this.#setTagline(value)
+      case "description":       return this.#setDescription(value)
+      case "logo":              return this.#setImage(this.logoTarget, this.logoPlaceholderTarget, url)
+      case "cover":             return this.#setImage(this.coverTarget, this.coverPlaceholderTarget, url)
+      case "palette":           return this.#setPalette(value, 1)
+      case "secondary_palette": return this.#setPalette(value, 2)
     }
   }
 
@@ -54,6 +72,24 @@ export default class extends Controller {
     if (!this.hasSlugTarget) return
     const trimmed = (value || "").trim()
     this.slugTarget.textContent = trimmed || "tu-cocina"
+  }
+
+  #setTagline(value) {
+    if (!this.hasTaglineTarget) return
+    const trimmed = (value || "").trim()
+    if (trimmed) {
+      this.taglineTarget.textContent = trimmed
+      this.taglineTarget.classList.remove("italic", "text-muted")
+      this.taglineTarget.classList.add("text-ink-2")
+    } else if (this.emptyTaglineValue) {
+      this.taglineTarget.textContent = this.emptyTaglineValue
+      this.taglineTarget.classList.add("italic", "text-muted")
+      this.taglineTarget.classList.remove("text-ink-2")
+    } else {
+      // No placeholder configured — hide the element so the preview
+      // doesn't leave a dangling empty line.
+      this.taglineTarget.textContent = ""
+    }
   }
 
   #setDescription(value) {
@@ -87,5 +123,24 @@ export default class extends Controller {
       placeholderEl.classList.remove("hidden")
       placeholderEl.classList.add("flex")
     }
+  }
+
+  // Palette change — rewrite the --brand-N-* custom properties on the
+  // preview root so every child that consumes them (cover gradient,
+  // hero CTA, zone chips) updates without touching individual nodes.
+  // `which` is 1 (primary) or 2 (secondary). The preview always
+  // renders in the light variant (the operator app is always-light
+  // chrome); the public storefront responds to the customer's
+  // preference independently.
+  #setPalette(name, which) {
+    if (!name) return
+    const entry = this.palettesValue[name]
+    if (!entry || !entry.light) return
+    const variant = entry.light
+    const root = this.element
+    root.style.setProperty(`--brand-${which}`,      variant.c)
+    root.style.setProperty(`--brand-${which}-ink`,  variant.ink)
+    root.style.setProperty(`--brand-${which}-soft`, variant.soft)
+    root.style.setProperty(`--brand-${which}-line`, variant.line)
   }
 }

@@ -3,10 +3,63 @@
   <head>
     <title><%= content_for(:title) || @storefront&.name || "Kitchef" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="<%= Storefronts::Palette.primary_color_for(@storefront) %>" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="<%= Storefronts::Palette.primary_color_for(@storefront, dark: true) %>" media="(prefers-color-scheme: dark)">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%= javascript_include_tag "theme_bootstrap" %>
+    <%# Pre-paint theme boot — seeds the storefront from the customer's
+        `prefers-color-scheme` and respects any customer override stored
+        in localStorage. We do NOT let the operator force a theme on
+        visitors; respecting the customer's system preference is the
+        accessible default. The localStorage key is slug-scoped so a
+        customer's preference on Elena's storefront doesn't leak onto
+        Mario's. %>
+    <script>
+      (function() {
+        var slug = <%= raw (@storefront&.slug || "").to_json %>;
+        var key = "kitchef_sf_theme_" + slug;
+        var stored = localStorage.getItem(key);
+        var mode = stored || "auto";
+        var sys = matchMedia("(prefers-color-scheme: dark)").matches;
+        var dark = mode === "dark" || (mode === "auto" && sys);
+        if (dark) document.documentElement.classList.add("dark");
+        document.documentElement.dataset.themeMode = mode;
+      })();
+    </script>
+
+    <%# Brand palette — inline per-request. Light variables live on :root;
+        dark variables live on .dark. The customer's toggle just flips the
+        .dark class; no server round-trip. The operator app never reads
+        these variables (it uses the Tailwind `accent` token).
+
+        The dark-mode chrome block overrides the operator-app defaults
+        (warm-green-tinted near-black) with a PALETTE-NEUTRAL near-black
+        so every kitchen's chosen palette — rosa, cobalto, bosque, etc. —
+        sits on a background that doesn't clash with its hue. Operator
+        app dark mode stays warm-green-tinted because its own palette is
+        already green. %>
+    <style id="storefront-palette">
+      :root {
+        <%= raw Storefronts::Palette.css_vars_for(@storefront, dark: false) %>
+      }
+      html.dark {
+        <%= raw Storefronts::Palette.css_vars_for(@storefront, dark: true) %>
+
+        /* Palette-neutral dark chrome (overrides app.css `.dark`).
+           Slight cool-neutral — close to black but not pure — so all
+           10 brand palettes harmonize against it. */
+        --color-bg:        #0F1013;
+        --color-bg-2:      #17181C;
+        --color-surface:   #1C1D22;
+        --color-line:      #2B2D33;
+        --color-line-2:    #3A3C43;
+        --color-ink:       #ECECEF;
+        --color-ink-2:     #BCBDC3;
+        --color-muted:     #82848C;
+      }
+    </style>
+
     <%= yield :head %>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,6 +70,10 @@
     <%= javascript_importmap_tags %>
   </head>
   <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased">
+    <%= render Storefronts::HeaderComponent.new(storefront: @storefront) if @storefront %>
+
     <%= yield %>
+
+    <%= render Storefronts::FooterComponent.new(storefront: @storefront) if @storefront %>
   </body>
 </html>

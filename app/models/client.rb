@@ -22,10 +22,10 @@
 #
 # Indexes
 #
-#  index_clients_on_account_id                       (account_id)
-#  index_clients_on_account_id_and_email             (account_id,email)
-#  index_clients_on_account_id_and_phone_normalized  (account_id,phone_normalized)
-#  index_clients_on_discarded_at                     (discarded_at)
+#  index_clients_on_account_id            (account_id)
+#  index_clients_on_account_id_and_email  (account_id,email)
+#  index_clients_on_discarded_at          (discarded_at)
+#  uniq_clients_account_phone_active      (account_id,phone_normalized) UNIQUE WHERE ((phone_normalized IS NOT NULL) AND (discarded_at IS NULL))
 #
 # Foreign Keys
 #
@@ -63,6 +63,45 @@ class Client < ApplicationRecord
       OR LOWER(email) LIKE :q
     SQL
   }
+
+  # Storefront dedup entry point. Phone is the identity — storefront
+  # checkout only captures first_name + last_name + phone, so matching
+  # on `(account, phone_normalized)` is how we keep one client record per
+  # customer across repeat pedidos.
+  #
+  # Never overwrites existing first_name/last_name on a subsequent order
+  # (the customer might use "Lupita" on one pedido and "Guadalupe Ramírez"
+  # on the next; the operator's roster should keep whatever she first
+  # chose). Blank names ARE backfilled — useful if the client was
+  # autocreated from an earlier manual pedido with only a phone.
+  #
+  # The unique partial index `uniq_clients_account_phone_active` is what
+  # makes this race-free under concurrent storefront submissions.
+  def self.find_or_create_by_phone!(account:, phone:, attrs: {})
+    normalized = Phone::NormalizeMx.call(raw: phone)
+    raise ArgumentError, "phone could not be normalized" if normalized.blank?
+
+    existing = account.clients.kept.find_by(phone_normalized: normalized)
+    if existing
+      updates = {}
+      updates[:first_name] = attrs[:first_name] if existing.first_name.blank? && attrs[:first_name].present?
+      updates[:last_name]  = attrs[:last_name]  if existing.last_name.blank?  && attrs[:last_name].present?
+      updates[:email]      = attrs[:email]      if existing.email.blank?      && attrs[:email].present?
+      existing.update!(updates) if updates.any?
+      return existing
+    end
+
+    account.clients.create!(
+      first_name: attrs[:first_name].presence || "Cliente",
+      last_name:  attrs[:last_name].presence,
+      email:      attrs[:email].presence,
+      phone:      normalized
+    )
+  rescue ActiveRecord::RecordNotUnique
+    # Lost the race — another request inserted the same (account, phone).
+    # Re-read and return it.
+    account.clients.kept.find_by!(phone_normalized: normalized)
+  end
 
   private
 

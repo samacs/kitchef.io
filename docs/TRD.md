@@ -116,8 +116,8 @@ Public storefront requests resolve `Account` via the slug in the URL:
 - `time_zone` (America/Mexico_City default)
 - `iva_enabled` (boolean, default false)
 - `iva_rate_percent` (default 16)
-- `public_profile` (StoreModel JSONB: description, hours, delivery_areas, social_links, avatar_color)
-- `branding` (StoreModel JSONB: logo via ActiveStorage, primary_color, hide_kitchef_branding)
+- `public_profile` (StoreModel JSONB: description, tagline, phone, whatsapp, instagram, colonia, city, delivery_zones[], payment_methods[], accepts_orders_schedule, pickup_reminder_hours — see §4.1)
+- `branding` (StoreModel JSONB: palette[bosque|terracota|tinto|cobalto|mostaza|cacao|pizarra|rosa|durazno|noroc], theme_default[auto|light|dark], hide_kitchef_branding — see §4.1)
 - `settings` (StoreModel JSONB: feature flags and preferences — see below)
 - `subscription_id`
 - ActiveStorage: `has_one_attached :logo`, `has_one_attached :cover_photo`
@@ -143,6 +143,62 @@ end
 ```
 
 **Key flag for Module 2:** `use_composable_recipes` controls whether the UI exposes advanced recipe-decomposition controls. Default is `false`; flipped to `true` either (a) when the operator completes her first-decomposition onboarding flow, or (b) when she opts into advanced mode during initial signup. See §6 for the UI-adaptation pattern.
+
+##### `Account#branding` (StoreModel) — storefront theme
+
+```ruby
+# app/models/accounts/branding.rb
+class Accounts::Branding
+  include StoreModel::Model
+
+  PALETTES = %w[bosque terracota tinto cobalto mostaza cacao pizarra rosa durazno noroc].freeze
+  THEMES   = %w[auto light dark].freeze
+
+  attribute :palette,              :string,  default: "bosque"
+  attribute :theme_default,        :string,  default: "auto"
+  attribute :hide_kitchef_branding, :boolean, default: false  # Pro-only
+
+  validates :palette,       inclusion: { in: PALETTES }
+  validates :theme_default, inclusion: { in: THEMES }
+end
+```
+
+Palette definitions (primary color + pre-computed `ink`/`soft`/`line` for light and dark) live in `config/palettes.yml` and are surfaced via `Storefronts::Palette.for(account)`, which renders inline CSS custom properties (`--brand-1`, `--brand-1-ink`, `--brand-1-soft`, `--brand-1-line`) into the `<body>` tag. The storefront stylesheet consumes those variables; the operator app is untouched (it always renders in the Kitchef green palette).
+
+##### `Account#public_profile` (StoreModel) — storefront meta
+
+```ruby
+# app/models/accounts/public_profile.rb
+class Accounts::PublicProfile
+  include StoreModel::Model
+
+  DESCRIPTION_MAX = 280
+  FULFILLMENT = %w[pickup delivery shipping].freeze
+
+  attribute :description,    :string,  default: ""
+  attribute :tagline,        :string,  default: ""
+  attribute :phone,          :string,  default: ""
+  attribute :whatsapp,       :string,  default: ""
+  attribute :instagram,      :string,  default: ""
+  attribute :colonia,        :string,  default: ""
+  attribute :city,           :string,  default: ""
+  attribute :fulfillment_types, :string, default: "pickup,delivery"  # comma-separated subset of FULFILLMENT
+  attribute :delivery_zones, :string, default: ""  # comma-separated colonia names (MVP; promoted to array when slot UI lands)
+  attribute :payment_notes,  :string,  default: ""   # free text, shown to customer after submit ("Te contacto por WhatsApp…")
+  attribute :pickup_reminder_hours, :integer, default: 4
+
+  # Accepting-orders weekly schedule — map of day-of-week (0..6) → { open:"HH:MM", close:"HH:MM" } | "closed".
+  # Storefront hero surfaces this as a live chip; submissions are still accepted
+  # when closed, but customers see "Abrimos el jueves 9:00".
+  attribute :ordering_hours, :string, default: ""  # JSON-encoded; lifted into OrderingHours service for parsing
+
+  validates :description, length: { maximum: DESCRIPTION_MAX }
+  validates :tagline,     length: { maximum: 80 }
+  validates :pickup_reminder_hours, numericality: { in: 0..24 }
+end
+```
+
+`fulfillment_types` is a flat comma-separated string (not a jsonb array) so the form can use plain `collection_check_boxes` without a StoreModel array coercion wrinkle. The values read through a `#fulfillment_type_options` helper that splits and validates against `FULFILLMENT`.
 
 #### `Client`
 - `account_id`
@@ -243,7 +299,7 @@ Cross-type conversion (e.g., grams → pieces) is **not** automatic and requires
 - `state` (AASM, English keys: `placed`, `confirmed`, `in_production`, `ready`, `delivered`, `paid`, `canceled`; display via `t("order.state.*")`)
 - `delivery_date` (date, required)
 - `delivery_start_time`, `delivery_end_time` — **integer minutes from midnight (0..1440)**, not datetime. A delivery window is "Saturday 11am-12pm in the operator's local time", not an absolute moment. Integers avoid timezone/DST drift, make `end - start` a one-subtraction duration, and keep range queries trivial. See `lib/time_of_day.rb` for the `from_string("09:30") → 570` / `to_string(570) → "09:30"` helpers; models expose `*_hhmm` accessors for forms. DB check constraints enforce `start < end`, `0..1440`.
-- `delivery_type` (enum, English keys: `delivery`, `pickup`; display via `t("order.delivery_types.*")`)
+- `delivery_type` (enum, English keys: `delivery`, `pickup`; display via `t("order.delivery_types.*")`). *Delivery* = the kitchen takes the pedido to the customer (with geocoding for runner directions). *Pickup* = the customer comes to the kitchen.
 - `delivery_address`, `colonia`, `city`
 - `delivery_notes`
 - `subtotal_cents`, `tax_cents`, `total_cents` (Money)
@@ -251,6 +307,7 @@ Cross-type conversion (e.g., grams → pieces) is **not** automatic and requires
 - `notes`
 - `source` (enum: `storefront`, `manual`, `whatsapp`, `instagram`, `other` — keys already English)
 - `position` (scoped to account+state, for drag-reorder within a column)
+- `pickup_reminder_sent_at` (datetime, nullable) — stamped by `PickupReminderJob` (see §11) the first time a `ready` pickup pedido crosses the configured `pickup_reminder_hours` threshold. Prevents duplicate pings.
 - `discarded_at`
 - Versioned via `paper_trail`
 
@@ -1130,6 +1187,44 @@ ETag includes auth state so the same page doesn't serve the operator's signed-in
 
 ---
 
+## 8.1 Storefront theming & branded palettes
+
+Every account ships with `Accounts::Branding` that declares a palette + theme default. `Storefronts::Palette` is the single source of truth for palette → CSS-custom-property mapping. Storefront views render palette variables inline on `<body>` so the theme survives the turbo-drive navigation without a full reload; the operator app never sees branded variables.
+
+```ruby
+# app/services/storefronts/palette.rb
+class Storefronts::Palette
+  PALETTES = {
+    "bosque"    => { label: "Bosque",       light: { c: "#0A5A3C", ink: "#F8F6F1", soft: "#E3EDE6", line: "#B9D4C2" }, dark: { c: "#3FAE7D", ink: "#0E1714", soft: "#13382A", line: "#1F4A37" } },
+    "terracota" => { label: "Terracota",    light: { c: "#B04E0E", ink: "#FFF6ED", soft: "#F6E2CB", line: "#E6C5A1" }, dark: { c: "#E08A4F", ink: "#1A0E05", soft: "#3E230F", line: "#5A3516" } },
+    # … 8 more palettes mirroring the design prototype …
+  }.freeze
+
+  def self.css_vars_for(account, dark: false)
+    p = PALETTES.fetch(account.branding.palette, PALETTES.fetch("bosque"))
+    variant = p.fetch(dark ? :dark : :light)
+    "--brand-1:#{variant[:c]};--brand-1-ink:#{variant[:ink]};--brand-1-soft:#{variant[:soft]};--brand-1-line:#{variant[:line]};"
+  end
+end
+```
+
+The storefront layout reads both the light and dark variant and renders both via a `<style>` block so the customer's own theme toggle flips without a server round-trip:
+
+```erb
+<style>
+  :root { <%= Storefronts::Palette.css_vars_for(@storefront, dark: false) %> }
+  .dark { <%= Storefronts::Palette.css_vars_for(@storefront, dark: true) %> }
+</style>
+```
+
+The operator's choice (`branding.theme_default`) seeds the pre-paint boot script's default, but the customer can toggle; the result persists to `localStorage` keyed by storefront slug.
+
+## 8.2 Guest ordering & phone-based client dedup
+
+Storefront checkout never creates a `User`. The customer drops a pedido by filling name + phone only; `Storefronts::PlaceOrder` normalizes the phone via `Phone::NormalizeMx`, calls `Client.find_or_create_by_phone!(account:, phone:, attrs: …)`, then hands off to `Orders::Place` with the resolved `client_id` and `source: :storefront`. If the phone belongs to an existing client, the command **never overwrites** a populated name — but it backfills blank `first_name`/`last_name` so the operator's roster stays useful.
+
+The per-order confirmation URL (`/:slug/orders/:prefixed_id`) is the access token; the prefixed_id's ~44 bits of entropy are enough to be unguessable, and `rack-attack` rate-limits the page to blunt enumeration attempts.
+
 ## 9. Billing — Stripe Subscription Flow
 
 ### Plans (internal keys are English; display labels rendered via I18n)
@@ -1204,6 +1299,7 @@ config.action_mailer.resend_settings = { api_key: Rails.application.credentials.
 - `SubscriptionReconciliationJob` — hourly, reconciles Stripe webhook drift
 - `MenuEngineeringRecalcJob` — nightly, precomputes matrices for faster panel loads
 - `SitemapGeneratorJob` — weekly, via `sitemap_generator`
+- `PickupReminderScanJob` — every 15 minutes, finds pickup pedidos in `ready` longer than each account's `pickup_reminder_hours` with `pickup_reminder_sent_at IS NULL`, enqueues a `PickupReminderJob` per pedido (operator notification + Noticed event; `pickup_reminder_sent_at` stamp prevents repeats). The scan is cheap — bounded by ready-but-not-delivered pickup pedidos, indexed on `(state, delivery_type, ready_at)`.
 
 ---
 

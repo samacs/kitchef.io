@@ -1,0 +1,71 @@
+<header
+  class="sticky top-0 z-50 border-b border-line/70 kc-chrome"
+  data-controller="storefront-theme"
+  data-storefront-theme-slug-value="<%= storefront.slug %>"
+>
+  <div class="mx-auto flex h-14 max-w-[1200px] items-center gap-3 px-5">
+    <%# Kitchef wordmark — anchors customers back to the storefront root
+        and carries Kitchef's platform branding. The kitchen's own
+        identity (logo + name) lives in the hero below, not here, so
+        we're not duplicating brand surface. %>
+    <a href="<%= storefront_path(slug: storefront.slug) %>"
+       class="flex items-center gap-2 text-ink no-underline shrink-0"
+       title="<%= t("storefronts.header.back_to_storefront", kitchen: storefront.name) %>">
+      <%= render Ui::LogoComponent.new(size: :sm) %>
+    </a>
+
+    <div class="flex-1"></div>
+
+    <%# Operator self-view chip — only visible when a signed-in operator
+        visits her own storefront. Quiet, self-service. %>
+    <% if show_editor_chip? %>
+      <a href="<%= account_path %>"
+         class="hidden sm:inline-flex items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 hover:border-line-2 no-underline">
+        <%= t("storefronts.header.edit_menu_chip") %>
+      </a>
+    <% end %>
+
+    <%# Theme toggle — cycles auto → light → dark, persists per-slug in
+        localStorage. The three glyphs are stacked; CSS shows only the
+        one matching the current mode via [data-theme-mode] attribute.
+        The controller writes that attribute on connect + every cycle. %>
+    <button type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border border-line bg-surface text-ink-2 hover:border-line-2"
+            data-storefront-theme-target="toggle"
+            data-action="click->storefront-theme#cycle"
+            aria-label="<%= t("storefronts.header.toggle_theme") %>">
+      <%# Auto (system) — monitor icon. Universally "uses your system
+          preference" across macOS, iOS, GitHub, etc. %>
+      <svg class="kc-sf-glyph" data-mode="auto" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <path d="M8 21h8M12 17v4"/>
+      </svg>
+      <%# Light — sun %>
+      <svg class="kc-sf-glyph" data-mode="light" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <%# Dark — moon %>
+      <svg class="kc-sf-glyph" data-mode="dark" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+
+    <%# Cart button with live count badge driven by storefront_cart_controller. %>
+    <a href="#"
+       class="relative inline-flex items-center gap-2 rounded-[9px] border border-line bg-surface px-3 py-2 text-[13px] font-medium text-ink no-underline hover:border-line-2"
+       data-action="click->storefront-cart#openDrawer"
+       aria-label="<%= t("storefronts.header.cart_aria") %>">
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+      <span class="hidden sm:inline"><%= t("storefronts.header.cart") %></span>
+      <span
+        class="absolute -right-1 -top-1 hidden min-w-[18px] h-[18px] items-center justify-center rounded-full px-1 font-mono text-[10.5px] font-bold leading-none"
+        style="background: var(--brand-1); color: var(--brand-1-ink); border: 2px solid var(--color-bg);"
+        data-storefront-cart-target="badge"
+        data-count="0"
+      >0</span>
+    </a>
+  </div>
+</header>

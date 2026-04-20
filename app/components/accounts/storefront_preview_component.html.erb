@@ -1,0 +1,111 @@
+<%# Live preview of the storefront hero. All `--brand-*` CSS vars are
+    set inline from the current palette pair so the preview renders the
+    exact colors the customer will see. The Stimulus receiver rewrites
+    those vars as the operator picks a new palette. %>
+<div
+  data-controller="live-preview"
+  data-live-preview-empty-name-value="<%= t("account.preview.empty_name") %>"
+  data-live-preview-empty-tagline-value="<%= t("account.preview.empty_tagline") %>"
+  data-live-preview-empty-description-value="<%= t("account.preview.empty_description") %>"
+  data-live-preview-palettes-value="<%= palettes_json %>"
+  class="flex flex-col gap-3"
+  style="<%= initial_css_vars %>"
+>
+  <div class="flex items-center justify-between gap-3">
+    <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <%= t("account.preview.kicker") %>
+    </span>
+    <span class="inline-flex items-center gap-1 text-[11px] text-muted font-mono">
+      <span class="inline-block h-[6px] w-[6px] rounded-full" style="background: var(--brand-1);" aria-hidden="true"></span>
+      kitchef.mx
+    </span>
+  </div>
+
+  <%# Storefront card. Uses the same structure as the live hero so what
+      the operator sees here is what customers see, just scaled to fit
+      a sidebar preview panel. %>
+  <article
+    class="overflow-hidden rounded-panel border border-line shadow-card"
+    style="background: var(--color-surface);"
+  >
+    <%# Cover — falls back to a brand-tinted gradient (brand-1-soft →
+        brand-2-soft) when no photo is attached. The gradient re-derives
+        automatically when the palette changes because it references
+        CSS vars. %>
+    <div class="relative aspect-[16/9] overflow-hidden"
+         style="background: linear-gradient(135deg, var(--brand-1-soft), var(--brand-2-soft));">
+      <img data-live-preview-target="cover"
+           src="<%= cover_url %>"
+           alt=""
+           class="<%= cover_url ? 'block' : 'hidden' %> absolute inset-0 h-full w-full object-cover" />
+      <div data-live-preview-target="coverPlaceholder"
+           class="<%= cover_url ? 'hidden' : 'flex' %> absolute inset-0 items-center justify-center text-muted">
+        <div class="flex flex-col items-center gap-2">
+          <%= helpers.icon(:image, size: :lg, class: "text-line-2") %>
+          <span class="font-mono text-[10.5px] uppercase tracking-[0.18em]"><%= t("account.preview.cover_placeholder") %></span>
+        </div>
+      </div>
+      <%# Bottom fade so the logo + name sit cleanly on any cover photo. %>
+      <div class="pointer-events-none absolute inset-0"
+           style="background: linear-gradient(180deg, transparent 0%, transparent 55%, var(--color-surface) 100%);"></div>
+    </div>
+
+    <div class="px-5 pb-5">
+      <%# Logo badge floats astride the cover/content boundary — half
+          in the cover, half in the content area. The name title
+          ALWAYS sits below the logo in the content area, never
+          overlapping the cover image (which has unpredictable
+          contrast — dark tacos, bright pastries, etc). %>
+      <div class="-mt-8 mb-3 flex">
+        <div class="relative h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[12px] border-[3px] shadow-lift"
+             style="background: var(--color-surface); border-color: var(--color-surface);">
+          <img data-live-preview-target="logo"
+               src="<%= logo_url %>"
+               alt=""
+               class="<%= logo_url ? 'block' : 'hidden' %> h-full w-full object-cover" />
+          <div data-live-preview-target="logoPlaceholder"
+               class="<%= logo_url ? 'hidden' : 'flex' %> h-full w-full items-center justify-center font-serif italic text-[30px]"
+               style="color: var(--brand-1);">
+            <%= name.first&.upcase %>
+          </div>
+        </div>
+      </div>
+
+      <div class="min-w-0">
+        <h3 data-live-preview-target="name"
+            data-empty="<%= name.blank? %>"
+            class="font-serif text-[22px] leading-[1.1] tracking-[-0.01em] <%= name.present? ? 'text-ink' : 'text-muted italic' %>">
+          <%= name.presence || t("account.preview.empty_name") %>
+        </h3>
+        <p class="mt-1 truncate font-mono text-[11px] text-muted">
+          kitchef.mx/<span data-live-preview-target="slug"><%= slug.presence || "tu-cocina" %></span>
+        </p>
+      </div>
+
+      <%# Tagline — emitted only when set; shows an italic placeholder when empty. %>
+      <p data-live-preview-target="tagline"
+         class="mt-3 text-[13px] leading-[1.45] <%= tagline.present? ? 'text-ink-2' : 'text-muted italic' %>">
+        <%= tagline.presence || t("account.preview.empty_tagline") %>
+      </p>
+
+      <p data-live-preview-target="description"
+         data-empty="<%= description.blank? %>"
+         class="mt-3 whitespace-pre-line text-[13px] leading-[1.55] <%= description.present? ? 'text-ink-2' : 'text-muted italic' %>">
+        <%= description.presence || t("account.preview.empty_description") %>
+      </p>
+
+      <%# Sample CTA + WhatsApp pill rendered in the brand palette so
+          the operator can judge contrast. %>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 rounded-[9px] px-3 py-1.5 text-[12px] font-semibold"
+              style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">
+          <%= t("account.preview.menu_cta") %>
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-[9px] border px-3 py-1.5 text-[12px] font-medium"
+              style="background: var(--brand-2-soft); color: var(--brand-2); border-color: var(--brand-2-line);">
+          <%= t("account.preview.whatsapp_cta") %>
+        </span>
+      </div>
+    </div>
+  </article>
+</div>
