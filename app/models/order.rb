@@ -20,6 +20,10 @@
 #  deposit_cents         :bigint           default(0), not null
 #  discarded_at          :datetime
 #  en_route_started_at   :datetime
+#  geocoded_at           :datetime
+#  geocoding_failed_at   :datetime
+#  latitude              :decimal(10, 6)
+#  longitude             :decimal(10, 6)
 #  notes                 :text
 #  paid_at               :datetime
 #  position              :integer
@@ -43,6 +47,7 @@
 #  index_orders_on_canceled_at                        (canceled_at)
 #  index_orders_on_client_id                          (client_id)
 #  index_orders_on_discarded_at                       (discarded_at)
+#  index_orders_on_latitude_and_longitude             (latitude,longitude)
 #
 # Foreign Keys
 #
@@ -185,6 +190,36 @@ class Order < ApplicationRecord
   # the primary-button helper falls through to `:deliver` for them.
   def delivery? = delivery_type_delivery?
   def pickup?   = delivery_type_pickup?
+
+  # Geocoding helpers. Only delivery-type pedidos with a usable address
+  # participate — pickup orders never need a runner-facing map, and an
+  # order without any street detail would just geocode to a broad city
+  # centroid (misleading for the runner's directions).
+  def geocoding_address
+    parts = [ delivery_address, colonia, city ].compact_blank
+    return nil if parts.empty?
+
+    (parts + [ "México" ]).join(", ")
+  end
+
+  def geocoded?
+    latitude.present? && longitude.present?
+  end
+
+  def needs_geocoding?
+    delivery? && !canceled? && geocoding_address.present? && !geocoded?
+  end
+
+  # Cooldown between failed attempts so GeocodeOrderJob doesn't hammer
+  # Google on a permanently-bad address. After the cooldown the job
+  # can retry (e.g. the operator fixed a typo).
+  GEOCODING_RETRY_COOLDOWN = 1.hour
+
+  def geocoding_on_cooldown?
+    return false if geocoding_failed_at.blank?
+
+    geocoding_failed_at > GEOCODING_RETRY_COOLDOWN.ago
+  end
 
   def paid?
     state == "paid"

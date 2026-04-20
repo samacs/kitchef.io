@@ -103,6 +103,9 @@ es-MX:
       create:
         duplicated: "Listo — revisa los datos y captura el pedido."
         failed: "No pudimos duplicar el pedido. Inténtalo de nuevo."
+    map:
+      alt: "Ubicación del pedido"
+      directions_cta: "Cómo llegar"
     columns:
       placed: "Nuevos"
       confirmed: "Confirmados"

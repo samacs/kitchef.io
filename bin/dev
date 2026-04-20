@@ -10,9 +10,15 @@ export PORT="${PORT:-3000}"
 export RUBY_DEBUG_OPEN="true"
 export RUBY_DEBUG_LAZY="true"
 
-# Use lvh.me for local development (see ./ssl/)
-export SSL_CERT_FILE="${SSL_CERT_FILE:-./ssl/lvh.me.pem}"
-export SSL_KEY_FILE="${SSL_KEY_FILE:-./ssl/lvh.me.key}"
+# Use lvh.me for local development (see ./ssl/). These variables feed
+# Puma's TLS listener; intentionally NOT named `SSL_CERT_FILE` /
+# `SSL_KEY_FILE` because those are OpenSSL's conventions for the
+# outbound CA bundle + private key. When Sidekiq inherits the env,
+# overloading those names makes every outbound HTTPS call fail with
+# "unable to get local issuer certificate" (the leaf cert for lvh.me
+# isn't a CA bundle).
+export HTTPS_CERT_FILE="${HTTPS_CERT_FILE:-./ssl/lvh.me.pem}"
+export HTTPS_KEY_FILE="${HTTPS_KEY_FILE:-./ssl/lvh.me.key}"
 
 if command -v overmind >/dev/null 2>&1; then
   exec overmind start -f Procfile.dev "$@"

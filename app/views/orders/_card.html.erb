@@ -1,3 +1,4 @@
+<% en_route = order.state == "en_route" %>
 <article id="<%= dom_id(order) %>"
          class="flex flex-col gap-3 p-4 rounded-card bg-bg/60 border border-line hover:border-line-2 transition">
   <header class="flex items-start justify-between gap-3">
@@ -23,6 +24,14 @@
     <%= render Orders::StateBadgeComponent.new(state: order.state) %>
   </header>
 
+  <%# Map thumbnail + Cómo llegar CTA. Reserved for the en_route
+      column where the runner needs the map front-and-center; other
+      delivery cards expose the same directions link as a compact
+      icon in the footer action cluster below. %>
+  <% if order.delivery? && order.geocoded? && en_route %>
+    <%= render "orders/map_thumbnail", order: order %>
+  <% end %>
+
   <ul class="flex flex-col gap-1">
     <% order.items.each do |item| %>
       <li class="flex items-baseline justify-between gap-2 text-[13px]">
@@ -36,6 +45,9 @@
       </li>
     <% end %>
   </ul>
+
+  <%# Non-en_route delivery cards get a quiet map icon in the footer
+      actions row below; keeps cards compact until the runner leg. %>
 
   <% if order.canceled? && order.cancel_reason_code.present? %>
     <div class="flex flex-col gap-0.5 px-3 py-2 rounded-card bg-err/5 border border-err/20">
@@ -54,6 +66,17 @@
       <%= humanized_money_with_symbol(order.total) %>
     </span>
     <div class="inline-flex items-center gap-1">
+      <% if order.delivery? && order.geocoded? && !en_route && !order.canceled? %>
+        <%= link_to directions_url_for(order),
+              target: "_blank",
+              rel: "noopener noreferrer",
+              aria: { label: t("orders.map.directions_cta") },
+              title: t("orders.map.directions_cta"),
+              class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-accent hover:border-accent/40 transition-colors" do %>
+          <%= icon(:navigation, size: :sm) %>
+        <% end %>
+      <% end %>
+
       <% if order.aasm.may_fire_event?(:cancel) %>
         <%= drawer_link_to new_order_cancellation_path(order),
               aria: { label: t("orders.transitions.cancel") },

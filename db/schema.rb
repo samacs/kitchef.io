@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -193,6 +193,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_130000) do
     t.bigint "deposit_cents", default: 0, null: false
     t.datetime "discarded_at"
     t.datetime "en_route_started_at"
+    t.datetime "geocoded_at"
+    t.datetime "geocoding_failed_at"
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
     t.text "notes"
     t.datetime "paid_at"
     t.integer "position"
@@ -210,6 +214,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_130000) do
     t.index ["canceled_at"], name: "index_orders_on_canceled_at"
     t.index ["client_id"], name: "index_orders_on_client_id"
     t.index ["discarded_at"], name: "index_orders_on_discarded_at"
+    t.index ["latitude", "longitude"], name: "index_orders_on_latitude_and_longitude"
     t.check_constraint "delivery_end_time IS NULL OR delivery_end_time >= 0 AND delivery_end_time <= 1440", name: "chk_orders_delivery_end_time_range"
     t.check_constraint "delivery_start_time IS NULL OR delivery_end_time IS NULL OR delivery_start_time < delivery_end_time", name: "chk_orders_delivery_start_before_end"
     t.check_constraint "delivery_start_time IS NULL OR delivery_start_time >= 0 AND delivery_start_time <= 1440", name: "chk_orders_delivery_start_time_range"

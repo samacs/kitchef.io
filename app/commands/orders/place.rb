@@ -36,6 +36,7 @@ module Orders
       end
 
       if order.save
+        enqueue_geocoding(order)
         success(order)
       else
         Result.new(success: false, object: order, errors: order.errors)
@@ -43,6 +44,10 @@ module Orders
     end
 
     private
+
+    def enqueue_geocoding(order)
+      GeocodeOrderJob.perform_later(order.id) if order.needs_geocoding?
+    end
 
     def price_from(item_attrs, recipe)
       PriceInCents.call(
