@@ -35,7 +35,7 @@ class DeliverySlot < ApplicationRecord
   validates :max_orders, numericality: { greater_than: 0 }
   validate  :end_time_after_start_time
 
-  scope :for_day, ->(day_of_week) { where(day_of_week: day_of_week).positioned }
+  scope :for_day, ->(day_of_week) { where(day_of_week: day_of_week).order(:position) }
 
   # Display helpers — convert minutes-from-midnight to "HH:MM" strings.
   def start_time_hhmm = TimeOfDay.to_string(start_time)

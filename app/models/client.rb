@@ -45,6 +45,10 @@ class Client < ApplicationRecord
   # the order history with client_id nulled so reports stay correct.
   has_many :orders, dependent: :nullify
 
+  # Run BEFORE the strict Phonelib validator so "662 188 4355" and the
+  # WhatsApp "+521 ..." variants reach validation as clean E.164.
+  before_validation :normalize_phone
+
   validates :first_name, presence: true
   validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
   validate  :phone_is_valid_mx_number
@@ -61,6 +65,16 @@ class Client < ApplicationRecord
   }
 
   private
+
+  def normalize_phone
+    return if phone.blank?
+
+    normalized = Phone::NormalizeMx.call(raw: phone)
+    # If we can't shape it into a local 10-digit MX number, leave the
+    # raw value in place — the validator below will surface an error
+    # with the operator's original input intact for correction.
+    self.phone = normalized if normalized
+  end
 
   def phone_is_valid_mx_number
     return if phone.blank?

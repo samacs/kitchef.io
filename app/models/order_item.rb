@@ -33,6 +33,8 @@ class OrderItem < ApplicationRecord
   belongs_to :order
   belongs_to :recipe
 
+  before_validation :snapshot_costs, on: :create
+
   validates :quantity, numericality: { greater_than: 0 }
   validates :unit_price_cents, :unit_cost_cents, numericality: { greater_than_or_equal_to: 0 }
   validate  :recipe_is_saleable
@@ -42,6 +44,16 @@ class OrderItem < ApplicationRecord
   end
 
   private
+
+  # Belt-and-suspenders snapshot for any path that creates an item outside
+  # of the Orders::Place command (e.g. console, console fix-ups). The
+  # command sets prices/costs explicitly; only blank attributes get filled.
+  def snapshot_costs
+    return if recipe.nil?
+
+    self.unit_price_cents = recipe.sale_price_cents if unit_price_cents.to_i.zero?
+    self.unit_cost_cents  = recipe.cost_cents_cached.to_i if unit_cost_cents.to_i.zero?
+  end
 
   def recipe_is_saleable
     return if recipe.nil? || recipe.is_saleable?

@@ -11,6 +11,14 @@ es-MX:
         other: "%{count} platillos"
       see_all: "Ver todos"
       cta: "Agregar platillo"
+    today_orders:
+      kicker: "Hoy"
+      title: "Pedidos de hoy"
+      stat:
+        one: "%{count} pedido para hoy"
+        other: "%{count} pedidos para hoy"
+      see_all: "Ver todos"
+      empty_client: "Cliente eliminado"
     empty_state:
       headline: "Empieza por tu primer platillo"
       sub: "Agrega tu platillo estrella con foto y precio. Luego súmale los demás y arma tu menú en minutos."
@@ -19,10 +27,224 @@ es-MX:
   stubs:
     in_development: "Esta sección está en construcción. Volverá con forma propia en el próximo módulo."
 
+  panel:
+    drawer:
+      label: "Panel de edición"
+      close: "Cerrar panel"
+
   orders:
     title: "Pedidos"
+    index:
+      title: "Pedidos"
+      subtitle: "Mueve cada tarjeta a la columna que toca"
+      cta: "Agregar pedido"
+      total_label: "Total"
+    new:
+      title: "Capturar pedido"
+      subtitle: "Anota lo que te pidió tu clienta"
+      kicker: "Nuevo pedido"
+      heading: "Cuéntanos del pedido"
+      lede: "Selecciona a tu clienta, agrega los platillos y la fecha de entrega. Lo demás lo afinas después."
+    edit:
+      title: "Editar pedido"
+      subtitle: "Cambia datos o platillos"
+      kicker: "Editar pedido"
+      heading: "Pedido %{id}"
+    create:
+      created: "Pedido capturado."
+    update:
+      updated: "Cambios guardados."
+    destroy:
+      discarded: "Pedido eliminado."
+    confirm:
+      confirm: "Pedido confirmado."
+    start_production:
+      start_production: "En producción."
+    mark_ready:
+      mark_ready: "Listo para entrega."
+    ship:
+      ship: "En reparto."
+    deliver:
+      deliver: "Entregado."
+    mark_paid:
+      mark_paid: "Marcado como pagado."
+    errors:
+      immutable: "Este pedido ya no se puede editar. Si necesitas hacer cambios, duplícalo para abrir uno nuevo."
+    transitions:
+      confirm: "Confirmar"
+      start_production: "Iniciar producción"
+      mark_ready: "Marcar listo"
+      ship: "Marcar en camino"
+      deliver: "Marcar entregado"
+      mark_paid: "Marcar pagado"
+      or_mark_paid: "o marcar pagado"
+      cancel: "Cancelar pedido"
+      edit: "Editar"
+      duplicate: "Duplicar pedido"
+      errors:
+        not_allowed: "No se puede cambiar el estado del pedido desde aquí."
+    cancellations:
+      title: "Cancelar pedido"
+      kicker: "Cancelación"
+      heading: "Cancelar el pedido de %{client}"
+      lede: "Elige el motivo para dejar registro. Los pedidos cancelados se guardan en el historial para que puedas auditarlos después."
+      reason_kicker: "Motivo"
+      reason_label: "¿Por qué cancelamos?"
+      reason_prompt: "Elige un motivo"
+      note_label: "Nota (opcional)"
+      note_placeholder: "Detalles que quieras dejar anotados para después."
+      note_hint: "Solo la ves tú. Aparece en el historial del pedido."
+      note_required: "Obligatoria"
+      back: "Volver"
+      submit: "Cancelar pedido"
+      create:
+        canceled: "Pedido cancelado."
+    duplications:
+      create:
+        duplicated: "Listo — revisa los datos y captura el pedido."
+        failed: "No pudimos duplicar el pedido. Inténtalo de nuevo."
+    map:
+      alt: "Ubicación del pedido"
+      directions_cta: "Cómo llegar"
+    columns:
+      placed: "Nuevos"
+      confirmed: "Confirmados"
+      in_production: "En producción"
+      ready: "Listos"
+      en_route: "En reparto"
+      delivered: "Entregados"
+      paid: "Pagados"
+      canceled: "Cancelados"
+      count:
+        zero: "Sin pedidos"
+        one: "%{count} pedido"
+        other: "%{count} pedidos"
+      empty: "Aún no hay pedidos en esta columna."
+    form:
+      client_label: "Cliente"
+      client_placeholder: "Busca por nombre, teléfono o correo"
+      client_results_empty: "No encontramos a nadie con ese dato."
+      client_create_inline: "Agregar cliente nuevo"
+      client_required: "Selecciona un cliente."
+      delivery_type_label: "Tipo de entrega"
+      source_label: "Cómo llegó este pedido"
+      delivery_date_label: "Fecha de entrega"
+      delivery_window_label: "Horario"
+      delivery_start_placeholder: "10:00"
+      delivery_end_placeholder: "12:00"
+      colonia_label: "Colonia"
+      city_label: "Ciudad"
+      delivery_address_label: "Calle y número"
+      delivery_notes_label: "Notas para la entrega"
+      notes_label: "Notas internas"
+      line_items_label: "Platillos"
+      line_items_hint: "Agrega cada platillo y la cantidad. Sólo aparecen los platillos del menú."
+      add_item: "Agregar platillo"
+      remove_item: "Quitar"
+      no_items: "Aún no agregaste platillos."
+      pick_recipe_placeholder: "Elige un platillo"
+      quantity_label: "Cant."
+      unit_price_label: "Precio"
+      line_total_label: "Subtotal"
+      total_label: "Total"
+      submit_create: "Capturar pedido"
+      submit_update: "Guardar cambios"
+      done: "Listo"
+      cancel: "Cancelar"
+      delete: "Eliminar pedido"
+      delete_confirm: "¿Eliminar este pedido? Lo conservamos en el historial."
+      autosave:
+        saving: "Guardando…"
+        saved: "Guardado"
+        error: "No se pudo guardar"
+    danger_zone:
+      title: "¿Te equivocaste de pedido?"
+      sub: "Puedes eliminar este pedido y dejará de aparecer en tu kanban. Lo conservamos en el historial."
+    empty_state:
+      headline: "Aún no recibes pedidos"
+      sub: "Captura tu primer pedido a mano o espera el primero desde tu menú público."
+      cta: "Capturar pedido"
+    inline_client:
+      title: "Cliente nuevo"
+      sub: "Lo guardamos junto al pedido."
+      cancel: "Cancelar"
+      dismiss: "Cerrar panel"
+      submit: "Guardar cliente"
+
   clients:
     title: "Clientes"
+    index:
+      title: "Tus clientes"
+      subtitle: "Quién compra y cómo contactarle"
+      cta: "Agregar cliente"
+      search_placeholder: "Busca por nombre, teléfono o correo"
+      count:
+        one: "%{count} cliente"
+        other: "%{count} clientes"
+      table:
+        name: "Nombre"
+        phone: "Teléfono"
+        colonia: "Colonia"
+        orders: "Pedidos"
+        actions: ""
+      orders_count:
+        zero: "0"
+        one: "%{count}"
+        other: "%{count}"
+    new:
+      title: "Agregar cliente"
+      subtitle: "Sus datos para próximos pedidos"
+      kicker: "Nuevo cliente"
+      heading: "Datos de tu clienta"
+      lede: "Con nombre y teléfono basta. Lo demás lo agregas cuando lo tengas a la mano."
+    edit:
+      title: "Editar %{name}"
+      subtitle: "Actualiza sus datos"
+      kicker: "Editar cliente"
+    create:
+      created: "Cliente agregado."
+    update:
+      updated: "Cambios guardados."
+    destroy:
+      discarded: "Cliente eliminado."
+    form:
+      first_name_label: "Nombre"
+      first_name_placeholder: "Lupita"
+      last_name_label: "Apellido"
+      last_name_placeholder: "Ramírez"
+      phone_label: "Teléfono"
+      phone_placeholder: "33 1234 5678"
+      phone_hint: "Móvil mexicano. Lo usamos para WhatsApp y notificaciones."
+      email_label: "Correo (opcional)"
+      email_placeholder: "lupita@correo.mx"
+      colonia_label: "Colonia"
+      colonia_placeholder: "Condesa"
+      city_label: "Ciudad"
+      city_placeholder: "Ciudad de México"
+      street_address_label: "Calle y número (opcional)"
+      street_address_placeholder: "Av. Tamaulipas 120"
+      notes_label: "Notas (opcional)"
+      notes_placeholder: "Le gustan los tamales sin chile."
+      submit_create: "Agregar cliente"
+      submit_update: "Guardar cambios"
+      done: "Listo"
+      cancel: "Cancelar"
+      delete: "Eliminar cliente"
+      delete_confirm: "¿Eliminar a esta clienta? Sus pedidos siguen en tu historial."
+    danger_zone:
+      title: "¿Ya no atiendes a esta clienta?"
+      sub: "Puedes eliminarla. Sus pedidos seguirán en tu historial sin nombre asociado."
+    empty_state:
+      headline: "Tu lista de clientes está vacía"
+      sub: "Agrega a tu primera clienta para captar pedidos a mano y darle seguimiento."
+      cta: "Agregar cliente"
+    search:
+      empty: "No encontramos a nadie con ese dato."
+      hint: "Escribe nombre, teléfono o correo para buscar."
+    row:
+      actions_label: "Acciones para %{name}"
+      edit: "Editar"
+      delete: "Eliminar"
   recipes:
     title: "Recetario"
     internal_badge: "Interna"

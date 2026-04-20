@@ -1,0 +1,28 @@
+<%# `h-full` stretches the column to the kanban row's viewport-capped
+    height, and `flex-1 overflow-y-auto` on the card list lets each
+    column scroll independently when its stack of cards exceeds the
+    available height. %>
+<section id="<%= column_id %>"
+         class="flex flex-col w-[280px] shrink-0 h-full rounded-panel bg-surface border border-line shadow-card">
+  <header class="flex items-baseline justify-between gap-3 px-4 pt-4 pb-3 border-b border-line shrink-0">
+    <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-accent">
+      <%= column_title %>
+    </span>
+    <span class="font-mono text-[11px] text-muted uppercase tracking-[0.14em]">
+      <%= count_label %>
+    </span>
+  </header>
+
+  <div class="flex-1 flex flex-col gap-3 p-3 overflow-y-auto kc-kanban-col">
+    <% if orders.empty? %>
+      <div class="flex-1 flex items-center justify-center text-muted/50 font-mono text-[14px] select-none"
+           aria-hidden="true">
+        —
+      </div>
+    <% else %>
+      <% orders.each do |order| %>
+        <%= render "orders/card", order: order %>
+      <% end %>
+    <% end %>
+  </div>
+</section>

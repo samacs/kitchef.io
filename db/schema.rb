@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_20_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -175,10 +175,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000001) do
   create_table "orders", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "balance_cents", default: 0, null: false
+    t.string "cancel_reason_code"
+    t.text "cancel_reason_note"
+    t.datetime "canceled_at"
     t.string "city"
     t.bigint "client_id"
     t.string "colonia"
+    t.datetime "confirmed_at"
     t.datetime "created_at", null: false
+    t.datetime "delivered_at"
     t.string "delivery_address"
     t.date "delivery_date", null: false
     t.integer "delivery_end_time"
@@ -187,8 +192,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000001) do
     t.integer "delivery_type", default: 0, null: false
     t.bigint "deposit_cents", default: 0, null: false
     t.datetime "discarded_at"
+    t.datetime "en_route_started_at"
+    t.datetime "geocoded_at"
+    t.datetime "geocoding_failed_at"
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
     t.text "notes"
+    t.datetime "paid_at"
     t.integer "position"
+    t.datetime "production_started_at"
+    t.datetime "ready_at"
     t.integer "source", default: 0, null: false
     t.string "state", default: "placed", null: false
     t.bigint "subtotal_cents", default: 0, null: false
@@ -198,8 +211,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_20_000001) do
     t.index ["account_id", "delivery_date"], name: "index_orders_on_account_id_and_delivery_date"
     t.index ["account_id", "state", "position"], name: "index_orders_on_account_id_and_state_and_position"
     t.index ["account_id"], name: "index_orders_on_account_id"
+    t.index ["canceled_at"], name: "index_orders_on_canceled_at"
     t.index ["client_id"], name: "index_orders_on_client_id"
     t.index ["discarded_at"], name: "index_orders_on_discarded_at"
+    t.index ["latitude", "longitude"], name: "index_orders_on_latitude_and_longitude"
     t.check_constraint "delivery_end_time IS NULL OR delivery_end_time >= 0 AND delivery_end_time <= 1440", name: "chk_orders_delivery_end_time_range"
     t.check_constraint "delivery_start_time IS NULL OR delivery_end_time IS NULL OR delivery_start_time < delivery_end_time", name: "chk_orders_delivery_start_before_end"
     t.check_constraint "delivery_start_time IS NULL OR delivery_start_time >= 0 AND delivery_start_time <= 1440", name: "chk_orders_delivery_start_time_range"

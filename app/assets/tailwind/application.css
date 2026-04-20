@@ -225,6 +225,19 @@
     transform: translateX(0);
   }
 
+  /* Right-side edit drawer backdrop. Same `ink flips in dark` caveat as
+     .kc-drawer-backdrop — the scrim stays pinned to dark rgba so it
+     actually darkens in both themes, and dark mode deepens further so
+     the panel reads against an already-dark surface. */
+  .kc-right-drawer-backdrop {
+    background-color: rgba(14, 23, 20, 0.45);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .dark .kc-right-drawer-backdrop {
+    background-color: rgba(0, 0, 0, 0.72);
+  }
+
   /* Segmented theme control inside Nav::UserMenuComponent. Active
      option gets a raised surface treatment so the chosen mode reads
      instantly; inactive options sit flat on the bg-2 track. */
@@ -250,5 +263,55 @@
   }
   .kc-theme-option[data-active] .kc-theme-option-icon {
     color: var(--color-accent);
+  }
+
+  /* Subtle, design-tokened scrollbars for long scrollable panels (the
+     orders kanban row, clients table, any ad-hoc container that opts
+     in by class). Keeps scrollbars visible for discoverability but
+     removes the chrome-default heft — thumb uses the line token in
+     light mode and adapts via the --color-line variable in dark. */
+  .kc-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-2) transparent;
+  }
+  .kc-scroll::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+  }
+  .kc-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .kc-scroll::-webkit-scrollbar-thumb {
+    background: var(--color-line-2);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+  .kc-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted);
+    background-clip: padding-box;
+  }
+  .kc-scroll::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Quieter inner column scroll — tracks stay invisible until hovered,
+     thumb sits flush. Used inside each kanban column body. */
+  .kc-kanban-col {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .kc-kanban-col:hover {
+    scrollbar-color: var(--color-line-2) transparent;
+  }
+  .kc-kanban-col::-webkit-scrollbar {
+    width: 6px;
+  }
+  .kc-kanban-col::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+  }
+  .kc-kanban-col:hover::-webkit-scrollbar-thumb {
+    background: var(--color-line-2);
   }
 }

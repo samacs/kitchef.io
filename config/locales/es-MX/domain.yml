@@ -43,6 +43,7 @@ es-MX:
       confirmed:     "Confirmado"
       in_production: "En producción"
       ready:         "Listo"
+      en_route:      "En reparto"
       delivered:     "Entregado"
       paid:          "Pagado"
       canceled:      "Cancelado"
@@ -55,6 +56,12 @@ es-MX:
       whatsapp:   "WhatsApp"
       instagram:  "Instagram"
       other:      "Otro"
+    cancel_reasons:
+      client_canceled: "Cliente canceló"
+      didnt_confirm:   "No confirmó a tiempo"
+      out_of_stock:    "Sin ingredientes"
+      delivery_issue:  "Problema de entrega"
+      other:           "Otro motivo"
 
   subscription:
     plans:

@@ -7,6 +7,7 @@
     <%= csp_meta_tag %>
 
     <%= javascript_include_tag "theme_bootstrap" %>
+    <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
     <%= yield :head %>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,5 +48,7 @@
         </div>
       </div>
     </div>
+
+    <%= render "shared/right_drawer" %>
   </body>
 </html>
