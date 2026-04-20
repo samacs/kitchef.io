@@ -1,0 +1,10 @@
+es-MX:
+  errors:
+    messages:
+      slug_format: "sólo puede contener letras, números y guiones"
+      slug_reserved: "no está disponible, prueba con otro nombre"
+      not_saleable: "debe ser una receta que se venda"
+      requires_saleable: "sólo puedes publicar recetas que se venden"
+      self_reference: "una receta no puede ser componente de sí misma"
+      cross_account: "no pertenece a esta cocina"
+      after_start_time: "debe ser después de la hora de inicio"

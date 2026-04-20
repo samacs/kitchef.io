@@ -1,0 +1,39 @@
+# PostgreSQL configuration.
+#
+# The primary controls are environment variables read at boot via dotenv-rails
+# (in development) or the process environment (in production). If DATABASE_URL
+# is set, Rails merges its values on top of anything in this file.
+#
+# Docker Compose ships defaults matching the fallbacks below, so `bin/rails db:*`
+# commands work against `docker compose up -d postgres` with zero config.
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("POSTGRES_HOST", "localhost") %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
+  username: <%= ENV.fetch("POSTGRES_USER", "kitchef") %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD", "kitchef") %>
+  variables:
+    statement_timeout: <%= ENV.fetch("POSTGRES_STATEMENT_TIMEOUT_MS", 15_000) %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch("POSTGRES_DB", "kitchef_development") %>
+
+# Warning: The database defined as "test" will be erased and re-generated
+# from your development database when you run `rake`. Do not set this db to
+# the same as development or production.
+test:
+  <<: *default
+  database: <%= ENV.fetch("POSTGRES_TEST_DB", "kitchef_test") %>
+
+# Production expects DATABASE_URL from the deployment environment (Kamal
+# secrets). The url key takes precedence over the host/user/password above,
+# so the explicit values here only matter if DATABASE_URL is absent.
+# Cache / queue / cable all run on Valkey — no separate Postgres DBs here.
+production:
+  <<: *default
+  url: <%= ENV["DATABASE_URL"] %>
+  database: <%= ENV.fetch("POSTGRES_DB", "kitchef_production") %>

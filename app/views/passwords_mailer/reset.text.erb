@@ -1,0 +1,8 @@
+<%= t(".greeting") %>
+
+<%= t(".intro") %>
+<%= edit_password_url(@user.password_reset_token) %>
+
+<%= t(".expiry", duration: distance_of_time_in_words(0, @user.password_reset_token_expires_in)) %>
+
+<%= t(".signature") %>

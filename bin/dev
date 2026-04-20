@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+export PGGSSENCMODE="disable"
+
+# Default to port 3000 if not specified
+export PORT="${PORT:-3000}"
+
+# Let the debug gem allow remote connections,
+# but avoid loading until `debugger` is called
+export RUBY_DEBUG_OPEN="true"
+export RUBY_DEBUG_LAZY="true"
+
+# Use lvh.me for local development (see ./ssl/)
+export SSL_CERT_FILE="${SSL_CERT_FILE:-./ssl/lvh.me.pem}"
+export SSL_KEY_FILE="${SSL_KEY_FILE:-./ssl/lvh.me.key}"
+
+if command -v overmind >/dev/null 2>&1; then
+  exec overmind start -f Procfile.dev "$@"
+else
+  if ! gem list foreman -i --silent; then
+    echo "Installing foreman..."
+    gem install foreman
+  fi
+  exec foreman start -f Procfile.dev "$@"
+fi

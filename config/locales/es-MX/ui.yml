@@ -1,0 +1,6 @@
+es-MX:
+  theme:
+    auto: "Automático"
+    light: "Claro"
+    dark: "Oscuro"
+    toggle_label: "Cambiar apariencia"

@@ -1,0 +1,171 @@
+# == Schema Information
+#
+# Table name: accounts
+#
+#  id               :bigint           not null, primary key
+#  branding         :jsonb            not null
+#  default_currency :string           default("MXN"), not null
+#  discarded_at     :datetime
+#  iva_enabled      :boolean          default(FALSE), not null
+#  iva_rate_percent :decimal(5, 2)    default(16.0), not null
+#  name             :string           not null
+#  public_profile   :jsonb            not null
+#  settings         :jsonb            not null
+#  slug             :string           not null
+#  time_zone        :string           default("America/Mexico_City"), not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  owner_id         :bigint           not null
+#
+# Indexes
+#
+#  index_accounts_on_discarded_at  (discarded_at)
+#  index_accounts_on_owner_id      (owner_id)
+#  index_accounts_on_settings      (settings) USING gin
+#  index_accounts_on_slug          (slug) UNIQUE
+#
+# Foreign Keys
+#
+#  fk_rails_...  (owner_id => users.id)
+#
+class Account < ApplicationRecord
+  extend FriendlyId
+  include HasPrefixedId.new(prefix: "acc")
+  include HasSoftDelete
+
+  friendly_id :name, use: :slugged
+
+  # Root-level slugs live at `kitchef.mx/:slug`. Any name that would collide
+  # with an app route has to be blocked at the model layer AND at routing
+  # layer (see config/routes.rb storefront constraint) AND in CI (see
+  # bin/check_reserved_slugs). This list is expected to grow — keep it
+  # alphabetized per block for easy diffs.
+  #
+  # Grouping mirrors the intent:
+  #   1. Kitchef app routes (Spanish — currently shipped).
+  #   2. English equivalents of every Spanish route (so an operator can't
+  #      pre-empt a future localization surface).
+  #   3. Cooking-domain terms — the whole reason Kitchef exists is this
+  #      vocabulary, and operators WILL try to register the obvious ones.
+  #   4. Common SaaS / auth / billing paths we'll almost certainly add.
+  #   5. Tech and protocol paths (robots, sitemap, webhooks, oauth, …).
+  #   6. Brand names (ours and look-alikes).
+  RESERVED_SLUGS = %w[
+    acerca admin ajustes api app asistencia asistente assets ayuda
+    blog buscar
+    categoria categorias como-funciona contacto cocina
+    directorio
+    empleos entrar equipo explorar
+    facturacion favicon fotos
+    health
+    kitchef
+    legal
+    nosotros nuestra-historia
+    pagos panel pedidos precios prensa privacidad preguntas
+    rails recetario recetas recuperar recursos registro robots
+    salir sesion sitemap soporte
+    terminos
+    up usuarios
+    webhooks
+
+    about account accounts admin-panel api-docs apis auth
+    billing
+    careers cart categories changelog checkout clients company contact cookies
+    dashboard delivery-slots demo docs docs-api documentation
+    enterprise explore
+    faq features feedback forgot-password
+    help home how-it-works
+    integrations
+    jobs join
+    letter_opener login logout
+    menus
+    new news
+    onboarding
+    password passwords pricing privacy production products profile
+    register reports reset-password root
+    search settings sign-in signin sign-out signout sign-up signup
+    stats status subscribe subscription support
+    team terms tour
+    users
+    welcome
+
+    baker baking bakery
+    chef chefs cocinera cocineras cocinero cocineros cook cooking cuisine
+    delivery deliveries
+    food foods foodie
+    ingredient ingredients
+    kitchen kitchens
+    meal meals menu
+    order orders
+    platillo platillos
+    receta recipe recipes restaurant restaurante
+    taller tamales tienda
+
+    analytics assets-cdn atom
+    cable callback callbacks css
+    embed
+    feed ftp
+    graphql
+    img images
+    js json
+    mail mailer metrics
+    oauth oauth2 oembed opensearch
+    ping public
+    recede_historical_location refresh_historical_location resume_historical_location
+    rss
+    ssh static superuser
+    www
+    xml
+
+    kitchef-mx kitchef-io agendario
+  ].freeze
+
+  belongs_to :owner, class_name: "User", inverse_of: :owned_account
+
+  # Declaration order matters: dependent-destroy cascades run in the order
+  # associations are declared. Orders must run before recipes/ingredients
+  # (OrderItems reference Recipes). Clients after orders (orders nullify
+  # client_id).
+  has_many :users,          dependent: :restrict_with_exception
+  has_many :orders,         dependent: :destroy
+  has_many :clients,        dependent: :destroy
+  has_many :recipes,        dependent: :destroy
+  has_many :ingredients,    dependent: :destroy
+  has_many :delivery_slots, dependent: :destroy
+  has_one  :subscription,   dependent: :destroy
+
+  has_one_attached :logo
+  has_one_attached :cover_photo
+
+  attribute :settings, Accounts::Settings.to_type
+
+  validates :name, presence: true, length: { maximum: 80 }
+  validates :slug,
+    presence: true,
+    uniqueness: true,
+    length: { minimum: 3, maximum: 50 },
+    format: {
+      with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,
+      message: :slug_format
+    },
+    exclusion: { in: RESERVED_SLUGS, message: :slug_reserved }
+
+  validates :default_currency, presence: true
+  validates :time_zone,        presence: true
+
+  scope :with_composable_recipes, -> {
+    where("accounts.settings @> ?", { use_composable_recipes: true }.to_json)
+  }
+
+  # Convenience: true when the operator has opted into advanced mode.
+  def composable_recipes?
+    settings.use_composable_recipes
+  end
+
+  # FriendlyID: don't regenerate the slug after the first save. A storefront
+  # URL that changes silently breaks every receipt and screenshot ever
+  # shared.
+  def should_generate_new_friendly_id?
+    slug.blank?
+  end
+end

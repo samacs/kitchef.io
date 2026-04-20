@@ -1,0 +1,63 @@
+es-MX:
+  dashboard:
+    title: "Tu cocina hoy"
+    placeholder: "Aquí vivirán tu kanban de pedidos, tu producción de la semana y las métricas que importan. Por ahora es un lugar reservado."
+
+  stubs:
+    in_development: "Esta sección está en construcción. Volverá con forma propia en el próximo módulo."
+
+  orders:
+    title: "Pedidos"
+  clients:
+    title: "Clientes"
+  recipes:
+    title: "Recetario"
+  ingredients:
+    title: "Ingredientes"
+  delivery_slots:
+    title: "Horarios de entrega"
+  account:
+    title: "Tu cocina"
+  subscription:
+    title: "Plan"
+
+  production:
+    weekly:
+      title: "Producción de la semana"
+    shopping_list:
+      title: "Lista de compras"
+
+  reports:
+    menu_engineering:
+      title: "Ingeniería del menú"
+    finance:
+      title: "Finanzas"
+
+  onboarding:
+    decomposition:
+      title: "Descompón tu receta"
+
+  registrations:
+    title: "Crea tu cuenta"
+
+  panel:
+    errors:
+      account_missing: "Necesitas una cocina activa para entrar al panel."
+
+  admin:
+    dashboard:
+      title: "Panel de administración"
+    errors:
+      not_authorized: "Esta sección es solo para el equipo de Kitchef."
+
+  storefronts:
+    menu:
+      title: "Menú de %{kitchen}"
+    orders:
+      new_title: "Haz tu pedido"
+      created_title: "Pedido recibido"
+      show_title: "Detalles del pedido"
+    not_found:
+      title: "Esta cocina no existe"
+      lede: "Tal vez cambió de nombre, o la dirección tiene un error. Desde la página principal encontrarás todas las cocinas activas."
+      cta: "Ir al inicio"

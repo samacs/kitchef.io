@@ -1,0 +1,29 @@
+es-MX:
+  marketing:
+    meta:
+      default_description: "El sistema operativo de tu cocina. Pedidos, recetas, márgenes y clientes en un solo lugar."
+
+    home:
+      title: "Kitchef — el sistema operativo de tu cocina"
+      headline_html: 'El sistema operativo de tu <em class="italic text-accent">cocina</em>.'
+      lede: "Pedidos, recetas, márgenes y clientes en un solo lugar. Diseñado para cocineras mexicanas que quieren crecer sin cuadernos ni WhatsApp."
+
+    pricing:
+      title: "Precios"
+      lede: "Libreta gratis. Cocina para crecer. Sin comisión sobre tus ventas, nunca."
+
+    how_it_works:
+      title: "Cómo funciona"
+      lede: "De tu primera receta al cierre del mes, sin aprender a usar Excel."
+
+    faq:
+      title: "Preguntas frecuentes"
+      lede: "Lo que todas nos preguntamos antes de empezar."
+
+    legal:
+      terms:
+        title: "Términos y condiciones"
+        lede: "Las reglas claras para usar Kitchef."
+      privacy:
+        title: "Aviso de privacidad"
+        lede: "Tus datos y los de tus clientes, protegidos."

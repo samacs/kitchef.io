@@ -1,0 +1,3 @@
+vim
+postgresql-${POSTGRES_MAJOR}-postgis-3
+postgresql-${POSTGRES_MAJOR}-pgvector

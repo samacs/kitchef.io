@@ -1,0 +1,14 @@
+<%# Placeholder used by every Phase 6 controller stub until real views
+    land in the feature PRs. Rendered as HTML so Turbo can drive the
+    navigation (Turbo silently bails on text/plain responses after a
+    form submit, which is what caused /sign-in to appear stuck). %>
+<main class="mx-auto max-w-[1240px] px-7 py-24">
+  <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent"><%= local_assigns.fetch(:kicker, "Panel") %></p>
+  <h1 class="mt-3 font-serif text-4xl text-ink tracking-tight"><%= local_assigns.fetch(:title) %></h1>
+  <% if local_assigns[:meta].present? %>
+    <p class="mt-2 text-sm text-muted font-mono"><%= local_assigns[:meta] %></p>
+  <% end %>
+  <% if local_assigns[:body].present? %>
+    <p class="mt-6 max-w-prose text-ink-2 leading-relaxed"><%= local_assigns[:body] %></p>
+  <% end %>
+</main>
