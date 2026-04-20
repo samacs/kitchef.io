@@ -13,6 +13,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvips42
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -20,16 +25,21 @@ jobs:
 
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
-      
+
       - name: Scan for known security vulnerabilities in gems used
         run: bin/bundler-audit
-      
+
   scan_js:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvips42
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -46,6 +56,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvips42
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
@@ -64,4 +79,3 @@ jobs:
 
       - name: Lint code for consistent style
         run: bin/rubocop -f github
-
