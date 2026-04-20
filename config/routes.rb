@@ -1,6 +1,19 @@
+require "sidekiq/web"
+require "sidekiq/cron/web"
+
 Rails.application.routes.draw do
   # ---- Health check / ops ----------------------------------------------
   get "up" => "rails/health#show", as: :rails_health_check
+
+  # ---- Sidekiq Web UI --------------------------------------------------
+  # Gated by AdminConstraint in production/staging (Kitchef team only). In
+  # development it's open so overmind-ran workers are easy to inspect. Same
+  # pattern as Agendario's config/routes/system.rb.
+  if Rails.env.development?
+    mount Sidekiq::Web => "/sidekiq"
+  else
+    constraints(AdminConstraint) { mount Sidekiq::Web => "/sidekiq" }
+  end
 
   # ---- Letter Opener (dev only) ----------------------------------------
   mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?

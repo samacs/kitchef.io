@@ -34,9 +34,11 @@
 
       <%= render Ui::IconButtonComponent.new(icon: :bell, label: t("panel.top_bar.notifications"), size: :sm, badge: true) %>
 
-      <%# Primary action — pages override via content_for :page_action. %>
-      <% if content_for?(:page_action) %>
-        <%= yield :page_action %>
+      <%# Primary action — pages override via content_for :page_action.
+          Inside a ViewComponent, `yield :name` doesn't reach the outer
+          template's content_for store; use helpers.content_for instead. %>
+      <% if helpers.content_for?(:page_action) %>
+        <%= helpers.content_for(:page_action) %>
       <% else %>
         <%= link_to helpers.new_order_path,
               class: "hidden sm:inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>

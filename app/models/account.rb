@@ -113,6 +113,7 @@ class Account < ApplicationRecord
     ping public
     recede_historical_location refresh_historical_location resume_historical_location
     rss
+    sidekiq
     ssh static superuser
     www
     xml

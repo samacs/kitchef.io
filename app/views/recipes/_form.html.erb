@@ -1,0 +1,136 @@
+<%= form_with model: recipe,
+      url: recipe.persisted? ? recipe_path(recipe) : recipes_path,
+      multipart: true,
+      class: "flex flex-col gap-5",
+      data: { controller: "image-upload" } do |form| %>
+
+  <% if recipe.errors.any? %>
+    <div role="alert"
+         class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+      <span class="text-[12px] font-mono uppercase tracking-[0.14em]">
+        <%= t("onboarding.shared.errors_title") %>
+      </span>
+      <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+        <% recipe.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= render Ui::TextFieldComponent.new(
+        name: "recipe[name]",
+        id: "recipe_name",
+        label: t("recipes.form.name_label"),
+        placeholder: t("recipes.form.name_placeholder"),
+        value: recipe.name,
+        leading_icon: :chef_hat,
+        required: true,
+        maxlength: 120,
+        autofocus: recipe.new_record?) %>
+
+  <label for="recipe_sale_price" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("recipes.form.sale_price_label") %>
+    </span>
+    <span class="relative flex items-center">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono pointer-events-none">$</span>
+      <%= form.number_field :sale_price,
+            id: "recipe_sale_price",
+            value: (recipe.sale_price_cents.to_i.zero? ? nil : format("%.2f", recipe.sale_price.to_f)),
+            step: "0.01",
+            min: 0,
+            required: true,
+            placeholder: t("recipes.form.sale_price_placeholder"),
+            class: "w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input pl-7 pr-16 py-2.5 text-[14px] leading-[1.3] font-mono transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">MXN</span>
+    </span>
+    <span class="text-[12px] text-muted"><%= t("recipes.form.sale_price_hint") %></span>
+  </label>
+
+  <label for="recipe_category" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("recipes.form.category_label") %>
+    </span>
+    <%= form.select :category,
+          Recipe::CATEGORIES.keys.map { |key| [ I18n.t("recipe.categories.#{key}"), key ] },
+          {},
+          id: "recipe_category",
+          class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+  </label>
+
+  <label for="recipe_description" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("recipes.form.description_label") %>
+    </span>
+    <%= form.text_area :description,
+          id: "recipe_description",
+          rows: 5,
+          placeholder: t("recipes.form.description_placeholder"),
+          class: "w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y whitespace-pre-line" %>
+    <span class="text-[12px] text-muted"><%= t("recipes.form.description_hint") %></span>
+  </label>
+
+  <div class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("recipes.form.photo_label") %>
+    </span>
+
+    <% if recipe.photos.attached? %>
+      <div class="flex items-center gap-4 p-4 rounded-card-sm bg-bg-2/60 border border-line">
+        <img src="<%= url_for(recipe.photos.first.variant(:thumb)) %>"
+             alt=""
+             class="w-16 h-16 rounded-[10px] object-cover shadow-card" />
+        <div class="flex-1 min-w-0 flex flex-col gap-1">
+          <span class="text-[13.5px] font-medium text-ink truncate">
+            <%= recipe.photos.first.filename.to_s %>
+          </span>
+          <span class="text-[12px] text-muted">
+            <%= number_to_human_size(recipe.photos.first.byte_size) %>
+          </span>
+        </div>
+      </div>
+    <% end %>
+
+    <label for="recipe_photos"
+           class="relative flex flex-col items-center justify-center gap-2 p-8 rounded-card border-2 border-dashed border-line hover:border-accent hover:bg-bg-2/60 transition cursor-pointer text-center overflow-hidden min-h-[220px]">
+      <img data-image-upload-target="preview"
+           src="<%= recipe.photos.attached? ? url_for(recipe.photos.first.variant(:card)) : "" %>"
+           alt=""
+           class="<%= recipe.photos.attached? ? "" : "hidden" %> absolute inset-0 w-full h-full object-cover" />
+
+      <div data-image-upload-target="placeholder"
+           class="<%= recipe.photos.attached? ? "hidden" : "" %> relative z-10 flex flex-col items-center gap-2">
+        <span class="w-12 h-12 inline-flex items-center justify-center rounded-full bg-accent-soft text-accent">
+          <%= icon(:image_plus, size: :md) %>
+        </span>
+        <span class="text-[14px] font-medium text-ink">
+          <%= t("recipes.form.photo_upload") %>
+        </span>
+        <span class="text-[12px] text-muted"><%= t("recipes.form.photo_hint") %></span>
+      </div>
+
+      <span class="<%= recipe.photos.attached? ? "" : "hidden" %> absolute bottom-3 left-1/2 -translate-x-1/2 z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill bg-ink/80 text-bg text-[12px] font-medium backdrop-blur-sm">
+        <%= icon(:image_plus, size: :xs) %>
+        <%= t("recipes.form.photo_replace") %>
+      </span>
+
+      <input id="recipe_photos"
+             type="file"
+             name="recipe[photos][]"
+             accept="image/jpeg,image/png,image/webp,image/heic"
+             class="sr-only"
+             data-image-upload-target="input"
+             data-action="change->image-upload#preview" />
+    </label>
+  </div>
+
+  <div class="flex items-center justify-between gap-3 pt-2">
+    <%= link_to t("recipes.form.cancel"),
+          recipes_path,
+          class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+
+    <%= form.submit(recipe.persisted? ? t("recipes.form.submit_update") : t("recipes.form.submit_create"),
+          class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta") %>
+  </div>
+<% end %>

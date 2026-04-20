@@ -75,7 +75,11 @@ class Recipe < ApplicationRecord
     as: :componentable,
     dependent: :destroy
 
-  has_many_attached :photos
+  has_many_attached :photos do |attachable|
+    attachable.variant :thumb, resize_to_limit: [ 120, 120 ]
+    attachable.variant :card,  resize_to_limit: [ 400, 400 ]
+    attachable.variant :hero,  resize_to_limit: [ 1200, 800 ]
+  end
 
   validates :name, presence: true, length: { maximum: 120 }
   validates :slug, presence: true
@@ -86,6 +90,9 @@ class Recipe < ApplicationRecord
     numericality: { greater_than_or_equal_to: 0 },
     presence: true,
     if: :is_saleable?
+  validates :photos,
+    content_type: %i[image/jpeg image/png image/webp image/heic],
+    size: { less_than: 5.megabytes }
   validate :published_requires_saleable
 
   scope :saleable, -> { where(is_saleable: true) }
@@ -95,6 +102,10 @@ class Recipe < ApplicationRecord
 
   def internal?
     !is_saleable?
+  end
+
+  def display_photo
+    photos.first&.variant(:card)
   end
 
   def should_generate_new_friendly_id?
