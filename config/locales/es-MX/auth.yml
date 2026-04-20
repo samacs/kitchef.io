@@ -21,25 +21,24 @@ es-MX:
     new:
       kicker: "Empezar"
       title_html: 'Tu cocina merece un <em>sistema</em>.'
-      lede: "Crea tu cuenta en dos minutos. Libreta gratis, sin tarjeta, sin comisión por venta."
+      lede: "Abrimos tu cuenta en dos minutos. El nombre de tu cocina y tu foto los elegimos después, con una vista previa en tiempo real."
       first_name_label: "Nombre"
       first_name_placeholder: "Elena"
       last_name_label: "Apellido"
       last_name_placeholder: "Martínez"
-      kitchen_name_label: "Nombre de tu cocina"
-      kitchen_name_placeholder: "Cocina de Elena"
-      kitchen_name_hint: "Así aparecerá tu menú público: kitchef.mx/cocina-de-elena"
       email_label: "Correo"
       email_placeholder: "tucocina@correo.com"
-      phone_label: "WhatsApp"
-      phone_placeholder: "+52 55 1234 5678"
-      phone_hint: "Para que tus clientas te encuentren. Puedes cambiarlo después."
       password_label: "Contraseña"
       password_placeholder: "Mínimo 8 caracteres"
-      submit: "Crear cocina"
+      password_confirmation_label: "Confirma tu contraseña"
+      password_confirmation_placeholder: "Repítela"
+      terms_accept_label_html: 'Acepto los <a href="%{terms_url}" class="link" target="_blank" rel="noopener" tabindex="-1">Términos del servicio</a> y el <a href="%{privacy_url}" class="link" target="_blank" rel="noopener" tabindex="-1">Aviso de privacidad</a>.'
+      submit: "Crear cuenta"
       have_account_html: '¿Ya tienes cuenta? <a href="%{url}" class="link">Entra</a>.'
-      terms_html: 'Al crear tu cocina aceptas los <a href="%{terms_url}" class="link">Términos</a> y el <a href="%{privacy_url}" class="link">Aviso de privacidad</a>.'
       seo_title: "Empieza gratis — Kitchef"
+      errors_title: "Revisa estos datos"
+    create:
+      notice: "¡Bienvenida! Ahora vamos a darle forma a tu cocina."
 
   passwords:
     invalid_token: "Este enlace ya expiró o no es válido. Pide otro."

@@ -137,7 +137,8 @@ class Account < ApplicationRecord
   has_one_attached :logo
   has_one_attached :cover_photo
 
-  attribute :settings, Accounts::Settings.to_type
+  attribute :settings,       Accounts::Settings.to_type
+  attribute :public_profile, Accounts::PublicProfile.to_type
 
   validates :name, presence: true, length: { maximum: 80 }
   validates :slug,
@@ -160,6 +161,15 @@ class Account < ApplicationRecord
   # Convenience: true when the operator has opted into advanced mode.
   def composable_recipes?
     settings.use_composable_recipes
+  end
+
+  # Canonical slug computation shared by the JSON endpoint, the live
+  # preview in the onboarding form, and FriendlyID's default
+  # normalization on save. Keeping this in one place means the
+  # preview URL the operator sees in the form matches the URL her
+  # storefront actually ships with.
+  def self.slugify(value)
+    value.to_s.parameterize
   end
 
   # FriendlyID: don't regenerate the slug after the first save. A storefront

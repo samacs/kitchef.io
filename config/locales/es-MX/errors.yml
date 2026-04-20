@@ -8,3 +8,6 @@ es-MX:
       self_reference: "una receta no puede ser componente de sí misma"
       cross_account: "no pertenece a esta cocina"
       after_start_time: "debe ser después de la hora de inicio"
+      required: "es obligatorio"
+      logo_missing: "Elige una imagen o salta este paso."
+      cover_missing: "Elige una imagen o salta este paso."

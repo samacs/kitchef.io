@@ -1,0 +1,29 @@
+<nav aria-label="<%= t('onboarding.shared.step_of', current: current_number, total: total) %>"
+     class="flex flex-col gap-3">
+  <div class="sm:hidden flex items-center justify-between text-[12px] text-muted font-mono uppercase tracking-[0.14em]">
+    <span><%= t('onboarding.shared.step_of', current: current_number, total: total) %></span>
+    <span class="text-ink font-medium tracking-normal normal-case"><%= current_label %></span>
+  </div>
+
+  <ol class="hidden sm:flex items-center gap-2">
+    <% steps.each_with_index do |step, idx| %>
+      <li class="flex items-center gap-2 flex-1 min-w-0 last:flex-none">
+        <span class="<%= dot_classes(step[:state]) %>">
+          <% if step[:state] == :done %>
+            <%= helpers.icon(:check, size: :xs, class: "text-bg") %>
+          <% else %>
+            <%= step[:number] %>
+          <% end %>
+        </span>
+        <span class="<%= label_classes(step[:state]) %>"><%= step[:label] %></span>
+        <% unless idx == steps.length - 1 %>
+          <span class="flex-1 h-px bg-line" aria-hidden="true"></span>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+
+  <div class="sm:hidden h-1.5 rounded-pill bg-bg-2 overflow-hidden" aria-hidden="true">
+    <div class="h-full bg-accent transition-[width] duration-300 ease-out <%= progress_class %>"></div>
+  </div>
+</nav>

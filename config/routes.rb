@@ -73,6 +73,21 @@ Rails.application.routes.draw do
   end
 
   namespace :onboarding do
+    get    "/",             to: "welcome#show",             as: :root
+    get    "/kitchen",      to: "kitchens#new",             as: :kitchen
+    post   "/kitchen",      to: "kitchens#create"
+    post   "/slug-check",   to: "kitchens#slug_check",      as: :slug_check, defaults: { format: :json }
+    get    "/description",  to: "descriptions#edit",        as: :description
+    patch  "/description",  to: "descriptions#update"
+    get    "/logo",         to: "logos#edit",               as: :logo
+    patch  "/logo",         to: "logos#update"
+    delete "/logo",         to: "logos#destroy"
+    get    "/cover",        to: "covers#edit",              as: :cover
+    patch  "/cover",        to: "covers#update"
+    delete "/cover",        to: "covers#destroy"
+    get    "/done",         to: "completions#show",         as: :done
+    post   "/done",         to: "completions#create"
+
     get  "/recipes/:recipe_id", to: "decomposition#show", as: :decomposition
     post "/recipes/:recipe_id", to: "decomposition#create"
   end

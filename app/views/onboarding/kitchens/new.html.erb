@@ -1,0 +1,111 @@
+<% content_for :title, t("onboarding.kitchen.seo_title") %>
+<% content_for :onboarding_step, 1 %>
+
+<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] gap-6 lg:gap-10 items-start" data-step-transition-target="step">
+  <div class="order-1">
+    <% if @errors.present? %>
+      <div role="alert"
+           class="mb-5 bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+        <span class="text-[12px] font-mono uppercase tracking-[0.14em]"><%= t("onboarding.shared.errors_title") %></span>
+        <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+          <% @errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
+      <div class="flex flex-col gap-3">
+        <%= render Ui::KickerComponent.new(text: t("onboarding.kitchen.kicker")) %>
+        <h1 class="font-serif text-[34px] sm:text-[40px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
+          <%= t("onboarding.kitchen.title_html").html_safe %>
+        </h1>
+        <p class="text-[15px] text-ink-2 leading-[1.55] max-w-[42ch]">
+          <%= t("onboarding.kitchen.lede") %>
+        </p>
+      </div>
+
+      <%= form_with url: onboarding_kitchen_path,
+            method: :post,
+            class: "flex flex-col gap-4",
+            data: {
+              controller: "slug-editor live-preview-source",
+              slug_editor_check_url_value: onboarding_slug_check_path,
+              slug_editor_status_labels_value: {
+                checking: t("onboarding.kitchen.slug_status_checking"),
+                available: t("onboarding.kitchen.slug_status_available"),
+                taken: t("onboarding.kitchen.slug_status_taken"),
+                reserved: t("onboarding.kitchen.slug_status_reserved"),
+                format: t("onboarding.kitchen.slug_status_format"),
+                length: t("onboarding.kitchen.slug_status_length"),
+                blank: t("onboarding.kitchen.slug_status_blank")
+              }.to_json
+            } do |form| %>
+
+        <%= render Ui::TextFieldComponent.new(
+              id: "account_name",
+              name: "account[name]",
+              label: t("onboarding.kitchen.name_label"),
+              placeholder: t("onboarding.kitchen.name_placeholder"),
+              hint: t("onboarding.kitchen.name_hint"),
+              leading_icon: :chef_hat,
+              required: true,
+              autofocus: true,
+              value: @form[:name],
+              data: {
+                slug_editor_target: "nameInput",
+                action: "input->slug-editor#nameChanged input->live-preview-source#emit",
+                live_preview_source_field_param: "name"
+              }) %>
+
+        <div class="flex flex-col gap-2">
+          <label for="account_slug" class="text-[13px] font-medium text-ink leading-none">
+            <%= t("onboarding.kitchen.slug_label") %>
+          </label>
+          <div class="flex items-stretch rounded-input border border-line hover:border-line-2 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20 transition bg-surface overflow-hidden">
+            <span class="inline-flex items-center px-3 text-[13.5px] font-mono text-muted bg-bg-2 border-r border-line select-none">
+              <%= t("onboarding.kitchen.slug_prefix") %>
+            </span>
+            <input type="text"
+                   name="account[slug]"
+                   id="account_slug"
+                   value="<%= @form[:slug] %>"
+                   autocomplete="off"
+                   spellcheck="false"
+                   inputmode="url"
+                   data-slug-editor-target="slugInput"
+                   data-action="input->slug-editor#slugChanged input->live-preview-source#emit"
+                   data-live-preview-source-field-param="slug"
+                   class="flex-1 bg-transparent text-ink text-[14px] px-3 py-2.5 outline-none font-mono" />
+          </div>
+          <div class="flex flex-col gap-1 min-h-[34px]">
+            <span class="text-[12px] text-muted"><%= t("onboarding.kitchen.slug_hint") %></span>
+            <span data-slug-editor-target="status"
+                  aria-live="polite"
+                  class="inline-flex items-center gap-1.5 text-[12px] font-medium text-muted min-h-[16px]">
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <%= link_to t("onboarding.shared.back"),
+                onboarding_root_path,
+                class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+          <%= form.submit t("onboarding.kitchen.submit"),
+                data: { slug_editor_target: "submit" },
+                class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta disabled:opacity-50 disabled:cursor-not-allowed" %>
+        </div>
+
+      <% end %>
+    </div>
+  </div>
+
+  <aside class="order-2 lg:sticky lg:top-6">
+    <%= render Onboarding::StorefrontPreviewComponent.new(
+          account:     current_onboarding_account,
+          name:        @form[:name],
+          slug:        @form[:slug],
+          description: current_onboarding_account&.public_profile&.description) %>
+  </aside>
+</div>

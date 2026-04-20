@@ -37,6 +37,107 @@ es-MX:
   onboarding:
     decomposition:
       title: "Descompón tu receta"
+    shared:
+      back: "Atrás"
+      skip: "Saltar este paso"
+      continue: "Continuar"
+      save_and_continue: "Guardar y continuar"
+      step_of: "Paso %{current} de %{total}"
+      errors_title: "Revisa estos datos"
+    stepper:
+      kitchen: "Tu cocina"
+      description: "Sobre ti"
+      logo: "Logo"
+      cover: "Portada"
+      done: "Listo"
+    welcome:
+      seo_title: "Te damos la bienvenida — Kitchef"
+      kicker: "Empezamos"
+      title_greeting: "Te damos la bienvenida"
+      title_suffix: "."
+      lede: "En cuatro pasos cortos te ayudamos a preparar tu cocina: nombre, presentación, logo y portada. Verás en vivo cómo se ve cada cambio en tu menú público."
+      cta: "Darle forma a mi cocina"
+    kitchen:
+      seo_title: "El nombre de tu cocina — Kitchef"
+      kicker: "Paso 1 · Tu cocina"
+      title_html: '¿Cómo se <em>llama</em> tu cocina?'
+      lede: "Este nombre encabezará tu menú público. Puedes cambiarlo después desde tu perfil."
+      name_label: "Nombre de tu cocina"
+      name_placeholder: "Cocina de Elena"
+      name_hint: "Entre 3 y 50 letras. Piensa en cómo te recomiendan tus clientas."
+      slug_label: "Tu dirección pública"
+      slug_hint: "Solo minúsculas, números y guiones."
+      slug_prefix: "kitchef.mx/"
+      slug_status_checking: "Revisando…"
+      slug_status_available: "Disponible"
+      slug_status_taken: "Ya está en uso"
+      slug_status_reserved: "Reservado por Kitchef"
+      slug_status_format: "Usa solo minúsculas, números y guiones"
+      slug_status_length: "Entre 3 y 50 caracteres"
+      slug_status_blank: "Escribe al menos una letra"
+      preview_title: "Así se verá tu menú"
+      preview_url_prefix: "kitchef.mx/"
+      preview_empty_name: "El nombre de tu cocina"
+      preview_empty_description: "Aquí aparecerá tu presentación. Podrás contarle a tus clientas quién cocina y qué pueden esperar."
+      submit: "Continuar"
+    description:
+      seo_title: "Cuéntales sobre ti — Kitchef"
+      kicker: "Paso 2 · Sobre ti"
+      title_html: 'Cuéntales a tus clientas <em>quién</em> cocina.'
+      lede: "Una o dos frases bastan. Aparece debajo del nombre de tu cocina en tu menú público. Puedes dejarlo en blanco y agregarlo después."
+      field_label: "Tu presentación"
+      field_placeholder: |-
+        Soy Elena y desde hace doce años cocino tamales de olla con la receta de mi abuela.
+
+        ✔ Masa fresca, nixtamalizada en casa
+        ✔ Sin conservadores
+        ✔ Entregas los sábados por la mañana
+      field_hint: "Hasta 280 caracteres. Usa saltos de línea o símbolos (✔, •, —) para darle forma."
+      counter_suffix: "caracteres"
+      skip: "Saltar por ahora"
+      submit: "Guardar y continuar"
+      preview_title: "Así se verá en tu menú"
+    logo:
+      seo_title: "Agrega tu logo — Kitchef"
+      kicker: "Paso 3 · Logo"
+      title_html: 'Dale <em>cara</em> a tu cocina.'
+      lede: "Aparece en tu menú público, en tus notas de venta y en las notificaciones a tus clientas. Si no tienes uno aún, sáltalo — puedes agregarlo después."
+      upload_label: "Elige una imagen"
+      upload_hint: "JPG, PNG o WebP. Mínimo 400×400, máximo 5 MB."
+      replace: "Cambiar imagen"
+      remove: "Quitar logo"
+      preview_title: "Vista previa"
+      skip: "Saltar por ahora"
+      submit: "Guardar y continuar"
+    cover:
+      seo_title: "Agrega tu portada — Kitchef"
+      kicker: "Paso 4 · Portada"
+      title_html: 'Una <em>foto</em> que antoje.'
+      lede: "La portada abre tu menú público y marca el tono de tu cocina. Busca algo en horizontal, con buena luz, sin marca de agua."
+      upload_label: "Elige una imagen"
+      upload_hint: "JPG, PNG o WebP. Mínimo 1200×800, máximo 5 MB."
+      replace: "Cambiar imagen"
+      remove: "Quitar portada"
+      preview_title: "Vista previa"
+      skip: "Saltar por ahora"
+      submit: "Guardar y continuar"
+    done:
+      seo_title: "Todo listo — Kitchef"
+      kicker: "Listo"
+      title_html: 'Tu cocina <em>está lista</em>.'
+      lede_html: 'Ya podemos recibir pedidos en <strong>kitchef.mx/%{slug}</strong>. Lo siguiente: agregar tus platillos.'
+      summary_title: "Lo que configuramos"
+      summary_name: "Nombre"
+      summary_url: "Dirección pública"
+      summary_description: "Presentación"
+      summary_description_empty: "— (podrás agregarla después)"
+      summary_logo: "Logo"
+      summary_logo_set: "Listo"
+      summary_logo_empty: "Sin logo (por ahora)"
+      summary_cover: "Portada"
+      summary_cover_set: "Lista"
+      summary_cover_empty: "Sin portada (por ahora)"
+      submit: "Entrar a mi panel"
 
   admin:
     dashboard:

@@ -58,9 +58,32 @@ es-MX:
       lede: "Lo que todas nos preguntamos antes de empezar."
 
     legal:
+      mock_notice: "Borrador. Este contenido es un marcador mientras finalizamos los documentos definitivos con asesoría legal."
       terms:
-        title: "Términos y condiciones"
-        lede: "Las reglas claras para usar Kitchef."
+        title: "Términos del servicio"
+        lede: "Las reglas claras para usar Kitchef. Léelas una vez y sigue cocinando tranquila."
+        sections:
+          - heading: "1. Aceptación"
+            body: "Al crear una cuenta en Kitchef aceptas estos términos. Si no estás de acuerdo, no actives tu cuenta."
+          - heading: "2. Cómo usas Kitchef"
+            body: "Kitchef es una herramienta para administrar tu negocio de comida. Tú eres responsable del contenido que publicas en tu menú, los precios que cobras y el cumplimiento sanitario de tus platillos."
+          - heading: "3. Nuestra relación"
+            body: "Kitchef no cobra comisión por tus ventas. El plan Libreta es gratis. Los planes de pago se cobran por mes y puedes cancelar cuando quieras — tus datos siempre son tuyos."
+          - heading: "4. Propiedad del contenido"
+            body: "Las fotos, descripciones y recetas que subas siguen siendo tuyas. Nos das permiso para mostrarlas en tu menú público y en comunicaciones a tus clientas."
+          - heading: "5. Cancelación"
+            body: "Puedes cerrar tu cuenta desde Ajustes en cualquier momento. Al cerrarla, exportas tus pedidos, recetas y clientes para llevarlos contigo."
       privacy:
         title: "Aviso de privacidad"
-        lede: "Tus datos y los de tus clientes, protegidos."
+        lede: "Tus datos y los de tus clientes están protegidos. Así los tratamos."
+        sections:
+          - heading: "1. Qué datos guardamos"
+            body: "De ti: nombre, correo, contraseña cifrada y la información que escribas sobre tu cocina. De tus clientes: los datos que tú captures al registrar un pedido (nombre, teléfono, colonia, notas)."
+          - heading: "2. Para qué los usamos"
+            body: "Para hacer funcionar tu panel, enviarte notificaciones operativas (como recordatorios de producción) y responder soporte. No vendemos ni compartimos tu información con terceros para publicidad."
+          - heading: "3. Dónde viven"
+            body: "En servidores administrados por Kitchef en Estados Unidos, con respaldos cifrados. Usamos Stripe para procesar pagos, que sigue sus propias políticas PCI."
+          - heading: "4. Tus derechos"
+            body: "Puedes acceder, rectificar, cancelar u oponerte al tratamiento de tus datos en cualquier momento escribiendo a privacidad@kitchef.mx."
+          - heading: "5. Cambios"
+            body: "Si cambiamos este aviso, te notificamos por correo con 30 días de anticipación. La versión vigente siempre está publicada en esta página."

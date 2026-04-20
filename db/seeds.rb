@@ -49,18 +49,19 @@ User.where(id: demo_user_ids).destroy_all
 puts "==> Cocina de Elena (simple mode)"
 
 elena = User.create!(
-  email_address: "elena@lvh.me",
-  password:      "kitchef2026",
-  first_name:    "Elena",
-  last_name:     "Ramírez",
-  phone:         "5512345678"
+  email_address:     "elena@lvh.me",
+  password:          "kitchef2026",
+  first_name:        "Elena",
+  last_name:         "Ramírez",
+  phone:             "5512345678",
+  terms_accepted_at: 2.weeks.ago
 )
 
 cocina_elena = Account.create!(
   owner: elena,
   name:  "Cocina de Elena",
   time_zone: "America/Mexico_City",
-  settings: { use_composable_recipes: false, onboarding_completed: false }
+  settings: { use_composable_recipes: false, onboarding_completed: true }
 )
 elena.update!(account: cocina_elena)
 
@@ -171,11 +172,12 @@ end
 puts "==> Taquería Don Mario (advanced mode)"
 
 mario = User.create!(
-  email_address: "mario@lvh.me",
-  password:      "kitchef2026",
-  first_name:    "Mario",
-  last_name:     "Hernández",
-  phone:         "5587654321"
+  email_address:     "mario@lvh.me",
+  password:          "kitchef2026",
+  first_name:        "Mario",
+  last_name:         "Hernández",
+  phone:             "5587654321",
+  terms_accepted_at: 3.weeks.ago
 )
 
 taqueria_mario = Account.create!(

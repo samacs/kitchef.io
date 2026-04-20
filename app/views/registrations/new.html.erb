@@ -4,6 +4,18 @@
   <%= render Ui::FlashComponent.new(kind: :alert,  message: flash[:alert]) %>
   <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
 
+  <% if @errors.present? %>
+    <div role="alert"
+         class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+      <span class="text-[12px] font-mono uppercase tracking-[0.14em]"><%= t(".errors_title") %></span>
+      <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+        <% @errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
   <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
     <div class="flex flex-col gap-3">
       <%= render Ui::KickerComponent.new(text: t(".kicker")) %>
@@ -19,75 +31,75 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <%= render Ui::TextFieldComponent.new(
               id: "first_name",
-              name: "user[first_name]",
+              name: "first_name",
               label: t(".first_name_label"),
               placeholder: t(".first_name_placeholder"),
               autocomplete: "given-name",
               autofocus: true,
               required: true,
-              value: params.dig(:user, :first_name)) %>
+              value: (@user_params || params)[:first_name],
+              error: @errors&.[](:first_name)&.first) %>
 
         <%= render Ui::TextFieldComponent.new(
               id: "last_name",
-              name: "user[last_name]",
+              name: "last_name",
               label: t(".last_name_label"),
               placeholder: t(".last_name_placeholder"),
               autocomplete: "family-name",
               required: true,
-              value: params.dig(:user, :last_name)) %>
+              value: (@user_params || params)[:last_name],
+              error: @errors&.[](:last_name)&.first) %>
       </div>
 
       <%= render Ui::TextFieldComponent.new(
-            id: "kitchen_name",
-            name: "account[name]",
-            label: t(".kitchen_name_label"),
-            placeholder: t(".kitchen_name_placeholder"),
-            hint: t(".kitchen_name_hint"),
-            leading_icon: :chef_hat,
-            required: true,
-            value: params.dig(:account, :name)) %>
-
-      <%= render Ui::TextFieldComponent.new(
             id: "email_address",
-            name: "user[email_address]",
+            name: "email_address",
             type: :email,
             label: t(".email_label"),
             placeholder: t(".email_placeholder"),
             autocomplete: "email",
             leading_icon: :mail,
             required: true,
-            value: params.dig(:user, :email_address)) %>
-
-      <%= render Ui::TextFieldComponent.new(
-            id: "phone",
-            name: "user[phone]",
-            type: :tel,
-            label: t(".phone_label"),
-            placeholder: t(".phone_placeholder"),
-            hint: t(".phone_hint"),
-            autocomplete: "tel",
-            leading_icon: :phone,
-            value: params.dig(:user, :phone)) %>
+            value: (@user_params || params)[:email_address],
+            error: @errors&.[](:email_address)&.first) %>
 
       <%= render Ui::TextFieldComponent.new(
             id: "password",
-            name: "user[password]",
+            name: "password",
             type: :password,
             label: t(".password_label"),
             placeholder: t(".password_placeholder"),
             autocomplete: "new-password",
             required: true,
             maxlength: 72,
-            leading_icon: :lock) %>
+            leading_icon: :lock,
+            error: @errors&.[](:password)&.first) %>
+
+      <%= render Ui::TextFieldComponent.new(
+            id: "password_confirmation",
+            name: "password_confirmation",
+            type: :password,
+            label: t(".password_confirmation_label"),
+            placeholder: t(".password_confirmation_placeholder"),
+            autocomplete: "new-password",
+            required: true,
+            maxlength: 72,
+            leading_icon: :shield_check,
+            error: @errors&.[](:password_confirmation)&.first) %>
+
+      <div class="pt-1">
+        <%= render Ui::CheckboxComponent.new(
+              name: "terms_accepted",
+              label: t(".terms_accept_label_html",
+                      terms_url:   legal_path(doc: "terms"),
+                      privacy_url: legal_path(doc: "privacy")).html_safe,
+              required: true,
+              checked: @terms_accepted.present? || params[:terms_accepted].present?,
+              error: @errors&.[](:terms_accepted)&.first) %>
+      </div>
 
       <%= form.submit t(".submit"),
             class: "mt-2 inline-flex items-center justify-center gap-2 w-full text-[14px] font-semibold px-[18px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer" %>
-
-      <p class="text-[11.5px] text-muted leading-[1.5] text-center">
-        <%= t(".terms_html",
-              terms_url: legal_path(doc: "terms"),
-              privacy_url: legal_path(doc: "privacy")).html_safe %>
-      </p>
     <% end %>
   </div>
 

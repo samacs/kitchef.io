@@ -1,0 +1,71 @@
+<% content_for :title, t("onboarding.done.seo_title") %>
+<% content_for :onboarding_step, 5 %>
+
+<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] gap-6 lg:gap-10 items-start" data-step-transition-target="step">
+  <div class="order-1">
+    <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
+      <div class="flex flex-col gap-3">
+        <%= render Ui::KickerComponent.new(text: t("onboarding.done.kicker")) %>
+        <h1 class="font-serif text-[34px] sm:text-[40px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
+          <%= t("onboarding.done.title_html").html_safe %>
+        </h1>
+        <p class="text-[15px] text-ink-2 leading-[1.55] max-w-[46ch]">
+          <%= t("onboarding.done.lede_html", slug: current_onboarding_account.slug).html_safe %>
+        </p>
+      </div>
+
+      <dl class="flex flex-col gap-3 py-2">
+        <div class="flex items-start justify-between gap-3 py-2 border-t border-line">
+          <dt class="text-[12.5px] font-mono uppercase tracking-[0.14em] text-muted shrink-0 w-[130px] pt-[2px]">
+            <%= t("onboarding.done.summary_name") %>
+          </dt>
+          <dd class="flex-1 text-[14.5px] text-ink font-serif"><%= current_onboarding_account.name %></dd>
+        </div>
+        <div class="flex items-start justify-between gap-3 py-2 border-t border-line">
+          <dt class="text-[12.5px] font-mono uppercase tracking-[0.14em] text-muted shrink-0 w-[130px] pt-[2px]">
+            <%= t("onboarding.done.summary_url") %>
+          </dt>
+          <dd class="flex-1 text-[13.5px] font-mono text-ink-2">kitchef.mx/<%= current_onboarding_account.slug %></dd>
+        </div>
+        <div class="flex items-start justify-between gap-3 py-2 border-t border-line">
+          <dt class="text-[12.5px] font-mono uppercase tracking-[0.14em] text-muted shrink-0 w-[130px] pt-[2px]">
+            <%= t("onboarding.done.summary_description") %>
+          </dt>
+          <dd class="flex-1 text-[14px] text-ink-2 whitespace-pre-line">
+            <% if current_onboarding_account.public_profile.description.present? %>
+              <%= current_onboarding_account.public_profile.description %>
+            <% else %>
+              <span class="text-muted italic"><%= t("onboarding.done.summary_description_empty") %></span>
+            <% end %>
+          </dd>
+        </div>
+        <div class="flex items-start justify-between gap-3 py-2 border-t border-line">
+          <dt class="text-[12.5px] font-mono uppercase tracking-[0.14em] text-muted shrink-0 w-[130px] pt-[2px]">
+            <%= t("onboarding.done.summary_logo") %>
+          </dt>
+          <dd class="flex-1 text-[14px] <%= current_onboarding_account.logo.attached? ? 'text-accent' : 'text-muted italic' %>">
+            <%= current_onboarding_account.logo.attached? ? t("onboarding.done.summary_logo_set") : t("onboarding.done.summary_logo_empty") %>
+          </dd>
+        </div>
+        <div class="flex items-start justify-between gap-3 py-2 border-t border-b border-line">
+          <dt class="text-[12.5px] font-mono uppercase tracking-[0.14em] text-muted shrink-0 w-[130px] pt-[2px]">
+            <%= t("onboarding.done.summary_cover") %>
+          </dt>
+          <dd class="flex-1 text-[14px] <%= current_onboarding_account.cover_photo.attached? ? 'text-accent' : 'text-muted italic' %>">
+            <%= current_onboarding_account.cover_photo.attached? ? t("onboarding.done.summary_cover_set") : t("onboarding.done.summary_cover_empty") %>
+          </dd>
+        </div>
+      </dl>
+
+      <%= button_to t("onboarding.done.submit"),
+            onboarding_done_path,
+            method: :post,
+            class: "w-full inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta",
+            form: { class: "contents" } %>
+    </div>
+  </div>
+
+  <aside class="order-2 lg:sticky lg:top-6">
+    <%= render Onboarding::StorefrontPreviewComponent.new(account: current_onboarding_account) %>
+  </aside>
+</div>
