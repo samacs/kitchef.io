@@ -1,0 +1,71 @@
+<% content_for :title, t("onboarding.description.seo_title") %>
+<% content_for :onboarding_step, 2 %>
+
+<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] gap-6 lg:gap-10 items-start" data-step-transition-target="step">
+  <div class="order-1">
+    <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
+      <div class="flex flex-col gap-3">
+        <%= render Ui::KickerComponent.new(text: t("onboarding.description.kicker")) %>
+        <h1 class="font-serif text-[34px] sm:text-[40px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
+          <%= t("onboarding.description.title_html").html_safe %>
+        </h1>
+        <p class="text-[15px] text-ink-2 leading-[1.55] max-w-[46ch]">
+          <%= t("onboarding.description.lede") %>
+        </p>
+      </div>
+
+      <%= form_with url: onboarding_description_path,
+            method: :patch,
+            class: "flex flex-col gap-4",
+            data: { controller: "live-preview-source" } do |form| %>
+        <label for="account_description" class="text-[13px] font-medium text-ink leading-none">
+          <%= t("onboarding.description.field_label") %>
+        </label>
+
+        <%# char-counter sits on the wrapping div so its `count` target (in
+            the sibling row below the textarea) is inside the controller's
+            reachable subtree. A textarea itself can't hold targets. %>
+        <div data-controller="char-counter"
+             data-char-counter-max-value="<%= Accounts::PublicProfile::DESCRIPTION_MAX %>"
+             class="flex flex-col gap-2">
+          <textarea
+              id="account_description"
+              name="account[description]"
+              rows="5"
+              maxlength="<%= Accounts::PublicProfile::DESCRIPTION_MAX %>"
+              autofocus
+              data-action="input->char-counter#update input->live-preview-source#emit"
+              data-live-preview-source-field-param="description"
+              placeholder="<%= t('onboarding.description.field_placeholder') %>"
+              class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y whitespace-pre-line"><%= @description %></textarea>
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-[12px] text-muted"><%= t("onboarding.description.field_hint") %></span>
+            <span class="text-[12px] font-mono text-muted">
+              <span data-char-counter-target="count"><%= @description.to_s.length %></span>/<%= Accounts::PublicProfile::DESCRIPTION_MAX %>
+              <%= t("onboarding.description.counter_suffix") %>
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 pt-3">
+          <%= link_to t("onboarding.shared.back"),
+                onboarding_kitchen_path,
+                class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+          <div class="flex items-center gap-3">
+            <%= link_to t("onboarding.description.skip"),
+                  onboarding_logo_path,
+                  class: "text-[13px] font-medium text-ink-2 hover:text-ink px-3 py-[10px]" %>
+            <%= form.submit t("onboarding.description.submit"),
+                  class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <aside class="order-2 lg:sticky lg:top-6">
+    <%= render Onboarding::StorefrontPreviewComponent.new(
+          account:     current_onboarding_account,
+          description: @description) %>
+  </aside>
+</div>

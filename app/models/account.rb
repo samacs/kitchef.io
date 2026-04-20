@@ -125,8 +125,10 @@ class Account < ApplicationRecord
   # Declaration order matters: dependent-destroy cascades run in the order
   # associations are declared. Orders must run before recipes/ingredients
   # (OrderItems reference Recipes). Clients after orders (orders nullify
-  # client_id).
-  has_many :users,          dependent: :restrict_with_exception
+  # client_id). Users cascades so destroying the owner tears down any
+  # other members with it — the owner's `before_destroy :detach_from_account`
+  # pre-nulls the circular FK so this doesn't loop back onto itself.
+  has_many :users,          dependent: :destroy
   has_many :orders,         dependent: :destroy
   has_many :clients,        dependent: :destroy
   has_many :recipes,        dependent: :destroy
@@ -137,7 +139,8 @@ class Account < ApplicationRecord
   has_one_attached :logo
   has_one_attached :cover_photo
 
-  attribute :settings, Accounts::Settings.to_type
+  attribute :settings,       Accounts::Settings.to_type
+  attribute :public_profile, Accounts::PublicProfile.to_type
 
   validates :name, presence: true, length: { maximum: 80 }
   validates :slug,
@@ -160,6 +163,15 @@ class Account < ApplicationRecord
   # Convenience: true when the operator has opted into advanced mode.
   def composable_recipes?
     settings.use_composable_recipes
+  end
+
+  # Canonical slug computation shared by the JSON endpoint, the live
+  # preview in the onboarding form, and FriendlyID's default
+  # normalization on save. Keeping this in one place means the
+  # preview URL the operator sees in the form matches the URL her
+  # storefront actually ships with.
+  def self.slugify(value)
+    value.to_s.parameterize
   end
 
   # FriendlyID: don't regenerate the slug after the first save. A storefront

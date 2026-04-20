@@ -1,6 +1,23 @@
 <% content_for :title, t("marketing.legal.terms.title") %>
 
-<main class="mx-auto max-w-[700px] px-7 py-24">
-  <h1 class="font-serif text-5xl text-ink tracking-tight"><%= t("marketing.legal.terms.title") %></h1>
-  <p class="mt-4 text-ink-2"><%= t("marketing.legal.terms.lede") %></p>
+<main class="mx-auto max-w-[760px] px-5 sm:px-7 py-16 sm:py-24 flex flex-col gap-8">
+  <div class="flex flex-col gap-4">
+    <span class="inline-flex items-center gap-2 font-mono text-[11.5px] uppercase tracking-[0.18em] text-warn">
+      <span class="inline-block w-5 h-px bg-warn" aria-hidden="true"></span>
+      <span><%= t("marketing.legal.mock_notice") %></span>
+    </span>
+    <h1 class="font-serif text-[44px] sm:text-[52px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
+      <%= t("marketing.legal.terms.title") %>
+    </h1>
+    <p class="text-[16px] text-ink-2 leading-[1.6] max-w-[56ch]"><%= t("marketing.legal.terms.lede") %></p>
+  </div>
+
+  <section class="flex flex-col gap-6 pt-4 border-t border-line">
+    <% t("marketing.legal.terms.sections").each do |section| %>
+      <article class="flex flex-col gap-2">
+        <h2 class="font-serif text-[22px] text-ink leading-[1.2]"><%= section[:heading] %></h2>
+        <p class="text-[15px] text-ink-2 leading-[1.6] max-w-[64ch]"><%= section[:body] %></p>
+      </article>
+    <% end %>
+  </section>
 </main>

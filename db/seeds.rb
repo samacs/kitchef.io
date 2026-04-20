@@ -33,15 +33,10 @@ def sample_email(first, last, domain: "lvh.me")
 end
 
 puts "==> clearing existing demo data"
-demo_emails = %w[elena@lvh.me mario@lvh.me]
-demo_user_ids    = User.where(email_address: demo_emails).pluck(:id)
-demo_account_ids = Account.where(owner_id: demo_user_ids).pluck(:id)
-
-# Break the circular FK between users.account_id and accounts.owner_id
-# before destroying either side.
-User.where(account_id: demo_account_ids).update_all(account_id: nil)
-Account.where(id: demo_account_ids).destroy_all
-User.where(id: demo_user_ids).destroy_all
+# `user.destroy` cascades through owned_account → all account-scoped
+# records (see User#detach_from_account + Account has_many :users
+# destroy). No need to manually break the circular FK here.
+User.where(email_address: %w[elena@lvh.me mario@lvh.me]).find_each(&:destroy)
 
 # ---------------------------------------------------------------------------
 # Cocina de Elena — simple mode
@@ -49,18 +44,19 @@ User.where(id: demo_user_ids).destroy_all
 puts "==> Cocina de Elena (simple mode)"
 
 elena = User.create!(
-  email_address: "elena@lvh.me",
-  password:      "kitchef2026",
-  first_name:    "Elena",
-  last_name:     "Ramírez",
-  phone:         "5512345678"
+  email_address:     "elena@lvh.me",
+  password:          "kitchef2026",
+  first_name:        "Elena",
+  last_name:         "Ramírez",
+  phone:             "5512345678",
+  terms_accepted_at: 2.weeks.ago
 )
 
 cocina_elena = Account.create!(
   owner: elena,
   name:  "Cocina de Elena",
   time_zone: "America/Mexico_City",
-  settings: { use_composable_recipes: false, onboarding_completed: false }
+  settings: { use_composable_recipes: false, onboarding_completed: true }
 )
 elena.update!(account: cocina_elena)
 
@@ -171,11 +167,12 @@ end
 puts "==> Taquería Don Mario (advanced mode)"
 
 mario = User.create!(
-  email_address: "mario@lvh.me",
-  password:      "kitchef2026",
-  first_name:    "Mario",
-  last_name:     "Hernández",
-  phone:         "5587654321"
+  email_address:     "mario@lvh.me",
+  password:          "kitchef2026",
+  first_name:        "Mario",
+  last_name:         "Hernández",
+  phone:             "5587654321",
+  terms_accepted_at: 3.weeks.ago
 )
 
 taqueria_mario = Account.create!(

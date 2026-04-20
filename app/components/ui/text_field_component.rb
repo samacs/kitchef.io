@@ -29,6 +29,7 @@ module Ui
     option :input_class,   optional: true
     option :leading_icon,  optional: true
     option :trailing,      optional: true
+    option :data,          default: -> { {} }
 
     def call
       content_tag(:label, class: "flex flex-col gap-2", for: input_id) do
@@ -67,7 +68,8 @@ module Ui
     def input_tag
       tag.input(
         **input_attrs,
-        class: input_classes
+        class: input_classes,
+        data: data
       )
     end
 

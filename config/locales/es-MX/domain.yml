@@ -58,9 +58,8 @@ es-MX:
 
   subscription:
     plans:
-      free: "Libreta"
-      pro:  "Cocina"
-      team: "Taller"
+      free: "Gratis"
+      pro:  "Pro"
     status:
       trialing:   "En prueba"
       active:     "Activa"

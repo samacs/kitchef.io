@@ -1,0 +1,74 @@
+<div data-controller="live-preview"
+     data-live-preview-empty-name-value="<%= empty_name_placeholder %>"
+     data-live-preview-empty-description-value="<%= empty_description_placeholder %>"
+     class="flex flex-col gap-3">
+  <div class="flex items-center justify-between gap-3">
+    <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <%= t("onboarding.kitchen.preview_title") %>
+    </span>
+    <span class="inline-flex items-center gap-1 text-[11px] text-muted">
+      <span class="w-1.5 h-1.5 rounded-full bg-accent" aria-hidden="true"></span>
+      kitchef.mx
+    </span>
+  </div>
+
+  <article class="bg-surface border border-line rounded-panel shadow-card overflow-hidden">
+    <div class="relative aspect-[16/9] bg-bg-2">
+      <img data-live-preview-target="cover"
+           src="<%= cover_url %>"
+           alt=""
+           class="<%= cover_url ? 'block' : 'hidden' %> absolute inset-0 w-full h-full object-cover" />
+      <div data-live-preview-target="coverPlaceholder"
+           class="<%= cover_url ? 'hidden' : 'flex' %> absolute inset-0 items-center justify-center text-muted">
+        <div class="flex flex-col items-center gap-2">
+          <%= helpers.icon(:image, size: :lg, class: "text-line-2") %>
+          <span class="font-mono text-[10.5px] uppercase tracking-[0.18em]">Portada</span>
+        </div>
+      </div>
+      <div class="absolute inset-0 bg-gradient-to-t from-ink/50 via-transparent to-transparent"></div>
+    </div>
+
+    <div class="-mt-8 px-5 pb-5 sm:px-7 sm:pb-7 flex flex-col gap-4">
+      <div class="flex items-end gap-4">
+        <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-panel border-4 border-surface shadow-card overflow-hidden bg-bg-2 shrink-0">
+          <img data-live-preview-target="logo"
+               src="<%= logo_url %>"
+               alt=""
+               class="<%= logo_url ? 'block' : 'hidden' %> w-full h-full object-cover" />
+          <div data-live-preview-target="logoPlaceholder"
+               class="<%= logo_url ? 'hidden' : 'flex' %> w-full h-full items-center justify-center text-muted">
+            <%= helpers.icon(:chef_hat, size: :md, class: "text-line-2") %>
+          </div>
+        </div>
+
+        <div class="flex-1 min-w-0 pb-1">
+          <h3 data-live-preview-target="name"
+              data-empty="<%= display_name.blank? %>"
+              class="font-serif text-[22px] sm:text-[26px] leading-[1.05] tracking-[-0.01em] <%= display_name.present? ? 'text-ink' : 'text-muted italic' %> truncate">
+            <%= display_name.presence || empty_name_placeholder %>
+          </h3>
+          <p class="font-mono text-[11px] text-muted mt-1 truncate">
+            kitchef.mx/<span data-live-preview-target="slug"><%= display_slug.presence || "tu-cocina" %></span>
+          </p>
+        </div>
+      </div>
+
+      <p data-live-preview-target="description"
+         data-empty="<%= display_description.blank? %>"
+         class="text-[13.5px] leading-[1.55] whitespace-pre-line <%= display_description.present? ? 'text-ink-2' : 'text-muted italic' %>">
+        <%= display_description.presence || empty_description_placeholder %>
+      </p>
+
+      <div class="flex items-center gap-2 pt-2 border-t border-line">
+        <span class="inline-flex items-center gap-1 text-[11px] text-muted font-mono uppercase tracking-[0.14em]">
+          <%= helpers.icon(:utensils, size: :xs, class: "text-muted") %>
+          Menú
+        </span>
+        <span class="ml-auto inline-flex items-center gap-1 text-[11px] text-muted font-mono uppercase tracking-[0.14em]">
+          <%= helpers.icon(:message_circle, size: :xs, class: "text-muted") %>
+          Pedir
+        </span>
+      </div>
+    </div>
+  </article>
+</div>

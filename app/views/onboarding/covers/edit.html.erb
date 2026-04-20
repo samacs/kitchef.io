@@ -1,0 +1,88 @@
+<% content_for :title, t("onboarding.cover.seo_title") %>
+<% content_for :onboarding_step, 4 %>
+
+<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] gap-6 lg:gap-10 items-start" data-step-transition-target="step">
+  <div class="order-1">
+    <% if @errors.present? %>
+      <div role="alert"
+           class="mb-5 bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+        <span class="text-[12px] font-mono uppercase tracking-[0.14em]"><%= t("onboarding.shared.errors_title") %></span>
+        <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+          <% @errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
+      <div class="flex flex-col gap-3">
+        <%= render Ui::KickerComponent.new(text: t("onboarding.cover.kicker")) %>
+        <h1 class="font-serif text-[34px] sm:text-[40px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
+          <%= t("onboarding.cover.title_html").html_safe %>
+        </h1>
+        <p class="text-[15px] text-ink-2 leading-[1.55] max-w-[46ch]">
+          <%= t("onboarding.cover.lede") %>
+        </p>
+      </div>
+
+      <%= form_with url: onboarding_cover_path,
+            method: :patch,
+            multipart: true,
+            class: "flex flex-col gap-4",
+            data: { controller: "image-upload live-preview-source" } do |form| %>
+
+        <% if current_onboarding_account.cover_photo.attached? %>
+          <div class="flex items-center gap-4 p-4 rounded-card-sm bg-bg-2/60 border border-line">
+            <img src="<%= url_for(current_onboarding_account.cover_photo) %>"
+                 alt=""
+                 class="w-24 h-16 rounded-[8px] object-cover shadow-card" />
+            <div class="flex-1 min-w-0 flex flex-col gap-1">
+              <span class="text-[13.5px] font-medium text-ink"><%= current_onboarding_account.cover_photo.filename.to_s %></span>
+              <span class="text-[12px] text-muted"><%= number_to_human_size(current_onboarding_account.cover_photo.byte_size) %></span>
+            </div>
+            <%= button_to t("onboarding.cover.remove"),
+                  onboarding_cover_path,
+                  method: :delete,
+                  class: "text-[13px] font-medium text-err hover:underline",
+                  form: { class: "contents" } %>
+          </div>
+        <% end %>
+
+        <label for="account_cover_photo"
+               class="flex flex-col items-center justify-center gap-2 p-8 rounded-card border-2 border-dashed border-line hover:border-accent hover:bg-bg-2/60 transition cursor-pointer text-center">
+          <span class="w-12 h-12 inline-flex items-center justify-center rounded-full bg-accent-soft text-accent">
+            <%= icon(:image, size: :md) %>
+          </span>
+          <span class="text-[14px] font-medium text-ink"><%= t("onboarding.cover.upload_label") %></span>
+          <span class="text-[12px] text-muted"><%= t("onboarding.cover.upload_hint") %></span>
+          <input id="account_cover_photo"
+                 type="file"
+                 name="account[cover_photo]"
+                 accept="image/jpeg,image/png,image/webp"
+                 class="sr-only"
+                 data-image-upload-target="input"
+                 data-action="change->image-upload#preview change->live-preview-source#emit"
+                 data-live-preview-source-field-param="cover" />
+        </label>
+
+        <div class="flex items-center justify-between gap-3 pt-3">
+          <%= link_to t("onboarding.shared.back"),
+                onboarding_logo_path,
+                class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+          <div class="flex items-center gap-3">
+            <%= link_to t("onboarding.cover.skip"),
+                  onboarding_done_path,
+                  class: "text-[13px] font-medium text-ink-2 hover:text-ink px-3 py-[10px]" %>
+            <%= form.submit t("onboarding.cover.submit"),
+                  class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <aside class="order-2 lg:sticky lg:top-6">
+    <%= render Onboarding::StorefrontPreviewComponent.new(account: current_onboarding_account) %>
+  </aside>
+</div>

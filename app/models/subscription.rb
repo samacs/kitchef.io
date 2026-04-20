@@ -25,13 +25,13 @@
 #  fk_rails_...  (account_id => accounts.id)
 #
 class Subscription < ApplicationRecord
-  # Internal plan identifiers are English. Operator-facing product names
-  # (Libreta / Cocina / Taller — see DESIGN.md §5.7) are rendered via I18n
-  # under `t("subscription.plans.*")`.
+  # Two-tier product: a free entry point and a single paid plan.
+  # Internal keys are English (`free`, `pro`); operator-facing labels
+  # ("Gratis" / "Pro") are rendered via I18n under
+  # `t("subscription.plans.*")` so copy tweaks don't need a deploy.
   PLANS = {
-    free: 0,   # "Libreta"
-    pro:  1,   # "Cocina" (main paid plan)
-    team: 2    # "Taller" (future tier)
+    free: 0,   # "Gratis" — entry tier, capped pedidos/month
+    pro:  1    # "Pro"    — $150 MXN/mes, uncapped
   }.freeze
 
   STATUSES = {
