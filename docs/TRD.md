@@ -11,27 +11,28 @@
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Language | **Ruby (latest, ~4.0.1)** | Matches Agendario Dockerfile |
-| Framework | **Ruby on Rails (latest, ~8.1)** | Matches reference Gemfile |
+| Language | **Ruby 4.0.2** | RVM gemset `kitchef.io`; `.ruby-version` pinned |
+| Framework | **Ruby on Rails 8.1.x** | native auth, Hotwire, Propshaft |
 | Database | **PostgreSQL 18** | with `pgvector`, `fuzzystrmatch`, `pg_trgm`, `pg_stat_statements` |
-| Cache / Queue / Cable | **Valkey 9** | wire-compatible with Redis; `redis` + `hiredis-client` gems |
-| Background jobs | **Sidekiq 8 + sidekiq-cron** | scheduled via sidekiq-cron |
-| Web server | **Puma + Thruster** | matches Rails 8 convention |
+| Cache / Queue / Cable | **Valkey 9** | wire-compatible with Redis; `redis` + `hiredis` + `hiredis-client` gems; single `config.redis_config` shared across Sidekiq, Rails.cache, Action Cable |
+| Background jobs | **Sidekiq 8 + sidekiq-cron** | `bin/sidekiq -C config/sidekiq.yml` (binstub); Procfile.dev `worker:` line; schedule loads from `config/schedule.yml` when present |
+| Web server | **Puma + Thruster** | SSL binding in dev via `ssl://0.0.0.0:3000?key=&cert=`; local certs in `./ssl/` generated per-machine with mkcert |
 | Asset pipeline | **Propshaft + Importmap** | no Node toolchain, no ESbuild |
-| CSS | **TailwindCSS + Flowbite** | via `tailwindcss-rails` |
+| CSS | **Tailwind CSS v4** | CSS-first config via `@theme` directive in `app/assets/tailwind/application.css`; tokens from `DESIGN.md`; dark mode via `.dark` class + pre-paint `theme_bootstrap.js` |
+| Design primitives | **Bespoke `app/components/ui/*`** | Flowbite was dropped — `DESIGN.md` defines deep-green accent, bone background, Instrument Serif / Inter / JetBrains Mono; Flowbite defaults would fight every token |
 | JS framework | **Hotwire (Turbo + Stimulus)** | plus Hotwire Spark in dev |
 | View layer | **ERB + ViewComponent** | components for anything that repeats or has logic |
 | Icons | **Lucide + lucide-rails helper** | custom SVG when Lucide doesn't have what we need |
-| Auth | **Rails 8 native auth** | (no Devise); Omniauth for Google later |
-| Email (dev) | **letter_opener_web** | mounted at `/cartas` in dev |
+| Auth | **Rails 8 native auth** | (no Devise); `app/constraints/` for routing-layer gating (UserConstraint / AdminConstraint); Omniauth for Google later |
+| Email (dev) | **letter_opener_web** | mounted at `/letter_opener` in dev |
 | Email (prod) | **Resend** | via `resend` gem |
 | File storage | **ActiveStorage + active_storage_validations** | S3 in prod, disk in dev |
 | Money | **money + money-rails** | MXN default, MXN only in UI |
-| Phone | **phonelib + phony_rails** | default MX |
+| Phone | **phonelib + phony_rails** | default MX; Phonelib API exposes `strict_check=` (not `strict_validation=`) |
 | Serialization | **Oj + oj_serializers** | for any JSON endpoints |
-| Deployment | **Kamal + Docker** | matches Agendario convention |
+| Deployment | **Kamal + Docker** | postgres + valkey in `docker/`, custom Dockerfiles, bind-mounted init scripts |
 | Code style | **rubocop-rails-omakase** | plus rails / performance / factory_bot / faker rules |
-| Testing | **Skipped for v1** | factories kept for seeds; tests deferred |
+| Testing | **Skipped for v1** | FactoryBot + Faker are in the Gemfile but unused — seeds use hardcoded pools of real Mexican names (Faker's `es-MX` locale was flaky); re-wire factories when tests land |
 
 ---
 
@@ -65,13 +66,13 @@ Kitchef is a monolithic Rails 8 application, server-rendered with Hotwire, deplo
 ```
 
 ### Request flow for a new pedido from a public storefront
-1. Client POSTs to `/cocina-de-elena/pedidos` from the public form
+1. Client POSTs to `/cocina-de-elena/orders` from the public form
 2. `Storefronts::OrdersController#create` invokes `Orders::PlaceOrder` command
 3. Command validates, creates the order, triggers `NewOrderNotification` via Noticed
 4. Noticed broadcasts via Turbo Stream to the operator's dashboard (`broadcasts_to [account, :orders]`)
 5. Noticed also enqueues a Sidekiq job to send the operator a push/email
-6. Client is redirected to `/cocina-de-elena/pedidos/ord_xyz` (order status page)
-7. Operator's already-open dashboard sees the new order slide into the *pedido* column in real time
+6. Client is redirected to `/cocina-de-elena/orders/ord_xyz` (order status page)
+7. Operator's already-open dashboard sees the new order slide into the `placed` column in real time
 
 ---
 
@@ -145,24 +146,25 @@ end
 
 #### `Client`
 - `account_id`
-- `name_first`, `name_last` (name_of_person)
+- `first_name`, `last_name` (name_of_person — the gem hard-requires these exact column names; can't override)
 - `phone`, `phone_normalized`
 - `email`
-- `colonia`, `city`, `street_address`, `references` (how to find the house)
+- `colonia`, `city`, `street_address`, `references_note` (how to find the house — `references` alone conflicts with AR's reflection names)
 - `notes` (free text)
 - `allergies` (text)
 - `birthday` (date, for reminders)
 - `prefixed_id` (prefix: `cli_`)
 - `discarded_at`
 - Versioned via `paper_trail`
+- `has_many :orders, dependent: :nullify` — orders outlive clients for historical reporting
 
 #### `Ingredient`
 - `account_id`
 - `name` ("masa de maíz")
-- `unit` (g, kg, ml, l, pieza)
+- `unit` (English: `g`, `kg`, `ml`, `l`, `piece`; rendered via `t("units.*")`)
 - `unit_cost_cents` (Money, default MXN)
 - `price_updated_at`
-- `category` (enum: abarrotes, carnes, lacteos, verduras, especias, otros)
+- `category` (enum, English keys: `pantry`, `meats`, `dairy`, `produce`, `spices`, `other`; display via `t("ingredient.categories.*")`)
 - `supplier_name` (optional)
 - `notes`
 - `prefixed_id` (prefix: `ing_`)
@@ -180,14 +182,15 @@ end
   - `true` for things Elena actually sells (*Tamal verde*, *Pastel de tres leches*)
   - `false` for internal preparations (*Masa*, *Salsa verde base*, *Relleno de pollo*) used only as components of other recipes
 - `yield_quantity` (decimal) — how much this recipe produces in a single batch
-- `yield_unit` (string enum) — the unit of the yield: `pieza`, `g`, `kg`, `ml`, `l`, `porcion`
-  - A saleable tamal recipe might have `yield_quantity: 1, yield_unit: pieza` (we cost per tamal)
-  - An internal masa recipe might have `yield_quantity: 1800, yield_unit: g` (we cost per gram of masa)
+- `yield_unit` (string enum, English keys: `piece`, `g`, `kg`, `ml`, `l`, `serving`; display via `t("units.*")`)
+  - A saleable tamal recipe might have `yield_quantity: 1, yield_unit: "piece"` (we cost per tamal)
+  - An internal masa recipe might have `yield_quantity: 1800, yield_unit: "g"` (we cost per gram of masa)
   - Cost-per-yield-unit is the canonical unit cost used when this recipe is referenced as a component
-- `category` (enum: platos_fuertes, entradas, postres, bebidas, bases_y_preparaciones, otros)
-  - `bases_y_preparaciones` is the typical category for non-saleable internal recipes
+- `category` (enum, English keys: `mains`, `starters`, `desserts`, `drinks`, `bases`, `other`; display via `t("recipe.categories.*")` — `t("recipe.categories.bases") → "Bases y preparaciones"`)
+  - `bases` is the typical category for non-saleable internal recipes
 - `target_margin_percent` (default 60) — only meaningful for saleable recipes
 - `is_published` (boolean — shows on public storefront) — can only be true if `is_saleable` is also true
+- `cost_cents_cached` (bigint, nullable) — fast-path cache of the fully resolved component tree cost. **`monetize :cost_cents_cached, as: :cost_cached, allow_nil: true`** — money-rails can't infer monetization from the non-standard `_cached` suffix, so alias the helper name explicitly.
 - `prefixed_id` (prefix: `rec_`)
 - `position` (scoped to account+category)
 - `discarded_at`
@@ -195,6 +198,7 @@ end
 - Versioned via `paper_trail`
 - **Computed**: `cost_cents`, `cost_per_yield_unit_cents`, `margin_cents`, `margin_percent` — all derived from the recipe's components
 - **Validations**: `is_published` requires `is_saleable`; `sale_price_cents` required when `is_saleable` is true; `yield_quantity > 0`
+- `has_many :usages, as: :componentable, dependent: :destroy` — cascades so `Account.destroy` works; the "warn operator about affected parents" UX is a controller concern, not a model-level restriction
 
 #### `RecipeComponent` (polymorphic join replaces the old `RecipeIngredient`)
 
@@ -204,7 +208,7 @@ A recipe can have many components. Each component points to **either an `Ingredi
 - `componentable_type` — `"Ingredient"` or `"Recipe"` (polymorphic)
 - `componentable_id` — FK to ingredient or recipe
 - `quantity` (decimal)
-- `unit` (string: g, kg, ml, l, pieza — must be compatible with the target's declared units)
+- `unit` (string, English keys: `g`, `kg`, `ml`, `l`, `piece` — must be compatible with the target's declared units; display via `t("units.*")` → "pieza", "porción", etc.)
 - `notes` (optional — "picado fino", "a temperatura ambiente")
 - `position` (scoped to recipe)
 
@@ -227,8 +231,8 @@ We maintain a static conversion table for the common cases:
 | l | ml | × 1000 |
 | g | kg | × 0.001 |
 | ml | l | × 0.001 |
-| pieza | pieza | 1:1 only |
-| porcion | porcion | 1:1 only |
+| piece | piece | 1:1 only |
+| serving | serving | 1:1 only |
 
 Cross-type conversion (e.g., grams → pieces) is **not** automatic and requires the target recipe to declare both a weight yield and a piece yield. For v1, we keep this strict: if Elena's *masa* recipe yields `1800 g` but her *tamal verde* references *masa* in units of *pieza*, the cost engine raises a user-visible error: *"Tu receta de masa está en gramos pero tu tamal verde usa 'piezas'. ¿Cuántos gramos tiene una pieza de masa?"* — prompting her to either normalize the component unit or add a dual-yield declaration. This is handled in `Recipes::CostCalculator` (see §6).
 
@@ -236,16 +240,16 @@ Cross-type conversion (e.g., grams → pieces) is **not** automatic and requires
 - `account_id`
 - `client_id` (nullable — some orders come from anonymous storefront visitors before client is created; resolved in `PlaceOrder` command)
 - `prefixed_id` (prefix: `ord_`)
-- `state` (AASM: `pedido`, `confirmado`, `en_produccion`, `listo`, `entregado`, `pagado`, `cancelado`)
+- `state` (AASM, English keys: `placed`, `confirmed`, `in_production`, `ready`, `delivered`, `paid`, `canceled`; display via `t("order.state.*")`)
 - `delivery_date` (date, required)
-- `delivery_slot_start_at`, `delivery_slot_end_at` (datetime — used with `interval_set` for capacity)
-- `delivery_type` (enum: entrega, recoleccion)
+- `delivery_start_time`, `delivery_end_time` — **integer minutes from midnight (0..1440)**, not datetime. A delivery window is "Saturday 11am-12pm in the operator's local time", not an absolute moment. Integers avoid timezone/DST drift, make `end - start` a one-subtraction duration, and keep range queries trivial. See `lib/time_of_day.rb` for the `from_string("09:30") → 570` / `to_string(570) → "09:30"` helpers; models expose `*_hhmm` accessors for forms. DB check constraints enforce `start < end`, `0..1440`.
+- `delivery_type` (enum, English keys: `delivery`, `pickup`; display via `t("order.delivery_types.*")`)
 - `delivery_address`, `colonia`, `city`
 - `delivery_notes`
 - `subtotal_cents`, `tax_cents`, `total_cents` (Money)
 - `deposit_cents`, `balance_cents` (Money)
 - `notes`
-- `source` (enum: storefront, manual, whatsapp, instagram, other)
+- `source` (enum: `storefront`, `manual`, `whatsapp`, `instagram`, `other` — keys already English)
 - `position` (scoped to account+state, for drag-reorder within a column)
 - `discarded_at`
 - Versioned via `paper_trail`
@@ -262,7 +266,7 @@ Cross-type conversion (e.g., grams → pieces) is **not** automatic and requires
 #### `Payment`
 - `order_id`
 - `amount_cents` (Money)
-- `method` (enum: efectivo, transferencia, tarjeta, mercado_pago, otro)
+- `method` (enum, English keys: `cash`, `transfer`, `card`, `mercado_pago`, `other` — `mercado_pago` stays as-is because it's the brand name; display via `t("payment.methods.*")`)
 - `received_at` (datetime)
 - `reference` (e.g., SPEI reference number)
 - `notes`
@@ -270,8 +274,8 @@ Cross-type conversion (e.g., grams → pieces) is **not** automatic and requires
 
 #### `DeliverySlot`
 - `account_id`
-- `day_of_week` (0-6)
-- `start_time`, `end_time` (time-of-day)
+- `day_of_week` (integer, 0–6)
+- `start_time`, `end_time` — **integer minutes from midnight (0..1440)**, same pattern as `Order.delivery_*_time`. Check constraints enforce `start < end`, `0..1440`, `day_of_week BETWEEN 0 AND 6`.
 - `max_orders` (integer)
 - `colonias` (JSONB array of colonia names — "Condesa", "Roma Norte", etc.)
 - `position`
@@ -281,8 +285,8 @@ Cross-type conversion (e.g., grams → pieces) is **not** automatic and requires
 - `account_id`
 - `stripe_customer_id`
 - `stripe_subscription_id`
-- `plan` (enum: basico, profesional)
-- `status` (enum: trialing, active, past_due, canceled, incomplete)
+- `plan` (enum, English keys: `free`, `pro`, `team` — brand names **Libreta** / **Cocina** / **Taller** rendered via `t("subscription.plans.*")`)
+- `status` (enum: `trialing`, `active`, `past_due`, `canceled`, `incomplete` — keys already English)
 - `trial_ends_at`
 - `current_period_end`
 - `cancel_at_period_end` (boolean)
@@ -429,7 +433,7 @@ end
 - Use a component **whenever logic appears in a template** or **whenever a partial is rendered from more than one place**.
 - Component files live under `app/components/<domain>/<noun>_component.rb` with a sidecar ERB template.
 - Components for UI primitives (button, card, badge) live under `app/components/ui/`.
-- Flowbite-styled primitives are wrapped in our own components — we never reference raw Flowbite class strings outside of `app/components/ui/`.
+- UI primitives render design tokens from `app/assets/tailwind/application.css` (the `@theme` block) — no raw hex colors, no utility-class soup outside the UI primitives themselves. Flowbite was evaluated and dropped — see §16.
 
 Example:
 
@@ -479,6 +483,32 @@ end
 - `Order` broadcasts to `[account, :orders]`. When it moves state, the target frame moves columns via `turbo_stream.replace`.
 - Use `broadcast_refreshes` for simple cases; switch to explicit `after_create_commit -> { broadcast_append_to ... }` when granular control is needed.
 - Public storefront views do NOT broadcast (no open stream; customers visit once).
+- **Controllers that forms redirect to MUST return HTML.** Turbo Drive silently bails on `text/plain` responses after a form submit — the DOM doesn't swap and the flow looks broken. `ApplicationController#render_stub(title:, meta:)` renders `app/views/shared/stub.html.erb` with the right content type for Phase 6 placeholders.
+
+### Routing-layer constraints (`app/constraints/`)
+
+Three classes, mirroring Agendario's pattern:
+
+- `ApplicationConstraint` — base. Takes the request in initializer, dispatches class-level `.matches?` to instance `#authorized?`.
+- `UserConstraint < ApplicationConstraint` — builds a `CookieJar` from the request, reads `:session_id` via `cookies.signed`, resolves to a `User`. `authorized?` returns `user.present?`.
+- `AdminConstraint < UserConstraint` — `super && user.admin?`.
+
+Used sparingly — only where routing has to pick between **different controllers for the same URL**:
+
+```ruby
+# Root: signed-in operators get their dashboard; everyone else sees marketing
+root "dashboards#show", constraints: UserConstraint, as: :authenticated_root
+root "static_pages#show", defaults: { page: "home" }
+
+# Platform admin: non-admins fall through → storefront rejects "admin" → 404
+constraints AdminConstraint do
+  namespace :admin do
+    root "dashboards#show"
+  end
+end
+```
+
+For the operator app (`/orders`, `/recipes`, etc.) **we don't use constraints**. Controller-level `require_authentication` (from the Rails 8 `Authentication` concern) redirects unauth'd requests to `/sign-in` and preserves `return_to_after_authenticating` in the session — which gets the operator back to where they were after signing in. A routing constraint would lose that return-to context.
 
 ---
 
@@ -746,7 +776,7 @@ export default class extends Controller {
   hideAdvancedFields() {
     // Hide the "internal recipe" option (is_saleable: false)
     // Hide the recipe-picker tab
-    // Hide the yield declaration fields (simple mode assumes yield_quantity: 1, yield_unit: "porcion")
+    // Hide the yield declaration fields (simple mode assumes yield_quantity: 1, yield_unit: "serving")
     this.componentTypeSelectorTargets.forEach(el => el.hidden = true)
     this.yieldFieldsTarget.hidden = true
     this.saleableToggleTarget.hidden = true
@@ -757,8 +787,8 @@ export default class extends Controller {
 **3. Controller level** — `before_action` guards on advanced-only actions:
 
 ```ruby
-# app/controllers/panel/recipes_controller.rb
-class Panel::RecipesController < Panel::BaseController
+# app/controllers/recipes_controller.rb
+class RecipesController < AuthenticatedController
   before_action :require_composable_mode, only: %i[decompose convert_to_internal]
 
   # ...
@@ -767,8 +797,8 @@ class Panel::RecipesController < Panel::BaseController
 
   def require_composable_mode
     unless Current.account.settings.use_composable_recipes?
-      redirect_to panel_onboarding_decomposition_path(params[:id]),
-                  notice: "Primero descompón una receta para habilitar esta función"
+      redirect_to onboarding_decomposition_path(params[:id]),
+                  notice: t("recipes.decompose.first_time_required")
     end
   end
 end
@@ -776,9 +806,9 @@ end
 
 ### 6.5 — The onboarding decomposition flow
 
-The first-time decomposition is a focused, 3-step form — not a settings toggle. It lives at `/panel/onboarding/receta/:recipe_id` and walks Elena through converting one flat recipe into a decomposed one.
+The first-time decomposition is a focused, 3-step form — not a settings toggle. It lives at `/onboarding/recipes/:recipe_id` and walks Elena through converting one flat recipe into a decomposed one.
 
-**Step 1 — Picking the components** (`Panel::Onboarding::DecompositionController#show`):
+**Step 1 — Picking the components** (`Onboarding::DecompositionController#show`):
 - The form asks: *"¿Qué ingredientes usas para hacer este platillo?"*
 - Empty repeater with *Agregar ingrediente* — free-text name + current price + unit
 - No cost calculation shown yet; just capture the raw list
@@ -831,7 +861,7 @@ class Onboarding::CompleteFirstDecomposition < ApplicationCommand
 end
 ```
 
-After this runs, the operator returns to `/panel/recetario` and the UI has silently transformed — *Descomponer* actions appear on every other recipe card, a new "Recetas internas" tab appears in the top nav of the recipe section, and the menu-engineering dashboard becomes available.
+After this runs, the operator returns to `/recipes` and the UI has silently transformed — *Descomponer* actions appear on every other recipe card, a new "Recetas internas" tab appears in the top nav of the recipe section, and the menu-engineering dashboard becomes available.
 
 ### 6.6 — Order item cost snapshots with nested resolution
 
@@ -904,157 +934,231 @@ Composable recipes add real complexity. The guardrails:
 
 ## 8. Routing
 
+### Guiding principles
+- **URL paths are English.** Brand-coherent, future-proof when we add language toggles, and matches the code-stays-English rule. Spanish lives in view copy, not URLs.
+- **Root-level storefront slugs.** Public storefronts at `kitchef.mx/cocina-de-elena`, never `kitchef.mx/c/cocina-de-elena`.
+- **Constraint-based root dispatch.** Signed-in operators land on their dashboard at `/`; anonymous visitors see marketing — same URL, two handlers picked by `UserConstraint`.
+- **No `/panel` prefix, no `Panel::` namespace.** Operator controllers sit flat at the top level; domain sub-surfaces (`Production::`, `Reports::`, `Onboarding::`) keep URL grouping.
+
 ### Reserved top-level paths
 
 Because public storefronts live at the **root level** (e.g., `kitchef.mx/cocina-de-elena`), every current and future top-level route must be protected from being claimed as an account slug. This is a known, managed cost of root-level slugs — the approach Agendario already uses in production without incident.
 
-The canonical reserved list:
+`Account::RESERVED_SLUGS` in `app/models/account.rb` is **194 entries** grouped by intent (alphabetized per block for diff-friendly growth):
 
-```ruby
-# app/models/account.rb
-RESERVED_SLUGS = %w[
-  admin panel api cartas health up assets rails
-  precios registro entrar salir recuperar sesion
-  preguntas como-funciona blog legal privacidad
-  terminos contacto ayuda app webhooks
-  directorio buscar explorar
-  acerca nosotros nuestra-historia
-  soporte recursos
-  robots sitemap favicon
-  kitchef equipo prensa
-].freeze
-```
+1. **Kitchef app routes (Spanish — defense in depth)** — `acerca`, `ajustes`, `asistencia`, `ayuda`, `cocina`, `contacto`, `cartas` (historic), `entrar`, `pedidos`, `recetario`, `ingredientes`, `entregas`, `registro`, `recuperar`, `salir`, `sesion`, `precios`, etc. Kept even after the English path migration so operators can never use these words as slugs.
+2. **English app routes** — `sign-in`, `sign-up`, `sign-out`, `reset-password`, `orders`, `clients`, `recipes`, `ingredients`, `delivery-slots`, `production`, `reports`, `subscription`, `account`, `admin`, `onboarding`, `pricing`, `how-it-works`, `faq`, `legal`, etc.
+3. **Cooking-domain terms (both languages)** — `chef`, `cocinera`, `kitchen`, `restaurant`, `menu`, `meal`, `recipe`, `platillo`, `tamales`, `delivery`, `food`, etc. Operators will reflexively reach for these.
+4. **Common SaaS / auth / billing paths** — `dashboard`, `settings`, `billing`, `login`, `logout`, `help`, `support`, `terms`, `privacy`, `docs`, `api`, `integrations`, etc.
+5. **Tech / protocol paths** — `robots`, `sitemap`, `favicon`, `webhooks`, `oauth`, `oauth2`, `graphql`, `feed`, `rss`, `atom`, `www`, `mail`, `cable`, `recede_historical_location` (Turbo), etc.
+6. **Brand names** — `kitchef`, `kitchef-mx`, `kitchef-io`, `agendario`.
 
-**This list is expected to grow.** Any new top-level route added to `config/routes.rb` must also be added to `RESERVED_SLUGS`. A CI check greps new top-level route literals against the constant and fails the build if a word appears in routes but not in the reserved list. See §23 for the CI rule.
+**The list is expected to grow.** Any new top-level route added to `config/routes.rb` must also be added to `RESERVED_SLUGS`. The CI script at `bin/check_reserved_slugs` parses the actual route table at boot and fails the build on any missing entry. See §23.
 
-Validated in `Account` model with a user-friendly Spanish message:
+Validated in `Account` model with I18n-keyed error messages:
 
 ```ruby
 validates :slug,
-  exclusion: {
-    in: RESERVED_SLUGS,
-    message: "no está disponible, prueba con otro nombre"
-  },
-  format: {
-    with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/,
-    message: "solo puede contener letras, números y guiones"
-  },
-  length: { minimum: 3, maximum: 50 }
+  presence: true,
+  uniqueness: true,
+  length: { minimum: 3, maximum: 50 },
+  format:     { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/, message: :slug_format },
+  exclusion:  { in: RESERVED_SLUGS,                    message: :slug_reserved }
+# config/locales/es-MX/errors.yml → "no está disponible, prueba con otro nombre"
 ```
 
-Storefront slugs are lowercase, hyphen-separated, ASCII only. The `friendly_id` generator handles diacritics (*Cocina de María* → `cocina-de-maria`).
+Storefront slugs are lowercase, hyphen-separated, ASCII only. `friendly_id` handles diacritics (*Cocina de María* → `cocina-de-maria`).
+
+### Routing-layer constraints — `app/constraints/`
+
+Mirrors Agendario's pattern. Three classes:
+
+```ruby
+# app/constraints/application_constraint.rb
+class ApplicationConstraint
+  attr_reader :request
+  def initialize(request) = @request = request
+  def self.matches?(request) = new(request).authorized?
+  def authorized? = raise NotImplementedError
+end
+
+# app/constraints/user_constraint.rb — any signed-in user
+class UserConstraint < ApplicationConstraint
+  attr_reader :user, :cookies
+  def initialize(request)
+    super
+    @cookies = ActionDispatch::Cookies::CookieJar.build(request, request.cookies)
+    @user    = Session.find_by(id: cookies.signed[:session_id])&.user
+  end
+  def authorized? = user.present?
+end
+
+# app/constraints/admin_constraint.rb
+class AdminConstraint < UserConstraint
+  def authorized? = super && user.admin?
+end
+```
+
+Constraints are used sparingly — only where routing must pick between **different controllers** for the same URL. For the operator app, controller-level `require_authentication` (from the Rails 8 `Authentication` concern, included in `ApplicationController`) is what handles redirects and preserves `return_to_after_authenticating`.
 
 ### Route structure
 
 ```ruby
 # config/routes.rb
 Rails.application.routes.draw do
-  # Health check
+  # Ops / health
   get "up" => "rails/health#show", as: :rails_health_check
+  mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
 
-  # Letter opener (dev only)
-  mount LetterOpenerWeb::Engine, at: "/cartas" if Rails.env.development?
+  # Authentication (Rails 8 native) — GET + POST on the same URL per form
+  get    "/sign-in",                   to: "sessions#new",      as: :new_session
+  post   "/sign-in",                   to: "sessions#create",   as: :session
+  delete "/sign-out",                  to: "sessions#destroy",  as: :destroy_session
 
-  # Marketing / public
-  root "marketing#home"
-  get "/precios", to: "marketing#pricing"
-  get "/como-funciona", to: "marketing#how_it_works"
-  get "/preguntas", to: "marketing#faq"
-  get "/legal/:doc", to: "marketing#legal", as: :legal
+  get    "/sign-up",                   to: "registrations#new", as: :new_registration
+  post   "/sign-up",                   to: "registrations#create", as: :registration
 
-  # Authentication (Rails 8 native)
-  resource :session, only: %i[new create destroy], path: "entrar"
-  resources :passwords, only: %i[new create edit update], path: "recuperar"
-  resource :registration, only: %i[new create], path: "registro"
+  get    "/reset-password",            to: "passwords#new",     as: :new_password
+  post   "/reset-password",            to: "passwords#create",  as: :passwords
+  get    "/reset-password/:token/edit", to: "passwords#edit",   as: :edit_password
+  match  "/reset-password/:token",     to: "passwords#update",  as: :password, via: %i[patch put]
 
-  # Authenticated operator area (all panel routes prefixed with /panel)
-  scope "/panel", as: :panel do
-    constraints authenticated: true do
-      get "/", to: "panel/dashboards#show", as: :dashboard
+  # Marketing / public static pages (StaticPagesController pattern — one
+  # action, view selected via :page route default, HTTP-cached)
+  get "/pricing",       to: "static_pages#show", defaults: { page: "pricing" }
+  get "/how-it-works",  to: "static_pages#show", defaults: { page: "how_it_works" }
+  get "/faq",           to: "static_pages#show", defaults: { page: "faq" }
+  get "/legal/:doc",    to: "static_pages#show", defaults: { page: "legal" }, as: :legal
 
-      resources :orders, path: "pedidos"
-      resources :clients, path: "clientes"
-      resources :recipes, path: "recetario"
-      resources :ingredients, path: "ingredientes"
-      resources :delivery_slots, path: "entregas"
+  # Root — constraint-based dispatch
+  root "dashboards#show", constraints: UserConstraint, as: :authenticated_root
+  root "static_pages#show", defaults: { page: "home" }
 
-      namespace :production do
-        get "/", to: "weekly#show", as: :weekly
-        get "/compras", to: "shopping_lists#show"
-      end
-
-      namespace :reports do
-        get "/menu", to: "menu_engineering#show"
-        get "/finanzas", to: "finance#show"
-      end
-
-      namespace :onboarding do
-        get "/receta/:recipe_id", to: "decomposition#show", as: :decomposition
-        post "/receta/:recipe_id", to: "decomposition#create"
-      end
-
-      resource :account, path: "cocina", only: %i[show edit update]
-      resource :subscription, only: %i[show new create destroy]
+  # Platform admin (Kitchef team only) — AdminConstraint gates at routing
+  constraints AdminConstraint do
+    namespace :admin do
+      root "dashboards#show"
     end
   end
 
-  # Stripe webhooks
-  post "/webhooks/stripe", to: "webhooks/stripe#create"
+  # Authenticated operator app — flat, no /panel prefix, no Panel:: namespace
+  resources :orders
+  resources :clients
+  resources :recipes
+  resources :ingredients
+  resources :delivery_slots, path: "delivery-slots"
 
-  # Public storefronts — ROOT-LEVEL SLUGS
-  # This block MUST come last in the routes file.
-  # The `slug` constraint rejects any value that matches RESERVED_SLUGS.
+  namespace :production do
+    get "/",               to: "weekly#show",         as: :weekly
+    get "/shopping-list",  to: "shopping_lists#show", as: :shopping_list
+  end
+  namespace :reports do
+    get "/menu",     to: "menu_engineering#show", as: :menu_engineering
+    get "/finance",  to: "finance#show",          as: :finance
+  end
+  namespace :onboarding do
+    get  "/recipes/:recipe_id", to: "decomposition#show", as: :decomposition
+    post "/recipes/:recipe_id", to: "decomposition#create"
+  end
+
+  resource :account,      only: %i[show edit update]
+  resource :subscription, only: %i[show new create destroy]
+
+  # Webhooks
+  scope :webhooks, module: "webhooks", as: "webhooks" do
+    post "/stripe", to: "stripe#create", as: :stripe
+  end
+
+  # Public storefronts — MUST stay last
   scope ":slug",
-        constraints: ->(req) { !Account::RESERVED_SLUGS.include?(req.params[:slug]) },
-        as: :storefront do
-    get "/", to: "storefronts#show"
-    get "/menu", to: "storefronts/menus#show"
-    resources :orders, only: %i[new create show], path: "pedidos"
+    constraints: ->(req) { !Account::RESERVED_SLUGS.include?(req.params[:slug]) },
+    as: :storefront do
+    get "/",     to: "storefronts#show"
+    get "/menu", to: "storefronts/menus#show", as: :menu
+    resources :orders, only: %i[new create show], controller: "storefronts/orders"
   end
 end
 ```
 
-**Why this routing order is safe:**
-1. All named routes (`/precios`, `/panel/*`, `/entrar`, etc.) are declared **before** the catch-all storefront scope
-2. The storefront scope's constraint rejects any slug that's in `RESERVED_SLUGS` — so even if a user somehow ends up with a slug that collides with a named route, Rails will 404 rather than hit the wrong controller
-3. The `RESERVED_SLUGS` check at the model level prevents the slug from ever being saved in the first place
-4. CI enforces that any new top-level route has a corresponding entry in `RESERVED_SLUGS`
+### Controller base classes
 
-Operator-facing URL examples:
-- `kitchef.mx` — marketing homepage
-- `kitchef.mx/precios` — pricing
-- `kitchef.mx/registro` — signup
-- `kitchef.mx/panel` — operator dashboard (authenticated)
+| Base | Purpose |
+|---|---|
+| `ApplicationController` | Includes `Authentication` concern, sets `Current.account`, exposes `render_stub` helper |
+| `AuthenticatedController` | All top-level operator controllers (orders, clients, recipes, ingredients, delivery-slots, account, subscription, dashboards). `layout "panel"`, `require_account` |
+| `Storefronts::BaseController` | Public storefront surface; resolves `@storefront`, catches `RecordNotFound` → branded 404 |
+| `Webhooks::BaseController` | `< ActionController::API` — no CSRF, no cookies, no view lookup |
+| `Admin::BaseController` | Platform admin; layout + `require_admin` belt-and-suspenders |
+
+Nested namespace controllers (`Production::WeeklyController`, `Reports::MenuEngineeringController`, `Onboarding::DecompositionController`) also inherit from `AuthenticatedController`.
+
+### Static pages (marketing surface)
+
+`StaticPagesController#show` renders a template matching `params[:page]` (or nested under `params[:doc]` for `/legal/*`). This is the Agendario pattern: adding a new marketing page = add a view file + one line in `config/routes.rb`. The controller handles HTTP caching per auth state:
+
+```ruby
+response.headers["Vary"] = "Cookie"
+if authenticated?
+  expires_in 0, public: false, must_revalidate: true
+else
+  expires_in 1.hour, public: true, stale_while_revalidate: 5.minutes
+end
+render page_view if stale?(etag: [ page_view, authenticated? ])
+```
+
+ETag includes auth state so the same page doesn't serve the operator's signed-in nav to anonymous visitors.
+
+### Why this routing order is safe
+
+1. All named routes (`/sign-in`, `/orders`, `/admin`, `/webhooks/*`, marketing) are declared **before** the catch-all storefront scope.
+2. The storefront scope's lambda constraint rejects any slug in `Account::RESERVED_SLUGS` — even if a user's slug slipped past model validation somehow, Rails 404s rather than dispatching to the wrong controller.
+3. The `RESERVED_SLUGS` model-level exclusion validation prevents the slug from being saved in the first place.
+4. `bin/check_reserved_slugs` fails CI on any new top-level route that isn't in the list.
+5. `UserConstraint` and `AdminConstraint` gate `/` and `/admin` by auth state — same URLs, different controllers, no leakage.
+
+### URL examples
+
+- `kitchef.mx` — marketing homepage (anonymous) OR operator dashboard (signed-in)
+- `kitchef.mx/pricing`, `/how-it-works`, `/faq`, `/legal/terms` — marketing
+- `kitchef.mx/sign-in`, `/sign-up`, `/reset-password` — auth
+- `kitchef.mx/orders`, `/recipes`, `/delivery-slots` — operator app (signed-in)
+- `kitchef.mx/production`, `/reports/menu` — operator sub-surfaces
+- `kitchef.mx/admin` — platform admin (Kitchef team only)
 - `kitchef.mx/cocina-de-elena` — Elena's public storefront
-- `kitchef.mx/cocina-de-elena/pedidos/new` — order form on Elena's storefront
-- `kitchef.mx/cocina-de-elena/pedidos/ord_abc123xyz` — order status page
+- `kitchef.mx/cocina-de-elena/orders/new` — order form on Elena's storefront
+- `kitchef.mx/cocina-de-elena/orders/ord_abc123xyz` — order status page
 
 ---
 
 ## 9. Billing — Stripe Subscription Flow
 
-### Plans (seeded via `rails-settings-cached`)
-- `plan:basico` — free, managed internally (no Stripe entry)
-- `plan:profesional_mensual` — $249 MXN/mes, Stripe price ID
-- `plan:profesional_anual` — $2,490 MXN/año, Stripe price ID
+### Plans (internal keys are English; brand names are rendered via I18n)
+
+| Enum key | Display (brand) | Billing | Notes |
+|---|---|---|---|
+| `free` | **Libreta** | no Stripe entry | free tier, 20 pedidos/month cap |
+| `pro`  | **Cocina**  | $249 MXN/mes    | main paid plan |
+| `team` | **Taller**  | reserved        | future team tier |
+
+Display strings live under `t("subscription.plans.*")` in `config/locales/es-MX/domain.yml`. An annual variant of Pro ships as a second Stripe price ID against the same `plan: :pro` enum value.
 
 ### Flow
-1. Operator clicks *Mejorar a Profesional*
-2. `Subscriptions::CreateCheckoutSession` command generates Stripe Checkout URL
-3. Operator completes checkout in MXN
-4. Stripe webhook `checkout.session.completed` → `Webhooks::StripeHandler` → `Subscriptions::ActivatePro` command updates the `Subscription` record
-5. Operator sees Pro features unlocked instantly (via Turbo Stream refresh of nav)
+1. Operator clicks *Mejorar a Cocina*.
+2. `Subscriptions::CreateCheckoutSession` command generates Stripe Checkout URL.
+3. Operator completes checkout in MXN.
+4. Stripe webhook `checkout.session.completed` → `Webhooks::StripeHandler` → `Subscriptions::ActivatePro` command updates the `Subscription` record.
+5. Operator sees Pro features unlocked instantly (via Turbo Stream refresh of nav).
 
 ### Downgrade
-- Cancellation sets `cancel_at_period_end: true`
-- At period end, webhook `customer.subscription.deleted` → `Subscriptions::DowngradeToBasic`
-- Operator keeps all data but loses Pro features; pedido-count cap re-applies
+- Cancellation sets `cancel_at_period_end: true`.
+- At period end, webhook `customer.subscription.deleted` → `Subscriptions::DowngradeToFree`.
+- Operator keeps all data but loses Pro features; pedido-count cap re-applies.
 
 ### Free tier enforcement
 - `Subscriptions::PlanLimitCheck` service runs before every `Orders::PlaceOrder`:
-  - If `account.plan == :basico` and `account.orders.where(created_at: current_month).count >= 20`, command fails with `:over_limit`
-  - Public storefront shows "Esta cocina no está aceptando pedidos en este momento" if over limit
-  - Operator sees persistent upsell banner
+  - If `account.subscription.plan_free?` and `account.orders.where(created_at: current_month).count >= 20`, command fails with `:over_limit`.
+  - Public storefront shows "Esta cocina no está aceptando pedidos en este momento" if over limit.
+  - Operator sees persistent upsell banner.
 
 ---
 
@@ -1082,17 +1186,17 @@ config.action_mailer.resend_settings = { api_key: Rails.application.credentials.
 ```
 
 ### Email deliveries (development)
-- Via **letter_opener_web**, mounted at `/cartas`
+- Via **letter_opener_web**, mounted at `/letter_opener`
 
 ---
 
 ## 11. Background Jobs
 
 ### Sidekiq configuration
-- **Valkey** as backend (via `redis` + `hiredis-client` + `connection_pool`)
-- Connection via `ENV["VALKEY_URL"]` (e.g., `redis://valkey:6379/0`)
-- `config/sidekiq.yml` with queues: `default`, `mailers`, `notifications`, `imports`
-- Web UI mounted at `/panel/sidekiq` in dev+staging, behind admin auth in prod
+- **Valkey** as backend — shared connection via `Rails.application.config.redis_config` (single source of truth for Sidekiq, Rails.cache, Action Cable).
+- Driver: `hiredis` (set globally via `RedisClient.default_driver` in the Sidekiq initializer).
+- `config/sidekiq.yml` with queues: `critical`, `default`, `mailers`, `notifications`, `imports`, `low`.
+- Web UI mounted at `/admin/sidekiq` inside the admin namespace (AdminConstraint-gated).
 
 ### Scheduled jobs (sidekiq-cron)
 - `DailyOperatorDigestJob` — 7am MX time, emails summary to operators with `digest_enabled: true`
@@ -1217,53 +1321,88 @@ config.time_zone = "America/Mexico_City"
 ## 16. Frontend Stack
 
 ### Importmap configuration
-```javascript
-// config/importmap.rb
-pin "application", preload: true
-pin "@hotwired/turbo-rails", to: "turbo.min.js", preload: true
-pin "@hotwired/stimulus", to: "stimulus.min.js", preload: true
-pin "@hotwired/stimulus-loading", to: "stimulus-loading.js", preload: true
+```ruby
+# config/importmap.rb
+pin "application"
+pin "@hotwired/turbo-rails",       to: "turbo.min.js"
+pin "@hotwired/stimulus",          to: "stimulus.min.js"
+pin "@hotwired/stimulus-loading",  to: "stimulus-loading.js"
 pin_all_from "app/javascript/controllers", under: "controllers"
-pin "flowbite", to: "https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"
-pin "chartkick", to: "chartkick.js"
-pin "Chart.bundle", to: "Chart.bundle.js"
 ```
 
-### TailwindCSS
-- Configured via `tailwindcss-rails`
-- Content paths include `app/views/**/*`, `app/components/**/*`, `app/helpers/**/*`
-- Flowbite plugin registered in `tailwind.config.js`:
-```js
-plugins: [require("flowbite/plugin")]
-```
-- Custom palette:
-  - Primary: deep terracotta (`#A64B2A` family) or mole (`#5E2A22`)
-  - Accent: nopal green (`#4A7C59`)
-  - Backgrounds: masa off-white (`#F7F1E8`)
+**Flowbite dropped.** The original plan paired Flowbite with a custom palette, but `DESIGN.md`'s token system (deep green accent, bone background, Instrument Serif / Inter / JetBrains Mono) is bespoke enough that Flowbite's component styling would fight every utility. Bespoke `app/components/ui/*` primitives map directly to `DESIGN.md` specs with zero override cost. If we ever need a specific Flowbite JS behavior (e.g., complex datepicker), we pull in the standalone JS widget and re-style; we don't bring in the full library.
 
-### Stimulus controllers (initial)
-- `dropdown_controller.js` — wraps Flowbite dropdowns
-- `modal_controller.js` — wraps Flowbite modals
-- `auto_submit_controller.js` — for live-search inputs
-- `currency_input_controller.js` — formats MXN input with thousands separator
-- `phone_input_controller.js` — formats MX phone numbers as user types
-- `sortable_controller.js` — drag-and-drop reordering with `positioning` gem's endpoint
+### Tailwind CSS v4 (CSS-first)
+
+Configured via `tailwindcss-rails` 4.x. The config and tokens live in `app/assets/tailwind/application.css` using Tailwind v4's `@theme` directive — no `tailwind.config.js`. Dark mode via the `.dark` class (pre-paint boot in `app/javascript/theme_bootstrap.js` to prevent FOUC).
+
+```css
+/* app/assets/tailwind/application.css */
+@import "tailwindcss";
+
+@source "../../components/**/*.{rb,erb,html,html.erb}";
+@source "../../views/**/*.{erb,html,html.erb}";
+@source "../../helpers/**/*.rb";
+@source "../../javascript/**/*.js";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-serif: "Instrument Serif", Georgia, serif;
+  --font-sans:  "Inter", -apple-system, system-ui, sans-serif;
+  --font-mono:  "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ink:         #0E1714;
+  --color-ink-2:       #2F3A35;
+  --color-muted:       #6B7670;
+
+  --color-bg:          #F8F6F1;   /* bone, NEVER pure white */
+  --color-bg-2:        #EFEBE3;
+  --color-surface:     #FFFFFF;
+
+  --color-accent:      #0A5A3C;   /* deep green */
+  --color-accent-2:    #074830;
+  --color-accent-soft: #E3EDE6;
+
+  --radius-button: 9px;
+  --radius-card:   14px;
+  --radius-panel:  20px;
+  --radius-pill:   99px;
+  /* …shadows, status tokens, etc. */
+}
+
+.dark { --color-ink: #F2EFE8; /* …dark overrides… */ }
+```
+
+The full token set (status, radii, shadows) and design rationale live in `DESIGN.md` — that document is the source of truth for anything visual.
+
+### Stimulus controllers
+
+Live in `app/javascript/controllers/`. Already shipped: `theme_controller.js` (auto → light → dark cycle, labels passed from ERB via `data-theme-*-label-value`). Others land with their feature PRs:
+
+- `currency_input_controller.js` — MXN input formatting
+- `phone_input_controller.js` — MX phone formatting as user types
+- `sortable_controller.js` — drag-and-drop via `positioning` gem endpoint
+- `auto_submit_controller.js` — live-search inputs
+
+**No inline JS in views.** Pre-paint boot code goes in `app/javascript/*.js` and is loaded via `javascript_include_tag` in `<head>`. Interactive behavior goes through Stimulus. Labels/copy are passed from ERB via `data-*-value` attributes so translations stay on the server.
 
 ### Turbo
-- Frame-based navigation for panel sections (avoids full reloads)
-- Stream broadcasts from models for real-time
-- Morphing enabled (`data-turbo-action="morph"`) for kanban updates
+- Frame-based navigation for operator sections (avoids full reloads).
+- Stream broadcasts from models for real-time kanban updates.
+- Morphing enabled (`data-turbo-action="morph"`) for kanban column moves.
+- **Controllers that forms redirect to MUST return HTML.** Turbo silently bails on `text/plain` after a form submit — the URL bar doesn't change and the flow looks broken. Use `render_stub(title:, meta:)` (defined on `ApplicationController`) for Phase 6 placeholders — it renders the shared `app/views/shared/stub.html.erb` template with a proper `text/html` content type.
 
 ### View components directory layout
 
 ```
 app/components/
-├── ui/                         # Flowbite-wrapped primitives
-│   ├── button_component.rb
-│   ├── badge_component.rb
-│   ├── card_component.rb
+├── ui/                         # Bespoke primitives (DESIGN.md tokens)
+│   ├── button_component.rb     # :default, :primary, :ghost variants
+│   ├── badge_component.rb      # status pills (listo/nuevo/en_produccion/atrasado)
+│   ├── card_component.rb       # default, compact, showcase variants
 │   ├── dropdown_component.rb
-│   ├── modal_component.rb
+│   ├── modal_component.rb      # native <dialog>-based
 │   └── form/
 │       ├── field_component.rb
 │       ├── money_input_component.rb
@@ -1288,8 +1427,8 @@ app/components/
 ## 17. Email
 
 ### Development
-- `letter_opener_web` mounted at `/cartas`
-- `letter_opener` ensures emails open in the browser on send
+- `letter_opener_web` mounted at `/letter_opener` (renamed from the original `/cartas` to use the gem's conventional mount path — easier to spot in routes, doesn't require explaining to new contributors).
+- `letter_opener` ensures emails open in the browser on send.
 
 ### Production
 - **Resend** via `resend` gem
@@ -1577,20 +1716,27 @@ kitchef/
 ## 21. Docker & Local Development
 
 ### Reference
-Mirror the Agendario structure exactly (see repo: https://github.com/samacs/agendario.mx).
+Modeled after Agendario's structure (https://github.com/samacs/agendario.mx) with a few intentional deviations noted below.
 
 ### Production Dockerfile
-Based on Agendario's, with name substitutions (`agendario` → `kitchef`). Key elements:
-- Ruby 4.0.1-slim base
+Based on Agendario's. Key elements:
+- Ruby 4.0.2-slim base (tracks `.ruby-version`)
 - jemalloc preloaded
 - Two-stage build (base + build + final)
-- Non-root `rails` user
-- Thruster entrypoint
+- Non-root `rails` user (UID/GID 1000)
+- `RAILS_ENV=production`, `BUNDLE_DEPLOYMENT=1`
+- Thruster entrypoint on port 80
 
-### compose.yml
+### compose.yml (actual structure)
 ```yaml
 ---
 name: kitchef
+
+x-postgres-env: &postgres-env
+  POSTGRES_USER: ${POSTGRES_USER:-kitchef}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-kitchef}
+  POSTGRES_DB: ${POSTGRES_DB:-kitchef_development}
+
 services:
   postgres:
     build:
@@ -1598,11 +1744,24 @@ services:
       dockerfile: ./docker/postgres/Dockerfile
       args:
         POSTGRES_MAJOR: ${POSTGRES_MAJOR:-18}
-        DISTRO_NAME: ${DISTRO_NAME:-trixie}
     image: ${DOCKER_REGISTRY:-kitchef.mx}/${DOCKER_REPOSITORY:-kitchef}-postgres:${TAG:-latest}
     hostname: kitchef-postgres
     container_name: kitchef-postgres
-    # ... same structure as Agendario
+    restart: unless-stopped
+    environment:
+      <<: *postgres-env
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports: [ "${POSTGRES_PORT:-5432}:5432" ]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sh:/docker-entrypoint-initdb.d/10-init.sh:ro
+      - ./docker/postgres/create_extensions.sql:/docker-entrypoint-initdb.d/20-create_extensions.sql:ro
+      - ./docker/postgres/.psqlrc:/root/.psqlrc:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   valkey:
     build:
@@ -1610,42 +1769,106 @@ services:
       dockerfile: ./docker/valkey/Dockerfile
       args:
         VALKEY_MAJOR: ${VALKEY_MAJOR:-9}
-        DISTRO_NAME: ${DISTRO_NAME:-alpine}
     image: ${DOCKER_REGISTRY:-kitchef.mx}/${DOCKER_REPOSITORY:-kitchef}-valkey:${TAG:-latest}
     hostname: kitchef-valkey
     container_name: kitchef-valkey
-    # ... same structure as Agendario
+    restart: unless-stopped
+    ports: [ "${VALKEY_PORT:-6379}:6379" ]
+    volumes: [ valkey-data:/data ]
+    healthcheck:
+      test: [ "CMD", "valkey-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres-data:
   valkey-data:
 ```
 
+**Deviations from a literal Agendario mirror, each documented in source:**
+1. **No `DISTRO_NAME` arg** at the compose layer. The original spec had `DISTRO_NAME` as an arg on *both* services with different defaults (`trixie` for postgres, `alpine` for valkey) — a single env var can't legitimately hold two values, so if you set it in `.env` one service breaks. Each `Dockerfile` keeps its own `ARG DISTRO_NAME=…` default; we don't surface it to compose.
+2. **Health checks on both services** (`pg_isready`, `valkey-cli ping`). Enables `depends_on: { condition: service_healthy }` when we add a web container later.
+3. **Init scripts are bind-mounted, not COPY'd into the image.** `docker/postgres/init.sh` and `create_extensions.sql` are mounted read-only into `/docker-entrypoint-initdb.d/` with numeric prefixes that force init order (10 then 20). Changes don't require a rebuild (they take effect on the next fresh volume init; existing volumes keep their schema).
+4. **`.psqlrc` is bind-mounted** to `/root/.psqlrc` so `docker exec kitchef-postgres psql` sessions get `\timing`, verbose error reports, and the `[NULL]` null indicator.
+
 ### Postgres extensions
-Same as Agendario (`create_extensions.sql`):
 ```sql
+-- docker/postgres/create_extensions.sql (runs on fresh init)
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 ```
 
+### Dev SSL — lvh.me + mkcert
+
+The dev server runs HTTPS on `https://lvh.me:3000` — not `http://localhost:3000`. Reasons:
+- `localhost` is refused by several third-party services as an OAuth redirect URI or webhook origin (Stripe Connect, some WhatsApp providers, Google OAuth). `lvh.me` resolves to 127.0.0.1 and behaves like a real domain.
+- HTTPS from day one avoids HSTS gotchas, prevents mixed-content when we pull CDN assets, and matches production identically so a dev never hits a bug that only manifests under TLS.
+
+Certs live in `./ssl/lvh.me.pem` + `./ssl/lvh.me.key`, generated per-machine via `mkcert` (one-time: `brew install mkcert && mkcert -install && mkcert -key-file ssl/lvh.me.key -cert-file ssl/lvh.me.pem lvh.me "*.lvh.me" localhost 127.0.0.1`). The `ssl/` directory is gitignored; each dev regenerates their own.
+
+`bin/dev` sets `SSL_CERT_FILE` / `SSL_KEY_FILE` env vars and hands them to Puma via `Procfile.dev`:
+
+```
+web: bin/rails server -b "ssl://0.0.0.0:${PORT:-3000}?key=${SSL_KEY_FILE}&cert=${SSL_CERT_FILE}"
+css: bin/rails tailwindcss:watch
+worker: bin/sidekiq -C config/sidekiq.yml
+```
+
+`config/environments/development.rb` widens `config.hosts` to include `lvh.me` and its subdomain regex, and sets `default_url_options = { host: "lvh.me", port: 3000, protocol: "https" }` on `config.action_controller` + `config.action_mailer` + `Rails.application.routes` — otherwise `root_url` can drop `:3000`/`https://` when generated outside a request (mailers, jobs), and a sign-in redirect lands at a dead `http://lvh.me/`.
+
 ### `.env` (via dotenv-rails)
 ```
+# Database
+POSTGRES_USER=kitchef
+POSTGRES_PASSWORD=kitchef
+POSTGRES_DB=kitchef_development
+POSTGRES_PORT=5432
+POSTGRES_MAJOR=18
 DATABASE_URL=postgres://kitchef:kitchef@localhost:5432/kitchef_development
+
+# Valkey (Redis-compatible)
+VALKEY_PORT=6379
+VALKEY_MAJOR=9
 VALKEY_URL=redis://localhost:6379/0
-RAILS_MASTER_KEY=...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-RESEND_API_KEY=re_...
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
+
+# Rails
+RAILS_MASTER_KEY=
+PREFIXED_IDS_SALT=kitchef-dev-salt-replace-in-prod
+
+# OAuth / payments / email / storage / observability
+GOOGLE_OAUTH_CLIENT_ID=
+GOOGLE_OAUTH_CLIENT_SECRET=
+STRIPE_PUBLISHABLE_KEY=pk_test_
+STRIPE_SECRET_KEY=sk_test_
+STRIPE_WEBHOOK_SECRET=whsec_
+RESEND_API_KEY=re_
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_WHATSAPP_FROM=
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
 AWS_REGION=us-east-2
 S3_BUCKET=kitchef-dev-uploads
-SENTRY_DSN=...
-POSTHOG_API_KEY=...
+SENTRY_DSN=
+POSTHOG_API_KEY=
 ```
+
+### Shared Valkey config
+
+A single `Rails.application.config.redis_config` hash in `config/application.rb` is the source of truth for every Valkey connection (Sidekiq, Rails.cache, Action Cable, ad-hoc consumers):
+
+```ruby
+# config/application.rb
+config.redis_config = {
+  url:    ENV.fetch("VALKEY_URL", "redis://localhost:6379/0"),
+  driver: :hiredis
+}
+```
+
+`config/initializers/sidekiq.rb` reads this hash for both server and client, sets `RedisClient.default_driver`, and loads `config/schedule.yml` (sidekiq-cron) when present. Cache stores in `development.rb` and `production.rb` `.merge` pool/timeout options on top.
 
 ---
 
