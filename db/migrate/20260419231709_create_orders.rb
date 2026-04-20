@@ -7,7 +7,7 @@ class CreateOrders < ActiveRecord::Migration[8.1]
       # Orders::PlaceOrder).
       t.references :client, foreign_key: true
 
-      t.string   :state, null: false, default: "placed"
+      t.string :state, null: false, default: "placed"
 
       # Delivery date + local time window (minutes from midnight). Integer
       # times avoid TZ/DST drift on recurring schedules; the operator's
