@@ -1,0 +1,112 @@
+# == Schema Information
+#
+# Table name: recipes
+#
+#  id                    :bigint           not null, primary key
+#  category              :integer          default("mains"), not null
+#  cost_cents_cached     :bigint
+#  description           :text
+#  discarded_at          :datetime
+#  is_published          :boolean          default(FALSE), not null
+#  is_saleable           :boolean          default(TRUE), not null
+#  name                  :string           not null
+#  position              :integer
+#  sale_price_cents      :bigint           default(0), not null
+#  slug                  :string           not null
+#  target_margin_percent :integer          default(60), not null
+#  yield_quantity        :decimal(10, 3)   default(1.0), not null
+#  yield_unit            :string           default("porcion"), not null
+#  created_at            :datetime         not null
+#  updated_at            :datetime         not null
+#  account_id            :bigint           not null
+#
+# Indexes
+#
+#  index_recipes_on_account_id                            (account_id)
+#  index_recipes_on_account_id_and_category_and_position  (account_id,category,position)
+#  index_recipes_on_account_id_and_is_saleable            (account_id,is_saleable)
+#  index_recipes_on_account_id_and_slug                   (account_id,slug) UNIQUE
+#  index_recipes_on_discarded_at                          (discarded_at)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (account_id => accounts.id)
+#
+class Recipe < ApplicationRecord
+  extend FriendlyId
+  include AccountScoped
+  include HasPrefixedId.new(prefix: "rec")
+  include HasSoftDelete
+
+  friendly_id :name, use: :scoped, scope: :account
+  has_paper_trail
+  positioned on: [ :account, :category ]
+  monetize :sale_price_cents
+  monetize :cost_cents_cached, as: :cost_cached, allow_nil: true
+
+  YIELD_UNITS = %w[piece g kg ml l serving].freeze
+  CATEGORIES = {
+    mains:     0,
+    starters:  1,
+    desserts:  2,
+    drinks:    3,
+    bases:     4,    # internal preparations: masa, salsas, bases_y_preparaciones
+    other:    99
+  }.freeze
+
+  enum :category, CATEGORIES, prefix: true
+
+  # Components — the polymorphic join that enables decomposition. A parent
+  # Recipe has many components, each pointing at either an Ingredient or
+  # another Recipe.
+  has_many :components,
+    class_name: "RecipeComponent",
+    dependent: :destroy,
+    inverse_of: :recipe
+
+  has_many :component_recipes,     through: :components, source: :componentable, source_type: "Recipe"
+  has_many :component_ingredients, through: :components, source: :componentable, source_type: "Ingredient"
+
+  # Reverse side — where is this recipe used as a component?
+  # Destroy cascades so an Account.destroy can proceed; UI-level deletion
+  # warns the operator about affected parent recipes.
+  has_many :usages,
+    class_name: "RecipeComponent",
+    as: :componentable,
+    dependent: :destroy
+
+  has_many_attached :photos
+
+  validates :name, presence: true, length: { maximum: 120 }
+  validates :slug, presence: true
+  validates :yield_quantity, numericality: { greater_than: 0 }
+  validates :yield_unit, presence: true, inclusion: { in: YIELD_UNITS }
+  validates :target_margin_percent, numericality: { in: 0..100 }
+  validates :sale_price_cents,
+    numericality: { greater_than_or_equal_to: 0 },
+    presence: true,
+    if: :is_saleable?
+  validate :published_requires_saleable
+
+  scope :saleable, -> { where(is_saleable: true) }
+  scope :internal, -> { where(is_saleable: false) }
+  scope :published, -> { where(is_saleable: true, is_published: true) }
+  scope :by_category, ->(category) { where(category: category) }
+
+  def internal?
+    !is_saleable?
+  end
+
+  def should_generate_new_friendly_id?
+    slug.blank? || will_save_change_to_name?
+  end
+
+  private
+
+  def published_requires_saleable
+    return unless is_published?
+    return if is_saleable?
+
+    errors.add(:is_published, :requires_saleable)
+  end
+end

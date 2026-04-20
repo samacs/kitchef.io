@@ -1,0 +1,69 @@
+es-MX:
+  # Operator-facing labels for internal English identifiers (enum keys,
+  # AASM states, unit codes). Everything the operator reads passes through
+  # here.
+
+  units:
+    g:       "g"
+    kg:      "kg"
+    ml:      "ml"
+    l:       "l"
+    piece:   "pieza"
+    serving: "porción"
+
+  payment:
+    methods:
+      cash:         "Efectivo"
+      transfer:     "Transferencia"
+      card:         "Tarjeta"
+      mercado_pago: "Mercado Pago"
+      other:        "Otro"
+
+  ingredient:
+    categories:
+      pantry:  "Abarrotes"
+      meats:   "Carnes"
+      dairy:   "Lácteos"
+      produce: "Verduras"
+      spices:  "Especias"
+      other:   "Otros"
+
+  recipe:
+    categories:
+      mains:    "Platos fuertes"
+      starters: "Entradas"
+      desserts: "Postres"
+      drinks:   "Bebidas"
+      bases:    "Bases y preparaciones"
+      other:    "Otros"
+
+  order:
+    state:
+      placed:        "Pedido"
+      confirmed:     "Confirmado"
+      in_production: "En producción"
+      ready:         "Listo"
+      delivered:     "Entregado"
+      paid:          "Pagado"
+      canceled:      "Cancelado"
+    delivery_types:
+      delivery: "Entrega a domicilio"
+      pickup:   "Recolección"
+    sources:
+      storefront: "Tienda pública"
+      manual:     "Capturado a mano"
+      whatsapp:   "WhatsApp"
+      instagram:  "Instagram"
+      other:      "Otro"
+
+  subscription:
+    plans:
+      free: "Libreta"
+      pro:  "Cocina"
+      team: "Taller"
+    status:
+      trialing:   "En prueba"
+      active:     "Activa"
+      past_due:   "Pago atrasado"
+      canceled:   "Cancelada"
+      incomplete: "Incompleta"
