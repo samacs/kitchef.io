@@ -43,9 +43,19 @@ module Kitchef
     # introduce in Phase 5+ so autoloading picks them up without fuss.
     config.autoload_paths += %W[
       #{config.root}/app/commands
+      #{config.root}/app/constraints
       #{config.root}/app/queries
       #{config.root}/app/services
     ]
+
+    # Shared Valkey (Redis-compatible) connection config used by Sidekiq, the
+    # Rails cache store, and any gem that asks for it via `config.redis_config`.
+    # Keeping a single source of truth means flipping URL, driver, or retry
+    # policy in one place.
+    config.redis_config = {
+      url: ENV.fetch("VALKEY_URL", "redis://localhost:6379/0"),
+      driver: :hiredis
+    }
 
     # Keep generators quiet — no system tests, no helpers, no fixtures (we
     # defer testing to a later milestone).

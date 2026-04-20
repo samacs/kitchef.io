@@ -25,12 +25,10 @@ Rails.application.configure do
     config.action_controller.perform_caching = false
   end
 
-  # Use Valkey for the dev cache store so behavior matches production and
-  # fragment-cached marketing pages survive reloads. Falls back to a memory
-  # store if Valkey is unreachable so onboarding devs don't get a wall of
-  # ConnectionError noise.
-  config.cache_store = :redis_cache_store, {
-    url: ENV.fetch("VALKEY_URL", "redis://localhost:6379/0"),
+  # Valkey-backed cache store in dev so fragment-cached marketing pages
+  # survive reloads. Shares the same connection config as Sidekiq (see
+  # config/application.rb#redis_config).
+  config.cache_store = :redis_cache_store, Rails.application.config.redis_config.merge(
     pool: { size: ENV.fetch("RAILS_MAX_THREADS", 5).to_i, timeout: 1 },
     connect_timeout: 0.5,
     read_timeout:    1.0,
@@ -39,7 +37,7 @@ Rails.application.configure do
     error_handler: ->(method:, returning:, exception:) {
       Rails.logger.warn("Valkey cache #{method} failed: #{exception.class}: #{exception.message}")
     }
-  }
+  )
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
@@ -52,8 +50,15 @@ Rails.application.configure do
 
   # Use lvh.me in development (resolves to 127.0.0.1, supports subdomains, and
   # is a valid host for OAuth redirect URIs and webhook targets — unlike
-  # `localhost`, which some third-party services reject).
-  config.action_mailer.default_url_options = { host: "lvh.me", port: 3000, protocol: "https" }
+  # `localhost`, which some third-party services reject). Setting url
+  # options here and on action_controller keeps `root_url` / `redirect_to`
+  # from dropping `:3000` and `https://` when the current request's
+  # base_url isn't fully available (mailers, background jobs). Without
+  # this, a redirect after sign-in can land at `http://lvh.me/` (no port)
+  # and appear broken.
+  config.action_mailer.default_url_options      = { host: "lvh.me", port: 3000, protocol: "https" }
+  config.action_controller.default_url_options  = { host: "lvh.me", port: 3000, protocol: "https" }
+  Rails.application.routes.default_url_options  = { host: "lvh.me", port: 3000, protocol: "https" }
 
   # Allow lvh.me and its subdomains through Host Authorization. We keep the
   # middleware enabled (defense against DNS rebinding); we only widen the

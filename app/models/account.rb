@@ -53,7 +53,7 @@ class Account < ApplicationRecord
   RESERVED_SLUGS = %w[
     acerca admin ajustes api app asistencia asistente assets ayuda
     blog buscar
-    cartas categoria categorias como-funciona contacto cocina
+    categoria categorias como-funciona contacto cocina
     directorio
     empleos entrar equipo explorar
     facturacion favicon fotos
@@ -70,20 +70,21 @@ class Account < ApplicationRecord
 
     about account accounts admin-panel api-docs apis auth
     billing
-    careers cart categories changelog checkout company contact cookies
-    dashboard demo docs docs-api documentation
+    careers cart categories changelog checkout clients company contact cookies
+    dashboard delivery-slots demo docs docs-api documentation
     enterprise explore
     faq features feedback forgot-password
-    help home
+    help home how-it-works
     integrations
     jobs join
-    login logout
+    letter_opener login logout
     menus
     new news
     onboarding
-    password passwords pricing privacy products profile
-    register reset-password root
-    search settings signin signout signup stats status subscribe support
+    password passwords pricing privacy production products profile
+    register reports reset-password root
+    search settings sign-in signin sign-out signout sign-up signup
+    stats status subscribe subscription support
     team terms tour
     users
     welcome
@@ -101,7 +102,7 @@ class Account < ApplicationRecord
     taller tamales tienda
 
     analytics assets-cdn atom
-    callback callbacks css
+    cable callback callbacks css
     embed
     feed ftp
     graphql
@@ -110,6 +111,7 @@ class Account < ApplicationRecord
     mail mailer metrics
     oauth oauth2 oembed opensearch
     ping public
+    recede_historical_location refresh_historical_location resume_historical_location
     rss
     ssh static superuser
     www

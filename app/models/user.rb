@@ -3,6 +3,7 @@
 # Table name: users
 #
 #  id               :bigint           not null, primary key
+#  admin            :boolean          default(FALSE), not null
 #  discarded_at     :datetime
 #  email_address    :string           not null
 #  first_name       :string
@@ -17,6 +18,7 @@
 # Indexes
 #
 #  index_users_on_account_id     (account_id)
+#  index_users_on_admin          (admin) WHERE (admin = true)
 #  index_users_on_discarded_at   (discarded_at)
 #  index_users_on_email_address  (email_address) UNIQUE
 #

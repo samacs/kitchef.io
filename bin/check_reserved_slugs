@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# Ensures every top-level route in config/routes.rb has a corresponding
+# entry in Account::RESERVED_SLUGS. A missing entry means an operator
+# could register an account slug that collides with an app route — the
+# first request to the route would load the storefront instead of the
+# intended controller.
+#
+# Run locally:   bin/check_reserved_slugs
+# CI step:       bundle exec bin/check_reserved_slugs
+
+require_relative "../config/environment"
+
+# Paths that are legitimately NOT reserved — usually because they are
+# handled by the storefront scope itself (/:slug/menu lives inside the
+# catch-all, so "menu" below the slug is fine; top-level "menu" stays
+# reserved).
+EXEMPT = %w[
+  :slug
+].freeze
+
+# Pull every top-level path literal out of the route table. We drop any
+# route whose first segment starts with a colon (parameterized — these
+# are the storefront catch-all itself), any blank segment, and anything
+# in EXEMPT.
+def top_level_paths
+  Rails.application.routes.routes.map do |route|
+    spec = route.path.spec.to_s
+    next unless spec.match?(%r{\A/[^/]+(?:/|\z|\()})
+
+    first = spec.sub(%r{\A/}, "").split(%r{[/.(]}).first
+    first&.strip
+  end.compact.uniq.reject do |segment|
+    segment.empty? || segment.start_with?(":") || EXEMPT.include?(segment)
+  end
+end
+
+unreserved = top_level_paths - Account::RESERVED_SLUGS
+
+if unreserved.any?
+  warn "x These top-level routes are not in Account::RESERVED_SLUGS:"
+  unreserved.each { |p| warn "    - #{p}" }
+  warn ""
+  warn "Add them to RESERVED_SLUGS in app/models/account.rb, then rerun:"
+  warn "  bin/check_reserved_slugs"
+  exit 1
+end
+
+puts "ok — all #{top_level_paths.size} top-level routes are reserved (#{Account::RESERVED_SLUGS.size} slugs in the block-list)."

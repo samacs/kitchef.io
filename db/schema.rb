@@ -284,6 +284,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_233946) do
 
   create_table "users", force: :cascade do |t|
     t.bigint "account_id"
+    t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "discarded_at"
     t.string "email_address", null: false
@@ -294,6 +295,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_233946) do
     t.string "phone_normalized"
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_users_on_account_id"
+    t.index ["admin"], name: "index_users_on_admin", where: "(admin = true)"
     t.index ["discarded_at"], name: "index_users_on_discarded_at"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end

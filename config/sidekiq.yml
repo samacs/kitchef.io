@@ -1,4 +1,6 @@
+---
 :concurrency: <%= ENV.fetch("SIDEKIQ_CONCURRENCY", 5) %>
+:pidfile: tmp/pids/sidekiq.pid
 :timeout: 25
 
 :queues:
@@ -8,3 +10,7 @@
   - [notifications, 2]
   - [imports, 1]
   - [low, 1]
+
+production:
+  :concurrency: 10
+  :verbose: false
