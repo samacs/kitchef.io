@@ -125,8 +125,10 @@ class Account < ApplicationRecord
   # Declaration order matters: dependent-destroy cascades run in the order
   # associations are declared. Orders must run before recipes/ingredients
   # (OrderItems reference Recipes). Clients after orders (orders nullify
-  # client_id).
-  has_many :users,          dependent: :restrict_with_exception
+  # client_id). Users cascades so destroying the owner tears down any
+  # other members with it — the owner's `before_destroy :detach_from_account`
+  # pre-nulls the circular FK so this doesn't loop back onto itself.
+  has_many :users,          dependent: :destroy
   has_many :orders,         dependent: :destroy
   has_many :clients,        dependent: :destroy
   has_many :recipes,        dependent: :destroy

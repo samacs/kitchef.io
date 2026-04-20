@@ -38,6 +38,18 @@ class User < ApplicationRecord
   has_many   :sessions, dependent: :destroy
   has_one    :owned_account, class_name: "Account", foreign_key: :owner_id, dependent: :destroy, inverse_of: :owner
 
+  # Break the circular users.account_id ↔ accounts.owner_id reference
+  # before the `has_one :owned_account` destroy cascade runs. `prepend:
+  # true` is load-bearing — without it this callback fires AFTER the
+  # association's own `dependent: :destroy` hook, and Account's
+  # `has_many :users` still sees the owner pointing back, re-enters
+  # User#destroy, and recurses until the stack blows. With the prepend,
+  # `user.destroy` tears down the whole kitchen (account, subscription,
+  # orders, clients, recipes, ingredients, delivery slots, ActiveStorage
+  # attachments) in one call — the contract the eventual "Delete my
+  # account" settings action will wire up to.
+  before_destroy :detach_from_account, prepend: true
+
   attr_accessor :terms_accepted
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
@@ -53,6 +65,15 @@ class User < ApplicationRecord
   end
 
   private
+
+  # Paired with the `before_destroy :detach_from_account` callback above.
+  # `update_column` skips callbacks + validations — we only need the
+  # single SQL UPDATE to clear the FK so the cascade can proceed.
+  def detach_from_account
+    return if account_id.nil?
+
+    update_column(:account_id, nil)
+  end
 
   def phone_is_valid_mx_number
     return if phone.blank?
