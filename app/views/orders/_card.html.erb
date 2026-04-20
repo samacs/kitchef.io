@@ -6,11 +6,18 @@
             class: "font-serif text-[16px] leading-[1.2] text-ink truncate hover:underline" do %>
         <%= order.client&.name.presence || t("dashboard.today_orders.empty_client") %>
       <% end %>
-      <span class="font-mono text-[11px] text-muted uppercase tracking-[0.14em]">
-        <%= l(order.delivery_date, format: :long) %>
-        <% if order.delivery_start_time.present? %>
-          · <%= order.delivery_start_time_hhmm %><% if order.delivery_end_time.present? %>–<%= order.delivery_end_time_hhmm %><% end %>
-        <% end %>
+      <span class="font-mono text-[11px] text-muted uppercase tracking-[0.14em] inline-flex items-center gap-1.5">
+        <span class="inline-flex items-center text-muted"
+              aria-label="<%= t("order.delivery_types.#{order.delivery_type}") %>"
+              title="<%= t("order.delivery_types.#{order.delivery_type}") %>">
+          <%= icon(order.delivery? ? :bike : :shopping_bag, size: :xs) %>
+        </span>
+        <span>
+          <%= l(order.delivery_date, format: :long) %>
+          <% if order.delivery_start_time.present? %>
+            · <%= order.delivery_start_time_hhmm %><% if order.delivery_end_time.present? %>–<%= order.delivery_end_time_hhmm %><% end %>
+          <% end %>
+        </span>
       </span>
     </div>
     <%= render Orders::StateBadgeComponent.new(state: order.state) %>
@@ -83,6 +90,20 @@
           form: { class: "block" },
           class: "w-full inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
       <span><%= t("orders.transitions.#{primary}") %></span>
+    <% end %>
+
+    <%# Skip-shortcut: handoff + payment frequently happen at the same
+        moment (cash-and-carry, paid upfront via storefront + delivery
+        in one motion). When mark_paid is available but isn't the
+        primary, expose it as a quiet ghost button so the operator
+        skips without digging into the drawer. %>
+    <% if primary != :mark_paid && order.aasm.may_fire_event?(:mark_paid) %>
+      <%= button_to mark_paid_order_path(order),
+            method: :post,
+            form: { class: "block" },
+            class: "w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-medium px-3 py-[6px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
+        <span><%= t("orders.transitions.or_mark_paid") %></span>
+      <% end %>
     <% end %>
   <% end %>
 </article>

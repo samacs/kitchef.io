@@ -31,10 +31,14 @@
         cta_href: new_order_path) %>
 <% else %>
   <% by_state = orders.group_by(&:state) %>
-  <% live_states = %w[placed confirmed in_production ready delivered paid] %>
+  <% live_states = %w[placed confirmed in_production ready en_route delivered paid] %>
   <% canceled = by_state["canceled"].to_a %>
 
-  <div class="flex gap-4 overflow-x-auto pb-4 -mx-5 lg:-mx-7 px-5 lg:px-7 overscroll-x-contain kc-scroll"
+  <%# Live kanban: cap the row at viewport height below the top bar
+      so columns stretch to fill (via `h-full` on each column) and
+      internal card scroll handles overflow. Cancelados lives below
+      as a separate horizontal strip. %>
+  <div class="flex gap-4 overflow-x-auto pb-4 -mx-5 lg:-mx-7 px-5 lg:px-7 overscroll-x-contain kc-scroll h-[calc(100vh-220px)] min-h-[360px]"
        data-controller="drag-scroll">
     <% live_states.each do |state| %>
       <%= render Orders::KanbanColumnComponent.new(state: state, orders: by_state[state].to_a) %>
@@ -51,16 +55,21 @@
       </span>
     </header>
 
-    <div class="flex flex-col gap-3 p-4 sm:p-5">
-      <% if canceled.empty? %>
-        <div class="text-muted/50 font-mono text-[14px] text-center py-4 select-none" aria-hidden="true">—</div>
-      <% else %>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <% canceled.each do |order| %>
+    <% if canceled.empty? %>
+      <div class="text-muted/50 font-mono text-[14px] text-center py-4 select-none" aria-hidden="true">—</div>
+    <% else %>
+      <%# Horizontal strip — same drag-scroll behavior as the live
+          kanban, same subtle kc-scroll styling (scrollbar auto-hides
+          when all cards fit). Each card keeps its fixed w-[280px]
+          from the live kanban so the layout reads consistently. %>
+      <div class="flex gap-3 overflow-x-auto p-4 sm:p-5 overscroll-x-contain kc-scroll"
+           data-controller="drag-scroll">
+        <% canceled.each do |order| %>
+          <div class="w-[280px] shrink-0">
             <%= render "orders/card", order: order %>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   </section>
 <% end %>

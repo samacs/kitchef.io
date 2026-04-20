@@ -67,6 +67,21 @@ export default class extends Controller {
     const row = select.closest("[data-order-line-items-target='row']")
     if (!row) return
 
+    const opt = select.options[select.selectedIndex]
+
+    // Adjust the quantity input's step + min for the picked recipe's
+    // yield_unit (pieces/servings/g/ml → integer, kg/l → 0.1). The
+    // server helper ships the rule as data attributes so JS doesn't
+    // need to know which unit maps to which step.
+    const qty = row.querySelector("input[name$='[quantity]']")
+    if (qty) {
+      const step = opt?.dataset?.qtyStep
+      const min  = opt?.dataset?.qtyMin
+      if (step) qty.step = step
+      if (min)  qty.min  = min
+      qty.inputMode = (step && step.includes(".")) ? "decimal" : "numeric"
+    }
+
     const priceInput = this.priceInput(row)
     if (!priceInput) return
 
@@ -75,7 +90,6 @@ export default class extends Controller {
       return
     }
 
-    const opt = select.options[select.selectedIndex]
     const cents = parseInt(opt?.dataset?.priceCents || "0", 10)
     if (cents > 0) priceInput.value = (cents / 100).toFixed(2)
     this.recalc()

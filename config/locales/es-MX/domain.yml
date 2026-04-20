@@ -43,6 +43,7 @@ es-MX:
       confirmed:     "Confirmado"
       in_production: "En producción"
       ready:         "Listo"
+      en_route:      "En reparto"
       delivered:     "Entregado"
       paid:          "Pagado"
       canceled:      "Cancelado"

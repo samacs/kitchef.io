@@ -1,6 +1,7 @@
 <%= form_with model: client,
       url: client.persisted? ? client_path(client) : clients_path,
-      class: "flex flex-col gap-5" do |form| %>
+      class: "flex flex-col gap-5",
+      data: client.persisted? ? { controller: "form-autosave", action: "change->form-autosave#save" } : {} do |form| %>
 
   <% if client.errors.any? %>
     <div role="alert"
@@ -83,13 +84,29 @@
           class: "w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y" %>
   </label>
 
-  <div class="flex items-center justify-between gap-3 pt-2">
-    <%= link_to t("clients.form.cancel"),
-          clients_path,
-          data: { action: "click->right-drawer#close" },
-          class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+  <% if client.persisted? %>
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <span data-form-autosave-target="status"
+            data-label-saving="<%= t("orders.form.autosave.saving") %>"
+            data-label-saved="<%= t("orders.form.autosave.saved") %>"
+            data-label-error="<%= t("orders.form.autosave.error") %>"
+            class="hidden font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted data-[state=saved]:text-accent data-[state=error]:text-err transition-colors">
+      </span>
 
-    <%= form.submit(client.persisted? ? t("clients.form.submit_update") : t("clients.form.submit_create"),
-          class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta") %>
-  </div>
+      <%= link_to t("clients.form.done"),
+            clients_path,
+            data: { action: "click->right-drawer#close", form_autosave_skip: true },
+            class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+    </div>
+  <% else %>
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <%= link_to t("clients.form.cancel"),
+            clients_path,
+            data: { action: "click->right-drawer#close" },
+            class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+
+      <%= form.submit(t("clients.form.submit_create"),
+            class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta") %>
+    </div>
+  <% end %>
 <% end %>

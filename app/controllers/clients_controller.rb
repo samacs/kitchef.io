@@ -32,7 +32,15 @@ class ClientsController < AuthenticatedController
     result = Clients::Update.call(client: client, params: client_params)
     if result.success?
       respond_to do |format|
-        format.turbo_stream { render turbo_stream: close_drawer_and_refresh }
+        # Auto-save keeps the drawer open — swap only the table row in
+        # place. Full-page refresh would knock focus out of whichever
+        # field the operator just committed.
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            helpers.dom_id(client),
+            Clients::RowComponent.new(client: client)
+          )
+        end
         format.html { redirect_to clients_path, notice: t(".updated") }
       end
     else

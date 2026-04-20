@@ -19,6 +19,7 @@
 #  delivery_type         :integer          default("delivery"), not null
 #  deposit_cents         :bigint           default(0), not null
 #  discarded_at          :datetime
+#  en_route_started_at   :datetime
 #  notes                 :text
 #  paid_at               :datetime
 #  position              :integer
@@ -134,6 +135,7 @@ class Order < ApplicationRecord
     state :confirmed
     state :in_production
     state :ready
+    state :en_route
     state :delivered
     state :paid
     state :canceled
@@ -153,18 +155,36 @@ class Order < ApplicationRecord
       transitions from: :in_production, to: :ready
     end
 
-    event :deliver, after: :stamp_delivered_at do
-      transitions from: :ready, to: :delivered
+    # `ship` is guarded to delivery-type only — pickup pedidos stay in
+    # `ready` until the customer walks in (they skip `en_route`). If an
+    # operator wants to mark a pickup as "in transit" anyway, they can
+    # do it in a console; the UI won't surface the button.
+    event :ship, after: :stamp_en_route_started_at do
+      transitions from: :ready, to: :en_route, guard: :delivery?
     end
 
+    event :deliver, after: :stamp_delivered_at do
+      transitions from: %i[ready en_route], to: :delivered
+    end
+
+    # Skip-friendly: operators commonly take payment at the handoff
+    # moment for cash-and-carry and can paid-out straight from any
+    # active state. `delivered_at` will be null for those skips — a
+    # true signal that we never observed the handoff separately.
     event :mark_paid, after: :stamp_paid_at do
-      transitions from: %i[delivered ready in_production confirmed], to: :paid
+      transitions from: %i[delivered en_route ready in_production confirmed], to: :paid
     end
 
     event :cancel, after: :stamp_canceled_at do
-      transitions from: %i[placed confirmed in_production ready], to: :canceled
+      transitions from: %i[placed confirmed in_production ready en_route], to: :canceled
     end
   end
+
+  # AASM guard — ship makes no semantic sense for pickup orders, so
+  # `ready.may_fire_event?(:ship)` returns false on pickup pedidos and
+  # the primary-button helper falls through to `:deliver` for them.
+  def delivery? = delivery_type_delivery?
+  def pickup?   = delivery_type_pickup?
 
   def paid?
     state == "paid"
@@ -191,6 +211,8 @@ class Order < ApplicationRecord
   # finance/menu-engineering views will wrap these in aggregates.
   def time_to_confirm          = duration(created_at, confirmed_at)
   def time_in_production       = duration(production_started_at, ready_at)
+  def time_waiting_for_runner  = duration(ready_at, en_route_started_at)
+  def time_in_transit          = duration(en_route_started_at, delivered_at)
   def time_to_deliver          = duration(ready_at, delivered_at)
   def time_to_pay              = duration(delivered_at, paid_at)
   def fulfillment_time         = duration(created_at, delivered_at || paid_at)
@@ -233,6 +255,7 @@ class Order < ApplicationRecord
   def stamp_confirmed_at          = stamp(:confirmed_at)
   def stamp_production_started_at = stamp(:production_started_at)
   def stamp_ready_at              = stamp(:ready_at)
+  def stamp_en_route_started_at   = stamp(:en_route_started_at)
   def stamp_delivered_at          = stamp(:delivered_at)
   def stamp_paid_at               = stamp(:paid_at)
   def stamp_canceled_at           = stamp(:canceled_at)

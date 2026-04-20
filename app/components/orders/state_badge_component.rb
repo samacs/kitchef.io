@@ -8,6 +8,7 @@ module Orders
       "confirmed"     => :default,
       "in_production" => :en_produccion,
       "ready"         => :listo,
+      "en_route"      => :en_produccion,
       "delivered"     => :listo,
       "paid"          => :default,
       "canceled"      => :atrasado

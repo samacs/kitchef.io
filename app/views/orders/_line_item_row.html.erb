@@ -27,6 +27,7 @@
     </select>
   </label>
 
+  <% rule = quantity_rule_for(recipe_unit) %>
   <label class="col-span-4 sm:col-span-2 flex flex-col gap-1.5">
     <span class="text-[12px] text-muted font-medium">
       <%= t("orders.form.quantity_label") %>
@@ -34,8 +35,9 @@
     <input type="number"
            name="<%= field_name_prefix %>[quantity]"
            value="<%= quantity %>"
-           min="0.001"
-           step="0.001"
+           min="<%= rule[:min] %>"
+           step="<%= rule[:step] %>"
+           inputmode="<%= rule[:step].to_s.include?(".") ? "decimal" : "numeric" %>"
            data-order-line-items-target="quantity"
            data-action="input->order-line-items#recalc"
            class="w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[13.5px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />

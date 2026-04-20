@@ -74,6 +74,7 @@ Rails.application.routes.draw do
       post :confirm
       post :start_production, path: "start-production"
       post :mark_ready,       path: "mark-ready"
+      post :ship
       post :deliver
       post :mark_paid,        path: "mark-paid"
     end

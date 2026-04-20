@@ -62,6 +62,8 @@ es-MX:
       start_production: "En producción."
     mark_ready:
       mark_ready: "Listo para entrega."
+    ship:
+      ship: "En reparto."
     deliver:
       deliver: "Entregado."
     mark_paid:
@@ -72,8 +74,10 @@ es-MX:
       confirm: "Confirmar"
       start_production: "Iniciar producción"
       mark_ready: "Marcar listo"
-      deliver: "Entregar"
+      ship: "Marcar en camino"
+      deliver: "Marcar entregado"
       mark_paid: "Marcar pagado"
+      or_mark_paid: "o marcar pagado"
       cancel: "Cancelar pedido"
       edit: "Editar"
       duplicate: "Duplicar pedido"
@@ -104,6 +108,7 @@ es-MX:
       confirmed: "Confirmados"
       in_production: "En producción"
       ready: "Listos"
+      en_route: "En reparto"
       delivered: "Entregados"
       paid: "Pagados"
       canceled: "Cancelados"
@@ -141,9 +146,14 @@ es-MX:
       total_label: "Total"
       submit_create: "Capturar pedido"
       submit_update: "Guardar cambios"
+      done: "Listo"
       cancel: "Cancelar"
       delete: "Eliminar pedido"
       delete_confirm: "¿Eliminar este pedido? Lo conservamos en el historial."
+      autosave:
+        saving: "Guardando…"
+        saved: "Guardado"
+        error: "No se pudo guardar"
     danger_zone:
       title: "¿Te equivocaste de pedido?"
       sub: "Puedes eliminar este pedido y dejará de aparecer en tu kanban. Lo conservamos en el historial."
@@ -214,6 +224,7 @@ es-MX:
       notes_placeholder: "Le gustan los tamales sin chile."
       submit_create: "Agregar cliente"
       submit_update: "Guardar cambios"
+      done: "Listo"
       cancel: "Cancelar"
       delete: "Eliminar cliente"
       delete_confirm: "¿Eliminar a esta clienta? Sus pedidos siguen en tu historial."

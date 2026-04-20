@@ -26,7 +26,18 @@ class OrdersController < AuthenticatedController
     result = Orders::Update.call(order: order, params: order_params)
     if result.success?
       respond_to do |format|
-        format.turbo_stream { render turbo_stream: close_drawer_and_refresh }
+        # Quick-edit flow: the drawer stays open so operators can keep
+        # tweaking. We replace the kanban card in place (precise morph
+        # via its dom_id) rather than refreshing the whole page — the
+        # operator never loses focus. Other tabs still get the normal
+        # broadcast refresh.
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            helpers.dom_id(order),
+            partial: "orders/card",
+            locals: { order: order }
+          )
+        end
         format.html { redirect_to orders_path, notice: t(".updated") }
       end
     else

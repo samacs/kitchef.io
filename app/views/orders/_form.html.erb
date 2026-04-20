@@ -1,10 +1,22 @@
 <% saleable_recipes = Current.account.recipes.kept.saleable.order(:position) %>
-<% recipe_options = saleable_recipes.map { |r| [ r.name, r.id, { "data-price-cents": r.sale_price_cents.to_i } ] } %>
+<% recipe_options = saleable_recipes.map { |r|
+     rule = quantity_rule_for(r.yield_unit)
+     [ r.name, r.id, {
+       "data-price-cents": r.sale_price_cents.to_i,
+       "data-yield-unit":  r.yield_unit,
+       "data-qty-step":    rule[:step],
+       "data-qty-min":     rule[:min]
+     } ]
+   } %>
 <% selected_client = order.client %>
 
+<%# `form-autosave` is only wired for persisted records — new-pedido
+    capture still goes through the explicit "Capturar pedido" submit so
+    the operator commits once, when all the line items are in place. %>
 <%= form_with model: order,
       url: order.persisted? ? order_path(order) : orders_path,
-      class: "flex flex-col gap-6" do |form| %>
+      class: "flex flex-col gap-6",
+      data: order.persisted? ? { controller: "form-autosave", action: "change->form-autosave#save" } : {} do |form| %>
 
   <% if order.errors.any? %>
     <div role="alert"
@@ -225,6 +237,7 @@
             field_name_prefix: "order[items_attributes][NEW_RECORD]",
             id: nil,
             recipe_id: nil,
+            recipe_unit: nil,
             quantity: 1,
             unit_price_cents: nil,
             destroy_value: nil,
@@ -239,6 +252,7 @@
                 field_name_prefix: "order[items_attributes][#{idx}]",
                 id: item.id,
                 recipe_id: item.recipe_id,
+                recipe_unit: item.recipe&.yield_unit,
                 quantity: item.quantity,
                 unit_price_cents: item.unit_price_cents,
                 destroy_value: nil,
@@ -271,13 +285,32 @@
           class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y" %>
   </label>
 
-  <div class="flex items-center justify-between gap-3 pt-2">
-    <%= link_to t("orders.form.cancel"),
-          orders_path,
-          data: { action: "click->right-drawer#close" },
-          class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+  <% if order.persisted? %>
+    <%# Quick-edit flow: no save button — changes auto-save on commit.
+        The "Listo" button just dismisses the drawer; a small status
+        chip gives feedback on the save cycle. %>
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <span data-form-autosave-target="status"
+            data-label-saving="<%= t("orders.form.autosave.saving") %>"
+            data-label-saved="<%= t("orders.form.autosave.saved") %>"
+            data-label-error="<%= t("orders.form.autosave.error") %>"
+            class="hidden font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted data-[state=saved]:text-accent data-[state=error]:text-err transition-colors">
+      </span>
 
-    <%= form.submit(order.persisted? ? t("orders.form.submit_update") : t("orders.form.submit_create"),
-          class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta") %>
-  </div>
+      <%= link_to t("orders.form.done"),
+            orders_path,
+            data: { action: "click->right-drawer#close", form_autosave_skip: true },
+            class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+    </div>
+  <% else %>
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <%= link_to t("orders.form.cancel"),
+            orders_path,
+            data: { action: "click->right-drawer#close" },
+            class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+
+      <%= form.submit(t("orders.form.submit_create"),
+            class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta") %>
+    </div>
+  <% end %>
 <% end %>
