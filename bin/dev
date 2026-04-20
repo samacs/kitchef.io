@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+if gem list --silent --installed foreman
+then
+  exec foreman start -f Procfile.dev "$@"
+else
+  echo "Foreman no está instalado. Instálalo con:"
+  echo ""
+  echo "    gem install foreman"
+  echo ""
+  exit 1
+fi
