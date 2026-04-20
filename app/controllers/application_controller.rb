@@ -9,11 +9,21 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   # Resolve Current.account from the signed-in user on every authenticated
-  # request. For public pages (marketing, storefronts) Current.account stays
-  # nil and the controller picks its own @storefront / session state.
+  # request. For public pages (marketing, storefronts) we still try to
+  # resume the session so the marketing header can render the user menu
+  # when a signed-in operator visits `/pricing` — `resume_session` is a
+  # no-op without a valid cookie, so anonymous requests stay anonymous.
+  before_action :resume_current_session
   before_action :set_current_account
 
   private
+
+  def resume_current_session
+    # `resume_session` is defined on the Authentication concern and is
+    # already called by `require_authentication`; re-invoking it here is
+    # idempotent (it's guarded by `Current.session ||=`) and cheap.
+    resume_session
+  end
 
   def set_current_account
     Current.account = Current.user&.owned_account

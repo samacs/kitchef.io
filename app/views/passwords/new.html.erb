@@ -1,17 +1,39 @@
-<div class="mx-auto md:w-2/3 w-full">
-  <% if alert = flash[:alert] %>
-    <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
-  <% end %>
+<% content_for :title, t("passwords.new.title_html") %>
 
-  <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
+<div class="w-full max-w-[460px] flex flex-col gap-5">
+  <%= render Ui::FlashComponent.new(kind: :alert,  message: flash[:alert]) %>
+  <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
 
-  <%= form_with url: passwords_path, class: "contents" do |form| %>
-    <div class="my-5">
-      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: t(".email_placeholder"), value: params[:email_address], class: "block shadow-sm rounded-md border border-gray-400 focus:outline-solid focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+  <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
+    <div class="flex flex-col gap-3">
+      <%= render Ui::KickerComponent.new(text: t(".kicker")) %>
+      <h1 class="font-serif text-[38px] sm:text-[44px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
+        <%= t(".title_html").html_safe %>
+      </h1>
+      <p class="text-[15px] text-ink-2 leading-[1.55] max-w-[38ch]">
+        <%= t(".lede") %>
+      </p>
     </div>
 
-    <div class="inline">
-      <%= form.submit t(".submit"), class: "w-full sm:w-auto text-center rounded-lg px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
-    </div>
-  <% end %>
+    <%= form_with url: passwords_path, class: "flex flex-col gap-4" do |form| %>
+      <%= render Ui::TextFieldComponent.new(
+            id: "email_address",
+            name: "email_address",
+            type: :email,
+            label: t(".email_label"),
+            placeholder: t(".email_placeholder"),
+            autocomplete: "username",
+            autofocus: true,
+            required: true,
+            leading_icon: :mail,
+            value: params[:email_address]) %>
+
+      <%= form.submit t(".submit"),
+            class: "mt-1 inline-flex items-center justify-center gap-2 w-full text-[14px] font-semibold px-[18px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer" %>
+    <% end %>
+  </div>
+
+  <div class="text-center text-[13.5px] text-ink-2">
+    <%= link_to t(".back_to_sign_in"), new_session_path, class: "link" %>
+  </div>
 </div>

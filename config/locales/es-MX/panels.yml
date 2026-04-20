@@ -1,6 +1,7 @@
 es-MX:
   dashboard:
     title: "Tu cocina hoy"
+    subtitle: "Una vista de todo lo que pasa hoy"
     placeholder: "Aquí vivirán tu kanban de pedidos, tu producción de la semana y las métricas que importan. Por ahora es un lugar reservado."
 
   stubs:
@@ -36,13 +37,6 @@ es-MX:
   onboarding:
     decomposition:
       title: "Descompón tu receta"
-
-  registrations:
-    title: "Crea tu cuenta"
-
-  panel:
-    errors:
-      account_missing: "Necesitas una cocina activa para entrar al panel."
 
   admin:
     dashboard:

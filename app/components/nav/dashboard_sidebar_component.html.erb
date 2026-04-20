@@ -1,0 +1,48 @@
+<aside class="hidden lg:flex w-[240px] shrink-0 flex-col bg-bg-2 border-r border-line px-3.5 py-5 sticky top-0 h-screen">
+  <%# ---- Logo ------------------------------------------------------ %>
+  <div class="px-1.5 pb-5">
+    <%= render Ui::LogoComponent.new(href: root_path) %>
+  </div>
+
+  <%# ---- Sections ------------------------------------------------- %>
+  <nav class="flex-1 min-h-0 overflow-y-auto" aria-label="Panel">
+    <% helpers.panel_nav_sections.each_with_index do |section, idx| %>
+      <div class="<%= idx.zero? ? "" : "mt-4" %>">
+        <div class="px-3 pt-3 pb-2 font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase text-muted">
+          <%= section[:kicker] %>
+        </div>
+        <ul class="flex flex-col gap-[2px]">
+          <% section[:items].each do |item| %>
+            <% active = helpers.panel_nav_active?(item, current_path) %>
+            <li>
+              <%= link_to item.href,
+                    class: [
+                      "flex items-center gap-[11px] px-3 py-[9px] rounded-[8px] text-[13.5px] transition-colors border",
+                      (active ? "bg-surface border-line text-ink font-semibold shadow-card" : "bg-transparent border-transparent text-ink-2 hover:text-ink hover:bg-[color-mix(in_oklab,var(--color-ink)_3%,transparent)] font-medium")
+                    ].join(" ") do %>
+                <span class="<%= active ? "text-accent" : "text-muted" %> inline-flex shrink-0">
+                  <%= helpers.icon(item.icon, size: :sm) %>
+                </span>
+                <span class="flex-1 truncate"><%= item.label %></span>
+                <% if item.badge.present? %>
+                  <span class="inline-flex items-center justify-center min-w-[18px] px-1.5 py-px rounded-pill bg-accent text-bg text-[10px] font-semibold">
+                    <%= item.badge %>
+                  </span>
+                <% end %>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </nav>
+
+  <%# ---- Identity card (opens upward) ----------------------------- %>
+  <div class="mt-3 pt-3 border-t border-line">
+    <%= render Nav::UserMenuComponent.new(
+          current_user: current_user,
+          current_account: current_account,
+          variant: :card,
+          placement: :top_start) %>
+  </div>
+</aside>

@@ -3,6 +3,43 @@ es-MX:
     meta:
       default_description: "El sistema operativo de tu cocina. Pedidos, recetas, márgenes y clientes en un solo lugar."
 
+    brand:
+      name: "Kitchef"
+      mark: "k"
+
+    nav:
+      product: "Producto"
+      how_it_works: "Cómo funciona"
+      pricing: "Precios"
+      stories: "Historias"
+      sign_in: "Iniciar sesión"
+      sign_up: "Empezar gratis"
+      open_menu: "Abrir menú"
+      close_menu: "Cerrar menú"
+      back_home: "Volver al inicio"
+
+    footer:
+      tagline: "El sistema operativo de la cocina casera mexicana. Hecho en CDMX, en pesos, sin comisión por venta."
+      product:
+        title: "Producto"
+        orders: "Pedidos"
+        payments: "Cobros"
+        production: "Producción"
+        reports: "Reportes"
+      company:
+        title: "Compañía"
+        about: "Sobre nosotros"
+        blog: "Blog"
+        customers: "Clientes"
+        contact: "Contacto"
+      legal:
+        title: "Legal"
+        terms: "Términos"
+        privacy: "Privacidad"
+        notice: "Aviso"
+      copy: "© %{year} · Kitchef SAPI de CV"
+      location: "Hecho en CDMX · MXN"
+
     home:
       title: "Kitchef — el sistema operativo de tu cocina"
       headline_html: 'El sistema operativo de tu <em class="italic text-accent">cocina</em>.'

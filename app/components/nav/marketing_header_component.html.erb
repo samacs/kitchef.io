@@ -1,0 +1,81 @@
+<header class="kc-chrome sticky top-0 z-50 border-b border-line">
+  <div class="mx-auto max-w-[1240px] px-7">
+    <div class="flex items-center justify-between gap-4 py-[14px]">
+      <%# ---- Logo ------------------------------------------------------ %>
+      <%= render Ui::LogoComponent.new(href: helpers.root_path) %>
+
+      <%# ---- Desktop nav links --------------------------------------- %>
+      <nav class="hidden md:flex items-center gap-1" aria-label="<%= t("marketing.nav.product") %>">
+        <% nav_links.each do |link| %>
+          <%= link_to link[:label], link[:href],
+                class: "text-[13.5px] font-medium text-ink-2 hover:text-ink hover:bg-bg-2 px-3.5 py-2 rounded-[7px] transition-colors" %>
+        <% end %>
+      </nav>
+
+      <%# ---- Right rail: theme toggle + auth-aware CTAs ------------- %>
+      <div class="flex items-center gap-2">
+        <%= render Ui::ThemeToggleComponent.new %>
+
+        <% if signed_in? %>
+          <%# Signed-in: user menu dropdown (hidden on narrow screens —
+              the hamburger has its own sign-out row there). %>
+          <div class="hidden sm:flex">
+            <%= render Nav::UserMenuComponent.new(
+                  current_user: current_user,
+                  current_account: current_account,
+                  placement: :bottom_end
+                ) %>
+          </div>
+        <% else %>
+          <%# Signed-out: sign-in (ghost) + sign-up (primary). Hide both
+              under sm; the hamburger menu has them. %>
+          <div class="hidden sm:flex items-center gap-2">
+            <%= link_to t("marketing.nav.sign_in"), helpers.new_session_path,
+                  class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button text-ink-2 hover:text-ink hover:bg-bg-2 transition-colors" %>
+            <%= link_to t("marketing.nav.sign_up"), helpers.new_registration_path,
+                  class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
+          </div>
+        <% end %>
+
+        <%# ---- Mobile: hamburger → dropdown containing nav + CTAs ---- %>
+        <div class="md:hidden">
+          <%= render Ui::DropdownComponent.new(placement: :bottom_end, menu_width: "w-[min(320px,calc(100vw-32px))]") do |d| %>
+            <% d.with_trigger do %>
+              <%= render Ui::IconButtonComponent.new(icon: :menu, label: t("marketing.nav.open_menu")) %>
+            <% end %>
+            <% d.with_menu do %>
+              <div class="flex flex-col gap-px">
+                <% nav_links.each do |link| %>
+                  <%= render Ui::MenuItemComponent.new(label: link[:label], href: link[:href]) %>
+                <% end %>
+                <div class="my-2 mx-2 kc-rule"></div>
+                <% if signed_in? %>
+                  <div class="flex items-center gap-2.5 px-2.5 py-2">
+                    <%= render Ui::AvatarComponent.new(name: current_user.name.to_s, size: :sm) %>
+                    <div class="min-w-0">
+                      <div class="text-[13px] font-semibold text-ink truncate"><%= current_user.name %></div>
+                      <div class="text-[11px] text-muted truncate"><%= current_user.email_address %></div>
+                    </div>
+                  </div>
+                  <%= render Ui::MenuItemComponent.new(label: t("user_menu.kitchen"),      icon: :home,     href: helpers.account_path) %>
+                  <%= render Ui::MenuItemComponent.new(label: t("user_menu.settings"),     icon: :settings, href: helpers.edit_account_path) %>
+                  <%= render Ui::MenuItemComponent.new(label: t("user_menu.subscription"), icon: :credit_card, href: helpers.subscription_path) %>
+                  <div class="my-1 mx-2 kc-rule"></div>
+                  <%= render Ui::MenuItemComponent.new(
+                        label: t("user_menu.sign_out"), icon: :log_out,
+                        href: helpers.destroy_session_path, method: :delete, danger: true) %>
+                <% else %>
+                  <%= render Ui::MenuItemComponent.new(label: t("marketing.nav.sign_in"), icon: :log_in,      href: helpers.new_session_path) %>
+                  <div class="px-1.5 py-1">
+                    <%= link_to t("marketing.nav.sign_up"), helpers.new_registration_path,
+                          class: "flex items-center justify-center w-full gap-2 text-[13px] font-semibold px-3 py-2 rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

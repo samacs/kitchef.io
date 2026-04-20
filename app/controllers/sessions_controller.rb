@@ -4,6 +4,8 @@ class SessionsController < ApplicationController
     redirect_to new_session_path, alert: I18n.t("sessions.create.rate_limited")
   }
 
+  layout "auth", only: %i[ new ]
+
   def new
   end
 

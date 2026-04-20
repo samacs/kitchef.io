@@ -1,25 +1,64 @@
 es-MX:
   sessions:
     new:
-      title: "Entra a tu cocina"
-      email_placeholder: "Tu correo"
+      kicker: "Entrar"
+      title_html: 'Bienvenida de <em>vuelta</em>.'
+      lede: "Entra y sigue administrando los pedidos, la producción y las finanzas de tu cocina."
+      email_label: "Correo"
+      email_placeholder: "tucocina@correo.com"
+      password_label: "Contraseña"
       password_placeholder: "Tu contraseña"
       submit: "Entrar"
       forgot_password: "¿Olvidaste tu contraseña?"
+      no_account_html: '¿Aún sin cuenta? <a href="%{url}" class="link">Empieza gratis</a>.'
+      seo_title: "Entra a tu cocina — Kitchef"
     create:
       invalid_credentials: "Correo o contraseña incorrectos. Inténtalo de nuevo."
       rate_limited: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo."
 
+  registrations:
+    title: "Crea tu cuenta"
+    new:
+      kicker: "Empezar"
+      title_html: 'Tu cocina merece un <em>sistema</em>.'
+      lede: "Crea tu cuenta en dos minutos. Libreta gratis, sin tarjeta, sin comisión por venta."
+      first_name_label: "Nombre"
+      first_name_placeholder: "Elena"
+      last_name_label: "Apellido"
+      last_name_placeholder: "Martínez"
+      kitchen_name_label: "Nombre de tu cocina"
+      kitchen_name_placeholder: "Cocina de Elena"
+      kitchen_name_hint: "Así aparecerá tu menú público: kitchef.mx/cocina-de-elena"
+      email_label: "Correo"
+      email_placeholder: "tucocina@correo.com"
+      phone_label: "WhatsApp"
+      phone_placeholder: "+52 55 1234 5678"
+      phone_hint: "Para que tus clientas te encuentren. Puedes cambiarlo después."
+      password_label: "Contraseña"
+      password_placeholder: "Mínimo 8 caracteres"
+      submit: "Crear cocina"
+      have_account_html: '¿Ya tienes cuenta? <a href="%{url}" class="link">Entra</a>.'
+      terms_html: 'Al crear tu cocina aceptas los <a href="%{terms_url}" class="link">Términos</a> y el <a href="%{privacy_url}" class="link">Aviso de privacidad</a>.'
+      seo_title: "Empieza gratis — Kitchef"
+
   passwords:
     invalid_token: "Este enlace ya expiró o no es válido. Pide otro."
     new:
-      title: "Recupera tu contraseña"
-      email_placeholder: "Tu correo"
+      kicker: "Recuperar"
+      title_html: 'Recupera tu <em>contraseña</em>.'
+      lede: "Escribe tu correo y te mandamos un enlace para restablecerla."
+      email_label: "Correo"
+      email_placeholder: "tucocina@correo.com"
       submit: "Enviar instrucciones"
+      back_to_sign_in: "Regresar a iniciar sesión"
     edit:
-      title: "Define tu nueva contraseña"
-      password_placeholder: "Nueva contraseña"
-      password_confirmation_placeholder: "Confírmala"
+      kicker: "Restablecer"
+      title_html: 'Define tu <em>nueva</em> contraseña.'
+      lede: "Elige una contraseña segura. Te mandaremos de vuelta al inicio de sesión."
+      password_label: "Nueva contraseña"
+      password_placeholder: "Mínimo 8 caracteres"
+      password_confirmation_label: "Confírmala"
+      password_confirmation_placeholder: "Repite tu contraseña"
       submit: "Guardar contraseña"
     create:
       notice: "Si encontramos tu correo, te enviamos las instrucciones para recuperar tu contraseña."
@@ -36,3 +75,39 @@ es-MX:
       link_text: "Restablecer contraseña"
       expiry: "El enlace expira en %{duration}."
       signature: "— El equipo de Kitchef"
+
+  user_menu:
+    trigger_label: "Abrir menú de usuario"
+    plan_free: "Plan Libreta"
+    plan_pro: "Plan Cocina"
+    plan_team: "Plan Taller"
+    kitchen: "Mi cocina"
+    settings: "Configuración"
+    subscription: "Plan y facturación"
+    storefront: "Ver menú público"
+    sign_out: "Cerrar sesión"
+
+  panel:
+    errors:
+      account_missing: "Necesitas una cocina activa para entrar al panel."
+    nav:
+      section: "Cocina"
+      home: "Inicio"
+      orders: "Pedidos"
+      recipes: "Recetario"
+      ingredients: "Ingredientes"
+      clients: "Clientes"
+      delivery_slots: "Entregas"
+      production: "Producción"
+      reports_section: "Reportes"
+      reports_menu: "Ingeniería del menú"
+      reports_finance: "Finanzas"
+      account_section: "Cuenta"
+      account: "Mi cocina"
+      subscription: "Plan"
+    top_bar:
+      search_placeholder: "Buscar pedido, cliente o platillo…"
+      notifications: "Notificaciones"
+      new_order: "Nuevo pedido"
+      open_sidebar: "Abrir navegación"
+      close_sidebar: "Cerrar navegación"

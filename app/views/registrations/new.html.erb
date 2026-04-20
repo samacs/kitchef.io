@@ -1,0 +1,97 @@
+<% content_for :title, t(".seo_title") %>
+
+<div class="w-full max-w-[520px] flex flex-col gap-5">
+  <%= render Ui::FlashComponent.new(kind: :alert,  message: flash[:alert]) %>
+  <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
+
+  <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
+    <div class="flex flex-col gap-3">
+      <%= render Ui::KickerComponent.new(text: t(".kicker")) %>
+      <h1 class="font-serif text-[38px] sm:text-[44px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
+        <%= t(".title_html").html_safe %>
+      </h1>
+      <p class="text-[15px] text-ink-2 leading-[1.55] max-w-[42ch]">
+        <%= t(".lede") %>
+      </p>
+    </div>
+
+    <%= form_with url: registration_path, class: "flex flex-col gap-4" do |form| %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <%= render Ui::TextFieldComponent.new(
+              id: "first_name",
+              name: "user[first_name]",
+              label: t(".first_name_label"),
+              placeholder: t(".first_name_placeholder"),
+              autocomplete: "given-name",
+              autofocus: true,
+              required: true,
+              value: params.dig(:user, :first_name)) %>
+
+        <%= render Ui::TextFieldComponent.new(
+              id: "last_name",
+              name: "user[last_name]",
+              label: t(".last_name_label"),
+              placeholder: t(".last_name_placeholder"),
+              autocomplete: "family-name",
+              required: true,
+              value: params.dig(:user, :last_name)) %>
+      </div>
+
+      <%= render Ui::TextFieldComponent.new(
+            id: "kitchen_name",
+            name: "account[name]",
+            label: t(".kitchen_name_label"),
+            placeholder: t(".kitchen_name_placeholder"),
+            hint: t(".kitchen_name_hint"),
+            leading_icon: :chef_hat,
+            required: true,
+            value: params.dig(:account, :name)) %>
+
+      <%= render Ui::TextFieldComponent.new(
+            id: "email_address",
+            name: "user[email_address]",
+            type: :email,
+            label: t(".email_label"),
+            placeholder: t(".email_placeholder"),
+            autocomplete: "email",
+            leading_icon: :mail,
+            required: true,
+            value: params.dig(:user, :email_address)) %>
+
+      <%= render Ui::TextFieldComponent.new(
+            id: "phone",
+            name: "user[phone]",
+            type: :tel,
+            label: t(".phone_label"),
+            placeholder: t(".phone_placeholder"),
+            hint: t(".phone_hint"),
+            autocomplete: "tel",
+            leading_icon: :phone,
+            value: params.dig(:user, :phone)) %>
+
+      <%= render Ui::TextFieldComponent.new(
+            id: "password",
+            name: "user[password]",
+            type: :password,
+            label: t(".password_label"),
+            placeholder: t(".password_placeholder"),
+            autocomplete: "new-password",
+            required: true,
+            maxlength: 72,
+            leading_icon: :lock) %>
+
+      <%= form.submit t(".submit"),
+            class: "mt-2 inline-flex items-center justify-center gap-2 w-full text-[14px] font-semibold px-[18px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer" %>
+
+      <p class="text-[11.5px] text-muted leading-[1.5] text-center">
+        <%= t(".terms_html",
+              terms_url: legal_path(doc: "terms"),
+              privacy_url: legal_path(doc: "privacy")).html_safe %>
+      </p>
+    <% end %>
+  </div>
+
+  <div class="text-center text-[13.5px] text-ink-2">
+    <%= t(".have_account_html", url: new_session_path).html_safe %>
+  </div>
+</div>

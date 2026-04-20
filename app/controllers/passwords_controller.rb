@@ -5,6 +5,8 @@ class PasswordsController < ApplicationController
     redirect_to new_password_path, alert: I18n.t("passwords.create.rate_limited")
   }
 
+  layout "auth", only: %i[ new edit ]
+
   def new
   end
 

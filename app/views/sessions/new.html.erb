@@ -1,31 +1,56 @@
-<div class="mx-auto md:w-2/3 w-full">
-  <% if alert = flash[:alert] %>
-    <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
-  <% end %>
+<% content_for :title, t(".seo_title") %>
 
-  <% if notice = flash[:notice] %>
-    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-lg inline-block" id="notice"><%= notice %></p>
-  <% end %>
+<div class="w-full max-w-[460px] flex flex-col gap-5">
+  <%= render Ui::FlashComponent.new(kind: :alert,  message: flash[:alert]) %>
+  <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
 
-  <h1 class="font-bold text-4xl"><%= t(".title") %></h1>
-
-  <%= form_with url: session_url, class: "contents" do |form| %>
-    <div class="my-5">
-      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: t(".email_placeholder"), value: params[:email_address], class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
+  <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
+    <div class="flex flex-col gap-3">
+      <%= render Ui::KickerComponent.new(text: t(".kicker")) %>
+      <h1 class="font-serif text-[38px] sm:text-[44px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
+        <%= t(".title_html").html_safe %>
+      </h1>
+      <p class="text-[15px] text-ink-2 leading-[1.55] max-w-[38ch]">
+        <%= t(".lede") %>
+      </p>
     </div>
 
-    <div class="my-5">
-      <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: t(".password_placeholder"), maxlength: 72, class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
-    </div>
+    <%= form_with url: session_url, class: "flex flex-col gap-4" do |form| %>
+      <%= render Ui::TextFieldComponent.new(
+            id: "email_address",
+            name: "email_address",
+            type: :email,
+            label: t(".email_label"),
+            placeholder: t(".email_placeholder"),
+            autocomplete: "username",
+            autofocus: true,
+            required: true,
+            leading_icon: :mail,
+            value: params[:email_address]) %>
 
-    <div class="col-span-6 sm:flex sm:items-center sm:gap-4">
-      <div class="inline">
-        <%= form.submit t(".submit"), class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
+      <%= render Ui::TextFieldComponent.new(
+            id: "password",
+            name: "password",
+            type: :password,
+            label: t(".password_label"),
+            placeholder: t(".password_placeholder"),
+            autocomplete: "current-password",
+            required: true,
+            maxlength: 72,
+            leading_icon: :lock) %>
+
+      <div class="flex items-center justify-between gap-4 -mt-1">
+        <span></span>
+        <%= link_to t(".forgot_password"), new_password_path,
+              class: "text-[12.5px] font-medium text-ink-2 hover:text-accent transition-colors" %>
       </div>
 
-      <div class="mt-4 text-sm text-gray-500 sm:mt-0">
-        <%= link_to t(".forgot_password"), new_password_path, class: "text-gray-700 underline hover:no-underline" %>
-      </div>
-    </div>
-  <% end %>
+      <%= form.submit t(".submit"),
+            class: "mt-1 inline-flex items-center justify-center gap-2 w-full text-[14px] font-semibold px-[18px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer" %>
+    <% end %>
+  </div>
+
+  <div class="text-center text-[13.5px] text-ink-2">
+    <%= t(".no_account_html", url: new_registration_path).html_safe %>
+  </div>
 </div>
