@@ -69,8 +69,29 @@ Rails.application.routes.draw do
   # Controllers inherit from AuthenticatedController which enforces session
   # + Current.account. Production/Reports/Onboarding sub-namespaces keep
   # URL grouping; everything else is flat.
-  resources :orders
-  resources :clients
+  resources :orders do
+    member do
+      post :confirm
+      post :start_production, path: "start-production"
+      post :mark_ready,       path: "mark-ready"
+      post :deliver
+      post :mark_paid,        path: "mark-paid"
+    end
+
+    # Cancel requires a reason — the dedicated resource gets us a GET for
+    # the drawer form and a POST that flows through Orders::Cancel with
+    # reason params. Duplicate restores a canceled pedido as a fresh
+    # `placed` draft (single POST).
+    resource :cancellation, only: %i[new create], controller: "orders/cancellations"
+    resource :duplication,  only: %i[create],     controller: "orders/duplications"
+  end
+
+  resources :clients do
+    collection do
+      get :search
+    end
+  end
+
   resources :recipes
   resources :ingredients
   resources :delivery_slots, path: "delivery-slots"

@@ -1,0 +1,39 @@
+<%# Persistent right-side drawer. Any link with
+    `data-turbo-frame="drawer_content"` + `click->right-drawer#open`
+    (or the `drawer_link_to` helper) loads its edit surface into the
+    single `<turbo-frame id="drawer_content">` below. The panel slides
+    in from the right on click and slides out when:
+      • the user hits Esc
+      • the user clicks the backdrop or close button
+      • a successful form submit returns
+        `<turbo-stream action="update" target="drawer_content"></turbo-stream>`
+        (the Stimulus controller observes the frame emptying and slides
+         the drawer shut automatically).
+%>
+<div data-controller="right-drawer"
+     class="fixed inset-0 z-[60] pointer-events-none overflow-hidden">
+  <div data-right-drawer-target="backdrop"
+       data-action="click->right-drawer#close"
+       class="absolute inset-0 kc-right-drawer-backdrop opacity-0 transition-opacity duration-200"
+       aria-hidden="true"></div>
+
+  <aside data-right-drawer-target="panel"
+         role="dialog"
+         aria-modal="true"
+         aria-label="<%= t("panel.drawer.label") %>"
+         class="absolute right-0 top-0 h-full w-full sm:w-[520px] max-w-full bg-bg border-l border-line shadow-panel translate-x-full transition-transform duration-200 ease-out flex flex-col">
+    <header class="flex items-center justify-end px-3 py-2.5 border-b border-line shrink-0">
+      <button type="button"
+              data-action="click->right-drawer#close"
+              aria-label="<%= t("panel.drawer.close") %>"
+              title="<%= t("panel.drawer.close") %>"
+              class="inline-flex items-center justify-center w-9 h-9 rounded-input text-muted hover:text-ink hover:bg-bg-2 transition-colors">
+        <%= icon(:x, size: :sm) %>
+      </button>
+    </header>
+
+    <%= turbo_frame_tag "drawer_content",
+          data: { right_drawer_target: "frame" },
+          class: "flex-1 overflow-y-auto" %>
+  </aside>
+</div>

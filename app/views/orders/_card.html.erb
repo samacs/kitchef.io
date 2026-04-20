@@ -1,0 +1,88 @@
+<article id="<%= dom_id(order) %>"
+         class="flex flex-col gap-3 p-4 rounded-card bg-bg/60 border border-line hover:border-line-2 transition">
+  <header class="flex items-start justify-between gap-3">
+    <div class="flex flex-col gap-0.5 min-w-0">
+      <%= drawer_link_to edit_order_path(order),
+            class: "font-serif text-[16px] leading-[1.2] text-ink truncate hover:underline" do %>
+        <%= order.client&.name.presence || t("dashboard.today_orders.empty_client") %>
+      <% end %>
+      <span class="font-mono text-[11px] text-muted uppercase tracking-[0.14em]">
+        <%= l(order.delivery_date, format: :long) %>
+        <% if order.delivery_start_time.present? %>
+          · <%= order.delivery_start_time_hhmm %><% if order.delivery_end_time.present? %>–<%= order.delivery_end_time_hhmm %><% end %>
+        <% end %>
+      </span>
+    </div>
+    <%= render Orders::StateBadgeComponent.new(state: order.state) %>
+  </header>
+
+  <ul class="flex flex-col gap-1">
+    <% order.items.each do |item| %>
+      <li class="flex items-baseline justify-between gap-2 text-[13px]">
+        <span class="text-ink-2 truncate">
+          <span class="font-mono text-muted mr-1"><%= item.quantity.to_s.sub(/\.0+\z/, "") %>×</span>
+          <%= item.recipe&.name %>
+        </span>
+        <span class="font-mono text-[12.5px] text-muted shrink-0">
+          <%= humanized_money_with_symbol(item.line_total) %>
+        </span>
+      </li>
+    <% end %>
+  </ul>
+
+  <% if order.canceled? && order.cancel_reason_code.present? %>
+    <div class="flex flex-col gap-0.5 px-3 py-2 rounded-card bg-err/5 border border-err/20">
+      <span class="font-mono text-[11px] text-err uppercase tracking-[0.14em]">
+        <%= t("orders.cancellations.reason_kicker") %>
+      </span>
+      <span class="text-[12.5px] text-ink-2 leading-[1.4]">
+        <%= t("order.cancel_reasons.#{order.cancel_reason_code}") %><%
+          if order.cancel_reason_note.present? %> · <%= order.cancel_reason_note %><% end %>
+      </span>
+    </div>
+  <% end %>
+
+  <footer class="flex items-center justify-between gap-2 pt-3 border-t border-line">
+    <span class="font-mono text-[14px] font-medium text-ink">
+      <%= humanized_money_with_symbol(order.total) %>
+    </span>
+    <div class="inline-flex items-center gap-1">
+      <% if order.aasm.may_fire_event?(:cancel) %>
+        <%= drawer_link_to new_order_cancellation_path(order),
+              aria: { label: t("orders.transitions.cancel") },
+              title: t("orders.transitions.cancel"),
+              class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-err hover:border-err/40 transition-colors" do %>
+          <%= icon(:x, size: :sm) %>
+        <% end %>
+      <% end %>
+
+      <% if order.canceled? %>
+        <%= button_to order_duplication_path(order),
+              method: :post,
+              form: { class: "inline-flex", data: { turbo_frame: "drawer_content" } },
+              data: { action: "click->right-drawer#open" },
+              aria: { label: t("orders.transitions.duplicate") },
+              title: t("orders.transitions.duplicate"),
+              class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-ink hover:border-line transition-colors" do %>
+          <%= icon(:copy, size: :sm) %>
+        <% end %>
+      <% elsif !order.immutable? %>
+        <%= drawer_link_to edit_order_path(order),
+              aria: { label: t("orders.transitions.edit") },
+              title: t("orders.transitions.edit"),
+              class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-ink hover:border-line transition-colors" do %>
+          <%= icon(:pencil, size: :sm) %>
+        <% end %>
+      <% end %>
+    </div>
+  </footer>
+
+  <% if (primary = primary_transition_for(order)) %>
+    <%= button_to public_send("#{primary}_order_path", order),
+          method: :post,
+          form: { class: "block" },
+          class: "w-full inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+      <span><%= t("orders.transitions.#{primary}") %></span>
+    <% end %>
+  <% end %>
+</article>

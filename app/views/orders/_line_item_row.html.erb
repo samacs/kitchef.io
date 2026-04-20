@@ -1,0 +1,79 @@
+<div class="grid grid-cols-12 gap-3 items-end p-3 rounded-card bg-bg-2/40 border border-line"
+     data-order-line-items-target="row">
+  <% if id %>
+    <input type="hidden" name="<%= field_name_prefix %>[id]" value="<%= id %>" />
+  <% end %>
+
+  <input type="hidden" name="<%= field_name_prefix %>[_destroy]"
+         value="<%= destroy_value %>"
+         data-order-line-items-target="destroy" />
+
+  <label class="col-span-12 sm:col-span-6 flex flex-col gap-1.5">
+    <span class="text-[12px] text-muted font-medium">
+      <%= t("orders.form.pick_recipe_placeholder") %>
+    </span>
+    <select name="<%= field_name_prefix %>[recipe_id]"
+            data-order-line-items-target="recipeSelect"
+            data-action="change->order-line-items#recipeChanged"
+            class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+      <option value=""><%= t("orders.form.pick_recipe_placeholder") %></option>
+      <% recipe_options.each do |label, value, attrs| %>
+        <option value="<%= value %>"
+                data-price-cents="<%= attrs[:'data-price-cents'] %>"
+                <%= "selected" if recipe_id.to_i == value.to_i %>>
+          <%= label %>
+        </option>
+      <% end %>
+    </select>
+  </label>
+
+  <label class="col-span-4 sm:col-span-2 flex flex-col gap-1.5">
+    <span class="text-[12px] text-muted font-medium">
+      <%= t("orders.form.quantity_label") %>
+    </span>
+    <input type="number"
+           name="<%= field_name_prefix %>[quantity]"
+           value="<%= quantity %>"
+           min="0.001"
+           step="0.001"
+           data-order-line-items-target="quantity"
+           data-action="input->order-line-items#recalc"
+           class="w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[13.5px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+  </label>
+
+  <label class="col-span-4 sm:col-span-2 flex flex-col gap-1.5">
+    <span class="text-[12px] text-muted font-medium">
+      <%= t("orders.form.unit_price_label") %>
+    </span>
+    <span class="relative flex items-center">
+      <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px] pointer-events-none">$</span>
+      <input type="number"
+             name="<%= field_name_prefix %>[unit_price]"
+             value="<%= unit_price_cents.to_i.positive? ? format("%.2f", unit_price_cents.to_i / 100.0) : nil %>"
+             min="0"
+             step="0.01"
+             inputmode="decimal"
+             placeholder="0.00"
+             data-order-line-items-target="price"
+             data-action="input->order-line-items#recalc"
+             class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-2 py-2 text-[13.5px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+    </span>
+  </label>
+
+  <div class="col-span-3 sm:col-span-1 flex flex-col gap-1.5">
+    <span class="text-[12px] text-muted font-medium">
+      <%= t("orders.form.line_total_label") %>
+    </span>
+    <span data-order-line-items-target="lineTotal"
+          class="font-mono text-[13.5px] text-ink py-2">$0.00</span>
+  </div>
+
+  <div class="col-span-1 flex items-center justify-end pb-1">
+    <button type="button"
+            data-action="click->order-line-items#remove"
+            aria-label="<%= t("orders.form.remove_item") %>"
+            class="inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-err hover:border-err/40 transition-colors">
+      <%= icon(:trash_2, size: :sm) %>
+    </button>
+  </div>
+</div>

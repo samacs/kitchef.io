@@ -10,6 +10,8 @@
 # layout name is semantic ("panel" = operator dashboard panel), not a
 # reference to a Ruby module.
 class AuthenticatedController < ApplicationController
+  include DrawerResponder
+
   layout "panel"
 
   before_action :require_account

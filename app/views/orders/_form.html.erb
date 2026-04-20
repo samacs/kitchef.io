@@ -1,0 +1,283 @@
+<% saleable_recipes = Current.account.recipes.kept.saleable.order(:position) %>
+<% recipe_options = saleable_recipes.map { |r| [ r.name, r.id, { "data-price-cents": r.sale_price_cents.to_i } ] } %>
+<% selected_client = order.client %>
+
+<%= form_with model: order,
+      url: order.persisted? ? order_path(order) : orders_path,
+      class: "flex flex-col gap-6" do |form| %>
+
+  <% if order.errors.any? %>
+    <div role="alert"
+         class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+      <span class="text-[12px] font-mono uppercase tracking-[0.14em]">
+        <%= t("onboarding.shared.errors_title") %>
+      </span>
+      <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+        <% order.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# ---- Client picker (autocomplete) ---------------------------------- %>
+  <div class="flex flex-col gap-2"
+       data-controller="client-search"
+       data-client-search-search-url-value="<%= search_clients_path %>">
+    <div class="flex items-center justify-between gap-3">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("orders.form.client_label") %>
+      </span>
+      <button type="button"
+              class="text-[12px] font-medium text-accent hover:underline"
+              data-action="click->client-search#openInline">
+        <%= t("orders.form.client_create_inline") %>
+      </button>
+    </div>
+
+    <div class="relative">
+      <%= form.hidden_field :client_id, data: { client_search_target: "hidden" } %>
+      <input type="text"
+             autocomplete="off"
+             placeholder="<%= t("orders.form.client_placeholder") %>"
+             value="<%= selected_client&.name %>"
+             data-client-search-target="input"
+             data-action="input->client-search#search focus->client-search#search keydown->client-search#keydown"
+             class="w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+
+      <div data-client-search-target="results"
+           class="hidden absolute z-20 mt-1 left-0 right-0 bg-surface border border-line rounded-card shadow-panel max-h-[260px] overflow-y-auto">
+      </div>
+    </div>
+
+    <%# Inline client quick-add panel — toggled by openInline %>
+    <div data-client-search-target="inlinePanel"
+         class="hidden flex flex-col gap-3 mt-2 p-4 rounded-card bg-bg-2/60 border border-line">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex flex-col gap-0.5">
+          <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-accent">
+            <%= t("orders.inline_client.title") %>
+          </span>
+          <span class="text-[12.5px] text-muted leading-[1.4]">
+            <%= t("orders.inline_client.sub") %>
+          </span>
+        </div>
+        <button type="button"
+                aria-label="<%= t("orders.inline_client.dismiss") %>"
+                title="<%= t("orders.inline_client.dismiss") %>"
+                class="inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-ink hover:bg-bg-2 transition-colors"
+                data-action="click->client-search#closeInline">
+          <%= icon(:x, size: :sm) %>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <input type="text"
+               placeholder="<%= t("clients.form.first_name_placeholder") %>"
+               data-client-search-target="firstName"
+               class="w-full bg-surface text-ink placeholder:text-muted border border-line rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+        <input type="text"
+               placeholder="<%= t("clients.form.last_name_placeholder") %>"
+               data-client-search-target="lastName"
+               class="w-full bg-surface text-ink placeholder:text-muted border border-line rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+        <input type="tel"
+               placeholder="<%= t("clients.form.phone_placeholder") %>"
+               data-client-search-target="phone"
+               class="w-full bg-surface text-ink placeholder:text-muted border border-line rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+        <input type="text"
+               placeholder="<%= t("clients.form.colonia_placeholder") %>"
+               data-client-search-target="colonia"
+               class="w-full bg-surface text-ink placeholder:text-muted border border-line rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+      </div>
+
+      <div class="flex items-center justify-end gap-2">
+        <button type="button"
+                data-action="click->client-search#closeInline"
+                class="inline-flex items-center justify-center text-[13px] font-medium px-4 py-[8px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors">
+          <%= t("orders.inline_client.cancel") %>
+        </button>
+        <button type="button"
+                data-action="click->client-search#submitInline"
+                class="inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta">
+          <%= t("orders.inline_client.submit") %>
+        </button>
+      </div>
+
+      <p data-client-search-target="inlineError"
+         class="hidden text-[12.5px] text-err font-medium"></p>
+    </div>
+  </div>
+
+  <%# ---- Delivery type + source --------------------------------------- %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <label for="order_delivery_type" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("orders.form.delivery_type_label") %>
+      </span>
+      <%= form.select :delivery_type,
+            Order::DELIVERY_TYPES.keys.map { |key| [ I18n.t("order.delivery_types.#{key}"), key ] },
+            {},
+            id: "order_delivery_type",
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </label>
+
+    <label for="order_source" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("orders.form.source_label") %>
+      </span>
+      <%= form.select :source,
+            Order::SOURCES.keys.map { |key| [ I18n.t("order.sources.#{key}"), key ] },
+            {},
+            id: "order_source",
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </label>
+  </div>
+
+  <%# ---- Date + window ----------------------------------------------- %>
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <label for="order_delivery_date" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("orders.form.delivery_date_label") %>
+      </span>
+      <%= form.date_field :delivery_date,
+            id: "order_delivery_date",
+            required: true,
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </label>
+
+    <label for="order_delivery_start_time_hhmm" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("orders.form.delivery_window_label") %>
+      </span>
+      <%= form.text_field :delivery_start_time_hhmm,
+            id: "order_delivery_start_time_hhmm",
+            value: order.delivery_start_time_hhmm,
+            placeholder: t("orders.form.delivery_start_placeholder"),
+            pattern: "[0-2][0-9]:[0-5][0-9]",
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </label>
+
+    <label for="order_delivery_end_time_hhmm" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">&nbsp;</span>
+      <%= form.text_field :delivery_end_time_hhmm,
+            id: "order_delivery_end_time_hhmm",
+            value: order.delivery_end_time_hhmm,
+            placeholder: t("orders.form.delivery_end_placeholder"),
+            pattern: "[0-2][0-9]:[0-5][0-9]",
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </label>
+  </div>
+
+  <%# ---- Address block ------------------------------------------------ %>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <%= render Ui::TextFieldComponent.new(
+          name: "order[colonia]",
+          id: "order_colonia",
+          label: t("orders.form.colonia_label"),
+          value: order.colonia) %>
+    <%= render Ui::TextFieldComponent.new(
+          name: "order[city]",
+          id: "order_city",
+          label: t("orders.form.city_label"),
+          value: order.city) %>
+  </div>
+
+  <%= render Ui::TextFieldComponent.new(
+        name: "order[delivery_address]",
+        id: "order_delivery_address",
+        label: t("orders.form.delivery_address_label"),
+        value: order.delivery_address) %>
+
+  <label for="order_delivery_notes" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("orders.form.delivery_notes_label") %>
+    </span>
+    <%= form.text_area :delivery_notes,
+          id: "order_delivery_notes",
+          rows: 2,
+          class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y" %>
+  </label>
+
+  <%# ---- Line items --------------------------------------------------- %>
+  <div class="flex flex-col gap-3"
+       data-controller="order-line-items"
+       data-order-line-items-recipe-options-value="<%= recipe_options.to_json %>">
+    <div class="flex items-baseline justify-between gap-3">
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[13px] font-medium text-ink leading-none">
+          <%= t("orders.form.line_items_label") %>
+        </span>
+        <span class="text-[12px] text-muted">
+          <%= t("orders.form.line_items_hint") %>
+        </span>
+      </div>
+      <button type="button"
+              data-action="click->order-line-items#add"
+              class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-3 py-[6px] rounded-button bg-surface text-ink border border-line hover:border-line-2 transition-colors">
+        <%= icon(:plus, size: :xs) %>
+        <span><%= t("orders.form.add_item") %></span>
+      </button>
+    </div>
+
+    <%# Hidden template — cloned by the Stimulus controller for new rows. %>
+    <template data-order-line-items-target="template">
+      <%= render "orders/line_item_row",
+            field_name_prefix: "order[items_attributes][NEW_RECORD]",
+            id: nil,
+            recipe_id: nil,
+            quantity: 1,
+            unit_price_cents: nil,
+            destroy_value: nil,
+            recipe_options: recipe_options %>
+    </template>
+
+    <div data-order-line-items-target="rows"
+         class="flex flex-col gap-3">
+      <% if order.items.any? %>
+        <% order.items.each_with_index do |item, idx| %>
+          <%= render "orders/line_item_row",
+                field_name_prefix: "order[items_attributes][#{idx}]",
+                id: item.id,
+                recipe_id: item.recipe_id,
+                quantity: item.quantity,
+                unit_price_cents: item.unit_price_cents,
+                destroy_value: nil,
+                recipe_options: recipe_options %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <p data-order-line-items-target="empty"
+       class="<%= 'hidden' if order.items.any? %> text-[12.5px] text-muted leading-[1.5] px-3 py-3 text-center bg-bg-2/60 rounded-card border border-line">
+      <%= t("orders.form.no_items") %>
+    </p>
+
+    <div class="flex items-center justify-end gap-3 pt-2 border-t border-line">
+      <span class="font-mono text-[12px] text-muted uppercase tracking-[0.14em]">
+        <%= t("orders.form.total_label") %>
+      </span>
+      <span data-order-line-items-target="total"
+            class="font-mono text-[18px] font-medium text-ink">$0.00</span>
+    </div>
+  </div>
+
+  <label for="order_notes" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("orders.form.notes_label") %>
+    </span>
+    <%= form.text_area :notes,
+          id: "order_notes",
+          rows: 2,
+          class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y" %>
+  </label>
+
+  <div class="flex items-center justify-between gap-3 pt-2">
+    <%= link_to t("orders.form.cancel"),
+          orders_path,
+          data: { action: "click->right-drawer#close" },
+          class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+
+    <%= form.submit(order.persisted? ? t("orders.form.submit_update") : t("orders.form.submit_create"),
+          class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta") %>
+  </div>
+<% end %>

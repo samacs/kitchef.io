@@ -1,0 +1,34 @@
+<% if results.empty? %>
+  <p class="px-3 py-2 text-[12.5px] text-muted">
+    <%= t("clients.search.empty") %>
+  </p>
+<% else %>
+  <ul class="flex flex-col">
+    <% results.each do |c| %>
+      <li>
+        <button type="button"
+                data-action="click->client-search#pick"
+                data-client-id="<%= c.id %>"
+                data-client-name="<%= c.name %>"
+                data-client-colonia="<%= c.colonia %>"
+                data-client-city="<%= c.city %>"
+                data-client-street-address="<%= c.street_address %>"
+                class="w-full text-left px-3 py-2 hover:bg-bg-2/60 transition-colors flex items-center justify-between gap-3">
+          <span class="flex flex-col">
+            <span class="text-[13.5px] font-medium text-ink"><%= c.name %></span>
+            <% if c.colonia.present? || c.email.present? %>
+              <span class="text-[12px] text-muted">
+                <%= [ c.colonia, c.email ].compact_blank.join(" · ") %>
+              </span>
+            <% end %>
+          </span>
+          <% if c.phone.present? %>
+            <span class="font-mono text-[12px] text-muted whitespace-nowrap">
+              <%= Phonelib.parse(c.phone, "MX").international.presence || c.phone %>
+            </span>
+          <% end %>
+        </button>
+      </li>
+    <% end %>
+  </ul>
+<% end %>

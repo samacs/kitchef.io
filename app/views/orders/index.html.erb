@@ -1,0 +1,66 @@
+<% content_for :title, t("orders.index.title") %>
+<% content_for :page_title, t("orders.index.title") %>
+<% content_for :page_subtitle, t("orders.index.subtitle") %>
+
+<% content_for :page_action do %>
+  <%= link_to new_order_path,
+        class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+    <%= icon(:plus, size: :xs) %>
+    <span><%= t("orders.index.cta") %></span>
+  <% end %>
+<% end %>
+
+<%= turbo_stream_from Current.account, :orders %>
+
+<% if flash[:notice].present? %>
+  <div class="mb-5">
+    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
+  </div>
+<% end %>
+<% if flash[:alert].present? %>
+  <div class="mb-5">
+    <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %>
+  </div>
+<% end %>
+
+<% if orders.empty? %>
+  <%= render Recipes::EmptyStateComponent.new(
+        headline_key: "orders.empty_state.headline",
+        sub_key:      "orders.empty_state.sub",
+        cta_label_key: "orders.empty_state.cta",
+        cta_href: new_order_path) %>
+<% else %>
+  <% by_state = orders.group_by(&:state) %>
+  <% live_states = %w[placed confirmed in_production ready delivered paid] %>
+  <% canceled = by_state["canceled"].to_a %>
+
+  <div class="flex gap-4 overflow-x-auto pb-4 -mx-5 lg:-mx-7 px-5 lg:px-7 overscroll-x-contain kc-scroll"
+       data-controller="drag-scroll">
+    <% live_states.each do |state| %>
+      <%= render Orders::KanbanColumnComponent.new(state: state, orders: by_state[state].to_a) %>
+    <% end %>
+  </div>
+
+  <section class="mt-6 rounded-panel bg-surface/60 border border-line">
+    <header class="flex items-baseline justify-between gap-3 px-5 py-3 border-b border-line">
+      <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-muted">
+        <%= t("orders.columns.canceled") %>
+      </span>
+      <span class="font-mono text-[11px] text-muted uppercase tracking-[0.14em]">
+        <%= t("orders.columns.count", count: canceled.size) %>
+      </span>
+    </header>
+
+    <div class="flex flex-col gap-3 p-4 sm:p-5">
+      <% if canceled.empty? %>
+        <div class="text-muted/50 font-mono text-[14px] text-center py-4 select-none" aria-hidden="true">—</div>
+      <% else %>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <% canceled.each do |order| %>
+            <%= render "orders/card", order: order %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+<% end %>
