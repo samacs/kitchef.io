@@ -62,7 +62,7 @@ gem "chartkick", "~> 5.1"
 gem "groupdate", "~> 6.8"
 gem "caxlsx", "~> 4.4"
 gem "rqrcode", "~> 3.2"
-gem "oj", "~> 3.16"
+gem "oj", "~> 3.17"
 gem "oj_serializers", "~> 3.0"
 
 # Storage & media

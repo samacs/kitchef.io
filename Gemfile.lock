@@ -385,7 +385,7 @@ GEM
       snaky_hash (~> 2.0, >= 2.0.3)
       version_gem (~> 1.1, >= 1.1.9)
     observer (0.1.2)
-    oj (3.16.17)
+    oj (3.17.0)
       bigdecimal (>= 3.0)
       ostruct (>= 0.2)
     oj_serializers (3.0.0)
@@ -779,7 +779,7 @@ DEPENDENCIES
   money-rails (~> 3.0)
   name_of_person (~> 1.1)
   noticed (~> 3.0)
-  oj (~> 3.16)
+  oj (~> 3.17)
   oj_serializers (~> 3.0)
   omniauth (~> 2.1)
   omniauth-google-oauth2 (~> 1.2)
@@ -981,7 +981,7 @@ CHECKSUMS
   noticed (3.0.0) sha256=cbb28f1624b9034117fbe7e1d36facfe624e9ad53a24aa149e2a676336ff8f98
   oauth2 (2.0.18) sha256=bacf11e470dfb963f17348666d0a75c7b29ca65bc48fd47be9057cf91a403287
   observer (0.1.2) sha256=d8a3107131ba661138d748e7be3dbafc0d82e732fffba9fccb3d7829880950ac
-  oj (3.16.17) sha256=a6688f666143632a1ef11a8d80c8d631b1112733c7da698ffafa4a22a8488244
+  oj (3.17.0) sha256=5684b2127fb70e650fae90df521b91336ff8e55e2e1011ed80eb0283beac5360
   oj_serializers (3.0.0) sha256=ccf32ca60db178ad1d4b754d04f16d90e65b27205bb4c765c643c77af9289002
   omniauth (2.1.4) sha256=42a05b0496f0d22e1dd85d42aaf602f064e36bb47a6826a27ab55e5ba608763c
   omniauth-google-oauth2 (1.2.2) sha256=74c3f3d0221c048f938846092fb15a1f15237526f50a7c93d9793f9a4ff1be11
