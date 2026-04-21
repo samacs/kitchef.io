@@ -1,11 +1,19 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Auto-save the drawer form on every field change. Change events bubble
-// to the form, so we listen once at the form level and let the default
+// Auto-save the form on every field change. Change events bubble to the
+// form, so we listen once at the form level and let the default
 // delegation pick up inputs, selects, textareas. Select + date inputs
 // fire `change` on commit; text inputs fire on blur — both are the
 // natural "I'm done with this field" moment, which is the right save
 // trigger. Avoids flooding the server on every keystroke.
+//
+// We submit via `fetch()` with an explicit `X-CSRF-Token` header rather
+// than `requestSubmit()` because multipart forms (e.g. /account with
+// logo + cover file fields) don't reliably surface the form's
+// `authenticity_token` field to Rails' CSRF check — Rails can't decode
+// the token from a multipart body, and Turbo doesn't always set the
+// header for form submissions with `_method` overrides. An explicit
+// fetch with the meta-tag token is predictable across every form shape.
 //
 // The optional `status` target surfaces the save state (Guardando… →
 // Guardado) so operators get a quiet confirmation without a button.
@@ -13,14 +21,11 @@ export default class extends Controller {
   static targets = ["status"]
 
   connect() {
-    this.onSubmitEnd = (event) => {
-      this.showStatus(event.detail?.success ? "saved" : "error")
-    }
-    this.element.addEventListener("turbo:submit-end", this.onSubmitEnd)
+    // keep around for reset-files-on-save + similar companion controllers
+    this.onSubmitEndDispatched = new Event("form-autosave:submit-end")
   }
 
   disconnect() {
-    this.element.removeEventListener("turbo:submit-end", this.onSubmitEnd)
     clearTimeout(this.debounceTimer)
     clearTimeout(this.hideTimer)
   }
@@ -32,10 +37,47 @@ export default class extends Controller {
     if (event.target.closest("button, [data-form-autosave-skip]")) return
 
     clearTimeout(this.debounceTimer)
-    this.debounceTimer = setTimeout(() => {
-      this.showStatus("saving")
-      this.element.requestSubmit()
-    }, 120)
+    this.debounceTimer = setTimeout(() => this.#submit(), 120)
+  }
+
+  async #submit() {
+    this.showStatus("saving")
+
+    const form = this.element
+    const formData = new FormData(form)
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+
+    try {
+      const res = await fetch(form.action, {
+        method: form.method.toUpperCase() || "POST",
+        headers: {
+          "Accept": "text/vnd.turbo-stream.html, text/html",
+          "X-CSRF-Token": csrfToken || "",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: formData,
+        credentials: "same-origin"
+      })
+
+      if (res.ok) {
+        this.showStatus("saved")
+        this.#dispatchSuccess()
+      } else {
+        this.showStatus("error")
+      }
+    } catch (_err) {
+      // Network failure — "No se pudo guardar" so the operator knows to
+      // retry manually. We don't auto-retry; a flaky connection would
+      // just replay stale values.
+      this.showStatus("error")
+    }
+  }
+
+  // Custom event consumers (e.g. reset-files-on-save) can listen for
+  // rather than coupling to Turbo's `turbo:submit-end` — which this
+  // controller no longer emits since we bypass requestSubmit().
+  #dispatchSuccess() {
+    this.element.dispatchEvent(new CustomEvent("form-autosave:success", { bubbles: true }))
   }
 
   showStatus(kind) {

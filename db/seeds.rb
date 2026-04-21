@@ -32,6 +32,71 @@ def sample_email(first, last, domain: "lvh.me")
   "#{slug}@#{domain}"
 end
 
+# Fetches an image from a remote URL and attaches it to an
+# ActiveStorage holder. Gracefully falls back on network errors so a
+# `db:seed` run without internet still finishes without aborting — the
+# demo accounts just end up photoless for that particular asset. Uses
+# a per-URL cache dir (tmp/seed_photos) so re-seeding doesn't refetch.
+require "open-uri"
+require "fileutils"
+
+def attach_seed_image(record, attachment_name, url:, filename:)
+  return if record.send(attachment_name).attached?
+
+  cache_root = Rails.root.join("tmp/seed_photos")
+  FileUtils.mkdir_p(cache_root)
+  cache_path = cache_root.join(filename)
+
+  unless cache_path.exist?
+    URI.open(url, open_timeout: 5, read_timeout: 15) do |remote|
+      File.binwrite(cache_path, remote.read)
+    end
+  end
+
+  record.send(attachment_name).attach(
+    io:           File.open(cache_path, "rb"),
+    filename:     filename,
+    content_type: "image/jpeg"
+  )
+rescue StandardError => e
+  warn "  ⚠  couldn't attach #{attachment_name} to #{record.class.name}(#{record.id}): #{e.class.name}: #{e.message}"
+end
+
+# Unsplash CDN URLs curated from tmp/kitchef-design. Each ID is
+# image-stable and hotlinkable per Unsplash's API terms. The `w=900`
+# + crop params keep download size modest (~60-100 KB per image).
+UNSPLASH = ->(id, w: 900) { "https://images.unsplash.com/#{id}?auto=format&fit=crop&w=#{w}&q=80" }
+
+SEED_PHOTO_IDS = {
+  # Accounts (cover + logo)
+  "elena_cover"         => "photo-1565299624946-b28f40a0ae38",
+  "elena_logo"          => "photo-1604908176997-125f25cc6f3d",
+  "mario_cover"         => "photo-1565299585323-38d6b0865b47",
+  "mario_logo"          => "photo-1552566626-52f8b828add9",
+  # Elena's saleable recipes
+  "tamal_verde"         => "photo-1625938144755-652e08e359b7",
+  "tamal_rojo"          => "photo-1599974579688-8dbdd335c77f",
+  "pozole_rojo"         => "photo-1559847844-5315695dadae",
+  "enchiladas_suizas"   => "photo-1565299624946-b28f40a0ae38",
+  "pastel_tres_leches"  => "photo-1565958011703-44f9829ba187",
+  "flan_napolitano"     => "photo-1563729784474-d77dbb933a9e",
+  "agua_jamaica"        => "photo-1541167760496-1628856ab772",
+  "champurrado"         => "photo-1517578239113-b03992dcdd25",
+  # Mario's saleable recipes (names match db/seeds.rb below)
+  "tacos_al_pastor"     => "photo-1565299585323-38d6b0865b47",
+  "tacos_arrachera"     => "photo-1565299624946-b28f40a0ae38",
+  "tacos_pollo"         => "photo-1599974579688-8dbdd335c77f",
+  "quesadillas"         => "photo-1625938144755-652e08e359b7",
+  "frijoles_charros"    => "photo-1599974579688-8dbdd335c77f",
+  "agua_horchata"       => "photo-1541167760496-1628856ab772"
+}.freeze
+
+def seed_photo_url(key, w: 900)
+  id = SEED_PHOTO_IDS[key]
+  return nil if id.blank?
+  UNSPLASH.call(id, w: w)
+end
+
 puts "==> clearing existing demo data"
 # `user.destroy` cascades through owned_account → all account-scoped
 # records (see User#detach_from_account + Account has_many :users
@@ -87,6 +152,10 @@ cocina_elena = Account.create!(
 )
 elena.update!(account: cocina_elena)
 
+puts "  …attaching cover + logo"
+attach_seed_image(cocina_elena, :cover_photo, url: seed_photo_url("elena_cover", w: 1600), filename: "cocina-elena-cover.jpg")
+attach_seed_image(cocina_elena, :logo,        url: seed_photo_url("elena_logo", w: 400),   filename: "cocina-elena-logo.jpg")
+
 Subscription.create!(account: cocina_elena, plan: :free, status: :active)
 
 elena_ingredients = [
@@ -116,17 +185,18 @@ elena_ingredients.each do |name, unit, cents, cat|
 end
 
 elena_recipes = [
-  [ "Tamal verde",             2500, :mains,    1, "piece" ],
-  [ "Tamal rojo",              2500, :mains,    1, "piece" ],
-  [ "Pozole rojo",            12000, :mains,    1, "serving" ],
-  [ "Enchiladas suizas",      14000, :mains,    1, "serving" ],
-  [ "Pastel de tres leches",  45000, :desserts, 1, "piece" ],
-  [ "Flan napolitano",        30000, :desserts, 1, "piece" ],
-  [ "Agua de jamaica",         4500, :drinks,   1, "l" ],
-  [ "Champurrado",             5000, :drinks,   1, "l" ]
+  [ "Tamal verde",             2500, :mains,    1, "piece",   "tamal_verde" ],
+  [ "Tamal rojo",              2500, :mains,    1, "piece",   "tamal_rojo" ],
+  [ "Pozole rojo",            12000, :mains,    1, "serving", "pozole_rojo" ],
+  [ "Enchiladas suizas",      14000, :mains,    1, "serving", "enchiladas_suizas" ],
+  [ "Pastel de tres leches",  45000, :desserts, 1, "piece",   "pastel_tres_leches" ],
+  [ "Flan napolitano",        30000, :desserts, 1, "piece",   "flan_napolitano" ],
+  [ "Agua de jamaica",         4500, :drinks,   1, "l",       "agua_jamaica" ],
+  [ "Champurrado",             5000, :drinks,   1, "l",       "champurrado" ]
 ]
-elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit|
-  cocina_elena.recipes.create!(
+puts "  …creating recipes + attaching photos"
+elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key|
+  recipe = cocina_elena.recipes.create!(
     name: name,
     sale_price_cents: cents,
     is_saleable: true,
@@ -136,6 +206,10 @@ elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit|
     is_published: true,
     target_margin_percent: 60
   )
+  attach_seed_image(recipe, :photos,
+    url: seed_photo_url(photo_key),
+    filename: "#{photo_key}.jpg")
+  recipe
 end
 
 elena_colonias = [ "Condesa", "Del Valle", "Roma Norte", "Coyoacán", "Polanco",
@@ -240,6 +314,10 @@ taqueria_mario = Account.create!(
   }
 )
 mario.update!(account: taqueria_mario)
+
+puts "  …attaching cover + logo"
+attach_seed_image(taqueria_mario, :cover_photo, url: seed_photo_url("mario_cover", w: 1600), filename: "taqueria-mario-cover.jpg")
+attach_seed_image(taqueria_mario, :logo,        url: seed_photo_url("mario_logo", w: 400),   filename: "taqueria-mario-logo.jpg")
 
 Subscription.create!(account: taqueria_mario, plan: :pro, status: :active)
 
@@ -383,6 +461,27 @@ gringa.components.create!(componentable: mario_ing["Queso Oaxaca"],             
 gringa.components.create!(componentable: mario_ing["Piña"],                     quantity:  30, unit: "g")
 
 mario_saleable = taqueria_mario.recipes.saleable.to_a
+
+# Attach a photo to each saleable Mario recipe by name match. The keys
+# below correspond to SEED_PHOTO_IDS entries — names drifting from
+# those photo keys would log a warning and the recipe ends up
+# photoless (which simply hides the storefront's "Publicar" CTA until
+# the operator uploads one manually).
+mario_photo_keys = {
+  "Taco al pastor"    => "tacos_al_pastor",
+  "Taco de asada"     => "tacos_arrachera",
+  "Taco de pollo"     => "tacos_pollo",
+  "Quesadilla"        => "quesadillas",
+  "Sope con frijol"   => "frijoles_charros",
+  "Gringa al pastor"  => "tacos_al_pastor"
+}
+puts "  …attaching recipe photos"
+mario_saleable.each do |recipe|
+  key = mario_photo_keys[recipe.name]
+  next unless key
+  attach_seed_image(recipe, :photos, url: seed_photo_url(key), filename: "#{key}-#{recipe.id}.jpg")
+end
+
 mario_colonias = [ "Condesa", "Del Valle", "Polanco", "Coyoacán", "Narvarte",
                    "Roma Sur", "Santa Fe", "Tlalpan", "Insurgentes", "Xoco",
                    "Acapulco" ]

@@ -43,12 +43,13 @@ module Storefronts
       },
       "mostaza" => {
         label: "Mostaza",
-        # Light-variant ink is a deep warm brown rather than cream so
-        # the foreground still passes WCAG AA (4.5:1) against the
-        # mustard background — cream on mustard was 4.36:1, too close
-        # to the edge for body CTAs. The dark variant keeps the near-
-        # black ink because the dark mustard is bright enough.
-        light: { c: "#9C6B12", ink: "#2A1F05", soft: "#F3E3B8", line: "#DCC57F" },
+        # Slightly darker primary than the "brightest-mustard" instinct
+        # so cream ink lands at 5.99:1 — comfortable WCAG AA body.
+        # The earlier #9C6B12 + cream landed at 4.30, just below AA,
+        # and a hand-tuned dark-brown ink only reached 3.49. Darkening
+        # the primary is the cleaner fix and keeps the ink consistent
+        # with the rest of the palette (bone-ish on dark backgrounds).
+        light: { c: "#805610", ink: "#FFF8E7", soft: "#F3E3B8", line: "#DCC57F" },
         dark:  { c: "#E8C35A", ink: "#1A1407", soft: "#3B2D0F", line: "#574217" }
       },
       "cacao" => {
