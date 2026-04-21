@@ -39,6 +39,12 @@ es-MX:
       add: "Agregar"
       empty_title: "Todavía no hay platillos publicados"
       empty_body: "La cocinera está armando su menú. Vuelve pronto."
+      # Only shown when the operator visits her own storefront and has
+      # unpublished drafts — quiet in-page nudge to finish publishing.
+      operator_hint:
+        one: "Tienes 1 platillo en borrador. Publícalo para que tus clientes lo vean aquí."
+        other: "Tienes %{count} platillos en borrador. Publícalos para que tus clientes los vean aquí."
+      operator_cta: "Ir a mi recetario"
 
     # --- Ordering hours chip -----------------------------------------
     ordering_hours:

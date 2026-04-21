@@ -93,7 +93,14 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :recipes
+  resources :recipes do
+    member do
+      post :toggle_publish, path: "toggle-publish"
+    end
+    collection do
+      post :publish_all, path: "publish-all"
+    end
+  end
   resources :ingredients
   resources :delivery_slots, path: "delivery-slots"
 

@@ -1,39 +1,87 @@
-<%= link_to helpers.edit_recipe_path(recipe),
-      class: "group relative flex flex-col bg-surface border border-line rounded-card overflow-hidden shadow-card hover:border-line-2 hover:shadow-panel transition" do %>
-  <div class="relative aspect-[4/3] bg-bg-2 overflow-hidden">
-    <% if photo_url %>
-      <img src="<%= photo_url %>"
-           alt="<%= recipe.name %>"
-           loading="lazy"
-           class="w-full h-full object-cover" />
-    <% else %>
-      <div class="w-full h-full flex items-center justify-center text-muted">
-        <%= helpers.icon(:chef_hat, size: :lg) %>
-      </div>
-    <% end %>
+<div class="group relative flex flex-col bg-surface border border-line rounded-card overflow-hidden shadow-card hover:border-line-2 hover:shadow-panel transition">
+  <%= link_to helpers.edit_recipe_path(recipe), class: "flex flex-col flex-1 no-underline" do %>
+    <div class="relative aspect-[4/3] bg-bg-2 overflow-hidden">
+      <% if photo_url %>
+        <img src="<%= photo_url %>"
+             alt="<%= recipe.name %>"
+             loading="lazy"
+             class="w-full h-full object-cover" />
+      <% else %>
+        <div class="w-full h-full flex items-center justify-center text-muted">
+          <%= helpers.icon(:chef_hat, size: :lg) %>
+        </div>
+      <% end %>
 
-    <% if recipe.internal? %>
-      <span class="absolute top-2.5 right-2.5">
+      <%# Top-right badge slot — shows the card's most informative state:
+          Publicada (accent) when live on the storefront, Borrador (muted)
+          when not, and Interna (neutral) for internal recipes. %>
+      <div class="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end">
+        <% if recipe.internal? %>
+          <%= render Ui::BadgeComponent.new(
+                label: t("recipes.internal_badge"),
+                status: :default,
+                dot: false) %>
+        <% elsif published? %>
+          <span class="inline-flex items-center gap-1.5 rounded-pill bg-accent-soft text-accent text-[10.5px] font-medium px-2.5 py-[3px]">
+            <span class="w-[5px] h-[5px] rounded-full bg-accent"></span>
+            <%= t("recipes.published_badge") %>
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1.5 rounded-pill bg-bg-2 text-muted text-[10.5px] font-medium px-2.5 py-[3px] border border-line">
+            <span class="w-[5px] h-[5px] rounded-full bg-muted"></span>
+            <%= t("recipes.draft_badge") %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-2 px-4 py-4">
+      <h3 class="font-serif text-[18px] leading-[1.2] text-ink line-clamp-2">
+        <%= recipe.name %>
+      </h3>
+      <div class="flex items-center justify-between gap-3">
+        <span class="font-mono text-[14px] font-medium text-ink">
+          <%= price_label %>
+        </span>
         <%= render Ui::BadgeComponent.new(
-              label: t("recipes.internal_badge"),
+              label: category_label,
               status: :default,
               dot: false) %>
-      </span>
-    <% end %>
-  </div>
-
-  <div class="flex flex-col gap-2 px-4 py-4">
-    <h3 class="font-serif text-[18px] leading-[1.2] text-ink line-clamp-2">
-      <%= recipe.name %>
-    </h3>
-    <div class="flex items-center justify-between gap-3">
-      <span class="font-mono text-[14px] font-medium text-ink">
-        <%= price_label %>
-      </span>
-      <%= render Ui::BadgeComponent.new(
-            label: category_label,
-            status: :default,
-            dot: false) %>
+      </div>
     </div>
-  </div>
-<% end %>
+  <% end %>
+
+  <%# Quick-publish action — sits at the card bottom, below the link so
+      clicks on the button don't bubble up as a card-click. A saleable
+      recipe with no photo shows a disabled state that nudges the
+      operator to upload a photo first. %>
+  <% unless recipe.internal? %>
+    <div class="border-t border-line px-4 py-2.5 bg-bg-2/40">
+      <% if publishable? %>
+        <%= button_to toggle_publish_recipe_path(recipe),
+              method: :post,
+              class: "w-full inline-flex items-center justify-center gap-1.5 text-[12.5px] font-medium rounded-[7px] py-1.5 transition #{published? ? 'text-ink-2 hover:text-ink hover:bg-bg-2' : 'bg-accent text-bg hover:bg-accent-2'}",
+              form: { class: "w-full" } do %>
+          <% if published? %>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19M1 1l22 22"/>
+            </svg>
+            <%= t("recipes.card.unpublish_cta") %>
+          <% else %>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            <%= t("recipes.card.publish_cta") %>
+          <% end %>
+        <% end %>
+      <% else %>
+        <%= link_to edit_recipe_path(recipe),
+              class: "w-full inline-flex items-center justify-center gap-1.5 text-[12.5px] font-medium text-muted hover:text-ink no-underline py-1.5" do %>
+          <%= helpers.icon(:image_plus, size: :xs) %>
+          <%= t("recipes.card.needs_photo") %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

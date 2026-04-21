@@ -248,6 +248,18 @@ es-MX:
   recipes:
     title: "Recetario"
     internal_badge: "Interna"
+    published_badge: "Publicada"
+    draft_badge: "Borrador"
+    card:
+      publish_cta: "Publicar en mi tienda"
+      unpublish_cta: "Ocultar de mi tienda"
+      needs_photo: "Agrega una foto para publicar"
+    bulk_publish:
+      title:
+        one: "Tienes 1 platillo listo para publicar"
+        other: "Tienes %{count} platillos listos para publicar"
+      lede: "Tus clientes verán estos platillos en tu menú público en cuanto los publiques."
+      cta: "Publicar todos"
     index:
       title: "Tu recetario"
       subtitle: "Todos los platillos que cocinas hoy"
@@ -283,6 +295,9 @@ es-MX:
       photo_upload: "Elige una foto"
       photo_replace: "Cambiar foto"
       photo_hint: "JPG, PNG, WebP o HEIC. Máximo 5 MB."
+      publish_label: "Mostrar en mi tienda"
+      publish_hint: "Tus clientes verán este platillo en tu menú público."
+      publish_hint_needs_photo: "Sube una foto primero — sin ella, tu menú se ve incompleto."
       submit_create: "Agregar platillo"
       submit_update: "Guardar cambios"
       cancel: "Cancelar"
@@ -294,6 +309,15 @@ es-MX:
       updated: "Cambios guardados."
     destroy:
       discarded: "Platillo eliminado."
+    toggle_publish:
+      published: "%{name} ya está en tu menú público."
+      unpublished: "%{name} ya no aparece en tu menú."
+      publish_requires_photo: "Agrega una foto a %{name} para publicarla en tu menú."
+    publish_all:
+      publish_all_ok:
+        one: "Publicaste 1 platillo en tu menú."
+        other: "Publicaste %{count} platillos en tu menú."
+      publish_all_none: "No hay platillos listos para publicar. Agrega una foto a tus borradores primero."
     danger_zone:
       title: "¿Ya no lo cocinas?"
       sub: "Puedes eliminar este platillo y dejará de aparecer en tu menú. Lo conservamos en el historial por si cambias de opinión."

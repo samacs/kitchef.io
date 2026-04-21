@@ -13,6 +13,22 @@
       <div class="rounded-[14px] border border-dashed border-line px-6 py-16 text-center">
         <div class="font-serif text-[22px] text-ink"><%= t("storefronts.menu.empty_title") %></div>
         <p class="mt-2 text-[13px] text-ink-2"><%= t("storefronts.menu.empty_body") %></p>
+
+        <%# Operator-only nudge — only rendered when the signed-in operator
+            is visiting her own storefront AND has draft recipes. Invisible
+            to customers. %>
+        <% if @viewing_own_storefront && @draft_count.positive? %>
+          <div class="mt-6 inline-flex flex-col items-center gap-2 rounded-[12px] border border-line bg-surface px-5 py-4">
+            <p class="text-[13px] text-ink-2">
+              <%= t("storefronts.menu.operator_hint", count: @draft_count) %>
+            </p>
+            <a href="<%= recipes_path %>"
+               class="inline-flex items-center gap-1.5 rounded-[9px] px-4 py-2 text-[13px] font-semibold no-underline"
+               style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">
+              <%= t("storefronts.menu.operator_cta") %>
+            </a>
+          </div>
+        <% end %>
       </div>
     <% else %>
       <div class="mb-5 flex items-end justify-between flex-wrap gap-4">
