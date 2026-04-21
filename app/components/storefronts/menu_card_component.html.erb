@@ -18,7 +18,27 @@
       </div>
     </div>
     <% if description.present? %>
-      <p class="text-[13px] leading-[1.55] text-ink-2 line-clamp-3"><%= description %></p>
+      <div data-controller="reveal"
+           data-reveal-collapsed-class="line-clamp-3"
+           data-reveal-expanded-class="line-clamp-none">
+        <p class="text-[13px] leading-[1.55] text-ink-2 whitespace-pre-line line-clamp-3"
+           data-reveal-target="content"><%= description %></p>
+        <button type="button"
+                class="mt-1 inline-flex items-center gap-1 text-[12px] font-semibold transition-colors hover:underline"
+                style="color: var(--brand-1);"
+                hidden
+                data-reveal-target="toggle"
+                data-action="click->reveal#toggle"
+                data-label-more="<%= t("storefronts.menu.reveal_more") %>"
+                data-label-less="<%= t("storefronts.menu.reveal_less") %>">
+          <span data-reveal-target="label"><%= t("storefronts.menu.reveal_more") %></span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+               data-reveal-target="chevron"
+               class="transition-transform">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+      </div>
     <% end %>
 
     <div class="mt-auto pt-2">

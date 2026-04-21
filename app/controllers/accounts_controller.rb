@@ -65,6 +65,7 @@ class AccountsController < AuthenticatedController
         phone whatsapp instagram
         colonia city
         delivery_zones payment_notes pickup_reminder_hours
+        ordering_hours
       ]
     )
   end

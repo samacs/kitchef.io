@@ -199,6 +199,73 @@
     -webkit-backdrop-filter: blur(12px);
   }
 
+  /* "Focus comment"-style highlight flash. Applied by
+     target_highlight_controller.js when a deep-link lands on an element
+     carrying `.kc-highlightable`. The ring + soft background fade in,
+     then smoothly drain back to transparent — a StackOverflow-style
+     "here it is" cue without a permanent tint. */
+  @keyframes kc-highlight-flash {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-accent) 0%, transparent);
+      background-color: color-mix(in oklab, var(--color-accent) 0%, var(--color-bg));
+      border-color: var(--color-line);
+    }
+    10% {
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-accent) 45%, transparent);
+      background-color: color-mix(in oklab, var(--color-accent) 14%, var(--color-bg));
+      border-color: var(--color-accent);
+    }
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-accent) 0%, transparent);
+      background-color: color-mix(in oklab, var(--color-accent) 0%, var(--color-bg));
+      border-color: var(--color-line);
+    }
+  }
+  .kc-highlight-flash {
+    animation: kc-highlight-flash 2.2s ease-out;
+  }
+
+  /* Notification row styling. `.kc-notification` itself only smooths
+     the read/unread color transition; the `kc-notification-enter`
+     keyframe plays once when a row is inserted via Turbo Stream so a
+     live notification doesn't just blink into place. */
+  .kc-notification {
+    transition: background-color .25s ease, border-color .25s ease, box-shadow .25s ease;
+    animation: kc-notification-enter .35s ease-out both;
+  }
+  @keyframes kc-notification-enter {
+    0%   { opacity: 0; transform: translateY(-4px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Storefront form inputs — the checkout page, cart notes, any other
+     public-facing text input. Inherits everyday border + surface tokens
+     but focuses into the kitchen's brand palette so the whole public
+     surface feels like one branded flow instead of a neutral form
+     plopped onto a branded page. The `color:` syntax via `var()` is an
+     arbitrary-value dance Tailwind can't express because the value is
+     a CSS variable set per-request in the layout. */
+  .kc-sf-input {
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .kc-sf-input:hover {
+    border-color: var(--color-line-2);
+  }
+  .kc-sf-input:focus,
+  .kc-sf-input:focus-visible {
+    border-color: var(--brand-1);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand-1) 20%, transparent);
+  }
+
+  /* Native radios/checkboxes in the checkout don't pick up `accent-color`
+     from inline style when Safari decides to ignore it on WebKit forms.
+     Explicitly pin it here so the selected dot / check tint uses the
+     kitchen's brand hue. */
+  .kc-sf-radio {
+    accent-color: var(--brand-1);
+  }
+
   /* Inline link styling used inside i18n-translated HTML strings where
      Tailwind utilities can't be applied directly. */
   .link {

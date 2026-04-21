@@ -1,0 +1,62 @@
+<% order = notification.event.order
+   confirmable = order && order.state == "placed" %>
+<li id="<%= dom_id(notification) %>"
+    class="kc-notification group relative flex items-start gap-3 rounded-card border p-4 transition
+           <%= notification.read? ? 'bg-surface border-line' : 'bg-accent-soft/40 border-accent/30 shadow-[inset_3px_0_0_0_var(--color-accent)]' %>"
+    data-read="<%= notification.read? %>"
+    role="listitem">
+  <span class="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full
+               <%= notification.read? ? 'bg-bg-2 text-muted' : 'bg-accent-soft text-accent' %>">
+    <%= icon(:bell, size: :xs) %>
+  </span>
+
+  <div class="flex-1 min-w-0 flex flex-col gap-1">
+    <div class="flex items-baseline gap-2 flex-wrap">
+      <span class="text-[13.5px] <%= notification.read? ? 'text-ink-2' : 'font-semibold text-ink' %> truncate">
+        <%= notification.event.title %>
+      </span>
+      <% unless notification.read? %>
+        <span class="inline-flex h-1.5 w-1.5 rounded-full bg-accent"
+              aria-label="<%= t('notifications.index.unread_dot_aria') %>"></span>
+      <% end %>
+      <span class="font-mono text-[11px] text-muted ml-auto">
+        <%= local_time(notification.created_at, format: "%H:%M · %d %b") %>
+      </span>
+    </div>
+    <p class="text-[12.5px] text-ink-2 leading-[1.45]">
+      <%= notification.event.body %>
+    </p>
+    <div class="mt-2 flex items-center gap-2 flex-wrap">
+      <% if confirmable %>
+        <%= button_to confirm_order_path(order),
+              method:  :post,
+              form:    { class: "inline" },
+              class:   "inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-[8px] bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors" do %>
+          <%= icon(:check, size: :xs) %>
+          <%= t("notifications.index.confirm_order") %>
+        <% end %>
+      <% elsif order %>
+        <span class="inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-[8px] bg-accent-soft text-accent border border-accent/20"
+              aria-label="<%= t("order.state.#{order.state}") %>">
+          <%= icon(:check, size: :xs) %>
+          <%= t("order.state.#{order.state}") %>
+        </span>
+      <% end %>
+
+      <%= link_to notification.event.url,
+            class: "inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-[8px] bg-transparent text-ink-2 border border-line hover:border-line-2 hover:text-ink transition-colors no-underline" do %>
+        <%= t("notifications.index.view_order") %>
+        <%= icon(:arrow_right, size: :xs) %>
+      <% end %>
+
+      <% unless notification.read? %>
+        <%= button_to mark_read_notification_path(notification),
+              method:  :post,
+              form:    { class: "inline ml-auto" },
+              class:   "inline-flex items-center gap-1.5 text-[12px] font-medium px-2.5 py-1.5 rounded-[8px] bg-transparent text-muted border border-transparent hover:border-line hover:text-ink transition-colors" do %>
+          <%= t("notifications.index.mark_read") %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</li>

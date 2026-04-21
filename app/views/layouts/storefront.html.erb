@@ -69,11 +69,19 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased">
+  <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased"
+        data-controller="<%= @storefront ? "storefront-cart" : "" %>"
+        <%= @storefront ? "data-storefront-cart-slug-value=\"#{@storefront.slug}\"".html_safe : "" %>>
     <%= render Storefronts::HeaderComponent.new(storefront: @storefront) if @storefront %>
 
     <%= yield %>
 
     <%= render Storefronts::FooterComponent.new(storefront: @storefront) if @storefront %>
+
+    <%# Cart drawer — owned by the layout so the header's "Carrito"
+        button works on every storefront page (show, menu, checkout,
+        confirmation), not just on `/:slug` where the component used
+        to live inside `<main>`. %>
+    <%= render Storefronts::CartDrawerComponent.new(storefront: @storefront) if @storefront %>
   </body>
 </html>

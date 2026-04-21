@@ -1,8 +1,12 @@
+<% autosave = recipe.persisted? %>
 <%= form_with model: recipe,
       url: recipe.persisted? ? recipe_path(recipe) : recipes_path,
       multipart: true,
       class: "flex flex-col gap-5",
-      data: { controller: "image-upload" } do |form| %>
+      data: {
+        controller: autosave ? "image-upload form-autosave reset-files-on-save" : "image-upload",
+        action: (autosave ? "change->form-autosave#save input->form-autosave#save" : nil)
+      }.compact do |form| %>
 
   <% if recipe.errors.any? %>
     <div role="alert"
@@ -15,6 +19,23 @@
           <li><%= message %></li>
         <% end %>
       </ul>
+    </div>
+  <% end %>
+
+  <% if autosave %>
+    <div class="flex justify-end -mb-2">
+      <span
+        data-form-autosave-target="status"
+        data-label-saving="<%= t("account.autosave.saving") %>"
+        data-label-saved="<%= t("account.autosave.saved") %>"
+        data-label-error="<%= t("account.autosave.error") %>"
+        class="hidden shrink-0 inline-flex items-center gap-1.5 rounded-full border border-line bg-bg-2 px-2.5 py-1 font-mono text-[11px] font-medium
+               data-[state=saving]:text-muted
+               data-[state=saved]:text-accent data-[state=saved]:border-accent/30 data-[state=saved]:bg-accent-soft
+               data-[state=error]:text-err data-[state=error]:border-err/30 data-[state=error]:bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))]"
+        role="status"
+        aria-live="polite"
+      ></span>
     </div>
   <% end %>
 
@@ -143,11 +164,13 @@
   </label>
 
   <div class="flex items-center justify-between gap-3 pt-2">
-    <%= link_to t("recipes.form.cancel"),
+    <%= link_to (autosave ? t("recipes.form.back") : t("recipes.form.cancel")),
           recipes_path,
           class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
 
-    <%= form.submit(recipe.persisted? ? t("recipes.form.submit_update") : t("recipes.form.submit_create"),
-          class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta") %>
+    <% unless autosave %>
+      <%= form.submit t("recipes.form.submit_create"),
+            class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
+    <% end %>
   </div>
 <% end %>

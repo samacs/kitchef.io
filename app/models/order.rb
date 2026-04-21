@@ -125,6 +125,7 @@ class Order < ApplicationRecord
   validates :delivery_start_time, :delivery_end_time,
     numericality: { only_integer: true, in: 0..TimeOfDay::MAX },
     allow_nil: true
+  validates :delivery_address, presence: true, if: :delivery_type_delivery?
   validate :delivery_end_time_after_start_time
   validate :cancellation_reason_is_complete
 

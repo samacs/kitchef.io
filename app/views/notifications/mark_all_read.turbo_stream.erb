@@ -1,0 +1,19 @@
+<%# Redraw the whole list — every item's style depends on its read
+    state, so a single bulk replace is cleaner than emitting N
+    per-row streams. %>
+<%= turbo_stream.replace "notifications_list" do %>
+  <ul id="notifications_list" class="flex flex-col gap-2.5" role="list">
+    <%= render partial: "notifications/notification", collection: @notifications, as: :notification %>
+  </ul>
+<% end %>
+
+<%= turbo_stream.replace "notifications_summary" do %>
+  <% count_total = @notifications.size %>
+  <div id="notifications_summary" class="flex items-center justify-between gap-3 text-[12.5px] text-muted">
+    <span class="font-mono uppercase tracking-[0.14em]">
+      <span><%= t("notifications.index.total_count", count: count_total) %></span>
+    </span>
+  </div>
+<% end %>
+
+<%= turbo_stream.remove "notifications_mark_all_read" %>

@@ -1,0 +1,17 @@
+<% if current_user %>
+  <%= helpers.turbo_stream_from(*stream_name) %>
+
+  <%= link_to notifications_path,
+        class: "relative inline-flex items-center justify-center shrink-0 w-[32px] h-[32px] bg-surface text-ink-2 border border-line rounded-[8px] transition-[border-color,color] hover:border-line-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+        aria: { label: t("panel.top_bar.notifications") },
+        title: t("panel.top_bar.notifications") do %>
+    <%= helpers.icon(:bell, size: :xs) %>
+    <% if badge? %>
+      <span class="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 inline-flex items-center justify-center rounded-full bg-accent text-bg ring-2 ring-surface font-mono text-[10px] leading-none font-semibold"
+            aria-live="polite"
+            aria-label="<%= t("notifications.badge.aria_count", count: unread_count) %>">
+        <%= unread_count > 9 ? "9+" : unread_count %>
+      </span>
+    <% end %>
+  <% end %>
+<% end %>

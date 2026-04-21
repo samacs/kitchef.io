@@ -301,6 +301,7 @@ es-MX:
       submit_create: "Agregar platillo"
       submit_update: "Guardar cambios"
       cancel: "Cancelar"
+      back: "Volver al recetario"
       delete: "Eliminar platillo"
       delete_confirm: "¿Eliminar este platillo? Podrás recuperarlo desde el historial."
     create:
@@ -384,6 +385,8 @@ es-MX:
       payment_notes: "Nota sobre el pago"
       payment_notes_placeholder: "Ej: Te contacto por WhatsApp para confirmar el anticipo."
       payment_notes_hint: "Se muestra al cliente al terminar su pedido."
+      ordering_hours_label: "Horario de pedidos"
+      ordering_hours_hint: "Define los días y horas en que tu tienda acepta pedidos nuevos. Los clientes verán un letrero si llegan fuera de horario."
   subscription:
     title: "Plan"
 
@@ -457,7 +460,7 @@ es-MX:
         ✔ Masa fresca, nixtamalizada en casa
         ✔ Sin conservadores
         ✔ Entregas los sábados por la mañana
-      field_hint: "Hasta 280 caracteres. Usa saltos de línea o símbolos (✔, •, —) para darle forma."
+      field_hint: "Hasta %{max} caracteres. Usa saltos de línea o símbolos (✔, •, —) para darle forma."
       counter_suffix: "caracteres"
       skip: "Saltar por ahora"
       submit: "Guardar y continuar"

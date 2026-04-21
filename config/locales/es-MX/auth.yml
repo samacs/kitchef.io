@@ -75,6 +75,23 @@ es-MX:
       expiry: "El enlace expira en %{duration}."
       signature: "— El equipo de Kitchef"
 
+  storefront_orders_mailer:
+    placed:
+      subject: "Pedido recibido — %{kitchen_name}"
+      kicker: "Pedido recibido"
+      greeting: "¡Pedido recibido, %{first_name}!"
+      lede: "Gracias por pedirle a %{kitchen_name}. Te confirmaremos por este medio o por WhatsApp en cuanto arrancamos a cocinar."
+      when_label: "Fecha de entrega"
+      where_label: "Entrega"
+      items_label: "Tu pedido"
+      total_label: "Total"
+      whatsapp_cta: "Escribir a %{kitchen_name} por WhatsApp"
+      whatsapp_message: "Hola %{kitchen_name}, vengo con mi pedido %{prefix_id}."
+      self_confirm_lede: "Toca el botón para confirmar tu pedido y que la cocina pueda empezar a prepararlo."
+      self_confirm_cta: "Confirmar mi pedido"
+      status_link: "Ver el estado de tu pedido"
+      footer: "Este correo llegó porque pediste en la tienda de %{kitchen_name} en Kitchef."
+
   user_menu:
     trigger_label: "Abrir menú de usuario"
     plan_free: "Plan Gratis"

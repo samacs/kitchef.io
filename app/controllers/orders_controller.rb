@@ -54,14 +54,52 @@ class OrdersController < AuthenticatedController
     define_method(event) do
       result = Orders::Transition.call(order: order, event: event)
       if result.success?
-        redirect_to orders_path, notice: t(".#{event}")
+        mark_related_notifications_read(order) if event == :confirm
+
+        respond_to do |format|
+          # Turbo-stream response keeps the operator where she clicked
+          # — e.g. pressing "Confirmar" in the notifications inbox
+          # updates the inbox row in place instead of yanking her to
+          # the kanban. Any page that doesn't render notifications
+          # just ignores the empty stream; the kanban's own
+          # broadcasts_refreshes_to handler still redraws the card
+          # from `[account, :orders]` when state flips.
+          format.turbo_stream do
+            if event == :confirm && request.referer&.include?("/notifications")
+              render "orders/transition_from_notifications",
+                locals: { order: order, notice: t(".#{event}") }
+            else
+              redirect_to orders_path, notice: t(".#{event}")
+            end
+          end
+          format.html { redirect_to orders_path, notice: t(".#{event}") }
+        end
       else
-        redirect_to orders_path, alert: t("orders.transitions.errors.not_allowed")
+        respond_to do |format|
+          format.turbo_stream { redirect_to orders_path, alert: t("orders.transitions.errors.not_allowed") }
+          format.html         { redirect_to orders_path, alert: t("orders.transitions.errors.not_allowed") }
+        end
       end
     end
   end
 
   private
+
+  # When the operator confirms a storefront order (from the kanban card OR
+  # from the notifications inbox), sweep any unread Noticed events pointing
+  # at this order to `read_at`. Without this, the bell badge would keep
+  # showing the notification even though the operator has already acted.
+  def mark_related_notifications_read(order)
+    return unless Current.user
+
+    Current.user.notifications
+      .joins(:event)
+      .where("noticed_events.params @> ?", { order_id: order.id }.to_json)
+      .where(read_at: nil)
+      .find_each(&:mark_as_read!)
+  rescue StandardError => e
+    Rails.logger.warn "[OrdersController] could not sweep notifications for order #{order.id}: #{e.message}"
+  end
 
   def reject_if_immutable
     return if order.new_record? || !order.immutable?

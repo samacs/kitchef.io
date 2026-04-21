@@ -1,0 +1,54 @@
+<% content_for :title, t("notifications.index.title") %>
+<% content_for :page_title, t("notifications.index.title") %>
+<% content_for :page_subtitle, t("notifications.index.subtitle") %>
+
+<%= turbo_stream_from Current.user, :notifications %>
+
+<% unread_count = @notifications.count(&:unread?) %>
+
+<% if unread_count.positive? %>
+  <% content_for :page_action do %>
+    <%= button_to mark_all_read_notifications_path,
+          method: :post,
+          form: { class: "inline" },
+          class: "inline-flex items-center gap-1.5 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 hover:text-ink transition-colors",
+          id: "notifications_mark_all_read" do %>
+      <%= icon(:check_check, size: :xs) %>
+      <span><%= t("notifications.index.mark_all_read") %></span>
+    <% end %>
+  <% end %>
+<% end %>
+
+<div class="flex flex-col gap-4">
+  <div id="flash_slot"></div>
+
+  <div id="notifications_summary" class="flex items-center justify-between gap-3 text-[12.5px] text-muted">
+    <span class="font-mono uppercase tracking-[0.14em]">
+      <% if unread_count.positive? %>
+        <span class="text-accent font-semibold"><%= t("notifications.index.unread_count", count: unread_count) %></span>
+        <span aria-hidden="true">·</span>
+        <span><%= t("notifications.index.total_count", count: @notifications.size) %></span>
+      <% else %>
+        <span><%= t("notifications.index.total_count", count: @notifications.size) %></span>
+      <% end %>
+    </span>
+  </div>
+
+  <% if @notifications.empty? %>
+    <div class="rounded-panel border border-line bg-surface p-10 text-center">
+      <div class="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+        <%= icon(:bell, size: :md) %>
+      </div>
+      <h2 class="font-serif text-[22px] leading-tight text-ink">
+        <%= t("notifications.index.empty_headline") %>
+      </h2>
+      <p class="mt-1 text-[13px] text-ink-2">
+        <%= t("notifications.index.empty_sub") %>
+      </p>
+    </div>
+  <% else %>
+    <ul id="notifications_list" class="flex flex-col gap-2.5" role="list">
+      <%= render partial: "notifications/notification", collection: @notifications, as: :notification %>
+    </ul>
+  <% end %>
+</div>

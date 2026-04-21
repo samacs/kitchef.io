@@ -17,7 +17,8 @@
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
   </head>
-  <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased">
+  <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased"
+        data-controller="target-highlight">
     <%# Single drawer controller wrapping both the drawer (rendered
         first so its fixed backdrop+panel sit outside the top-bar's
         backdrop-filter stacking context) and the main layout. The

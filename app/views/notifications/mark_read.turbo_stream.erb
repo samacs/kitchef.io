@@ -1,0 +1,28 @@
+<%# Replace the single notification row with its updated (read) state. %>
+<%= turbo_stream.replace @notification do %>
+  <%= render partial: "notifications/notification", locals: { notification: @notification } %>
+<% end %>
+
+<%# Refresh the unread-count pill above the list. %>
+<%= turbo_stream.replace "notifications_summary" do %>
+  <% count_unread = Current.user.notifications.unread.count %>
+  <% count_total  = Current.user.notifications.count %>
+  <div id="notifications_summary" class="flex items-center justify-between gap-3 text-[12.5px] text-muted">
+    <span class="font-mono uppercase tracking-[0.14em]">
+      <% if count_unread.positive? %>
+        <span class="text-accent font-semibold"><%= t("notifications.index.unread_count", count: count_unread) %></span>
+        <span aria-hidden="true">·</span>
+        <span><%= t("notifications.index.total_count", count: count_total) %></span>
+      <% else %>
+        <span><%= t("notifications.index.total_count", count: count_total) %></span>
+      <% end %>
+    </span>
+  </div>
+<% end %>
+
+<%# When there's nothing left to sweep, hide the header "Marcar todas"
+    button — it's rendered via content_for so Turbo can't morph it.
+    Remove by id is the simplest path. %>
+<% if Current.user.notifications.unread.none? %>
+  <%= turbo_stream.remove "notifications_mark_all_read" %>
+<% end %>

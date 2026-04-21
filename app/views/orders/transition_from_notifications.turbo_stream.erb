@@ -1,0 +1,46 @@
+<%# Fires when an operator confirms (or later, transitions) an order
+    directly from the `/notifications` inbox. Keeps the operator on the
+    page and rebuilds every inbox row + summary so the row for this
+    order switches from "Confirmar pedido" to the read/confirmed state. %>
+
+<% notifications_scope = Current.user.notifications.includes(:event).newest_first.limit(100) %>
+
+<%= turbo_stream.replace "notifications_list" do %>
+  <ul id="notifications_list" class="flex flex-col gap-2.5" role="list">
+    <%= render partial: "notifications/notification",
+               collection: notifications_scope,
+               as: :notification %>
+  </ul>
+<% end %>
+
+<%= turbo_stream.replace "notifications_summary" do %>
+  <% count_unread = Current.user.notifications.unread.count %>
+  <% count_total  = Current.user.notifications.count %>
+  <div id="notifications_summary" class="flex items-center justify-between gap-3 text-[12.5px] text-muted">
+    <span class="font-mono uppercase tracking-[0.14em]">
+      <% if count_unread.positive? %>
+        <span class="text-accent font-semibold"><%= t("notifications.index.unread_count", count: count_unread) %></span>
+        <span aria-hidden="true">·</span>
+        <span><%= t("notifications.index.total_count", count: count_total) %></span>
+      <% else %>
+        <span><%= t("notifications.index.total_count", count: count_total) %></span>
+      <% end %>
+    </span>
+  </div>
+<% end %>
+
+<% if Current.user.notifications.unread.none? %>
+  <%= turbo_stream.remove "notifications_mark_all_read" %>
+<% end %>
+
+<%# Toast-style confirmation so the operator sees something happened. %>
+<%= turbo_stream.prepend "flash_slot" do %>
+  <div id="confirm_toast_<%= order.id %>"
+       class="mb-3 rounded-[10px] border border-accent/30 bg-accent-soft text-accent px-4 py-2.5 text-[13px] font-medium flex items-center gap-2"
+       role="status"
+       data-controller="flash-dismiss"
+       data-flash-dismiss-delay-value="3200">
+    <%= icon(:check, size: :xs) %>
+    <span><%= notice %></span>
+  </div>
+<% end %>

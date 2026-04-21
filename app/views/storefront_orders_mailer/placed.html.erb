@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;background-color:#F8F6F1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#0E1714;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#F8F6F1;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;width:100%;background-color:#FFFFFF;border:1px solid #E6E1D8;border-radius:16px;overflow:hidden;">
+            <% if @account.cover_photo.attached? %>
+              <tr>
+                <td>
+                  <img src="<%= url_for(@account.cover_photo.variant(:card)) %>"
+                       alt=""
+                       width="560"
+                       style="display:block;width:100%;max-width:560px;height:auto;">
+                </td>
+              </tr>
+            <% end %>
+
+            <tr>
+              <td style="padding:28px 28px 8px 28px;">
+                <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#6B7670;">
+                  <%= t(".kicker") %>
+                </div>
+                <h1 style="margin:8px 0 0 0;font-family:'Instrument Serif','Times New Roman',serif;font-size:30px;line-height:1.1;color:#0E1714;">
+                  <%= t(".greeting", first_name: @client.first_name.presence || "") %>
+                </h1>
+                <p style="margin:12px 0 0 0;font-size:15px;line-height:1.55;color:#2F3A35;">
+                  <%= t(".lede", kitchen_name: @kitchen_name) %>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:20px 28px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #E6E1D8;border-radius:12px;">
+                  <tr>
+                    <td style="padding:16px 18px;">
+                      <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:#6B7670;">
+                        <%= t(".when_label") %>
+                      </div>
+                      <div style="margin-top:4px;font-family:'Instrument Serif',serif;font-size:18px;color:#0E1714;">
+                        <%= l(@order.delivery_date, format: :long) rescue @order.delivery_date %>
+                      </div>
+                      <% if @order.delivery_start_time && @order.delivery_end_time %>
+                        <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#2F3A35;">
+                          <%= @order.delivery_start_time_hhmm %>–<%= @order.delivery_end_time_hhmm %>
+                        </div>
+                      <% end %>
+                    </td>
+                  </tr>
+                  <% if @order.delivery_address.present? %>
+                    <tr>
+                      <td style="padding:16px 18px;border-top:1px solid #E6E1D8;">
+                        <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:#6B7670;">
+                          <%= t(".where_label") %>
+                        </div>
+                        <div style="margin-top:4px;font-size:14px;color:#0E1714;">
+                          <%= [ @order.delivery_address, @order.colonia, @order.city ].compact_blank.join(", ") %>
+                        </div>
+                      </td>
+                    </tr>
+                  <% end %>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:4px 28px 20px 28px;">
+                <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#6B7670;margin-bottom:10px;">
+                  <%= t(".items_label") %>
+                </div>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <% @order.items.each do |item| %>
+                    <tr>
+                      <td style="padding:8px 0;border-bottom:1px solid #E6E1D8;">
+                        <div style="font-size:14px;font-weight:600;color:#0E1714;"><%= item.recipe&.name %></div>
+                        <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:#6B7670;">× <%= item.quantity %></div>
+                      </td>
+                      <td align="right" style="padding:8px 0;border-bottom:1px solid #E6E1D8;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#0E1714;">
+                        <%= humanized_money_with_symbol(Money.new(item.unit_price_cents.to_i * item.quantity.to_d, "MXN")) %>
+                      </td>
+                    </tr>
+                  <% end %>
+                  <tr>
+                    <td style="padding:14px 0 0 0;font-size:14px;font-weight:600;color:#0E1714;">
+                      <%= t(".total_label") %>
+                    </td>
+                    <td align="right" style="padding:14px 0 0 0;font-family:'Instrument Serif',serif;font-size:22px;color:#0E1714;">
+                      <%= humanized_money_with_symbol(@order.total) %>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <% if @self_confirm_url.present? %>
+              <tr>
+                <td style="padding:12px 28px 6px 28px;">
+                  <p style="margin:0 0 10px 0;font-size:14px;line-height:1.5;color:#0E1714;">
+                    <%= t(".self_confirm_lede") %>
+                  </p>
+                </td>
+              </tr>
+              <tr>
+                <td align="center" style="padding:4px 28px 20px 28px;">
+                  <a href="<%= @self_confirm_url %>"
+                     style="display:inline-block;background-color:#0A5A3C;color:#F8F6F1;font-size:15px;font-weight:600;text-decoration:none;padding:14px 28px;border-radius:10px;border:1px solid #0A5A3C;">
+                    <%= t(".self_confirm_cta") %>
+                  </a>
+                </td>
+              </tr>
+            <% end %>
+
+            <% if @whatsapp_link.present? %>
+              <tr>
+                <td align="center" style="padding:8px 28px 24px 28px;">
+                  <a href="<%= @whatsapp_link %>"
+                     style="display:inline-block;background-color:#25D366;color:#053019;font-size:15px;font-weight:600;text-decoration:none;padding:14px 24px;border-radius:10px;border:1px solid #25D366;">
+                    <%= t(".whatsapp_cta", kitchen_name: @kitchen_name) %>
+                  </a>
+                </td>
+              </tr>
+            <% end %>
+
+            <tr>
+              <td align="center" style="padding:0 28px 28px 28px;">
+                <a href="<%= @status_url %>"
+                   style="font-size:13px;color:#0A5A3C;text-decoration:underline;">
+                  <%= t(".status_link") %>
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin:18px auto 0 auto;font-size:12px;color:#6B7670;text-align:center;max-width:520px;">
+            <%= t(".footer", kitchen_name: @kitchen_name) %>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

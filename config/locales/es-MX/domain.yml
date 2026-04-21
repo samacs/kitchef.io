@@ -63,6 +63,32 @@ es-MX:
       delivery_issue:  "Problema de entrega"
       other:           "Otro motivo"
 
+  notifications:
+    storefront_order_placed:
+      title: "Pedido nuevo de %{client} · %{total}"
+      body: "Para entregar el %{date}. Confírmalo para empezar a cocinar."
+      anonymous_client: "clienta"
+    badge:
+      aria_count:
+        one: "1 notificación sin leer"
+        other: "%{count} notificaciones sin leer"
+    index:
+      title: "Notificaciones"
+      subtitle: "Todo lo que pasa en tu cocina"
+      empty_headline: "Todo tranquilo por aquí"
+      empty_sub: "Cuando alguien haga un pedido desde tu tienda, lo verás aparecer aquí."
+      view_order: "Ver pedido"
+      mark_read: "Marcar como leída"
+      mark_all_read: "Marcar todas como leídas"
+      confirm_order: "Confirmar pedido"
+      unread_dot_aria: "Sin leer"
+      unread_count:
+        one: "1 sin leer"
+        other: "%{count} sin leer"
+      total_count:
+        one: "1 notificación"
+        other: "%{count} notificaciones"
+
   subscription:
     plans:
       free: "Gratis"

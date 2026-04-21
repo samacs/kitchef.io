@@ -39,7 +39,7 @@
               placeholder="<%= t('onboarding.description.field_placeholder') %>"
               class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y whitespace-pre-line"><%= @description %></textarea>
           <div class="flex items-center justify-between gap-3">
-            <span class="text-[12px] text-muted"><%= t("onboarding.description.field_hint") %></span>
+            <span class="text-[12px] text-muted"><%= t("onboarding.description.field_hint", max: Accounts::PublicProfile::DESCRIPTION_MAX) %></span>
             <span class="text-[12px] font-mono text-muted">
               <span data-char-counter-target="count"><%= @description.to_s.length %></span>/<%= Accounts::PublicProfile::DESCRIPTION_MAX %>
               <%= t("onboarding.description.counter_suffix") %>

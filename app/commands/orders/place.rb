@@ -18,7 +18,7 @@ module Orders
       items_attrs.each do |item_attrs|
         next if item_attrs.values_at(:recipe_id, :quantity).all?(&:blank?)
 
-        recipe = account.recipes.kept.saleable.find_by(id: item_attrs[:recipe_id])
+        recipe = resolve_recipe(item_attrs[:recipe_id])
         next if recipe.nil?
 
         order.items.build(
@@ -44,6 +44,20 @@ module Orders
     end
 
     private
+
+    # Operator forms post a numeric recipe id; the storefront cart posts
+    # the prefixed form (`rec_abc`). Support both so a single command
+    # serves every entry point.
+    def resolve_recipe(raw_id)
+      return nil if raw_id.blank?
+
+      scope = account.recipes.kept.saleable
+      if raw_id.to_s.start_with?("rec_")
+        scope.find_by_prefix_id(raw_id.to_s)
+      else
+        scope.find_by(id: raw_id)
+      end
+    end
 
     def enqueue_geocoding(order)
       GeocodeOrderJob.perform_later(order.id) if order.needs_geocoding?
