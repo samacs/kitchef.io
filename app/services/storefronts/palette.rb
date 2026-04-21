@@ -100,6 +100,11 @@ module Storefronts
       PALETTES.fetch(name, PALETTES.fetch(DEFAULT))
     end
 
+    # Strict hex-color regex the service uses to gate anything that will
+    # land inside a `<style>` tag. Matches `#rgb`, `#rrggbb`, and
+    # `#rrggbbaa` — the three shapes actually present in PALETTES.
+    HEX_COLOR_RE = /\A#[0-9A-Fa-f]{3}(?:[0-9A-Fa-f]{3}(?:[0-9A-Fa-f]{2})?)?\z/
+
     # Returns a CSS-ready string of `--brand-1-*` and `--brand-2-*`
     # declarations for the given account and theme variant. Used inline
     # in the storefront layout's <style> block — light and dark tokens
@@ -108,24 +113,45 @@ module Storefronts
     #
     #   "--brand-1:#0A5A3C;--brand-1-ink:#F8F6F1;--brand-1-soft:#E3EDE6;--brand-1-line:#B9D4C2;
     #    --brand-2:#B04E0E;--brand-2-ink:#FFF6ED;--brand-2-soft:#F6E2CB;--brand-2-line:#E6C5A1;"
+    #
+    # Every value is checked against HEX_COLOR_RE before it's concatenated.
+    # The inputs come from the frozen PALETTES hash, so this is
+    # belt-and-suspenders today — but the defensive check makes the
+    # service structurally incapable of emitting anything besides a
+    # canonical hex color, closing the one path a future regression
+    # (e.g. user-picked custom palettes, typo in a new entry) could
+    # open into a `<style>` injection sink. It's also what convinces
+    # Brakeman that the `raw` call in the storefront layout is safe.
     def self.css_vars_for(account, dark: false)
       primary   = self.for(account, which: :primary).fetch(dark ? :dark : :light)
       secondary = self.for(account, which: :secondary).fetch(dark ? :dark : :light)
 
-      "--brand-1:#{primary[:c]};" \
-        "--brand-1-ink:#{primary[:ink]};" \
-        "--brand-1-soft:#{primary[:soft]};" \
-        "--brand-1-line:#{primary[:line]};" \
-        "--brand-2:#{secondary[:c]};" \
-        "--brand-2-ink:#{secondary[:ink]};" \
-        "--brand-2-soft:#{secondary[:soft]};" \
-        "--brand-2-line:#{secondary[:line]};"
+      {
+        "--brand-1"       => primary[:c],
+        "--brand-1-ink"   => primary[:ink],
+        "--brand-1-soft"  => primary[:soft],
+        "--brand-1-line"  => primary[:line],
+        "--brand-2"       => secondary[:c],
+        "--brand-2-ink"   => secondary[:ink],
+        "--brand-2-soft"  => secondary[:soft],
+        "--brand-2-line"  => secondary[:line]
+      }.map { |name, value| "#{name}:#{sanitize_hex!(value)};" }.join
+    end
+
+    # Asserts a value matches the hex-color contract and returns it
+    # unchanged. Raises on malformed input — a corrupted PALETTES
+    # entry should fail loudly at boot rather than silently emit
+    # broken CSS (or worse, injected CSS) to every storefront visitor.
+    def self.sanitize_hex!(value)
+      raise ArgumentError, "palette value must be a hex color, got: #{value.inspect}" unless HEX_COLOR_RE.match?(value.to_s)
+
+      value
     end
 
     # Returns just the primary color hex for the given variant. Handy for
     # meta tags (<meta name="theme-color">) and social preview OG tags.
     def self.primary_color_for(account, dark: false)
-      self.for(account, which: :primary).fetch(dark ? :dark : :light).fetch(:c)
+      sanitize_hex!(self.for(account, which: :primary).fetch(dark ? :dark : :light).fetch(:c))
     end
   end
 end

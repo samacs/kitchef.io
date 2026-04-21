@@ -1,0 +1,46 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "229794a560f0c74b32983fae2d2c509f1ea7748f63b3bef465b04d3308cb8c22",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped model attribute",
+      "file": "app/views/layouts/storefront.html.erb",
+      "line": 44,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "Storefronts::Palette.css_vars_for(Account.friendly.kept.find(params[:slug]), :dark => false)",
+      "render_path": null,
+      "location": {
+        "type": "template",
+        "template": "layouts/storefront"
+      },
+      "user_input": "Account.friendly.kept.find(params[:slug])",
+      "confidence": "Weak",
+      "cwe_id": [79],
+      "note": "Output is a string of `--brand-N[-ink|-soft|-line]:#RRGGBB;` CSS custom property declarations. Every value is gated through `Storefronts::Palette.sanitize_hex!` which raises on anything that isn't a canonical hex color (#rgb, #rrggbb, #rrggbbaa). The primary + secondary palette names are validated at the model layer via `inclusion: { in: PALETTES }` on Accounts::Branding, and the service's .for() method falls back to DEFAULT when the name isn't in the frozen PALETTES hash. No user-controlled string can ever reach this string interpolation."
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "eba2b927ac647d4acb378f98bd82d5672bad6970654140a893d121bfa828b0af",
+      "check_name": "CrossSiteScripting",
+      "message": "Unescaped model attribute",
+      "file": "app/views/layouts/storefront.html.erb",
+      "line": 47,
+      "link": "https://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "Storefronts::Palette.css_vars_for(Account.friendly.kept.find(params[:slug]), :dark => true)",
+      "render_path": null,
+      "location": {
+        "type": "template",
+        "template": "layouts/storefront"
+      },
+      "user_input": "Account.friendly.kept.find(params[:slug])",
+      "confidence": "Weak",
+      "cwe_id": [79],
+      "note": "Dark-variant sibling of the light-variant warning above. Same guarantee: `sanitize_hex!` raises on any value that doesn't match `/\\A#[0-9A-Fa-f]{3,8}\\z/`, so the service is structurally incapable of emitting anything besides a canonical hex color into the inline <style> block."
+    }
+  ],
+  "updated": "2026-04-21 04:00:00 -0700",
+  "brakeman_version": "8.0.4"
+}
