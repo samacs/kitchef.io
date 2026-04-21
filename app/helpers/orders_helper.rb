@@ -20,15 +20,14 @@ module OrdersHelper
 
   # Natural production-flow order. `primary_transition_for` walks this
   # list and returns the first event that's permitted from the order's
-  # current state — that's the card's main next-step CTA. `mark_paid`
-  # intentionally sits last so "Iniciar producción" wins over "Marcar
-  # pagado" when both are available (the common case from `:confirmed`).
-  # `ship` comes before `deliver` so a delivery-type order in `ready`
-  # state picks "Marcar en camino" as its primary; pickup-type orders
-  # don't qualify for `ship` (the AASM guard returns false) and fall
-  # through to `deliver`. `mark_paid` stays last so the happy-path
-  # transition wins whenever both are available.
-  PRIMARY_EVENT_ORDER = %i[confirm start_production mark_ready ship deliver mark_paid].freeze
+  # current state — that's the card's main next-step CTA. `ship`
+  # comes before `deliver` so a delivery-type order in `ready` state
+  # picks "Marcar en camino" as its primary; pickup-type orders don't
+  # qualify for `ship` (the AASM guard returns false) and fall through
+  # to `deliver`. `mark_paid` is intentionally NOT in this list — it's
+  # a property update surfaced in its own button, so delivered orders
+  # have no primary fulfillment action.
+  PRIMARY_EVENT_ORDER = %i[confirm start_production mark_ready ship deliver].freeze
 
   def primary_transition_for(order)
     PRIMARY_EVENT_ORDER.find { |event| order.aasm.may_fire_event?(event) }

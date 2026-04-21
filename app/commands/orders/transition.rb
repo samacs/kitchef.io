@@ -6,7 +6,9 @@ module Orders
     # Cancel is NOT listed here — it requires a reason and flows through
     # Orders::Cancel via /orders/:id/cancellation. These events are
     # one-click forward transitions only.
-    EVENTS = %i[confirm start_production mark_ready ship deliver mark_paid].freeze
+    # Forward-flow fulfillment events. `mark_paid` is NOT here — it's
+    # a property update (see Order#mark_paid!), not a state transition.
+    EVENTS = %i[confirm start_production mark_ready ship deliver].freeze
 
     option :order
     option :event

@@ -17,13 +17,16 @@ class StorefrontOrdersMailer < ApplicationMailer
     @whatsapp_link = build_whatsapp_link
     @host          = Rails.application.config.action_mailer.default_url_options.fetch(:host, "kitchef.mx")
     @status_url    = storefront_order_url(slug: @account.slug, id: @order.to_param, host: @host)
-    # Self-confirm CTA appears only when the customer left NO phone —
-    # the phone path is routed through WhatsApp instead (once that
-    # channel is live). No phone = no WhatsApp = we give the customer
-    # a one-tap confirm link so the kitchen isn't stuck waiting.
-    @self_confirm_url = if @client&.phone_normalized.blank?
-      confirm_storefront_order_url(slug: @account.slug, id: @order.to_param, host: @host)
-    end
+    # Self-confirm CTA stays in the email for every customer who
+    # supplied one, because the eventual WhatsApp-confirmation flow
+    # isn't live yet. Once that ships, this link will be gated to
+    # "phone was not provided" — but today, email is our only
+    # self-confirm channel, so we always surface it when we can.
+    @self_confirm_url = confirm_storefront_order_url(
+      slug: @account.slug,
+      id:   @order.to_param,
+      host: @host
+    )
 
     mail(
       to:      @client.email,

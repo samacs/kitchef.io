@@ -20,16 +20,20 @@ module Storefronts
       phone = customer_params[:phone].to_s.strip
       email = customer_params[:email].to_s.strip
 
-      if phone.blank? && email.blank?
+      # WhatsApp is the kitchen ↔ customer channel of record: order
+      # confirmation, payment receipt requests, delivery coordination.
+      # Email is optional and additive — when present, we also send a
+      # confirmation email with a self-confirm link.
+      if phone.blank?
         order = storefront.orders.new(order_params.to_h.deep_symbolize_keys)
-        order.errors.add(:base, :contact_required)
+        order.errors.add(:base, :phone_required)
         return Result.new(success: false, object: order, errors: order.errors)
       end
 
       client = resolve_client(phone: phone, email: email)
       if client.nil?
         order = storefront.orders.new(order_params.to_h.deep_symbolize_keys)
-        order.errors.add(:base, phone.present? ? :invalid_phone : :invalid_email)
+        order.errors.add(:base, :invalid_phone)
         return Result.new(success: false, object: order, errors: order.errors)
       end
 
@@ -69,10 +73,9 @@ module Storefronts
       Rails.logger.error "[PlaceOrder] confirmation email failed for order #{order.id}: #{e.message}"
     end
 
-    # Resolve a client record from the submitted contact details.
-    # Preference order: phone (the canonical dedup key) → email. At
-    # least one must be present; the call-site validates that before
-    # reaching here.
+    # Resolve a client record from the submitted phone + optional
+    # email. Phone is the canonical dedup key — the call-site
+    # guarantees it's present before we get here.
     def resolve_client(phone:, email:)
       attrs = {
         first_name: customer_params[:first_name].to_s.strip.presence,
@@ -80,15 +83,10 @@ module Storefronts
         email:      email.presence
       }
 
-      if phone.present?
-        Client.find_or_create_by_phone!(account: storefront, phone: phone, attrs: attrs)
-      else
-        Client.find_or_create_by_email!(account: storefront, email: email, attrs: attrs)
-      end
+      Client.find_or_create_by_phone!(account: storefront, phone: phone, attrs: attrs)
     rescue ArgumentError
-      # Phone normalizer couldn't shape the input into MX E.164, or the
-      # email was blank by the time we got here — return nil so the
-      # controller surfaces a contact-format error.
+      # Phone normalizer couldn't shape the input into MX E.164 —
+      # return nil so the controller surfaces a phone-format error.
       nil
     end
   end

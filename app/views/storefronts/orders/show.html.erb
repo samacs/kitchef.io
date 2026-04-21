@@ -17,17 +17,9 @@
     </div>
   <% end %>
 
-  <% client = @order.client %>
   <% lede_key =
-    case @order.state
-    when "placed"
-      if client&.phone_normalized.blank? && client&.email.present?
-        "storefronts.confirmation.lede_email_only"
-      elsif client&.phone_normalized.present? && client&.email.blank?
-        "storefronts.confirmation.lede_whatsapp_only"
-      else
-        "storefronts.confirmation.lede"
-      end
+    if @order.state == "placed"
+      "storefronts.confirmation.lede"
     else
       "storefronts.confirmation.lede_#{@order.state}"
     end
@@ -98,8 +90,30 @@
       <% end %>
     </div>
 
-    <div class="mt-4 flex items-baseline justify-between border-t border-line pt-4">
-      <span class="text-[14px] font-semibold text-ink"><%= t("storefronts.cart.total") %></span>
+    <div class="mt-4 flex items-baseline justify-between gap-4 border-t border-line pt-4 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-[14px] font-semibold text-ink"><%= t("storefronts.cart.total") %></span>
+        <% if @order.paid? %>
+          <span class="inline-flex items-center gap-1 rounded-pill px-2.5 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.12em]"
+                style="background: color-mix(in oklab, #0A5A3C 14%, var(--color-surface)); color: #0A5A3C; border: 1px solid color-mix(in oklab, #0A5A3C 35%, transparent);"
+                aria-label="<%= t("storefronts.confirmation.payment_status.paid_aria") %>">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            <%= t("storefronts.confirmation.payment_status.paid") %>
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1 rounded-pill px-2.5 py-1 font-mono text-[10.5px] font-semibold uppercase tracking-[0.12em]"
+                style="background: color-mix(in oklab, #B04E0E 14%, var(--color-surface)); color: #B04E0E; border: 1px solid color-mix(in oklab, #B04E0E 35%, transparent);"
+                aria-label="<%= t("storefronts.confirmation.payment_status.pending_aria") %>">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 8v4M12 16h.01"/>
+            </svg>
+            <%= t("storefronts.confirmation.payment_status.pending") %>
+          </span>
+        <% end %>
+      </div>
       <span class="font-serif text-[24px] tracking-tight text-ink"><%= humanized_money_with_symbol(@order.total) %></span>
     </div>
   </section>

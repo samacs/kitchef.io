@@ -66,9 +66,28 @@
   <% end %>
 
   <footer class="flex items-center justify-between gap-2 pt-3 border-t border-line">
-    <span class="font-mono text-[14px] font-medium text-ink">
-      <%= humanized_money_with_symbol(order.total) %>
-    </span>
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="font-mono text-[14px] font-medium text-ink">
+        <%= humanized_money_with_symbol(order.total) %>
+      </span>
+      <% if order.paid? %>
+        <span class="inline-flex items-center gap-1 text-accent"
+              aria-label="<%= t("orders.payment_status.paid_aria") %>"
+              title="<%= t("orders.payment_status.paid_aria") %>">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 6L9 17l-5-5"/>
+          </svg>
+          <span class="font-mono text-[10px] font-medium uppercase tracking-[0.1em]"><%= t("orders.payment_status.paid") %></span>
+        </span>
+      <% elsif !order.canceled? %>
+        <span class="inline-flex items-center gap-1 text-warn/80"
+              aria-label="<%= t("orders.payment_status.pending_aria") %>"
+              title="<%= t("orders.payment_status.pending_aria") %>">
+          <span class="inline-block h-[6px] w-[6px] rounded-full" style="background: var(--color-warn);" aria-hidden="true"></span>
+          <span class="font-mono text-[10px] font-medium uppercase tracking-[0.1em]"><%= t("orders.payment_status.pending") %></span>
+        </span>
+      <% end %>
+    </div>
     <div class="inline-flex items-center gap-1">
       <% if order.delivery? && order.geocoded? && !en_route && !order.canceled? %>
         <%= link_to directions_url_for(order),
@@ -118,18 +137,27 @@
           class: "w-full inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
       <span><%= t("orders.transitions.#{primary}") %></span>
     <% end %>
+  <% end %>
 
-    <%# Skip-shortcut: handoff + payment frequently happen at the same
-        moment (cash-and-carry, paid upfront via storefront + delivery
-        in one motion). When mark_paid is available but isn't the
-        primary, expose it as a quiet ghost button so the operator
-        skips without digging into the drawer. %>
-    <% if primary != :mark_paid && order.aasm.may_fire_event?(:mark_paid) %>
+  <%# Payment is orthogonal to fulfillment — available at every stage
+      except `canceled`, both as a forward-take action ("Marcar pagado")
+      and an undo ("Pago recibido ✓ · Deshacer"). The paid chip below
+      the Total line on the card covers display; the buttons here are
+      the capture action. %>
+  <% unless order.canceled? %>
+    <% if order.paid? %>
+      <%= button_to unmark_paid_order_path(order),
+            method: :post,
+            form: { class: "block", data: { turbo_confirm: t("orders.transitions.unmark_paid_confirm") } },
+            class: "w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-medium px-3 py-[6px] rounded-button bg-transparent text-muted border border-transparent hover:border-line hover:text-ink-2 transition-colors" do %>
+        <span><%= t("orders.transitions.unmark_paid") %></span>
+      <% end %>
+    <% else %>
       <%= button_to mark_paid_order_path(order),
             method: :post,
             form: { class: "block" },
             class: "w-full inline-flex items-center justify-center gap-1.5 text-[12px] font-medium px-3 py-[6px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
-        <span><%= t("orders.transitions.or_mark_paid") %></span>
+        <span><%= t("orders.transitions.mark_paid") %></span>
       <% end %>
     <% end %>
   <% end %>

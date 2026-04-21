@@ -103,32 +103,6 @@ class Client < ApplicationRecord
     account.clients.kept.find_by!(phone_normalized: normalized)
   end
 
-  # Email-only storefront dedup. When the customer submits without a
-  # phone, match on `(account, email)` case-insensitively. There's no
-  # DB-level unique index on email (a household can share an email
-  # across multiple clients), so dedup here is best-effort — but for a
-  # repeat storefront order from the same inbox it lands on the same
-  # record in practice.
-  def self.find_or_create_by_email!(account:, email:, attrs: {})
-    normalized_email = email.to_s.strip.downcase
-    raise ArgumentError, "email is blank" if normalized_email.blank?
-
-    existing = account.clients.kept.where("LOWER(email) = ?", normalized_email).first
-    if existing
-      updates = {}
-      updates[:first_name] = attrs[:first_name] if existing.first_name.blank? && attrs[:first_name].present?
-      updates[:last_name]  = attrs[:last_name]  if existing.last_name.blank?  && attrs[:last_name].present?
-      existing.update!(updates) if updates.any?
-      return existing
-    end
-
-    account.clients.create!(
-      first_name: attrs[:first_name].presence || "Cliente",
-      last_name:  attrs[:last_name].presence,
-      email:      normalized_email,
-      phone:      nil
-    )
-  end
 
   private
 

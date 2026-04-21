@@ -77,6 +77,7 @@ Rails.application.routes.draw do
       post :ship
       post :deliver
       post :mark_paid,        path: "mark-paid"
+      post :unmark_paid,      path: "unmark-paid"
     end
 
     # Cancel requires a reason — the dedicated resource gets us a GET for

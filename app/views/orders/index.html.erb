@@ -31,7 +31,7 @@
         cta_href: new_order_path) %>
 <% else %>
   <% by_state = orders.group_by(&:state) %>
-  <% live_states = %w[placed confirmed in_production ready en_route delivered paid] %>
+  <% live_states = %w[placed confirmed in_production ready en_route delivered] %>
   <% canceled = by_state["canceled"].to_a %>
 
   <%# Live kanban: cap the row at viewport height below the top bar

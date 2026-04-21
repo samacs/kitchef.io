@@ -50,6 +50,14 @@
       </div>
     </div>
 
-    <%= render "shared/right_drawer" %>
+    <%# Skip the drawer shell when the request is ALREADY targeting the
+        drawer frame — otherwise the response contains two elements
+        with `id="drawer_content"` (the shell + the actual content),
+        the browser parser handles duplicate IDs unpredictably, and
+        Turbo sometimes snaps the empty one into the drawer, leaving
+        the customer with "Content missing". %>
+    <% unless turbo_frame_request_id == "drawer_content" %>
+      <%= render "shared/right_drawer" %>
+    <% end %>
   </body>
 </html>

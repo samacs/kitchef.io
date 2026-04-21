@@ -10,7 +10,6 @@ module Orders
       "ready"         => :listo,
       "en_route"      => :en_produccion,
       "delivered"     => :listo,
-      "paid"          => :default,
       "canceled"      => :atrasado
     }.freeze
 
