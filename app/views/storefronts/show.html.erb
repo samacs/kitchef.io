@@ -1,6 +1,6 @@
 <% content_for :title, @storefront.name %>
 
-<main data-controller="storefront-cart" data-storefront-cart-slug-value="<%= @storefront.slug %>">
+<main>
   <%= render Storefronts::HeroComponent.new(storefront: @storefront, ordering_hours: @ordering_hours) %>
 
   <%# Full menu. Grouped by recipe category in display-order; categories
@@ -62,6 +62,4 @@
   </section>
 
   <%= render Storefronts::InfoStripComponent.new(storefront: @storefront, ordering_hours: @ordering_hours) %>
-
-  <%= render Storefronts::CartDrawerComponent.new(storefront: @storefront) %>
 </main>

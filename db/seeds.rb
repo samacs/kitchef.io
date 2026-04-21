@@ -228,12 +228,12 @@ elena_clients = Array.new(10) do |i|
 end
 
 state_transitions = {
-  placed:        [],
-  confirmed:     %i[confirm],
-  in_production: %i[confirm start_production],
-  ready:         %i[confirm start_production mark_ready],
-  delivered:     %i[confirm start_production mark_ready deliver],
-  paid:          %i[confirm start_production mark_ready deliver mark_paid]
+  placed:           [],
+  confirmed:        %i[confirm],
+  in_production:    %i[confirm start_production],
+  ready:            %i[confirm start_production mark_ready],
+  delivered:        %i[confirm start_production mark_ready deliver],
+  delivered_paid:   %i[confirm start_production mark_ready deliver]
 }
 
 15.times do |i|
@@ -245,6 +245,7 @@ state_transitions = {
     source:        %i[storefront manual whatsapp].sample,
     colonia:       client.colonia,
     city:          client.city,
+    delivery_address: (i.even? ? "Calle de prueba #{rand(1..500)}" : nil),
     notes:         ("Sin cilantro, porfa." if i % 4 == 0)
   )
   rand(1..3).times do
@@ -259,7 +260,11 @@ state_transitions = {
   subtotal = order.items.sum { |it| it.unit_price_cents * it.quantity }
   order.update!(subtotal_cents: subtotal, total_cents: subtotal, balance_cents: subtotal)
 
-  state_transitions[state_transitions.keys.sample].each { |e| order.send("#{e}!") }
+  chosen_state = state_transitions.keys.sample
+  state_transitions[chosen_state].each { |e| order.send("#{e}!") }
+  # `delivered_paid` seeds a delivered order that also has its payment
+  # captured — flips `paid_at` without an AASM transition.
+  order.mark_paid! if chosen_state == :delivered_paid
 end
 
 # ---------------------------------------------------------------------------
@@ -504,7 +509,8 @@ end
     delivery_type: i.even? ? :delivery : :pickup,
     source:        %i[storefront manual whatsapp instagram].sample,
     colonia:       client.colonia,
-    city:          client.city
+    city:          client.city,
+    delivery_address: (i.even? ? "Av. demo #{rand(1..800)}" : nil)
   )
   rand(2..5).times do
     recipe = mario_saleable.sample
@@ -518,7 +524,11 @@ end
   subtotal = order.items.sum { |it| it.unit_price_cents * it.quantity }
   order.update!(subtotal_cents: subtotal, total_cents: subtotal, balance_cents: subtotal)
 
-  state_transitions[state_transitions.keys.sample].each { |e| order.send("#{e}!") }
+  chosen_state = state_transitions.keys.sample
+  state_transitions[chosen_state].each { |e| order.send("#{e}!") }
+  # `delivered_paid` seeds a delivered order that also has its payment
+  # captured — flips `paid_at` without an AASM transition.
+  order.mark_paid! if chosen_state == :delivered_paid
 end
 
 # ---------------------------------------------------------------------------

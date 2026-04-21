@@ -18,6 +18,11 @@ module Accounts
     attribute :digest_enabled, :boolean, default: true
     attribute :digest_time,    :string,  default: "07:00"
 
+    # Per-order email notifications to the operator when a storefront
+    # order lands. Default-on; opt-out only. No UI yet — toggled via
+    # console for the handful of operators who ask.
+    attribute :notify_new_orders, :boolean, default: true
+
     # Onboarding state.
     attribute :onboarding_completed,              :boolean, default: false
     attribute :onboarding_advanced_mode_choice,   :string   # "yes" | "no" | "skip"

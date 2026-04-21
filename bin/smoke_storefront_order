@@ -1,0 +1,140 @@
+#!/usr/bin/env ruby
+# End-to-end smoke test for the full storefront → confirmation loop.
+# Exercises Storefronts::PlaceOrder (with an email), then asserts the
+# operator's Noticed event fired, the customer mailer was delivered, and
+# the one-click confirm transition moves the order through AASM cleanly.
+#
+# Run locally after `rails db:seed`:
+#   bin/smoke_storefront_order
+#
+# Exit 0 on success, 1 on any assertion failure. When a test framework
+# lands, this script becomes the skeleton of the first integration spec.
+
+require_relative "../config/environment"
+
+Rails.application.eager_load!
+
+FAILURES = []
+OK       = []
+
+def assert(condition, message)
+  if condition
+    OK << message
+    puts "  ok — #{message}"
+  else
+    FAILURES << message
+    puts "  FAIL — #{message}"
+  end
+end
+
+def section(title)
+  puts "\n== #{title}"
+end
+
+ActionMailer::Base.delivery_method = :test
+ActionMailer::Base.deliveries.clear
+ActiveJob::Base.queue_adapter = :inline
+
+section "1. Resolve Elena's account"
+account = Account.friendly.find("cocina-de-elena")
+assert account.present?, "Account#cocina-de-elena exists"
+assert account.owner.present?, "Account has an owner user"
+
+section "2. Pick a published, saleable recipe"
+recipe = account.recipes.kept.saleable.where(is_published: true).first
+assert recipe.present?, "Account has at least one published recipe"
+
+section "3. Place an order via Storefronts::PlaceOrder"
+before_notifications = account.owner.notifications.count
+before_orders        = account.orders.count
+
+customer_email = "smoke-#{SecureRandom.hex(3)}@example.com"
+customer_phone = "+52 55 #{rand(1000..9999)} #{rand(1000..9999)}"
+
+result = Storefronts::PlaceOrder.call(
+  storefront: account,
+  customer_params: {
+    first_name: "Lupita",
+    last_name:  "Pérez",
+    phone:      customer_phone,
+    email:      customer_email
+  },
+  order_params: {
+    delivery_type: "delivery",
+    delivery_date: 2.days.from_now.to_date,
+    delivery_start_time: 600,
+    delivery_end_time:   780,
+    delivery_address: "Calle Prueba 123",
+    colonia: "Condesa",
+    city: "Ciudad de México",
+    items_attributes: {
+      "0" => { recipe_id: recipe.id, quantity: 2 }
+    }
+  }
+)
+
+assert result.success?, "Storefronts::PlaceOrder returns success"
+order = result.object
+assert order.persisted?, "Order is persisted"
+assert order.state == "placed", "Order is in :placed state (got :#{order.state})"
+assert order.source == "storefront", "Order source is :storefront (got :#{order.source})"
+assert account.orders.count == before_orders + 1, "Account gained exactly one order"
+
+section "4. Client dedup"
+client = order.client
+assert client.present?, "Order has a client"
+assert client.email == customer_email, "Client email stored"
+
+# Placing the same phone again should reuse the client (not create a second).
+result2 = Storefronts::PlaceOrder.call(
+  storefront: account,
+  customer_params: {
+    first_name: "Lupita",
+    last_name:  "Pérez",
+    phone:      customer_phone,
+    email:      customer_email
+  },
+  order_params: {
+    delivery_type: "pickup",
+    delivery_date: 3.days.from_now.to_date,
+    items_attributes: { "0" => { recipe_id: recipe.id, quantity: 1 } }
+  }
+)
+assert result2.success?, "Second order for the same phone succeeds"
+assert result2.object.client_id == client.id, "Second order reuses the existing client (phone dedup)"
+
+section "5. Operator notification fired"
+# Noticed enqueues delivery via ActiveJob — in dev (no inline adapter) the
+# database row is still written synchronously by `.deliver_later`.
+notifications_after = account.owner.notifications.count
+assert notifications_after > before_notifications, "Owner gained at least one Noticed notification"
+
+latest = account.owner.notifications.newest_first.first
+assert latest.event.is_a?(StorefrontOrderPlacedNotification),
+  "Latest notification is a StorefrontOrderPlacedNotification"
+
+section "6. Customer confirmation email delivered"
+# ActiveJob inline adapter runs the mailer synchronously, so the
+# ActionMailer::Base.deliveries array is populated by the time the
+# assertion runs.
+delivered = ActionMailer::Base.deliveries.select { |m| m.to.include?(customer_email) }
+assert delivered.any?,
+  "Confirmation email delivered to #{customer_email} (deliveries=#{delivered.size})"
+if delivered.any?
+  mail = delivered.first
+  assert mail.subject.include?(account.name),
+    "Subject mentions kitchen name (got: #{mail.subject.inspect})"
+end
+
+section "7. One-click confirm moves order through AASM"
+assert order.aasm.may_fire_event?(:confirm), "Order may fire :confirm"
+order.confirm!
+order.reload
+assert order.state == "confirmed", "Order state is :confirmed after confirm! (got :#{order.state})"
+assert order.confirmed_at.present?, "Order#confirmed_at stamped"
+
+puts "\n=============================================="
+puts "  #{OK.size} assertions passed, #{FAILURES.size} failed"
+puts "=============================================="
+
+exit(FAILURES.empty? ? 0 : 1)

@@ -1,11 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Auto-save the form on every field change. Change events bubble to the
-// form, so we listen once at the form level and let the default
-// delegation pick up inputs, selects, textareas. Select + date inputs
-// fire `change` on commit; text inputs fire on blur — both are the
-// natural "I'm done with this field" moment, which is the right save
-// trigger. Avoids flooding the server on every keystroke.
+// Auto-save the form on every field change. Both `change` (for selects,
+// radios, file pickers) and `input` (for text-as-you-type) bubble to
+// the form root, so one listener covers both. A 600ms debounce
+// coalesces a typing burst into one POST — long enough to wait out a
+// full word, short enough that clicking "Ver mi tienda" still catches
+// the last edit before navigation.
 //
 // We submit via `fetch()` with an explicit `X-CSRF-Token` header rather
 // than `requestSubmit()` because multipart forms (e.g. /account with
@@ -37,7 +37,7 @@ export default class extends Controller {
     if (event.target.closest("button, [data-form-autosave-skip]")) return
 
     clearTimeout(this.debounceTimer)
-    this.debounceTimer = setTimeout(() => this.#submit(), 120)
+    this.debounceTimer = setTimeout(() => this.#submit(), 600)
   }
 
   async #submit() {

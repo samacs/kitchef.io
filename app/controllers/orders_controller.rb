@@ -54,14 +54,72 @@ class OrdersController < AuthenticatedController
     define_method(event) do
       result = Orders::Transition.call(order: order, event: event)
       if result.success?
-        redirect_to orders_path, notice: t(".#{event}")
+        mark_related_notifications_read(order) if event == :confirm
+
+        # Deep-link to the moved card via URL fragment so
+        # target_highlight_controller auto-scrolls + flashes it in the
+        # new column. The fragment is only useful on the kanban page
+        # — the notifications-inbox flow below short-circuits to its
+        # own turbo_stream template.
+        redirect_target = orders_path(anchor: helpers.dom_id(order))
+
+        respond_to do |format|
+          format.turbo_stream do
+            if event == :confirm && request.referer&.include?("/notifications")
+              render "orders/transition_from_notifications",
+                locals: { order: order, notice: t(".#{event}") }
+            else
+              redirect_to redirect_target, notice: t(".#{event}")
+            end
+          end
+          format.html { redirect_to redirect_target, notice: t(".#{event}") }
+        end
       else
-        redirect_to orders_path, alert: t("orders.transitions.errors.not_allowed")
+        respond_to do |format|
+          format.turbo_stream { redirect_to orders_path, alert: t("orders.transitions.errors.not_allowed") }
+          format.html         { redirect_to orders_path, alert: t("orders.transitions.errors.not_allowed") }
+        end
       end
     end
   end
 
+  # Payment capture. Stamps `paid_at` without touching AASM — a canceled
+  # order is rejected; everything else is idempotent, so a double-tap
+  # doesn't error. The kanban card is broadcast back (via the Order's
+  # `broadcasts_refreshes_to` on any update) so the paid chip morphs on
+  # every open dashboard.
+  def mark_paid
+    if order.mark_paid!
+      redirect_to orders_path(anchor: helpers.dom_id(order)), notice: t(".marked_paid")
+    else
+      redirect_to orders_path, alert: t(".mark_paid_blocked")
+    end
+  end
+
+  # Undo button for mis-clicks — clears `paid_at` and restores the
+  # outstanding balance. No state change.
+  def unmark_paid
+    order.unmark_paid!
+    redirect_to orders_path(anchor: helpers.dom_id(order)), notice: t(".unmarked_paid")
+  end
+
   private
+
+  # When the operator confirms a storefront order (from the kanban card OR
+  # from the notifications inbox), sweep any unread Noticed events pointing
+  # at this order to `read_at`. Without this, the bell badge would keep
+  # showing the notification even though the operator has already acted.
+  def mark_related_notifications_read(order)
+    return unless Current.user
+
+    Current.user.notifications
+      .joins(:event)
+      .where("noticed_events.params @> ?", { order_id: order.id }.to_json)
+      .where(read_at: nil)
+      .find_each(&:mark_as_read!)
+  rescue StandardError => e
+    Rails.logger.warn "[OrdersController] could not sweep notifications for order #{order.id}: #{e.message}"
+  end
 
   def reject_if_immutable
     return if order.new_record? || !order.immutable?

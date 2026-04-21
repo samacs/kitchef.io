@@ -67,7 +67,10 @@ es-MX:
     deliver:
       deliver: "Entregado."
     mark_paid:
-      mark_paid: "Marcado como pagado."
+      marked_paid:       "Pago marcado como recibido."
+      mark_paid_blocked: "No puedes marcar un pedido cancelado como pagado."
+    unmark_paid:
+      unmarked_paid: "Marca de pago deshecha."
     errors:
       immutable: "Este pedido ya no se puede editar. Si necesitas hacer cambios, duplícalo para abrir uno nuevo."
     transitions:
@@ -77,12 +80,18 @@ es-MX:
       ship: "Marcar en camino"
       deliver: "Marcar entregado"
       mark_paid: "Marcar pagado"
-      or_mark_paid: "o marcar pagado"
+      unmark_paid: "Deshacer pago"
+      unmark_paid_confirm: "¿Deshacer el pago de este pedido?"
       cancel: "Cancelar pedido"
       edit: "Editar"
       duplicate: "Duplicar pedido"
       errors:
         not_allowed: "No se puede cambiar el estado del pedido desde aquí."
+    payment_status:
+      paid: "Pagado"
+      paid_aria: "Pago recibido"
+      pending: "Pago pendiente"
+      pending_aria: "Pago pendiente con el cliente"
     cancellations:
       title: "Cancelar pedido"
       kicker: "Cancelación"
@@ -113,7 +122,6 @@ es-MX:
       ready: "Listos"
       en_route: "En reparto"
       delivered: "Entregados"
-      paid: "Pagados"
       canceled: "Cancelados"
       count:
         zero: "Sin pedidos"
@@ -301,6 +309,7 @@ es-MX:
       submit_create: "Agregar platillo"
       submit_update: "Guardar cambios"
       cancel: "Cancelar"
+      back: "Volver al recetario"
       delete: "Eliminar platillo"
       delete_confirm: "¿Eliminar este platillo? Podrás recuperarlo desde el historial."
     create:
@@ -384,6 +393,8 @@ es-MX:
       payment_notes: "Nota sobre el pago"
       payment_notes_placeholder: "Ej: Te contacto por WhatsApp para confirmar el anticipo."
       payment_notes_hint: "Se muestra al cliente al terminar su pedido."
+      ordering_hours_label: "Horario de pedidos"
+      ordering_hours_hint: "Define los días y horas en que tu tienda acepta pedidos nuevos. Los clientes verán un letrero si llegan fuera de horario."
   subscription:
     title: "Plan"
 
@@ -457,7 +468,7 @@ es-MX:
         ✔ Masa fresca, nixtamalizada en casa
         ✔ Sin conservadores
         ✔ Entregas los sábados por la mañana
-      field_hint: "Hasta 280 caracteres. Usa saltos de línea o símbolos (✔, •, —) para darle forma."
+      field_hint: "Hasta %{max} caracteres. Usa saltos de línea o símbolos (✔, •, —) para darle forma."
       counter_suffix: "caracteres"
       skip: "Saltar por ahora"
       submit: "Guardar y continuar"

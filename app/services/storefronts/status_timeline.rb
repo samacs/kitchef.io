@@ -1,9 +1,10 @@
 module Storefronts
-  # Customer-facing progress timeline. The operator kanban has seven
-  # states (placed → confirmed → in_production → ready → en_route →
-  # delivered → paid) but the customer only needs to see five meaningful
-  # milestones, and `en_route` collapses into "En camino" so pickup
-  # pedidos don't show an empty step they never pass through.
+  # Customer-facing progress timeline. The operator kanban has six
+  # fulfillment states (placed → confirmed → in_production → ready →
+  # en_route → delivered) plus `canceled`; the customer sees the
+  # linear flow. Payment is a separate axis (paid_at on the order) and
+  # surfaces as its own badge on the confirmation page, not as a step
+  # in this timeline.
   #
   # Returns an array of Step structs in display order, each with:
   #   - key:        stable identifier for view rendering
@@ -22,7 +23,7 @@ module Storefronts
       { key: "in_production", covers: %w[in_production],                    stamp: :production_started_at },
       { key: "ready",         covers: %w[ready],                            stamp: :ready_at },
       { key: "en_route",      covers: %w[en_route],                         stamp: :en_route_started_at },
-      { key: "delivered",     covers: %w[delivered paid],                   stamp: :delivered_at }
+      { key: "delivered",     covers: %w[delivered],                        stamp: :delivered_at }
     ].freeze
 
     def self.for(order)
@@ -63,8 +64,17 @@ module Storefronts
 
     def status_for(idx, current_idx)
       return :done    if idx < current_idx
+      # "Delivered" is the terminal step of the *fulfillment* axis —
+      # once the order hits that state (delivered OR paid), render it
+      # as :done so the timeline reads as "complete". Payment is a
+      # separate axis surfaced by its own badge in the view.
+      return :done    if idx == current_idx && fulfillment_complete?
       return :current if idx == current_idx
       :pending
+    end
+
+    def fulfillment_complete?
+      @order.state == "delivered"
     end
   end
 end

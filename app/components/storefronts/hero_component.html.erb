@@ -15,7 +15,7 @@
   <%# Logo + name + meta row. Logo sits 60px above the fade so it lands
       flush with the kitchen name. %>
   <div class="mx-auto max-w-[1200px] px-5" style="margin-top: -60px; position: relative;">
-    <div class="flex flex-wrap items-end gap-5">
+    <div class="flex flex-wrap items-start gap-5">
       <% if logo_image %>
         <div class="shrink-0 w-[120px] h-[120px] rounded-[18px] overflow-hidden bg-surface border-[3px] border-surface shadow-lift">
           <%= image_tag logo_image.variant(:card), class: "w-full h-full object-cover", alt: "" %>
@@ -49,7 +49,28 @@
           <% end %>
         </div>
         <% if description.present? %>
-          <p class="mt-4 max-w-[620px] text-[15px] leading-[1.55] text-ink-2"><%= description %></p>
+          <div class="mt-4 max-w-[620px]"
+               data-controller="reveal"
+               data-reveal-collapsed-class="line-clamp-3"
+               data-reveal-expanded-class="line-clamp-none">
+            <p class="text-[15px] leading-[1.55] text-ink-2 whitespace-pre-line line-clamp-3"
+               data-reveal-target="content"><%= description %></p>
+            <button type="button"
+                    class="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold transition-colors hover:underline"
+                    style="color: var(--brand-1);"
+                    hidden
+                    data-reveal-target="toggle"
+                    data-action="click->reveal#toggle"
+                    data-label-more="<%= t("storefronts.hero.reveal_more") %>"
+                    data-label-less="<%= t("storefronts.hero.reveal_less") %>">
+              <span data-reveal-target="label"><%= t("storefronts.hero.reveal_more") %></span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+                   data-reveal-target="chevron"
+                   class="transition-transform">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+          </div>
         <% end %>
       </div>
 

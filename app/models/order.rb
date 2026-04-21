@@ -91,11 +91,11 @@ class Order < ApplicationRecord
     other
   ].freeze
 
-  # Events that require operator input before firing (vs. the one-click
-  # transition buttons on each card). `Orders::Cancel` owns the cancel
-  # flow and attaches a reason; other forward-flow events go through
-  # `Orders::Transition` with no params.
-  TERMINAL_STATES = %w[paid canceled].freeze
+  # Terminal fulfillment states. `delivered` is the end of the
+  # fulfillment axis (handoff is complete); payment is a separate
+  # property tracked via `paid_at` and the `payments` association, so
+  # it never becomes a state here.
+  TERMINAL_STATES = %w[delivered canceled].freeze
 
   enum :delivery_type, DELIVERY_TYPES, prefix: true
   enum :source,        SOURCES,        prefix: true
@@ -125,6 +125,7 @@ class Order < ApplicationRecord
   validates :delivery_start_time, :delivery_end_time,
     numericality: { only_integer: true, in: 0..TimeOfDay::MAX },
     allow_nil: true
+  validates :delivery_address, presence: true, if: :delivery_type_delivery?
   validate :delivery_end_time_after_start_time
   validate :cancellation_reason_is_complete
 
@@ -153,7 +154,6 @@ class Order < ApplicationRecord
     state :ready
     state :en_route
     state :delivered
-    state :paid
     state :canceled
 
     # `after` callbacks stamp the matching lifecycle column so duration
@@ -183,17 +183,32 @@ class Order < ApplicationRecord
       transitions from: %i[ready en_route], to: :delivered
     end
 
-    # Skip-friendly: operators commonly take payment at the handoff
-    # moment for cash-and-carry and can paid-out straight from any
-    # active state. `delivered_at` will be null for those skips — a
-    # true signal that we never observed the handoff separately.
-    event :mark_paid, after: :stamp_paid_at do
-      transitions from: %i[delivered en_route ready in_production confirmed], to: :paid
-    end
-
     event :cancel, after: :stamp_canceled_at do
       transitions from: %i[placed confirmed in_production ready en_route], to: :canceled
     end
+  end
+
+  # Payment. Deliberately NOT an AASM event — capturing payment is a
+  # separate axis from fulfillment (a customer can pay on order, on
+  # delivery, or days later with a transfer receipt). `mark_paid!`
+  # stamps `paid_at` + zeros out the balance; `unmark_paid!` undoes a
+  # mis-stamp. Both are idempotent and safe from any state except
+  # `canceled`.
+  def mark_paid!
+    return false if canceled?
+    return true  if paid?
+
+    update!(paid_at: Time.current, balance_cents: 0)
+  end
+
+  def unmark_paid!
+    return true unless paid?
+
+    update!(paid_at: nil, balance_cents: [ total_cents - deposit_cents, 0 ].max)
+  end
+
+  def paid?
+    paid_at.present?
   end
 
   # AASM guard — ship makes no semantic sense for pickup pedidos (the
@@ -243,17 +258,14 @@ class Order < ApplicationRecord
     geocoding_failed_at > GEOCODING_RETRY_COOLDOWN.ago
   end
 
-  def paid?
-    state == "paid"
-  end
-
   def canceled?
     state == "canceled"
   end
 
-  # Canceled pedidos are read-only to preserve the audit trail and
-  # reporting integrity — operators recover by duplicating into a fresh
-  # draft. Paid is also immutable (finance clean-up would need a void).
+  # Delivered + canceled pedidos are read-only to preserve the audit
+  # trail and reporting integrity — fulfillment has run its course and
+  # the operator recovers any edit need by duplicating into a fresh
+  # draft. Payment state is orthogonal; `paid?` does NOT gate edits.
   def immutable?
     TERMINAL_STATES.include?(state)
   end

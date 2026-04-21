@@ -77,6 +77,7 @@ Rails.application.routes.draw do
       post :ship
       post :deliver
       post :mark_paid,        path: "mark-paid"
+      post :unmark_paid,      path: "unmark-paid"
     end
 
     # Cancel requires a reason — the dedicated resource gets us a GET for
@@ -140,6 +141,15 @@ Rails.application.routes.draw do
   end
   resource :subscription, only: %i[show new create destroy]
 
+  resources :notifications, only: %i[index] do
+    member do
+      post :mark_read, path: "mark-read"
+    end
+    collection do
+      post :mark_all_read, path: "mark-all-read"
+    end
+  end
+
   # ---- Webhooks -------------------------------------------------------
   scope :webhooks, module: "webhooks", as: "webhooks" do
     post "/stripe", to: "stripe#create", as: :stripe
@@ -156,6 +166,10 @@ Rails.application.routes.draw do
     get "/",     to: "storefronts#show"
     get "/menu", to: "storefronts/menus#show", as: :menu
     resources :orders, only: %i[new create show],
-      controller: "storefronts/orders"
+      controller: "storefronts/orders" do
+      member do
+        get :confirm
+      end
+    end
   end
 end

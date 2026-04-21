@@ -7,7 +7,7 @@ module Accounts
   class PublicProfile
     include StoreModel::Model
 
-    DESCRIPTION_MAX = 280
+    DESCRIPTION_MAX = 560
     FULFILLMENT     = %w[pickup delivery].freeze
     DEFAULT_PICKUP_REMINDER_HOURS = 4
 

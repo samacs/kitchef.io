@@ -18,9 +18,15 @@ class RecipesController < AuthenticatedController
   def update
     result = Recipes::Update.call(recipe: recipe, params: recipe_params)
     if result.success?
-      redirect_to recipes_path, notice: t(".updated")
+      respond_to do |format|
+        format.turbo_stream { head :no_content }
+        format.html { redirect_to recipes_path, notice: t(".updated") }
+      end
     else
-      render :edit, status: :unprocessable_content, locals: { recipe: result.object }
+      respond_to do |format|
+        format.turbo_stream { head :unprocessable_content }
+        format.html { render :edit, status: :unprocessable_content, locals: { recipe: result.object } }
+      end
     end
   end
 

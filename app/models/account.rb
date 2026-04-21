@@ -60,7 +60,7 @@ class Account < ApplicationRecord
     health
     kitchef
     legal
-    nosotros nuestra-historia
+    nosotros nuestra-historia notificaciones
     pagos panel pedidos precios prensa privacidad preguntas
     rails recetario recetas recuperar recursos registro robots
     salir sesion sitemap soporte
@@ -79,7 +79,7 @@ class Account < ApplicationRecord
     jobs join
     letter_opener login logout
     menus
-    new news
+    new news notifications
     onboarding
     password passwords pricing privacy production products profile
     register reports reset-password root

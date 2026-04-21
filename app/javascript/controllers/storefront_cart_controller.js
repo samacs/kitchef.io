@@ -26,7 +26,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "badge", "backdrop", "panel", "list", "emptyState",
-    "footer", "total", "summary", "summaryEmpty", "payload"
+    "footer", "total", "summary", "summaryEmpty", "payload", "submit"
   ]
 
   static values = { slug: String }
@@ -35,10 +35,17 @@ export default class extends Controller {
     this.cart = this.load()
     this.render()
     window.addEventListener("storage", this.onStorageChange)
+    // Any page can dispatch `storefront-cart:clear` to wipe the cart
+    // (used by the confirmation page — once the order is placed, the
+    // customer shouldn't see her just-paid items lingering in the
+    // header badge). Dispatched on `document` so the sender doesn't
+    // need to know where the controller is mounted.
+    document.addEventListener("storefront-cart:clear", this.onClearRequested)
   }
 
   disconnect() {
     window.removeEventListener("storage", this.onStorageChange)
+    document.removeEventListener("storefront-cart:clear", this.onClearRequested)
   }
 
   // ── Key ─────────────────────────────────────────────────────────────
@@ -74,6 +81,13 @@ export default class extends Controller {
       this.cart = this.load()
       this.render()
     }
+  }
+
+  onClearRequested = () => {
+    this.cart = { items: [] }
+    this.save()
+    this.render()
+    this.closeDrawer()
   }
 
   // ── Actions ─────────────────────────────────────────────────────────
@@ -175,6 +189,18 @@ export default class extends Controller {
     this.updateDrawer()
     this.updateCheckoutSummary()
     this.updatePayload()
+    this.updateSubmit()
+  }
+
+  // Checkout form submit button — disabled whenever the cart is empty.
+  // The server-side Orders::Place also blocks empty carts, but client-side
+  // disable turns the UX from "click, see error" to "can't click yet."
+  updateSubmit() {
+    if (!this.hasSubmitTarget) return
+    const empty = this.cart.items.length === 0
+    this.submitTarget.disabled = empty
+    this.submitTarget.classList.toggle("opacity-50", empty)
+    this.submitTarget.classList.toggle("cursor-not-allowed", empty)
   }
 
   totalCents() {

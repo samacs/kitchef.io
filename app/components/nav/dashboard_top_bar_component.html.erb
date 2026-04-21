@@ -32,7 +32,7 @@
         <%= render Ui::ThemeToggleComponent.new(size: :sm) %>
       </div>
 
-      <%= render Ui::IconButtonComponent.new(icon: :bell, label: t("panel.top_bar.notifications"), size: :sm, badge: true) %>
+      <%= render Nav::NotificationBellComponent.new(current_user: current_user) %>
 
       <%# Primary action — pages override via content_for :page_action.
           Inside a ViewComponent, `yield :name` doesn't reach the outer

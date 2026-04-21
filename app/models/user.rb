@@ -38,6 +38,11 @@ class User < ApplicationRecord
   has_many   :sessions, dependent: :destroy
   has_one    :owned_account, class_name: "Account", foreign_key: :owner_id, dependent: :destroy, inverse_of: :owner
 
+  # Noticed 3.0 stores notifications in a polymorphic `noticed_notifications`
+  # table keyed by recipient. The operator's notification inbox + bell badge
+  # read from this association.
+  has_many :notifications, as: :recipient, class_name: "Noticed::Notification", dependent: :destroy
+
   # Break the circular users.account_id ↔ accounts.owner_id reference
   # before the `has_one :owned_account` destroy cascade runs. `prepend:
   # true` is load-bearing — without it this callback fires AFTER the

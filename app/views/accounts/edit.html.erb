@@ -25,7 +25,7 @@
                     class: "flex flex-col gap-6",
                     data: {
                       controller: "live-preview-source form-autosave",
-                      action: "change->form-autosave#save"
+                      action: "change->form-autosave#save input->form-autosave#save"
                     }
                   } do |f| %>
 
@@ -70,7 +70,7 @@
                   } %>
           </div>
 
-          <%= f.fields_for :public_profile do |p| %>
+          <%= f.fields_for :public_profile, @account.public_profile do |p| %>
             <div>
               <%= p.label :tagline, t("account.fields.tagline"), class: "block text-[12px] font-medium text-muted mb-1" %>
               <%= p.text_field :tagline,
@@ -84,7 +84,7 @@
           <% end %>
         </div>
 
-        <%= f.fields_for :public_profile do |p| %>
+        <%= f.fields_for :public_profile, @account.public_profile do |p| %>
           <div>
             <%= p.label :description, t("account.fields.description"), class: "block text-[12px] font-medium text-muted mb-1" %>
             <%= p.text_area :description, rows: 3, maxlength: Accounts::PublicProfile::DESCRIPTION_MAX,
@@ -173,7 +173,7 @@
         </div>
 
         <%# Palettes + theme. %>
-        <%= f.fields_for :branding do |b| %>
+        <%= f.fields_for :branding, @account.branding do |b| %>
           <div>
             <label class="mb-2 block text-[13px] font-medium text-ink">
               <%= t("account.branding.primary_label") %>
@@ -211,7 +211,7 @@
           <p class="mt-1 text-[13px] text-ink-2"><%= t("account.sections.contact_lede") %></p>
         </div>
 
-        <%= f.fields_for :public_profile do |p| %>
+        <%= f.fields_for :public_profile, @account.public_profile do |p| %>
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
               <%= p.label :phone, t("account.fields.phone"), class: "block text-[12px] font-medium text-muted mb-1" %>
@@ -254,6 +254,16 @@
             <p class="mt-1 text-[11.5px] text-muted"><%= t("account.fields.payment_notes_hint") %></p>
           </div>
         <% end %>
+
+        <div>
+          <label class="mb-2 block text-[13px] font-medium text-ink">
+            <%= t("account.fields.ordering_hours_label") %>
+          </label>
+          <p class="mb-3 text-[12.5px] text-muted">
+            <%= t("account.fields.ordering_hours_hint") %>
+          </p>
+          <%= render Accounts::OrderingHoursEditorComponent.new(account: @account) %>
+        </div>
       </section>
 
       <div class="flex items-center justify-start">

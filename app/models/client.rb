@@ -103,6 +103,7 @@ class Client < ApplicationRecord
     account.clients.kept.find_by!(phone_normalized: normalized)
   end
 
+
   private
 
   def normalize_phone
