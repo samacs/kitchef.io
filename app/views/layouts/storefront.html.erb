@@ -70,8 +70,8 @@
     <%= javascript_importmap_tags %>
   </head>
   <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased"
-        data-controller="<%= @storefront ? "storefront-cart" : "" %>"
-        <%= @storefront ? "data-storefront-cart-slug-value=\"#{@storefront.slug}\"".html_safe : "" %>>
+        data-controller="<%= "storefront-cart" if @storefront %>"
+        <% if @storefront %>data-storefront-cart-slug-value="<%= @storefront.slug %>"<% end %>>
     <%= render Storefronts::HeaderComponent.new(storefront: @storefront) if @storefront %>
 
     <%= yield %>
