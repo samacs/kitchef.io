@@ -1,0 +1,172 @@
+<% content_for :title, t("storefronts.orders.new_title") %>
+
+<main class="mx-auto max-w-[800px] px-5 py-10" data-controller="storefront-checkout">
+  <div class="mb-8">
+    <div class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em]"
+         style="color: var(--brand-1);">
+      <span class="inline-block h-px w-5" style="background: var(--brand-1);"></span>
+      <%= @storefront.name %>
+    </div>
+    <h1 class="mt-1 font-serif text-[36px] leading-[1.05] tracking-tight text-ink">
+      <%= t("storefronts.checkout.heading_prefix") %>
+      <em style="color: var(--brand-1);"><%= t("storefronts.checkout.heading_accent") %></em>
+    </h1>
+    <p class="mt-2 text-[15px] leading-[1.55] text-ink-2 max-w-[620px]">
+      <%= t("storefronts.checkout.lede") %>
+    </p>
+  </div>
+
+  <% if flash[:alert] %>
+    <div class="mb-6">
+      <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %>
+    </div>
+  <% end %>
+
+  <%= form_with url: storefront_orders_path(slug: @storefront.slug),
+                method: :post,
+                local: true,
+                data: { controller: "storefront-cart", storefront_cart_slug_value: @storefront.slug } do |f| %>
+    <%# Cart is serialized client-side into this hidden field by
+        storefront_cart_controller; the server re-snapshots prices from
+        account.recipes in Orders::Place so no tampering matters. %>
+    <input type="hidden" name="cart_payload" data-storefront-cart-target="payload">
+
+    <%= f.fields_for :order, @order do |o| %>
+      <section class="mb-8 rounded-[16px] border border-line bg-surface p-6">
+        <h2 class="mb-4 font-serif text-[22px] text-ink"><%= t("storefronts.checkout.fulfillment_section") %></h2>
+
+        <div class="grid gap-3 sm:grid-cols-3">
+          <% @storefront.public_profile.fulfillment_type_list.each do |type| %>
+            <label class="flex cursor-pointer items-start gap-2 rounded-[10px] border border-line p-3 hover:border-line-2 has-[:checked]:border-transparent"
+                   style="--tw-ring-color: var(--brand-1);">
+              <%= o.radio_button :delivery_type, type, class: "mt-1", data: { action: "change->storefront-checkout#fulfillmentChanged" } %>
+              <span>
+                <span class="block text-[14px] font-semibold text-ink"><%= t("storefronts.fulfillment_types.#{type}.label") %></span>
+                <span class="block text-[12px] text-muted"><%= t("storefronts.fulfillment_types.#{type}.hint") %></span>
+              </span>
+            </label>
+          <% end %>
+        </div>
+
+        <div class="mt-5 grid gap-4 sm:grid-cols-3">
+          <div>
+            <%= o.label :delivery_date, t("storefronts.checkout.date"), class: "block text-[12px] font-medium text-muted mb-1" %>
+            <%= o.date_field :delivery_date, min: Date.current,
+                  class: "w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+          </div>
+          <div>
+            <%= o.label :delivery_start_time_hhmm, t("storefronts.checkout.start"), class: "block text-[12px] font-medium text-muted mb-1" %>
+            <%= o.text_field :delivery_start_time_hhmm, placeholder: "09:00", pattern: "[0-2][0-9]:[0-5][0-9]",
+                  class: "w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono" %>
+          </div>
+          <div>
+            <%= o.label :delivery_end_time_hhmm, t("storefronts.checkout.end"), class: "block text-[12px] font-medium text-muted mb-1" %>
+            <%= o.text_field :delivery_end_time_hhmm, placeholder: "12:00", pattern: "[0-2][0-9]:[0-5][0-9]",
+                  class: "w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono" %>
+          </div>
+        </div>
+
+        <%# Address block — appears for `delivery` and `shipping`, hidden
+            for pickup. `storefront-checkout` controller toggles `hidden`. %>
+        <div class="mt-5 space-y-4" data-storefront-checkout-target="address" hidden>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <%= o.label :colonia, t("storefronts.checkout.colonia"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= o.text_field :colonia, class: "w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+            </div>
+            <div>
+              <%= o.label :city, t("storefronts.checkout.city"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= o.text_field :city, value: @storefront.public_profile.city, class: "w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+            </div>
+          </div>
+          <div>
+            <%= o.label :delivery_address, t("storefronts.checkout.address"), class: "block text-[12px] font-medium text-muted mb-1" %>
+            <%= o.text_field :delivery_address, class: "w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+          </div>
+        </div>
+      </section>
+    <% end %>
+
+    <section class="mb-8 rounded-[16px] border border-line bg-surface p-6">
+      <h2 class="mb-4 font-serif text-[22px] text-ink"><%= t("storefronts.checkout.customer_section") %></h2>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="block text-[12px] font-medium text-muted mb-1"><%= t("storefronts.checkout.first_name") %></label>
+          <input type="text" name="customer[first_name]" required
+                 class="w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink">
+        </div>
+        <div>
+          <label class="block text-[12px] font-medium text-muted mb-1"><%= t("storefronts.checkout.last_name") %></label>
+          <input type="text" name="customer[last_name]"
+                 class="w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink">
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <label class="block text-[12px] font-medium text-muted mb-1"><%= t("storefronts.checkout.phone") %></label>
+        <input type="tel" name="customer[phone]" required inputmode="tel"
+               placeholder="+52 55 1234 5678"
+               class="w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono">
+        <p class="mt-1 text-[11px] text-muted"><%= t("storefronts.checkout.phone_hint") %></p>
+      </div>
+
+      <%# Email is opt-in behind a disclosure so it doesn't feel required. %>
+      <details class="mt-4">
+        <summary class="cursor-pointer text-[13px] font-medium text-ink-2 hover:text-ink"><%= t("storefronts.checkout.email_toggle") %></summary>
+        <div class="mt-3">
+          <input type="email" name="customer[email]"
+                 class="w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink">
+        </div>
+      </details>
+    </section>
+
+    <%# Collapsible per-pedido customization — the Castiron pain-point fix.
+        Closed by default; a first-time customer never sees these fields
+        unless she wants to. %>
+    <details class="mb-8 rounded-[16px] border border-line bg-surface p-6">
+      <summary class="cursor-pointer list-none">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <h2 class="font-serif text-[22px] text-ink"><%= t("storefronts.checkout.customize_section") %></h2>
+            <p class="mt-1 text-[13px] text-ink-2"><%= t("storefronts.checkout.customize_hint") %></p>
+          </div>
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-line text-muted transition-transform group-open:rotate-45">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </span>
+        </div>
+      </summary>
+      <div class="mt-5">
+        <%= fields_for :order, @order do |o| %>
+          <label class="block text-[12px] font-medium text-muted mb-1"><%= t("storefronts.checkout.customize_notes") %></label>
+          <%= o.text_area :delivery_notes, rows: 3,
+                placeholder: t("storefronts.checkout.customize_placeholder"),
+                class: "w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+        <% end %>
+      </div>
+    </details>
+
+    <section class="mb-8 rounded-[16px] border border-line bg-surface p-6">
+      <h2 class="mb-4 font-serif text-[22px] text-ink"><%= t("storefronts.checkout.summary_section") %></h2>
+      <div data-storefront-cart-target="summary">
+        <div class="py-6 text-center text-muted" data-storefront-cart-target="summaryEmpty">
+          <p class="mb-2 font-serif text-[18px] text-ink"><%= t("storefronts.cart.empty_title") %></p>
+          <a href="<%= storefront_menu_path(slug: @storefront.slug) %>" class="text-[13px]"
+             style="color: var(--brand-1);"><%= t("storefronts.cart.empty_cta") %></a>
+        </div>
+      </div>
+    </section>
+
+    <div class="flex flex-wrap items-center justify-end gap-3">
+      <a href="<%= storefront_menu_path(slug: @storefront.slug) %>"
+         class="inline-flex items-center gap-1 rounded-[9px] border border-line bg-surface px-4 py-2.5 text-[14px] font-medium text-ink-2 no-underline hover:border-line-2">
+        <%= t("storefronts.checkout.back_to_menu") %>
+      </a>
+      <button type="submit"
+              class="inline-flex items-center justify-center gap-2 rounded-[9px] px-6 py-3 text-[14px] font-semibold"
+              style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">
+        <%= t("storefronts.checkout.submit") %>
+      </button>
+    </div>
+  <% end %>
+</main>

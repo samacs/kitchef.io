@@ -51,6 +51,10 @@ Browser → Thruster → Puma (Rails 8)
 
 One `Account` per operator. Every tenant-scoped model has `account_id`. Use `Current.account` in authenticated contexts — it's resolved in `ApplicationController#set_current_account` from the signed-in user's `owned_account`. Public storefront controllers use `@storefront` instead (no `Current.account`).
 
+### Storefront theming (branded per-kitchen)
+
+Each account picks one of ~10 curated palettes via `Accounts::Branding.palette` (default `bosque`) plus a light/dark default (`Accounts::Branding.theme_default`). `Storefronts::Palette.css_vars_for(account, dark:)` returns inline `--brand-1 / --brand-1-ink / --brand-1-soft / --brand-1-line` CSS variables the storefront layout injects per-request. The operator app NEVER receives these variables — it always ships the Kitchef deep-green accent. Only storefront views / components read `var(--brand-*)`. Don't reference `--brand-1` inside operator-app components.
+
 ### Routing (all English, no /panel prefix)
 
 Public storefronts use **root-level slugs**: `kitchef.mx/cocina-de-elena`. The `Account::RESERVED_SLUGS` constant (194 entries in `app/models/account.rb`) blocks collisions with app routes. The catch-all storefront scope is **always last** in `config/routes.rb`. Run `bin/check_reserved_slugs` when adding any new top-level route — it fails CI on missing entries.
@@ -112,11 +116,11 @@ end
 
 ### Commands — write operations
 
-One command per business action. Returns a `Result` with `.success?`, `.object`, `.errors`.
+One command per business action. Returns a `Result` with `.success?`, `.object`, `.errors`. Note the actual class is `Orders::Place` (file `app/commands/orders/place.rb`), **not** `Orders::PlaceOrder` — keep the real name.
 
 ```ruby
-# app/commands/orders/place_order.rb
-class Orders::PlaceOrder < ApplicationCommand
+# app/commands/orders/place.rb
+class Orders::Place < ApplicationCommand
   option :account
   option :params
 
@@ -278,7 +282,7 @@ include AccountScoped                      # belongs_to :account + .for_account 
 - `has_person_name` on: `User`, `Client` — **columns must be named `first_name` and `last_name`**; the gem doesn't let you override names.
 - `friendly_id` on: `Account` (storefront URL), `Recipe` (recipe detail URLs)
 - `positioned` on: most orderable models
-- `aasm` on: `Order` — states (English): `placed → confirmed → in_production → ready → delivered → paid` (+ `canceled`)
+- `aasm` on: `Order` — states (English): `placed → confirmed → in_production → ready → en_route → delivered → paid` (+ `canceled`). `en_route` only fires for `delivery_type: :delivery`; pickup/shipping skip it.
 
 ### English enum keys, Spanish display
 
@@ -317,8 +321,7 @@ has_many :ingredients,    dependent: :destroy
 
 - Use Turbo Frames for in-page navigation within the operator app (avoid full reloads).
 - Broadcast model changes via Turbo Streams to the operator's dashboard.
-- `Order` broadcasts to `[account, :orders]` — kanban column updates in real time.
-- Public storefronts do NOT broadcast (no open ActionCable stream).
+- `Order` broadcasts **two** channels: `[account, :orders]` for the operator kanban AND `[order, :status]` for the customer's per-order status page. The customer page subscribes via `<turbo-stream-from>` on the narrower channel so they never see unrelated orders from the same kitchen.
 
 ### **Every controller action that a Turbo-driven form redirects to must return HTML.**
 

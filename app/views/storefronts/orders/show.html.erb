@@ -1,0 +1,104 @@
+<% content_for :title, t("storefronts.confirmation.title_short") %>
+
+<%# Per-order Turbo stream — morphs this page when the operator advances
+    state. Scoped to [order, :status] so the customer never subscribes to
+    unrelated pedidos from the same kitchen. %>
+<%= turbo_stream_from @order, :status %>
+
+<main class="mx-auto max-w-[760px] px-5 py-10">
+  <% if flash[:notice] %>
+    <div class="mb-6">
+      <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
+    </div>
+  <% end %>
+
+  <div class="mb-6">
+    <div class="font-mono text-[11px] uppercase tracking-[0.18em]" style="color: var(--brand-1);">
+      <%= t("storefronts.confirmation.kicker") %>
+    </div>
+    <h1 class="mt-2 font-serif text-[40px] leading-[1.05] tracking-tight text-ink">
+      <%= t("storefronts.confirmation.heading", first_name: @order.client&.first_name.presence || "") %>
+    </h1>
+    <p class="mt-3 text-[15px] leading-[1.55] text-ink-2 max-w-[620px]">
+      <%= t("storefronts.confirmation.lede", kitchen: @storefront.name) %>
+    </p>
+  </div>
+
+  <section class="mb-6 rounded-[16px] border border-line bg-surface p-6">
+    <h2 class="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+      <%= t("storefronts.confirmation.status_section") %>
+    </h2>
+    <%= render Storefronts::StatusTimelineComponent.new(steps: @status_timeline) %>
+  </section>
+
+  <section class="mb-6 grid gap-4 sm:grid-cols-2">
+    <div class="rounded-[14px] border border-line bg-surface p-5">
+      <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted"><%= t("storefronts.confirmation.when_label") %></div>
+      <div class="mt-1 font-serif text-[20px] text-ink">
+        <%= l(@order.delivery_date, format: :long) rescue @order.delivery_date %>
+      </div>
+      <% if @order.delivery_start_time && @order.delivery_end_time %>
+        <div class="font-mono text-[13px] text-ink-2">
+          <%= @order.delivery_start_time_hhmm %>–<%= @order.delivery_end_time_hhmm %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="rounded-[14px] border border-line bg-surface p-5">
+      <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted"><%= t("storefronts.confirmation.where_label") %></div>
+      <div class="mt-1 font-serif text-[20px] text-ink">
+        <%= t("storefronts.fulfillment_types.#{@order.delivery_type}.label") %>
+      </div>
+      <% if @order.delivery_address.present? %>
+        <div class="text-[13px] text-ink-2 mt-1">
+          <%= [ @order.delivery_address, @order.colonia, @order.city ].compact_blank.join(", ") %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <section class="mb-6 rounded-[16px] border border-line bg-surface p-6">
+    <h2 class="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+      <%= t("storefronts.confirmation.items_section") %>
+    </h2>
+    <div class="divide-y divide-line">
+      <% @order.items.each do |item| %>
+        <div class="flex items-start justify-between gap-4 py-3">
+          <div>
+            <div class="text-[14px] font-semibold text-ink"><%= item.recipe&.name || "Platillo" %></div>
+            <div class="font-mono text-[11.5px] text-muted">× <%= item.quantity %></div>
+            <% if item.notes.present? %>
+              <div class="mt-1 text-[12px] text-ink-2 italic"><%= item.notes %></div>
+            <% end %>
+          </div>
+          <div class="font-mono text-[13px] text-ink">
+            <%= humanized_money_with_symbol(Money.new(item.unit_price_cents.to_i * item.quantity.to_d, "MXN")) %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="mt-4 flex items-baseline justify-between border-t border-line pt-4">
+      <span class="text-[14px] font-semibold text-ink"><%= t("storefronts.cart.total") %></span>
+      <span class="font-serif text-[24px] tracking-tight text-ink"><%= humanized_money_with_symbol(@order.total) %></span>
+    </div>
+  </section>
+
+  <% if @storefront.public_profile.payment_notes.present? %>
+    <section class="mb-6 rounded-[14px] px-5 py-4"
+             style="background: var(--brand-1-soft); color: var(--brand-1);">
+      <div class="font-mono text-[10.5px] uppercase tracking-[0.14em]"><%= t("storefronts.confirmation.payment_note_label") %></div>
+      <p class="mt-1 text-[14px] leading-[1.5]"><%= @storefront.public_profile.payment_notes %></p>
+    </section>
+  <% end %>
+
+  <% whatsapp = @storefront.public_profile.whatsapp.presence || @storefront.public_profile.phone %>
+  <% if whatsapp.present? && (normalized = Phone::NormalizeMx.call(raw: whatsapp)) %>
+    <a href="https://wa.me/<%= normalized.sub(/\A\+/, "") %>?text=<%= ERB::Util.url_encode(t("storefronts.confirmation.whatsapp_message", kitchen: @storefront.name, id: @order.prefix_id)) %>"
+       target="_blank" rel="noopener"
+       class="inline-flex items-center gap-2 rounded-[9px] px-5 py-3 text-[14px] font-semibold no-underline"
+       style="background: #25D366; color: #053019; border: 1px solid #25D366;">
+      <%= t("storefronts.confirmation.whatsapp_cta", kitchen: @storefront.name) %>
+    </a>
+  <% end %>
+</main>

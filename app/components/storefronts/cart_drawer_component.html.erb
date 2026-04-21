@@ -1,0 +1,56 @@
+<%# Cart drawer — click the backdrop or × to close. Everything inside
+    `[data-storefront-cart-target]` is populated by the Stimulus controller
+    from sessionStorage; the HTML here is just the chrome. %>
+<div
+  class="fixed inset-0 z-[190] hidden bg-[rgba(14,23,20,0.42)] backdrop-blur-sm transition-opacity"
+  data-storefront-cart-target="backdrop"
+  data-action="click->storefront-cart#closeDrawer"
+></div>
+
+<aside
+  aria-label="<%= t("storefronts.cart.aria_label") %>"
+  role="dialog"
+  aria-modal="true"
+  class="fixed inset-y-0 right-0 z-[200] flex w-[min(420px,94vw)] translate-x-full flex-col border-l border-line bg-bg transition-transform duration-300"
+  data-storefront-cart-target="panel"
+>
+  <div class="flex items-center justify-between border-b border-line px-6 py-5">
+    <div>
+      <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+        <%= t("storefronts.cart.kicker") %>
+      </div>
+      <h2 class="font-serif text-[22px] leading-[1.1] tracking-tight text-ink"><%= storefront.name %></h2>
+    </div>
+    <button type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-[10px] border border-line bg-surface text-ink-2"
+            data-action="click->storefront-cart#closeDrawer"
+            aria-label="<%= t("storefronts.cart.close") %>">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="flex-1 overflow-y-auto px-6 py-4 kc-scroll" data-storefront-cart-target="list">
+    <div class="py-12 text-center text-muted" data-storefront-cart-target="emptyState">
+      <div class="mb-2 font-serif text-[22px] text-ink"><%= t("storefronts.cart.empty_title") %></div>
+      <div class="text-[13px] leading-[1.5]"><%= t("storefronts.cart.empty_body") %></div>
+    </div>
+  </div>
+
+  <div class="border-t border-line bg-surface px-6 py-5" data-storefront-cart-target="footer" hidden>
+    <div class="flex items-baseline justify-between border-t border-line pt-3">
+      <span class="text-[13px] font-semibold text-ink"><%= t("storefronts.cart.total") %></span>
+      <span class="font-serif text-[24px] tracking-tight text-ink" data-storefront-cart-target="total">$0.00</span>
+    </div>
+    <a href="<%= checkout_href %>"
+       class="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[9px] px-5 py-3 text-[14px] font-semibold no-underline"
+       style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);"
+       data-action="click->storefront-cart#checkout">
+      <%= t("storefronts.cart.checkout_cta") %>
+    </a>
+    <div class="mt-3 text-center font-mono text-[11px] text-muted">
+      <%= t("storefronts.cart.footer_note") %>
+    </div>
+  </div>
+</aside>

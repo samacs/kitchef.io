@@ -75,10 +75,12 @@ Kitchef v1 is a phone-first operations suite with five integrated modules, shari
 - Each operator gets a public shareable URL at the root level: `kitchef.mx/cocina-de-elena`
   - Clean, memorable, easy to say out loud at the mercado or write on a business card
   - Reserved top-level paths (`/precios`, `/registro`, `/panel`, etc.) are enforced at the model level; see TRD §8
-- Public order form: client fills in name, phone, what they want, delivery date, address
-- Orders land in a kanban board: *pedido → confirmado → en producción → listo → entregado → pagado*
+- Public order form: client fills in **name + phone only** (Agendario-style guest flow — no registration, no login, no saved address). Address fields only appear if delivery is picked.
+- Orders land in a kanban board: *pedido → confirmado → en producción → listo → en camino → entregado → pagado*
 - Client directory: preferences ("no le gusta el cilantro"), allergies, colonia, birthday, past orders
 - Per-client WhatsApp deep-link: one tap to message the client with a pre-filled confirmation
+- **Accepting-orders schedule.** Each kitchen declares when she is accepting new pedidos — a weekly recurring window (Mon–Sun, start/end times, optional exceptions). The public storefront reads this and shows either *"Aceptando pedidos · Vie 9:00–18:00"* live, or a soft *"Abrimos otra vez el jueves 9:00"* hint when closed. Submissions are still accepted when closed (she might be prepping ahead) but the hero chip makes expectations clear.
+- **Pickup reminders.** A pickup pedido that sits in `ready` for more than N hours (operator configurable, default 4h) auto-notifies both operator and customer that the order is still waiting. No one wants a cold tamal because the customer forgot.
 
 ### Module 2 — Recipe & ingredient cost engine (the quiet superpower)
 - Ingredient library with unit prices the operator maintains manually (kilo de masa $18, litro de aceite $42, docena de huevo $58)
@@ -126,11 +128,13 @@ Operators live on a spectrum. Some want to list *Tamales — $25* and never thin
 - *"Tu flan se vende bien pero casi no deja; considera subirlo a $90 o sacarlo de la carta."*
 - Works for 6–10 items (home operator) and naturally scales to 30+ (future fonda tier)
 
-### Module 4 — Production planning & delivery routing
+### Module 4 — Production planning, flexible fulfillment & delivery routing
 - Weekly production view: consolidates shopping list from all confirmed orders
 - Prep timeline: "hacer masa domingo 5pm para entregas lunes"
 - Delivery slot capacity: Saturdays 10am–6pm, max 5 orders/slot (uses `interval_set` to prevent overbooking)
 - Orders grouped by colonia for route efficiency: "Roma/Condesa sábado, Coyoacán/Del Valle domingo"
+- **Flexible fulfillment — pickup / delivery / shipping.** The operator toggles which fulfillment types her storefront offers. *Pickup* hides address fields entirely. *Delivery* uses her zones + slots. *Shipping* (paquetería — think galletas, moles envasados, conservas) shows a street-address field plus a note line for the courier and stamps `source: :shipping`. Each can carry its own fee rules in settings.
+- **Pickup-ready tracking.** A pedido in `ready` state for a delivery-type order triggers runner geocoding; for pickup it triggers a gentle reminder to both parties if the handoff doesn't happen within the configured window.
 
 ### Module 5 — Finance lite
 - Weekly and monthly view of ingresos, costos, margen bruto
@@ -139,10 +143,13 @@ Operators live on a spectrum. Some want to list *Tamales — $25* and never thin
 - Export to Excel for the señora's contador (via `caxlsx`)
 
 ### Cross-cutting features
-- Public storefront page with menu, prices, hours, WhatsApp link
+- **Beautiful, branded storefront.** Menu, prices, hours, WhatsApp link — chosen theme (one of ~10 curated palettes) and light/dark preference set by the operator. Her logo, cover, and name get the premium real estate; Kitchef chrome stays a footer attribution. The storefront is the single thing she shares on Instagram and WhatsApp; it must look beautiful on a $3,000 MXN phone.
+- **Guest checkout only.** Customers order without registering. Name + phone. No accounts, no saved addresses, no "forgot password." Re-ordering from the same phone recognizes the client on the operator's side (`find_or_create_by_phone`), so the operator's history stays coherent even though customers are anonymous.
+- **Collapsible per-item customization.** The order form is *short by default*: qty + "Agregar". A "Personalizar" accordion is the only surface that expands into notes ("sin cilantro", "pica la salsa") so the form never intimidates a first-time customer. Borrows the pattern customers like from CakeBoss without drowning in cake-specific fields.
+- **No marketplace, ever.** Kitchef never aggregates kitchens into a browse-and-discover surface. Each storefront is the cook's storefront — she owns the link, the customer relationship, the brand. (See Non-Goals.)
 - WhatsApp deep-link integration (no API required for v1)
 - QR code generator for the operator's URL (for business cards, flyers) via `rqrcode`
-- Real-time order updates via Turbo broadcasts (new pedido → appears on her board without refresh)
+- Real-time order updates via Turbo broadcasts — operator kanban AND the customer's order-status page both refresh without a reload
 - Daily digest email (optional) via Resend
 - In-app notifications via Noticed
 - Mobile-first responsive design — everything must work beautifully on a 360px viewport
@@ -229,12 +236,13 @@ Explicitly **not** building in v1, even if tempting:
 - Realistic 2026 prices (a tamal is $25–35)
 
 ### Visual direction
-- Warm off-white background (masa, not Figma blank)
-- Primary color: deep terracotta / mole / nopal green (grounded, confident)
-- One accent for CTAs. No purple, no 3D blobs, no chef hats.
-- Warm serif for headlines (Tiempos, Recoleta, or similar) + clean sans for UI (Inter)
+- Warm off-white background (masa, not Figma blank) — neutral page chrome
+- **Kitchef product palette:** deep green (`#0A5A3C`) on bone, the single accent
+- **Storefront brand palette** is per-kitchen. The operator picks one of ~10 curated palettes (*Bosque / Terracota / Tinto / Cobalto / Mostaza / Cacao / Pizarra / Rosa Mexicano / Durazno / Noroc*) plus a light/dark default. Each palette ships with a primary color + a derived *ink* (foreground on primary), *soft* (tinted surface), and *line* (tinted divider) — all pre-computed at design time so contrast is always readable.
+- Warm serif for headlines (Instrument Serif) + Inter sans for UI + JetBrains Mono for prices/deltas/timestamps
 - Photography over illustration where possible; editorial hand-drawn when not
 - Generous whitespace. Phone-first.
+- Dark mode is a first-class storefront setting, not an afterthought. The operator's choice (auto / light / dark) is what customers see by default; the customer can override with a toggle that persists in `localStorage`.
 
 ### Interaction principles
 - Every destructive action has a confirm step
@@ -247,22 +255,33 @@ Explicitly **not** building in v1, even if tempting:
 
 ## 8. Pricing & Monetization
 
-### Free tier — *Plan Gratis*
-- Up to **20 pedidos/month**
-- 1 operator (1 user)
-- Unlimited clients, recipes, ingredients
-- Basic reports
-- Kitchef branding on public storefront
-- **$0**
+### Free tier — *Plan Gratis* (feature-rich on purpose)
+The free tier is the product. It is **not** a crippled trial; it is a kitchen's real day-one tool. Castiron's instinct is right: Mexican kitchens adopt software that proves itself before they pay, and they tell other kitchens only if the free version actually worked.
+
+- **Unlimited pedidos, clients, recipes, ingredients.** The legacy 20-pedidos-per-month cap is retired — it trained operators to bail at the moment they started seeing value.
+- **Full recipe cost engine.** The quiet superpower (Module 2) is not a paywall item. A tamalera who has never seen her margin before must see it on day one or she never will.
+- **Public branded storefront** at `kitchef.mx/<slug>` with her choice of palette, light/dark toggle, logo, cover photo, WhatsApp CTA, delivery zones, accepting-orders schedule.
+- **Kanban order board with full state lifecycle** (placed → confirmed → en producción → listo → en camino → entregado → pagado), cancellation flow, duplicate-from-canceled.
+- **Real-time customer order tracking** on the storefront — her customer sees "En producción" change to "En camino" without refreshing.
+- **Flexible fulfillment** — pickup, delivery, shipping toggles per-kitchen.
+- **Pickup reminders** when ready pedidos go stale.
+- **Production planning** (weekly view + consolidated shopping list).
+- **WhatsApp deep-links, QR code generator, client notes/allergies/birthdays.**
+- Kitchef *"Hecha con Kitchef"* attribution lives in the storefront footer.
+- **$0**, no credit card.
 
 ### Paid tier — *Plan Pro*
-- Unlimited pedidos
-- Menu engineering insights
-- Production planning with delivery slot capacity
-- Excel export
-- Remove Kitchef branding from public storefront
-- QR code generator
-- Priority email support
+Pro is the *"I'm running a serious operation"* tier. It unlocks analytics, automation, and polish — not the ability to take pedidos at all.
+
+- **Menu engineering insights** (stars / plowhorses / puzzles / dogs matrix with plain-language recommendations).
+- **Ingredient-impact analysis** (which raw inputs drive the most cost across the whole operation — the negotiation lever).
+- **Custom domain** for the storefront (tu-cocina.com → points to Kitchef).
+- **Remove Kitchef attribution** from storefront footer.
+- **Advanced calendar & availability** — per-day ordering hours, blackout dates, holiday notes.
+- **Delivery slot capacity limits** with `interval_set`-backed overbooking protection.
+- **Excel export** of finance and production reports (`caxlsx`).
+- **SMS pickup/delivery reminders** (Twilio).
+- **Priority email support**, daily digest, and multi-user (coming with fonda tier).
 - **$150 MXN/month** (or $1,500 MXN/year, 2 months free)
 
 ### Payment rails (v1)

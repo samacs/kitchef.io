@@ -4,3 +4,6 @@ es-MX:
     light: "Claro"
     dark: "Oscuro"
     toggle_label: "Cambiar apariencia"
+  ui:
+    flash:
+      dismiss: "Cerrar aviso"

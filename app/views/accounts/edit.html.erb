@@ -1,0 +1,277 @@
+<% content_for :title, t("account.title") %>
+<% content_for :page_title, t("account.page_title") %>
+<% content_for :page_subtitle, t("account.page_subtitle") %>
+
+<%# Any global flash still surfaces (e.g. from button_to destroy-logo
+    posts), but the autosave flow uses a per-page inline indicator
+    rather than flashes on every keystroke save. %>
+<% if flash[:notice] %>
+  <div class="mb-5"><%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %></div>
+<% end %>
+<% if flash[:alert] %>
+  <div class="mb-5"><%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %></div>
+<% end %>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+  <%# ================================================================
+      LEFT — form (spans 2 of 3 columns on lg+)
+      ================================================================ %>
+  <div class="lg:col-span-2 min-w-0">
+    <%= form_with model: @account,
+                  url: account_path,
+                  method: :patch,
+                  html: {
+                    multipart: true,
+                    class: "flex flex-col gap-6",
+                    data: {
+                      controller: "live-preview-source form-autosave",
+                      action: "change->form-autosave#save"
+                    }
+                  } do |f| %>
+
+      <%# Identity — name, tagline, description, logo, cover, palettes.
+          Everything that the public storefront hero shows. %>
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+              <%= t("account.sections.identity_kicker") %>
+            </div>
+            <h2 class="mt-1 font-serif text-[22px] leading-tight text-ink">
+              <%= t("account.sections.identity_title") %>
+            </h2>
+            <p class="mt-1 text-[13px] text-ink-2"><%= t("account.sections.identity_lede") %></p>
+          </div>
+          <%# Autosave indicator — hidden by default, pops up on any
+              save attempt. `data-form-autosave-target="status"` is the
+              hook the controller writes to. %>
+          <span
+            data-form-autosave-target="status"
+            data-label-saving="<%= t("account.autosave.saving") %>"
+            data-label-saved="<%= t("account.autosave.saved") %>"
+            data-label-error="<%= t("account.autosave.error") %>"
+            class="hidden shrink-0 inline-flex items-center gap-1.5 rounded-full border border-line bg-bg-2 px-2.5 py-1 font-mono text-[11px] font-medium
+                   data-[state=saving]:text-muted
+                   data-[state=saved]:text-accent data-[state=saved]:border-accent/30 data-[state=saved]:bg-accent-soft
+                   data-[state=error]:text-err data-[state=error]:border-err/30 data-[state=error]:bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))]"
+            role="status"
+            aria-live="polite"
+          ></span>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <%= f.label :name, t("account.fields.name"), class: "block text-[12px] font-medium text-muted mb-1" %>
+            <%= f.text_field :name,
+                  class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink",
+                  data: {
+                    action: "input->live-preview-source#emit",
+                    live_preview_source_field_param: "name"
+                  } %>
+          </div>
+
+          <%= f.fields_for :public_profile do |p| %>
+            <div>
+              <%= p.label :tagline, t("account.fields.tagline"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= p.text_field :tagline,
+                    placeholder: t("account.fields.tagline_placeholder"),
+                    class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink",
+                    data: {
+                      action: "input->live-preview-source#emit",
+                      live_preview_source_field_param: "tagline"
+                    } %>
+            </div>
+          <% end %>
+        </div>
+
+        <%= f.fields_for :public_profile do |p| %>
+          <div>
+            <%= p.label :description, t("account.fields.description"), class: "block text-[12px] font-medium text-muted mb-1" %>
+            <%= p.text_area :description, rows: 3, maxlength: Accounts::PublicProfile::DESCRIPTION_MAX,
+                  placeholder: t("account.fields.description_placeholder"),
+                  class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink leading-[1.55]",
+                  data: {
+                    action: "input->live-preview-source#emit",
+                    live_preview_source_field_param: "description"
+                  } %>
+            <p class="mt-1 text-[11.5px] text-muted">
+              <%= t("account.fields.description_hint", max: Accounts::PublicProfile::DESCRIPTION_MAX) %>
+            </p>
+          </div>
+        <% end %>
+
+        <%# Logo + cover — both with live preview on file pick. %>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="block text-[12px] font-medium text-muted mb-1"><%= t("account.fields.logo") %></label>
+            <div class="flex items-center gap-3">
+              <div class="h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[10px] border border-line bg-bg-2">
+                <% if @account.logo.attached? %>
+                  <%= image_tag @account.logo.variant(:thumb), class: "h-full w-full object-cover", alt: "" %>
+                <% else %>
+                  <div class="flex h-full w-full items-center justify-center font-serif italic text-[28px] text-muted">
+                    <%= @account.name.first&.upcase %>
+                  </div>
+                <% end %>
+              </div>
+              <div class="flex flex-1 flex-col gap-2">
+                <%= f.file_field :logo,
+                      accept: "image/jpeg,image/png,image/webp,image/heic",
+                      class: "text-[12px]",
+                      data: {
+                        action: "change->live-preview-source#emit",
+                        live_preview_source_field_param: "logo"
+                      } %>
+                <% if @account.logo.attached? %>
+                  <%# Anchor with `data-turbo-method` instead of
+                      button_to — button_to emits a nested <form>
+                      which HTML5 doesn't allow, so the browser
+                      silently closes the outer autosave form at
+                      this point and any field below stops saving. %>
+                  <%= link_to t("account.fields.logo_remove"),
+                        logo_account_path,
+                        data: {
+                          turbo_method: :delete,
+                          turbo_confirm: t("account.fields.logo_remove_confirm"),
+                          form_autosave_skip: true
+                        },
+                        class: "self-start text-[12px] text-muted hover:text-err no-underline" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[12px] font-medium text-muted mb-1"><%= t("account.fields.cover") %></label>
+            <div class="flex items-center gap-3">
+              <div class="h-[72px] w-[120px] shrink-0 overflow-hidden rounded-[10px] border border-line bg-bg-2">
+                <% if @account.cover_photo.attached? %>
+                  <%= image_tag @account.cover_photo.variant(:card), class: "h-full w-full object-cover", alt: "" %>
+                <% end %>
+              </div>
+              <div class="flex flex-1 flex-col gap-2">
+                <%= f.file_field :cover_photo,
+                      accept: "image/jpeg,image/png,image/webp,image/heic",
+                      class: "text-[12px]",
+                      data: {
+                        action: "change->live-preview-source#emit",
+                        live_preview_source_field_param: "cover"
+                      } %>
+                <% if @account.cover_photo.attached? %>
+                  <%= link_to t("account.fields.cover_remove"),
+                        cover_account_path,
+                        data: {
+                          turbo_method: :delete,
+                          turbo_confirm: t("account.fields.cover_remove_confirm"),
+                          form_autosave_skip: true
+                        },
+                        class: "self-start text-[12px] text-muted hover:text-err no-underline" %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <%# Palettes + theme. %>
+        <%= f.fields_for :branding do |b| %>
+          <div>
+            <label class="mb-2 block text-[13px] font-medium text-ink">
+              <%= t("account.branding.primary_label") %>
+            </label>
+            <%= render Accounts::PalettePickerComponent.new(
+                  form: b,
+                  attribute: :palette,
+                  selected: @account.branding.palette,
+                  live_preview_field: "palette") %>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-[13px] font-medium text-ink">
+              <%= t("account.branding.secondary_label") %>
+            </label>
+            <%= render Accounts::PalettePickerComponent.new(
+                  form: b,
+                  attribute: :secondary_palette,
+                  selected: @account.branding.secondary_palette,
+                  live_preview_field: "secondary_palette") %>
+          </div>
+
+        <% end %>
+      </section>
+
+      <%# Contact — phone/WA/IG/location/zones/payment. %>
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6">
+        <div>
+          <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <%= t("account.sections.contact_kicker") %>
+          </div>
+          <h2 class="mt-1 font-serif text-[22px] leading-tight text-ink">
+            <%= t("account.sections.contact_title") %>
+          </h2>
+          <p class="mt-1 text-[13px] text-ink-2"><%= t("account.sections.contact_lede") %></p>
+        </div>
+
+        <%= f.fields_for :public_profile do |p| %>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <%= p.label :phone, t("account.fields.phone"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= p.text_field :phone, placeholder: "+52 55 1234 5678",
+                  class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono" %>
+            </div>
+            <div>
+              <%= p.label :whatsapp, t("account.fields.whatsapp"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= p.text_field :whatsapp, placeholder: "+52 55 1234 5678",
+                  class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono" %>
+            </div>
+            <div>
+              <%= p.label :instagram, t("account.fields.instagram"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= p.text_field :instagram, placeholder: "cocinadeelena",
+                  class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+            </div>
+            <div>
+              <%= p.label :colonia, t("account.fields.colonia"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= p.text_field :colonia,
+                  class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+            </div>
+            <div>
+              <%= p.label :city, t("account.fields.city"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= p.text_field :city,
+                  class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+            </div>
+            <div>
+              <%= p.label :delivery_zones, t("account.fields.delivery_zones"), class: "block text-[12px] font-medium text-muted mb-1" %>
+              <%= p.text_field :delivery_zones, placeholder: "Condesa, Del Valle, Roma",
+                  class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+              <p class="mt-1 text-[11.5px] text-muted"><%= t("account.fields.delivery_zones_hint") %></p>
+            </div>
+          </div>
+
+          <div>
+            <%= p.label :payment_notes, t("account.fields.payment_notes"), class: "block text-[12px] font-medium text-muted mb-1" %>
+            <%= p.text_area :payment_notes, rows: 2,
+                placeholder: t("account.fields.payment_notes_placeholder"),
+                class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+            <p class="mt-1 text-[11.5px] text-muted"><%= t("account.fields.payment_notes_hint") %></p>
+          </div>
+        <% end %>
+      </section>
+
+      <div class="flex items-center justify-start">
+        <a href="<%= storefront_path(slug: @account.slug) %>" target="_blank" rel="noopener"
+           class="inline-flex items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 hover:border-line-2 no-underline">
+          <%= t("account.view_storefront") %>
+        </a>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ================================================================
+      RIGHT — sticky live preview (1 of 3 columns on lg+)
+      Offset to clear the sticky panel top bar (~72px tall) plus a
+      small gap, otherwise the preview header slides under it when
+      the page scrolls.
+      ================================================================ %>
+  <aside class="lg:col-span-1 lg:sticky lg:top-[84px] w-full">
+    <%= render Accounts::StorefrontPreviewComponent.new(account: @account) %>
+  </aside>
+</div>

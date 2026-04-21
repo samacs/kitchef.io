@@ -11,7 +11,7 @@ class RecipesController < AuthenticatedController
     if result.success?
       redirect_to recipes_path, notice: t(".created")
     else
-      render :new, status: :unprocessable_entity, locals: { recipe: result.object }
+      render :new, status: :unprocessable_content, locals: { recipe: result.object }
     end
   end
 
@@ -20,13 +20,47 @@ class RecipesController < AuthenticatedController
     if result.success?
       redirect_to recipes_path, notice: t(".updated")
     else
-      render :edit, status: :unprocessable_entity, locals: { recipe: result.object }
+      render :edit, status: :unprocessable_content, locals: { recipe: result.object }
     end
   end
 
   def destroy
     recipe.discard
     redirect_to recipes_path, notice: t(".discarded")
+  end
+
+  # One-click publish/unpublish from the recipe card. POSTing to this
+  # endpoint flips `is_published` — if the flip is to `true` and the
+  # recipe has no photo, the Update command surfaces a validation error
+  # via the flash.
+  def toggle_publish
+    target = !recipe.is_published?
+    result = Recipes::Update.call(recipe: recipe, params: { is_published: target })
+
+    if result.success?
+      redirect_to recipes_path,
+        notice: t(target ? ".published" : ".unpublished", name: recipe.name)
+    else
+      redirect_to recipes_path,
+        alert: t(".publish_requires_photo", name: recipe.name)
+    end
+  end
+
+  # Bulk-publish every saleable draft that has a photo. The empty state
+  # CTA on the recetario index wires to this. Silently skips photoless
+  # drafts so the operator doesn't get partial-success error noise.
+  def publish_all
+    drafts = Current.account.recipes.kept.saleable.where(is_published: false)
+    publishable = drafts.select { |r| r.photos.attached? }
+
+    publishable.each { |r| r.update!(is_published: true) }
+
+    count = publishable.size
+    if count.zero?
+      redirect_to recipes_path, alert: t(".publish_all_none")
+    else
+      redirect_to recipes_path, notice: t(".publish_all_ok", count: count)
+    end
   end
 
   private
@@ -44,6 +78,6 @@ class RecipesController < AuthenticatedController
   end
 
   def recipe_params
-    params.require(:recipe).permit(:name, :sale_price, :category, :description, photos: [])
+    params.require(:recipe).permit(:name, :sale_price, :category, :description, :is_published, photos: [])
   end
 end

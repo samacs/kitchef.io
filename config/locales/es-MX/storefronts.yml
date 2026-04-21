@@ -1,0 +1,137 @@
+es-MX:
+  storefronts:
+    # --- Chrome ------------------------------------------------------
+    header:
+      back_to_storefront: "Volver a %{kitchen}"
+      cart: "Carrito"
+      cart_aria: "Abrir carrito"
+      edit_menu_chip: "Editar mi menú"
+      toggle_theme: "Cambiar apariencia"
+
+    footer:
+      powered_by: "Hecha con"
+
+    # --- Hero + root page --------------------------------------------
+    hero:
+      view_menu_cta: "Ver menú"
+
+    show:
+      menu_kicker: "Menú"
+      menu_title_prefix: "Hoy"
+      menu_title_accent: "ofrecemos"
+      view_full_menu: "Ver todo el menú"
+
+    # --- Info strip --------------------------------------------------
+    info_strip:
+      hours_kicker: "Horarios"
+      hours_title: "Cuándo abrimos"
+      hours_empty: "Configura tus horarios para que tus clientes sepan cuándo llegarles su pedido."
+      delivery_kicker: "Entregas"
+      delivery_title: "Dónde entregamos"
+      delivery_lede: "Entregamos en estas colonias de %{city}. Fuera de zona: envío por paquetería."
+      delivery_empty: "Agrega tus zonas de entrega en Ajustes para que tus clientes sepan a dónde llegas."
+      call_us: "Llámanos"
+
+    # --- Full menu page ----------------------------------------------
+    menu:
+      title: "Menú de %{kitchen}"
+      page_title: "Menú — %{kitchen}"
+      add: "Agregar"
+      empty_title: "Todavía no hay platillos publicados"
+      empty_body: "La cocinera está armando su menú. Vuelve pronto."
+      # Only shown when the operator visits her own storefront and has
+      # unpublished drafts — quiet in-page nudge to finish publishing.
+      operator_hint:
+        one: "Tienes 1 platillo en borrador. Publícalo para que tus clientes lo vean aquí."
+        other: "Tienes %{count} platillos en borrador. Publícalos para que tus clientes los vean aquí."
+      operator_cta: "Ir a mi recetario"
+
+    # --- Ordering hours chip -----------------------------------------
+    ordering_hours:
+      open_now: "Aceptando pedidos"
+      closed_now: "Por encargo"
+      next_opening: "Abrimos el %{day} %{time}"
+
+    # --- Fulfillment type labels -------------------------------------
+    fulfillment_types:
+      pickup:
+        label: "Recolección"
+        hint: "Pasas por el pedido"
+      delivery:
+        label: "Entrega a domicilio"
+        hint: "Te lo llevamos"
+
+    # --- Cart drawer -------------------------------------------------
+    cart:
+      aria_label: "Tu pedido"
+      kicker: "Tu pedido"
+      close: "Cerrar"
+      empty_title: "Tu carrito está vacío"
+      empty_body: "Agrega un platillo desde el menú."
+      empty_cta: "Ir al menú"
+      total: "Total"
+      checkout_cta: "Revisar y pedir"
+      footer_note: "Hecha con Kitchef"
+
+    # --- Checkout form ----------------------------------------------
+    checkout:
+      heading_prefix: "Arma tu"
+      heading_accent: "pedido"
+      lede: "Llena tus datos y confirmamos tu pedido por WhatsApp."
+      fulfillment_section: "¿Cómo te lo hacemos llegar?"
+      customer_section: "Tus datos"
+      customize_section: "Personalizar tu pedido (opcional)"
+      customize_hint: "Notas para la cocinera: alergias, picor, cambios."
+      customize_notes: "Notas del pedido"
+      customize_placeholder: "Ej: sin cilantro, salsa aparte, no tan picante…"
+      summary_section: "Resumen"
+      date: "Fecha"
+      start: "Desde"
+      end: "Hasta"
+      colonia: "Colonia"
+      city: "Ciudad"
+      address: "Calle y número"
+      first_name: "Nombre"
+      last_name: "Apellido"
+      phone: "WhatsApp"
+      phone_hint: "Número de 10 dígitos. Usaremos este WhatsApp para confirmar tu pedido."
+      email_toggle: "Agregar correo (opcional)"
+      back_to_menu: "Seguir viendo el menú"
+      submit: "Hacer pedido"
+
+    # --- Order create flash -----------------------------------------
+    orders:
+      new_title: "Haz tu pedido"
+      show_title: "Tu pedido"
+      created_flash: "¡Pedido recibido! Te contactamos por WhatsApp para confirmar."
+      create_error: "Revisa los datos y vuelve a intentarlo."
+
+    # --- Confirmation page ------------------------------------------
+    confirmation:
+      title_short: "Pedido recibido"
+      kicker: "¡Pedido recibido!"
+      heading: "Gracias, %{first_name}"
+      lede: "%{kitchen} recibió tu pedido y te contactará por WhatsApp en breve para confirmarlo."
+      status_section: "Estado del pedido"
+      when_label: "Cuándo"
+      where_label: "Cómo"
+      items_section: "Tu pedido"
+      payment_note_label: "Sobre el pago"
+      whatsapp_cta: "Hablar con %{kitchen}"
+      whatsapp_message: "Hola %{kitchen}, vengo con mi pedido %{id}."
+
+    # --- Status timeline (customer-facing) --------------------------
+    status_timeline:
+      steps:
+        placed:        "Pedido recibido"
+        confirmed:     "Pedido confirmado"
+        in_production: "En cocina"
+        ready:         "Listo"
+        en_route:      "En camino"
+        delivered:     "Entregado"
+
+    # --- Not-found (branded 404 inside the storefront layout) ------
+    not_found:
+      title: "Esta cocina no existe"
+      lede: "Revisa el enlace o busca a la cocinera en Instagram."
+      cta: "Volver a Kitchef"

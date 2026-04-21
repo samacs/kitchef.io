@@ -1,0 +1,31 @@
+<div class="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Paleta">
+  <% palettes.each do |name, meta| %>
+    <label
+      class="group relative inline-flex cursor-pointer"
+      title="<%= meta[:label] %>"
+      aria-label="<%= meta[:label] %>"
+    >
+      <input type="radio"
+             name="<%= field_name %>"
+             id="<%= field_id(name) %>"
+             value="<%= name %>"
+             <%= "checked" if selected.to_s == name %>
+             class="peer sr-only"
+             <%= radio_data(name).map { |k, v| "data-#{k.to_s.tr('_', '-')}=\"#{v}\"" }.join(" ").html_safe %>>
+      <%# The swatch — a filled circle in the light-variant color. An
+          outer ring (transparent by default) animates in on the
+          checked state so the selected swatch reads at a glance. %>
+      <span
+        class="inline-block h-9 w-9 rounded-full transition
+               ring-2 ring-transparent ring-offset-2 ring-offset-bg
+               peer-checked:ring-ink peer-focus-visible:ring-accent
+               border border-line"
+        style="background-color: <%= meta.dig(:light, :c) %>"
+        aria-hidden="true"
+      ></span>
+    </label>
+  <% end %>
+</div>
+<p class="mt-2 text-[11.5px] text-muted">
+  <%= t("account.branding.palette_hint") %>
+</p>

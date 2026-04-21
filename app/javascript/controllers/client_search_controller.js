@@ -112,7 +112,14 @@ export default class extends Controller {
     } else if (event.key === "Enter" && this.activeIndex >= 0) {
       event.preventDefault()
       const button = items[this.activeIndex]
-      this.selectClient(button.dataset.clientId, button.dataset.clientName)
+      // Mirror the mouse-click path: pass the same shipping dataset so
+      // keyboard selection also autofills colonia/city/address. Without
+      // this the hidden id updates but the address fields stay blank.
+      this.selectClient(button.dataset.clientId, button.dataset.clientName, {
+        colonia:       button.dataset.clientColonia,
+        city:          button.dataset.clientCity,
+        streetAddress: button.dataset.clientStreetAddress
+      })
       this.hideResults()
     } else if (event.key === "Escape") {
       this.hideResults()
