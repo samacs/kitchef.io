@@ -4,13 +4,37 @@
     available height. %>
 <section id="<%= column_id %>"
          class="flex flex-col w-[280px] shrink-0 h-full rounded-panel bg-surface border border-line shadow-card">
-  <header class="flex items-baseline justify-between gap-3 px-4 pt-4 pb-3 border-b border-line shrink-0">
-    <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-accent">
-      <%= column_title %>
-    </span>
-    <span class="font-mono text-[11px] text-muted uppercase tracking-[0.14em]">
-      <%= count_label %>
-    </span>
+  <header class="flex items-center justify-between gap-3 px-4 pt-4 pb-3 border-b border-line shrink-0">
+    <div class="flex items-baseline gap-3 min-w-0">
+      <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-accent truncate">
+        <%= column_title %>
+      </span>
+      <span class="font-mono text-[11px] text-muted uppercase tracking-[0.14em]">
+        <%= count_label %>
+      </span>
+    </div>
+
+    <% if bulk_available? %>
+      <%= render Ui::DropdownComponent.new(placement: :bottom_end, menu_width: "w-[220px]") do |d| %>
+        <% d.with_trigger do %>
+          <button type="button"
+                  aria-label="<%= t("orders.bulk.menu_aria") %>"
+                  title="<%= t("orders.bulk.menu_aria") %>"
+                  class="inline-flex items-center justify-center w-7 h-7 rounded-input text-muted border border-transparent hover:text-ink hover:border-line transition-colors">
+            <%= helpers.icon(:more_horizontal, size: :xs) %>
+          </button>
+        <% end %>
+        <% d.with_menu do %>
+          <%= button_to bulk_transition_orders_path(event: bulk_event),
+                method: :post,
+                form: { class: "block", data: { turbo_confirm: bulk_confirm_copy } },
+                role: "menuitem",
+                class: "w-full text-left px-3 py-2 rounded-card-sm text-[13px] text-ink-2 hover:bg-bg hover:text-ink transition-colors font-medium" do %>
+            <%= bulk_cta_label %>
+          <% end %>
+        <% end %>
+      <% end %>
+    <% end %>
   </header>
 
   <div class="flex-1 flex flex-col gap-3 p-3 overflow-y-auto kc-kanban-col">

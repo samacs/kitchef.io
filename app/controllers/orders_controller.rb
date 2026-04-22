@@ -103,7 +103,33 @@ class OrdersController < AuthenticatedController
     redirect_to orders_path(anchor: helpers.dom_id(order)), notice: t(".unmarked_paid")
   end
 
+  # Whole-column bulk transition from the kanban header menu. Fires the
+  # matching event on every eligible order in the column in one DB
+  # transaction. Sequential-in-process so the per-card Turbo broadcasts
+  # stay ordered — ≤20 pedidos per column keeps this well under a second.
+  def bulk_transition
+    event = params[:event].to_s
+    unless Orders::BulkTransition::EVENT_SOURCE_STATE.key?(event.to_sym)
+      return redirect_to orders_path, alert: t("orders.bulk.errors.unsupported")
+    end
+
+    result = Orders::BulkTransition.call(account: Current.account, event: event)
+    outcome = result.object
+    notice = bulk_flash_message(event: event, outcome: outcome)
+    redirect_to orders_path, notice: notice
+  end
+
   private
+
+  def bulk_flash_message(event:, outcome:)
+    return t("orders.bulk.#{event}.empty") if outcome.succeeded_count.zero? && outcome.failed_count.zero?
+
+    parts = []
+    parts << t("orders.bulk.#{event}.succeeded", count: outcome.succeeded_count) if outcome.succeeded_count.positive?
+    parts << t("orders.bulk.#{event}.failed", count: outcome.failed_count) if outcome.failed_count.positive?
+    parts.join(" · ")
+  end
+
 
   # When the operator confirms a storefront order (from the kanban card OR
   # from the notifications inbox), sweep any unread Noticed events pointing

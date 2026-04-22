@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_21_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -87,6 +87,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_21_000100) do
 
   create_table "delivery_slots", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.integer "capacity"
     t.jsonb "colonias", default: [], null: false
     t.datetime "created_at", null: false
     t.integer "day_of_week", null: false

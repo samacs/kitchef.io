@@ -1,0 +1,95 @@
+<% content_for :title, t("runners.show.title", account: @account.name) %>
+
+<main class="mx-auto max-w-[640px] px-5 py-6">
+  <header class="flex flex-col gap-1 mb-6">
+    <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <%= t("runners.show.kicker") %>
+    </span>
+    <h1 class="font-serif text-[26px] leading-[1.15] text-ink">
+      <%= t("runners.show.headline", account: @account.name) %>
+    </h1>
+    <p class="font-mono text-[11.5px] text-muted uppercase tracking-[0.14em] pt-1">
+      <%= l(@on, format: :long) %>
+    </p>
+  </header>
+
+  <% if @orders.empty? %>
+    <section class="rounded-panel border border-line bg-surface/60 px-6 py-10 text-center">
+      <p class="font-serif text-[20px] text-ink"><%= t("runners.show.empty.headline") %></p>
+      <p class="mt-2 text-muted text-[13.5px]"><%= t("runners.show.empty.sub") %></p>
+    </section>
+  <% else %>
+    <% by_colonia = @orders.group_by { |o| o.colonia.presence || t("runners.show.no_colonia") } %>
+    <ul class="flex flex-col gap-6">
+      <% by_colonia.each do |colonia, orders| %>
+        <li class="flex flex-col gap-3">
+          <h2 class="font-mono text-[11px] uppercase tracking-[0.18em] text-accent">
+            <%= colonia %>
+          </h2>
+          <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface">
+            <% orders.each do |order| %>
+              <% delivered = order.state == "delivered" %>
+              <li class="flex flex-col gap-3 px-4 py-4 <%= "opacity-60" if delivered %>">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex flex-col gap-0.5 min-w-0">
+                    <span class="text-[16px] text-ink font-medium truncate <%= "line-through" if delivered %>">
+                      <%= order.client&.name.presence || t("dashboard.today_orders.empty_client") %>
+                    </span>
+                    <% if order.delivery_start_time.present? %>
+                      <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+                        <%= order.delivery_start_time_hhmm %><%= order.delivery_end_time.present? ? "–#{order.delivery_end_time_hhmm}" : "" %>
+                      </span>
+                    <% end %>
+                  </div>
+                  <%= render Orders::StateBadgeComponent.new(state: order.state) %>
+                </div>
+
+                <% if order.delivery_address.present? || order.colonia.present? %>
+                  <p class="text-[14px] text-ink-2 leading-[1.45]">
+                    <%= [ order.delivery_address, order.colonia, order.city ].compact_blank.join(" · ") %>
+                  </p>
+                <% end %>
+
+                <% if order.items.any? %>
+                  <ul class="flex flex-col gap-0.5 text-[13px] text-muted">
+                    <% order.items.each do |item| %>
+                      <li>
+                        <span class="font-mono text-ink-2"><%= item.quantity.to_s.sub(/\.0+\z/, "") %>×</span>
+                        <%= item.recipe&.name %>
+                      </li>
+                    <% end %>
+                  </ul>
+                <% end %>
+
+                <div class="flex items-center gap-2 pt-1">
+                  <% if order.geocoded? %>
+                    <%= link_to directions_url_for(order),
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                          class: "inline-flex items-center gap-1.5 text-[13px] font-medium px-3 py-[7px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
+                      <%= icon(:navigation, size: :xs) %>
+                      <span><%= t("orders.map.directions_cta") %></span>
+                    <% end %>
+                  <% end %>
+
+                  <% unless delivered %>
+                    <%= button_to runner_deliver_path(token: params[:token], id: order.id),
+                          method: :post,
+                          form: { class: "inline-flex flex-1" },
+                          class: "flex-1 inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 py-[7px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+                      <span><%= t("runners.show.deliver_cta") %></span>
+                    <% end %>
+                  <% end %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <footer class="mt-10 pt-6 border-t border-line text-muted text-[11.5px] font-mono uppercase tracking-[0.14em] text-center">
+    <%= t("runners.show.footer") %>
+  </footer>
+</main>

@@ -87,6 +87,66 @@ es-MX:
       duplicate: "Duplicar pedido"
       errors:
         not_allowed: "No se puede cambiar el estado del pedido desde aquí."
+    bulk:
+      menu_aria: "Acciones de columna"
+      errors:
+        unsupported: "Esa acción masiva no está disponible."
+      confirm:
+        cta:
+          one: "Confirmar este pedido"
+          other: "Confirmar todos (%{count})"
+        confirm:
+          one: "¿Confirmar el pedido?"
+          other: "¿Confirmar los %{count} pedidos nuevos?"
+        succeeded:
+          one: "Confirmaste 1 pedido"
+          other: "Confirmaste %{count} pedidos"
+        failed:
+          one: "1 pedido no se pudo confirmar"
+          other: "%{count} pedidos no se pudieron confirmar"
+        empty: "No había pedidos nuevos para confirmar."
+      start_production:
+        cta:
+          one: "Iniciar producción"
+          other: "Iniciar producción de todos (%{count})"
+        confirm:
+          one: "¿Iniciar la producción de este pedido?"
+          other: "¿Iniciar la producción de %{count} pedidos?"
+        succeeded:
+          one: "Iniciaste la producción de 1 pedido"
+          other: "Iniciaste la producción de %{count} pedidos"
+        failed:
+          one: "1 pedido no pudo pasar a producción"
+          other: "%{count} pedidos no pudieron pasar a producción"
+        empty: "No había pedidos confirmados para arrancar."
+      mark_ready:
+        cta:
+          one: "Marcar listo"
+          other: "Marcar todos listos (%{count})"
+        confirm:
+          one: "¿Marcar este pedido como listo?"
+          other: "¿Marcar los %{count} pedidos como listos?"
+        succeeded:
+          one: "Marcaste 1 pedido como listo"
+          other: "Marcaste %{count} pedidos como listos"
+        failed:
+          one: "1 pedido no se pudo marcar como listo"
+          other: "%{count} pedidos no se pudieron marcar como listos"
+        empty: "No había pedidos en producción para marcar listos."
+      ship:
+        cta:
+          one: "Marcar en camino"
+          other: "Marcar en camino (%{count})"
+        confirm:
+          one: "¿Marcar este pedido en camino?"
+          other: "¿Marcar %{count} pedidos en camino? Los pedidos para recoger se quedan igual."
+        succeeded:
+          one: "Marcaste 1 pedido en camino"
+          other: "Marcaste %{count} pedidos en camino"
+        failed:
+          one: "1 pedido no se pudo marcar en camino"
+          other: "%{count} pedidos no se pudieron marcar en camino"
+        empty: "No había pedidos listos para salir."
     payment_status:
       paid: "Pagado"
       paid_aria: "Pago recibido"
@@ -338,6 +398,28 @@ es-MX:
     title: "Ingredientes"
   delivery_slots:
     title: "Horarios de entrega"
+    index:
+      title: "Horarios de entrega"
+      subtitle: "Define los días y horas en que puedes entregar, y cuántos pedidos caben en cada ventana."
+    create:
+      created: "Horario agregado."
+    update:
+      updated: "Horario actualizado."
+    destroy:
+      destroyed: "Horario eliminado."
+    form:
+      start_time_label: "Empieza"
+      end_time_label: "Termina"
+      capacity_label: "Cupo"
+      capacity_placeholder: "Sin tope"
+      save: "Guardar"
+      create_for_day: "Abrir %{day}"
+      close_day: "Cerrar este día"
+      destroy_confirm: "¿Cerrar las entregas del %{day}?"
+    capacity:
+      unlimited: "Sin tope"
+      display: "%{filled} de %{total} pedidos"
+      hint: "El cupo es una señal — por ahora no bloqueamos pedidos cuando se llena, pero verás cuánto se va ocupando la ventana para ajustarlo cuando haga falta."
   account:
     title: "Tu cocina"
     page_title: "Tu cocina"
@@ -399,10 +481,83 @@ es-MX:
     title: "Plan"
 
   production:
-    weekly:
-      title: "Producción de la semana"
+    show:
+      title: "Producción"
+      subtitle: "Qué cocinar, a quién le toca y cuándo."
+      active_day_kicker: "Día activo"
+      summary:
+        to_confirm:
+          zero: "sin pedidos por confirmar"
+          one: "%{count} por confirmar"
+          other: "%{count} por confirmar"
+        to_cook:
+          zero: "nada en cocina"
+          one: "%{count} a cocinar"
+          other: "%{count} a cocinar"
+        to_deliver:
+          zero: "sin entregas"
+          one: "%{count} entrega"
+          other: "%{count} entregas"
+      empty:
+        headline: "Nada agendado para este día"
+        sub: "Cuando tengas pedidos con esa fecha de entrega, verás aquí tu lista de cocina y de entregas."
+    strip:
+      aria_label: "Próximos siete días"
+      kicker: "Próximos %{count} días"
+      back_to_today: "Volver a hoy"
+    day_card:
+      count:
+        zero: "Sin pedidos"
+        one: "%{count} pedido"
+        other: "%{count} pedidos"
+      chips:
+        to_confirm:
+          one: "%{count} por confirmar"
+          other: "%{count} por confirmar"
+        to_cook:
+          one: "%{count} a cocinar"
+          other: "%{count} a cocinar"
+        to_deliver:
+          one: "%{count} entrega"
+          other: "%{count} entregas"
+    cook_list:
+      kicker: "Cocinar hoy"
+      headline: "Qué preparar"
+      empty: "Nada por cocinar todavía."
+      anonymous_client: "Cliente"
+      bulk_cta:
+        one: "Iniciar producción (%{count})"
+        other: "Iniciar producción (%{count})"
+    handoff_list:
+      kicker: "Entregar hoy"
+      headline: "A quién le toca"
+      empty: "Nada que entregar todavía."
+      no_window: "Sin horario"
+      share_cta: "Compartir ruta del día"
+      share_success: "Copiado"
+    bulk:
+      start_production:
+        succeeded:
+          one: "Iniciaste la producción de %{count} pedido"
+          other: "Iniciaste la producción de %{count} pedidos"
+        failed:
+          one: "1 pedido no pudo pasar a producción"
+          other: "%{count} pedidos no pudieron pasar a producción"
+        empty: "No había pedidos confirmados para arrancar."
+        confirm:
+          one: "¿Iniciar la producción de %{count} pedido?"
+          other: "¿Iniciar la producción de los %{count} pedidos confirmados?"
     shopping_list:
       title: "Lista de compras"
+      subtitle: "Lo que necesitas para los próximos siete días."
+      kicker: "Mercado"
+      headline: "Lista de compras"
+      window: "Del %{from} al %{to}"
+      print_cta: "Imprimir"
+      decomposition_nudge: "Cuando decompongas tus recetas en ingredientes, esta lista baja al nivel de ingrediente."
+      empty:
+        headline: "Aún no hay qué comprar"
+        sub: "Cuando tengas pedidos confirmados para los próximos siete días, verás aquí un resumen listo para llevar al mercado."
 
   reports:
     menu_engineering:

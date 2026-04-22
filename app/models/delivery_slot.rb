@@ -3,6 +3,7 @@
 # Table name: delivery_slots
 #
 #  id          :bigint           not null, primary key
+#  capacity    :integer
 #  colonias    :jsonb            not null
 #  day_of_week :integer          not null
 #  end_time    :integer          not null
@@ -33,9 +34,21 @@ class DeliverySlot < ApplicationRecord
     presence: true,
     numericality: { only_integer: true, in: 0..TimeOfDay::MAX }
   validates :max_orders, numericality: { greater_than: 0 }
+  # `capacity` is nullable — nil = unlimited, >0 = cap. Display-only in
+  # v1: the storefront still accepts submissions past the cap, the
+  # operator sees `"4 de 8 pedidos"` in the editor as a demand signal.
+  validates :capacity, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validate  :end_time_after_start_time
 
   scope :for_day, ->(day_of_week) { where(day_of_week: day_of_week).order(:position) }
+
+  # Sunday=0..Saturday=6 — matches `Date#wday` so service code can walk
+  # the week from any Monday without a conversion table.
+  def self.fill_level_for(account, week_starting: Date.current.beginning_of_week(:monday).to_date)
+    account.delivery_slots.order(:day_of_week, :start_time).map do |slot|
+      [ slot, DeliverySlots::FillLevel.for(account: account, slot: slot, week_starting: week_starting) ]
+    end
+  end
 
   # Display helpers — convert minutes-from-midnight to "HH:MM" strings.
   def start_time_hhmm = TimeOfDay.to_string(start_time)

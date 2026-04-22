@@ -1,0 +1,28 @@
+<% base_classes = "flex flex-col gap-2 w-[152px] shrink-0 px-3.5 py-3 rounded-card border transition-colors scroll-snap-align-start snap-start" %>
+<% active_classes = active ? "bg-surface border-accent shadow-card" : "bg-surface/60 border-line hover:border-line-2" %>
+<%= link_to production_path(on: row.date.to_s),
+      class: "#{base_classes} #{active_classes}",
+      aria: { current: (active ? "page" : nil) } do %>
+  <header class="flex items-baseline justify-between gap-2">
+    <span class="font-mono text-[11px] font-medium tracking-[0.18em] uppercase <%= today ? "text-accent" : "text-muted" %>">
+      <%= weekday_label %>
+    </span>
+    <span class="font-mono text-[13px] text-ink-2 tabular-nums">
+      <%= date_label %>
+    </span>
+  </header>
+
+  <p class="font-serif text-[15px] leading-[1.15] text-ink">
+    <%= count_label %>
+  </p>
+
+  <% unless chips.empty? %>
+    <ul class="flex flex-wrap gap-1.5 pt-1">
+      <% chips.each do |label| %>
+        <li class="inline-flex items-center px-2 py-[2px] rounded-pill bg-bg border border-line text-[11px] text-ink-2 font-mono">
+          <%= label %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+<% end %>

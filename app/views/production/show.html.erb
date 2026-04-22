@@ -1,0 +1,72 @@
+<% content_for :title, t("production.show.title") %>
+<% content_for :page_title, t("production.show.title") %>
+<% content_for :page_subtitle, t("production.show.subtitle") %>
+
+<% if flash[:notice].present? %>
+  <div class="mb-5">
+    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
+  </div>
+<% end %>
+<% if flash[:alert].present? %>
+  <div class="mb-5">
+    <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %>
+  </div>
+<% end %>
+
+<%# 7-day strip. Horizontal scroll on narrow screens via scroll-snap so
+    each card snaps cleanly. `@media print` on this section hides the
+    strip — the print output is focused on the active day's cook +
+    handoff lists below. %>
+<section class="mb-8 kc-production-strip" aria-label="<%= t("production.strip.aria_label") %>">
+  <div class="flex items-baseline justify-between mb-3">
+    <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <%= t("production.strip.kicker", count: Production::WeekOverview::WINDOW_DAYS) %>
+    </span>
+    <% if @on != Date.current %>
+      <%= link_to production_path, class: "font-mono text-[11.5px] text-accent hover:underline" do %>
+        <%= t("production.strip.back_to_today") %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-5 lg:-mx-7 px-5 lg:px-7 overscroll-x-contain kc-scroll snap-x snap-mandatory">
+    <% @week_overview.each do |row| %>
+      <%= render Production::DayCardComponent.new(
+            row: row,
+            active: row.date == @on,
+            today:  row.date == Date.current
+          ) %>
+    <% end %>
+  </div>
+</section>
+
+<%# Active day header — acts as the print artifact's title. %>
+<section class="flex items-baseline justify-between gap-3 mb-6">
+  <div class="flex flex-col gap-1">
+    <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <%= t("production.show.active_day_kicker") %>
+    </span>
+    <h1 class="font-serif text-[28px] leading-[1.1] text-ink tracking-tight">
+      <%= l(@on, format: :long) %>
+    </h1>
+  </div>
+  <div class="hidden sm:flex items-baseline gap-3 font-mono text-[11.5px] text-muted uppercase tracking-[0.14em]">
+    <span><%= t("production.show.summary.to_confirm", count: @plan.counts["placed"].to_i) %></span>
+    <span aria-hidden="true">·</span>
+    <span><%= t("production.show.summary.to_cook",    count: @plan.counts.values_at("confirmed", "in_production").compact.sum) %></span>
+    <span aria-hidden="true">·</span>
+    <span><%= t("production.show.summary.to_deliver", count: @plan.counts.values_at("ready", "en_route").compact.sum) %></span>
+  </div>
+</section>
+
+<% if @plan.empty? %>
+  <section class="rounded-panel border border-line bg-surface/60 px-6 py-10 text-center">
+    <p class="font-serif text-[20px] text-ink"><%= t("production.show.empty.headline") %></p>
+    <p class="mt-2 text-muted text-[13.5px] max-w-prose mx-auto"><%= t("production.show.empty.sub") %></p>
+  </section>
+<% else %>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+    <%= render Production::CookListComponent.new(plan: @plan, on_date: @on) %>
+    <%= render Production::HandoffListComponent.new(plan: @plan, on_date: @on) %>
+  </div>
+<% end %>

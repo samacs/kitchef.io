@@ -82,7 +82,7 @@ class Account < ApplicationRecord
     new news notifications
     onboarding
     password passwords pricing privacy production products profile
-    register reports reset-password root
+    r register reports reset-password root
     search settings sign-in signin sign-out signout sign-up signup
     stats status subscribe subscription support
     team terms tour

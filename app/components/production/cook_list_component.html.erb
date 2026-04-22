@@ -1,0 +1,42 @@
+<section class="flex flex-col gap-4">
+  <header class="flex items-baseline justify-between gap-3">
+    <div class="flex flex-col gap-1">
+      <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-accent">
+        <%= kicker %>
+      </span>
+      <h2 class="font-serif text-[22px] leading-[1.15] text-ink"><%= headline %></h2>
+    </div>
+
+    <% if bulk_action_visible? %>
+      <%= button_to production_bulk_start_production_path,
+            method: :post,
+            params: { on: on_date.to_s },
+            form: { class: "inline-flex", data: { turbo_confirm: t("production.bulk.start_production.confirm", count: plan.counts["confirmed"]) } },
+            class: "inline-flex items-center gap-2 text-[12.5px] font-semibold px-3 py-[7px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+        <span><%= t("production.cook_list.bulk_cta", count: plan.counts["confirmed"]) %></span>
+      <% end %>
+    <% end %>
+  </header>
+
+  <% if empty? %>
+    <p class="text-muted text-[14px]"><%= t("production.cook_list.empty") %></p>
+  <% else %>
+    <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface">
+      <% plan.cook_list.each do |row| %>
+        <li class="flex flex-col gap-1.5 px-4 py-3">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-[15.5px] text-ink font-medium"><%= row.recipe_name %></span>
+            <span class="font-mono text-[13px] text-ink-2 shrink-0 tabular-nums">
+              <%= row.display_qty %> <%= t("units.#{row.unit}", default: row.unit) %>
+            </span>
+          </div>
+          <% unless row.notes_roll_up.empty? %>
+            <p class="text-[12.5px] text-muted leading-[1.4]">
+              <%= row.notes_roll_up.join(" · ") %>
+            </p>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

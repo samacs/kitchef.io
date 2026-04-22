@@ -69,6 +69,13 @@ Rails.application.routes.draw do
   # Controllers inherit from AuthenticatedController which enforces session
   # + Current.account. Production/Reports/Onboarding sub-namespaces keep
   # URL grouping; everything else is flat.
+  # Column-header bulk action — lives OUTSIDE `resources :orders` so its
+  # `/orders/bulk/:event` pattern can't collide with member routes like
+  # `/orders/:id/confirm` (which would otherwise match "bulk" as an :id).
+  post "/orders/bulk/:event",
+    to: "orders#bulk_transition",
+    as: :bulk_transition_orders
+
   resources :orders do
     member do
       post :confirm
@@ -103,12 +110,21 @@ Rails.application.routes.draw do
     end
   end
   resources :ingredients
-  resources :delivery_slots, path: "delivery-slots"
+  resources :delivery_slots, path: "delivery-slots", only: %i[index create update destroy]
 
-  namespace :production do
-    get "/",               to: "weekly#show",         as: :weekly
-    get "/shopping-list",  to: "shopping_lists#show", as: :shopping_list
-  end
+  # Phase 5: top-level daily focus view. The previous `Production::Weekly`
+  # stub is gone — `/production` now lands on the real planner.
+  get "/production",               to: "production#show",          as: :production
+  get "/production/shopping-list", to: "production#shopping_list", as: :production_shopping_list
+  post "/production/bulk-start-production",
+    to: "production#bulk_start_production",
+    as: :production_bulk_start_production
+
+  # Zero-auth runner view — one signed token per day, resolved server-side
+  # back to an account + date. Any tamper or >24h staleness lands on the
+  # branded "ruta expirada" page.
+  get  "/r/:token",                 to: "runners#show",    as: :runner
+  post "/r/:token/orders/:id/deliver", to: "runners#deliver", as: :runner_deliver
 
   namespace :reports do
     get "/menu",     to: "menu_engineering#show", as: :menu_engineering
