@@ -25,8 +25,8 @@ module Accounts
       account.assign_attributes(attrs.slice(:name))
 
       # Merge into the existing StoreModel instance instead of replacing
-      # it so fields not in the form submission (like `ordering_hours`
-      # before the schedule editor ships) survive the save.
+      # it so fields not in the form submission (partial updates from
+      # autosave, for instance) keep their existing value.
       branding = account.branding
       branding.assign_attributes(branding_attrs.compact)
       account.branding = branding

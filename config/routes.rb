@@ -110,7 +110,19 @@ Rails.application.routes.draw do
     end
   end
   resources :ingredients
-  resources :delivery_slots, path: "delivery-slots", only: %i[index create update destroy]
+
+  # One schedule per account — weekly grid + date-specific exceptions.
+  # Replaces the Phase 5 /delivery-slots editor and the ordering-hours
+  # block formerly on /account/edit; both retired in Phase 6.
+  #
+  # Schedule settings (order_mode, lead_time_minutes) autosave via PATCH
+  # /schedule. Availabilities are managed individually via the nested
+  # collection so adds / edits / removes stay idempotent + Turbo-stream
+  # friendly — no accepts_nested_attributes fragility.
+  resource :schedule, only: %i[show update] do
+    resources :availabilities, only: %i[create update destroy],
+      controller: "schedules/availabilities"
+  end
 
   # Phase 5: top-level daily focus view. The previous `Production::Weekly`
   # stub is gone — `/production` now lands on the real planner.
@@ -181,10 +193,18 @@ Rails.application.routes.draw do
     as: :storefront do
     get "/",     to: "storefronts#show"
     get "/menu", to: "storefronts/menus#show", as: :menu
+    # Dish detail — one recipe per URL. The `recipe_slug` resolves via
+    # FriendlyId scoped to the account, so two kitchens can each have a
+    # "pozole-rojo" without collision.
+    get "/platillos/:recipe_slug", to: "storefronts/recipes#show", as: :recipe
     resources :orders, only: %i[new create show],
       controller: "storefronts/orders" do
       member do
-        get :confirm
+        # Customer self-confirm is now a POST so it carries the reviewed
+        # address + delivery notes. The email CTA lands on the order show
+        # page (GET), the customer taps the Confirm button, which fires
+        # this POST. Idempotent on replay (AASM guard returns false).
+        post :confirm
       end
     end
   end

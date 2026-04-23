@@ -1,0 +1,162 @@
+<% content_for :title, t("schedules.show.title") %>
+<% content_for :page_title, t("schedules.show.title") %>
+<% content_for :page_subtitle, t("schedules.show.subtitle") %>
+
+<%= content_for :page_action do %>
+  <span data-form-autosave-target="status"
+        data-label-saving="<%= t("schedules.autosave.saving") %>"
+        data-label-saved="<%= t("schedules.autosave.saved") %>"
+        data-label-error="<%= t("schedules.autosave.error") %>"
+        class="hidden font-mono text-[11px] uppercase tracking-[0.14em] text-muted"></span>
+<% end %>
+
+<div id="schedule_flash" class="mb-5">
+  <% if flash[:notice].present? %>
+    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
+  <% end %>
+  <% if flash[:alert].present? %>
+    <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %>
+  <% end %>
+</div>
+
+<div class="flex flex-col gap-8">
+  <%# Schedule settings: autosaves on change. Uses form_autosave_controller
+      the same way /account/edit does — debounced 600ms, silent success. %>
+  <%= form_with model: @schedule,
+        url: schedule_path,
+        method: :patch,
+        html: {
+          class: "flex flex-col gap-6 rounded-panel border border-line bg-surface p-6",
+          data: {
+            controller: "form-autosave",
+            action: "change->form-autosave#save input->form-autosave#save"
+          }
+        } do |f| %>
+    <div>
+      <h2 class="font-serif text-[22px] text-ink"><%= t("schedules.mode.title") %></h2>
+      <p class="text-muted text-[13.5px] mt-1"><%= t("schedules.mode.subtitle") %></p>
+    </div>
+
+    <div class="grid gap-3 sm:grid-cols-3">
+      <% Schedule::ORDER_MODES.keys.each do |mode| %>
+        <label class="flex cursor-pointer flex-col gap-1 rounded-card border border-line bg-bg p-3 transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent/[0.06]">
+          <div class="flex items-center gap-2">
+            <%= f.radio_button :order_mode, mode, class: "accent-accent" %>
+            <span class="text-[14px] font-semibold text-ink">
+              <%= t("schedules.mode.options.#{mode}.label") %>
+            </span>
+          </div>
+          <span class="text-[12.5px] text-muted leading-[1.45] pl-6">
+            <%= t("schedules.mode.options.#{mode}.hint") %>
+          </span>
+        </label>
+      <% end %>
+    </div>
+
+    <div>
+      <%= f.label :lead_time_hours, t("schedules.lead_time.label"), class: "block text-[13px] font-medium text-ink-2 mb-1" %>
+      <div class="flex items-center gap-2">
+        <%= f.number_field :lead_time_hours, min: 0, step: 1,
+              class: "rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono w-[120px]" %>
+        <span class="font-mono text-[12.5px] text-muted"><%= t("schedules.lead_time.unit") %></span>
+      </div>
+      <p class="mt-1 text-[12px] text-muted max-w-prose"><%= t("schedules.lead_time.hint") %></p>
+    </div>
+  <% end %>
+
+  <%# Weekly grid — each day is its own section. Rows inside are
+      independent <form>s so they autosave per-row without colliding. %>
+  <section>
+    <header class="mb-3">
+      <h2 class="font-serif text-[22px] text-ink"><%= t("schedules.weekly.title") %></h2>
+      <p class="text-muted text-[13.5px]"><%= t("schedules.weekly.subtitle") %></p>
+    </header>
+
+    <div class="flex flex-col gap-3">
+      <% [ 1, 2, 3, 4, 5, 6, 0 ].each do |wday| %>
+        <article class="rounded-card border border-line bg-surface p-4">
+          <header class="flex items-center justify-between gap-3 mb-3">
+            <span class="font-serif text-[18px] text-ink">
+              <%= t("schedules.day_names.#{wday}") %>
+            </span>
+            <%= button_to schedule_availabilities_path(availability: { wday: wday }),
+                  method: :post,
+                  form: { data: { turbo_stream: true } },
+                  class: "inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3 py-[6px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
+              <%= icon(:plus, size: :xs) %>
+              <span><%= t("schedules.day.add_slot") %></span>
+            <% end %>
+          </header>
+
+          <div id="availabilities_wday_<%= wday %>" class="flex flex-col gap-2">
+            <% @schedule.availabilities.recurring.for_wday(wday).order(:from_time).each do |availability| %>
+              <%= render "schedules/availability_row", availability: availability %>
+            <% end %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  </section>
+
+  <section>
+    <header class="mb-3 flex items-baseline justify-between gap-3">
+      <div>
+        <h2 class="font-serif text-[22px] text-ink"><%= t("schedules.exceptions.title") %></h2>
+        <p class="text-muted text-[13.5px]"><%= t("schedules.exceptions.subtitle") %></p>
+      </div>
+    </header>
+
+    <div id="availabilities_exceptions" class="flex flex-col gap-2 mb-4">
+      <% @schedule.availabilities.overrides.order(:date).each do |availability| %>
+        <%= render "schedules/availability_row", availability: availability %>
+      <% end %>
+    </div>
+
+    <%# Inline "add exception" form — own <form>, posts to the nested
+        availabilities controller, Turbo stream appends the new row. %>
+    <%= form_with url: schedule_availabilities_path,
+          method: :post,
+          html: {
+            class: "rounded-card border border-dashed border-line p-4 flex flex-wrap items-end gap-3",
+            data: { turbo_stream: true }
+          } do |form| %>
+      <label class="flex flex-col gap-1">
+        <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("schedules.exceptions.add.date_label") %>
+        </span>
+        <input type="date" name="availability[date]" required min="<%= Date.current %>"
+               class="rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono">
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("schedules.slot.from_label") %>
+        </span>
+        <input type="time" name="availability[from_time_hhmm]" value="00:00"
+               class="rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono w-[110px]">
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("schedules.slot.to_label") %>
+        </span>
+        <input type="time" name="availability[to_time_hhmm]" value="23:59"
+               class="rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono w-[110px]">
+      </label>
+      <label class="inline-flex items-center gap-2 pb-2.5">
+        <input type="hidden" name="availability[available]" value="0">
+        <input type="checkbox" name="availability[available]" value="1"
+               class="h-4 w-4 accent-accent">
+        <span class="text-[12.5px] text-ink-2"><%= t("schedules.slot.available_label") %></span>
+      </label>
+      <input type="text" name="availability[note]"
+             placeholder="<%= t("schedules.exceptions.note_placeholder") %>"
+             class="rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink flex-1 min-w-[160px]">
+      <button type="submit"
+              class="inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-3 py-[7px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta">
+        <%= t("schedules.exceptions.add.submit") %>
+      </button>
+    <% end %>
+    <p class="mt-2 text-[12px] text-muted max-w-prose">
+      <%= t("schedules.exceptions.add.hint") %>
+    </p>
+  </section>
+</div>

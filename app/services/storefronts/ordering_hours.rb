@@ -1,25 +1,21 @@
 module Storefronts
-  # Parses `account.public_profile.ordering_hours` (a JSON string) into a
-  # usable weekly schedule and answers the two questions the storefront
-  # cares about at render time:
+  # Answers the two questions the storefront hero + info strip care about
+  # at render time, using the account's `Schedule`:
   #
   #   - Is the kitchen accepting orders right now?
   #   - If closed, when does it next open?
   #
-  # The schedule is a map of day-of-week (0..6, Sunday=0 per Ruby's `wday`)
-  # to either `"closed"` or `{ "open" => "HH:MM", "close" => "HH:MM" }`.
-  # Times live in the account's `time_zone` so a "Saturday 9am" slot means
-  # 9am local regardless of UTC drift.
-  #
-  # Submissions are NOT blocked when closed — the customer might be
-  # ordering for tomorrow. This service is only for the hero chip that
-  # sets expectations.
+  # Recurring weekly availabilities on the schedule drive the answer. A
+  # date-specific exception (e.g. "Dec 25 closed" or "Dec 24 closes early")
+  # supersedes the recurring window on that specific day. Order submissions
+  # are NEVER blocked by this service — the hero chip only sets the
+  # customer's expectation for when the kitchen is active.
   class OrderingHours
     Result = Struct.new(:open_now, :today_window, :next_opening_day, :next_opening_time, keyword_init: true) do
       def open_now? = open_now
     end
 
-    DAY_KEYS = %w[Dom Lun Mar Mié Jue Vie Sáb].freeze  # Ruby wday 0..6
+    DAY_KEYS = %w[Dom Lun Mar Mié Jue Vie Sáb].freeze
     DAY_FULL = %w[domingo lunes martes miércoles jueves viernes sábado].freeze
 
     def self.for(account)
@@ -28,23 +24,27 @@ module Storefronts
 
     def initialize(account)
       @account  = account
-      @schedule = parse(account.public_profile.ordering_hours)
+      @schedule = account.schedule
       @now      = Time.current.in_time_zone(account.time_zone)
     end
 
     def call
-      today_entry = @schedule[@now.wday]
-      open_today, window = open_at?(today_entry, @now.strftime("%H:%M"))
+      return empty_result if @schedule.nil?
 
-      if open_today
+      today_windows = @schedule.windows_for(@now.to_date)
+      now_minutes   = (@now.hour * 60) + @now.min
+
+      active_window = today_windows.find { |w| now_minutes >= w.from_time && now_minutes < w.to_time }
+
+      if active_window
         Result.new(
           open_now:          true,
-          today_window:      window,
+          today_window:      "#{active_window.from_time_hhmm}–#{active_window.to_time_hhmm}",
           next_opening_day:  nil,
           next_opening_time: nil
         )
       else
-        day, time = next_opening(from_wday: @now.wday, from_time: @now.strftime("%H:%M"))
+        day, time = next_opening(from_minutes: now_minutes, today_windows: today_windows)
         Result.new(
           open_now:          false,
           today_window:      nil,
@@ -54,10 +54,8 @@ module Storefronts
       end
     end
 
-    # Class-level helper for the view layer — returns the Spanish chip
-    # label for a given Result, e.g. "Aceptando pedidos · Vie 9:00–18:00"
-    # or "Abrimos el jueves 9:00". Kept here (not in the view) so the
-    # logic is unit-testable and consistent between the hero and info strip.
+    # Chip label used by the storefront hero + info strip. Copy doesn't
+    # depend on the data shape — kept here so renderers stay dumb.
     def self.chip_label(result)
       return nil if result.blank?
 
@@ -72,48 +70,28 @@ module Storefronts
 
     private
 
-    def parse(raw)
-      return {} if raw.blank?
-
-      decoded = JSON.parse(raw)
-      decoded.each_with_object({}) do |(k, v), acc|
-        acc[k.to_i] = v
-      end
-    rescue JSON::ParserError
-      {}
+    def empty_result
+      Result.new(open_now: false, today_window: nil, next_opening_day: nil, next_opening_time: nil)
     end
 
-    def open_at?(entry, current_time_str)
-      return [ false, nil ] if entry.blank? || entry == "closed"
+    # Walks forward from today: first any later window today, then the
+    # next seven days. Looks at recurring availabilities + exceptions for
+    # each date via `Schedule#windows_for`.
+    def next_opening(from_minutes:, today_windows:)
+      upcoming_today = today_windows.find { |w| w.from_time > from_minutes }
+      return [ @now.wday, format_time(upcoming_today.from_time) ] if upcoming_today
 
-      open_t  = entry["open"]
-      close_t = entry["close"]
-      return [ false, nil ] if open_t.blank? || close_t.blank?
-
-      if current_time_str >= open_t && current_time_str < close_t
-        [ true, "#{open_t}–#{close_t}" ]
-      else
-        [ false, nil ]
-      end
-    end
-
-    def next_opening(from_wday:, from_time:)
-      # Today first: if there's a window later today we haven't hit yet.
-      today = @schedule[from_wday]
-      if today.is_a?(Hash) && today["open"].present? && today["open"] > from_time
-        return [ from_wday, today["open"] ]
-      end
-
-      7.times do |offset|
-        day = (from_wday + offset + 1) % 7
-        entry = @schedule[day]
-        next if entry.blank? || entry == "closed"
-        open_t = entry["open"]
-        next if open_t.blank?
-        return [ day, open_t ]
+      (1..7).each do |offset|
+        date = @now.to_date + offset.days
+        window = @schedule.windows_for(date).min_by(&:from_time)
+        return [ date.wday, format_time(window.from_time) ] if window
       end
 
       [ nil, nil ]
+    end
+
+    def format_time(minutes)
+      format("%02d:%02d", minutes / 60, minutes % 60)
     end
   end
 end

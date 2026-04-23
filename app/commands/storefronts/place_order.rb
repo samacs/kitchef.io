@@ -20,13 +20,22 @@ module Storefronts
       phone = customer_params[:phone].to_s.strip
       email = customer_params[:email].to_s.strip
 
-      # WhatsApp is the kitchen ↔ customer channel of record: order
-      # confirmation, payment receipt requests, delivery coordination.
-      # Email is optional and additive — when present, we also send a
-      # confirmation email with a self-confirm link.
+      # Both phone and email are required at checkout:
+      #   * Phone is the kitchen ↔ customer channel of record (WhatsApp).
+      #   * Email is our identity-verification gate — the order stays
+      #     dormant in `placed` until the customer clicks the signed link
+      #     we send to their inbox. Without an email there's no way to
+      #     prove ownership, so we reject at this layer rather than
+      #     accepting a ghost order.
       if phone.blank?
         order = storefront.orders.new(order_params.to_h.deep_symbolize_keys)
         order.errors.add(:base, :phone_required)
+        return Result.new(success: false, object: order, errors: order.errors)
+      end
+
+      if email.blank?
+        order = storefront.orders.new(order_params.to_h.deep_symbolize_keys)
+        order.errors.add(:base, :email_required)
         return Result.new(success: false, object: order, errors: order.errors)
       end
 

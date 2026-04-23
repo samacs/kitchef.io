@@ -1,0 +1,195 @@
+<% content_for :title, "#{@recipe.name} — #{@storefront.name}" %>
+
+<% photo_hero = @recipe.photos.first&.variant(resize_to_limit: [ 1200, 800 ]) %>
+<% back_href = storefront_path(slug: @storefront.slug) %>
+
+<main class="mx-auto max-w-[1200px] px-5 py-8">
+  <%# Breadcrumb + back link — mirrors the design's top-of-page nav.
+      Desktop shows the full crumb; mobile only the "Volver" chevron. %>
+  <nav class="mb-6 flex items-center justify-between gap-4"
+       aria-label="<%= t("storefronts.recipe.breadcrumb_aria") %>">
+    <%= link_to back_href,
+          class: "inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink transition-colors" do %>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      <span><%= t("storefronts.recipe.back_to_menu") %></span>
+    <% end %>
+    <ol class="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+      <li><%= link_to @storefront.name, back_href, class: "hover:text-ink-2 transition-colors" %></li>
+      <li aria-hidden="true">·</li>
+      <li><%= t("recipe.categories.#{@recipe.category}", default: @recipe.category.to_s.humanize) %></li>
+      <li aria-hidden="true">·</li>
+      <li class="text-ink-2 truncate max-w-[240px]"><%= @recipe.name %></li>
+    </ol>
+  </nav>
+
+  <%# Hero: gallery on the left, meta + add-to-cart on the right. On
+      mobile we stack vertically; the sticky-side-rail treatment only
+      kicks in at `lg` and up. %>
+  <section class="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
+    <div>
+      <div class="overflow-hidden rounded-[18px] border border-line bg-surface"
+           style="aspect-ratio: 4 / 3;">
+        <% if photo_hero %>
+          <%= image_tag photo_hero,
+                class: "h-full w-full object-cover",
+                alt: @recipe.name %>
+        <% else %>
+          <div class="flex h-full w-full items-center justify-center font-serif italic text-[80px]"
+               style="color: var(--brand-1);">
+            <%= @recipe.name.first.upcase %>
+          </div>
+        <% end %>
+      </div>
+
+      <%# "About the kitchen" strip — reinforces the human on the other
+          end of the order. Taps back to the storefront root. %>
+      <%= link_to back_href,
+            class: "mt-4 flex items-center gap-3 rounded-[14px] border border-line bg-surface px-3.5 py-3 no-underline transition-colors hover:border-line-2" do %>
+        <div class="h-10 w-10 shrink-0 overflow-hidden rounded-[10px] bg-bg-2">
+          <% if @storefront.logo.attached? %>
+            <%= image_tag @storefront.logo.variant(:thumb),
+                  class: "h-full w-full object-cover",
+                  alt: "" %>
+          <% else %>
+            <div class="flex h-full w-full items-center justify-center font-serif text-[16px]"
+                 style="color: var(--brand-1);"><%= @storefront.name.first %></div>
+          <% end %>
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="truncate text-[13px] font-semibold text-ink"><%= @storefront.name %></div>
+          <% if @storefront.public_profile.colonia.present? %>
+            <div class="font-mono text-[11px] text-muted"><%= @storefront.public_profile.colonia %></div>
+          <% end %>
+        </div>
+        <span class="font-mono text-[11px] uppercase tracking-[0.14em]"
+              style="color: var(--brand-1);">
+          <%= t("storefronts.recipe.view_kitchen_cta") %>
+        </span>
+      <% end %>
+    </div>
+
+    <div class="lg:sticky lg:top-20">
+      <div class="mb-4 flex flex-wrap items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+        <span><%= t("recipe.categories.#{@recipe.category}", default: @recipe.category.to_s.humanize) %></span>
+      </div>
+
+      <h1 class="font-serif text-[clamp(32px,4vw,48px)] leading-[1.05] tracking-tight text-ink">
+        <%= @recipe.name %>
+      </h1>
+
+      <div class="mt-6 flex items-baseline gap-3 border-b border-line pb-5">
+        <span class="font-serif text-[40px] leading-[1] tracking-tight text-ink">
+          <%= humanized_money_with_symbol(@recipe.sale_price) %>
+        </span>
+        <span class="font-mono text-[12.5px] text-muted">
+          / <%= t("units.#{@recipe.yield_unit}", default: @recipe.yield_unit.to_s) %>
+        </span>
+      </div>
+
+      <% if @recipe.description.present? %>
+        <div class="mt-5">
+          <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted mb-2">
+            <%= t("storefronts.recipe.from_the_kitchen") %>
+          </div>
+          <p class="whitespace-pre-line text-[14.5px] leading-[1.7] text-ink-2">
+            <%= @recipe.description %>
+          </p>
+        </div>
+      <% end %>
+
+      <%# Add-to-cart block. Reuses the storefront cart controller —
+          `storefront-cart#add` with a single-item payload mirrors what
+          the menu card does, so the cart drawer updates the same way.
+          `whatsapp-link` is a plain <a> to wa.me; no Twilio, no server. %>
+      <div class="mt-6 flex flex-col gap-2.5">
+        <button type="button"
+                data-action="click->storefront-cart#add"
+                data-storefront-cart-payload-param="<%= {
+                  recipe_id:   @recipe.prefix_id,
+                  name:        @recipe.name,
+                  price_cents: @recipe.sale_price_cents.to_i,
+                  photo:       (url_for(@recipe.photos.first&.variant(resize_to_limit: [ 400, 400 ])) if @recipe.photos.attached?)
+                }.compact.to_json %>"
+                class="inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-6 py-3.5 text-[15px] font-semibold transition"
+                style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1); box-shadow: 0 2px 10px rgba(10, 90, 60, 0.18);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <%= t("storefronts.recipe.add_to_cart") %>
+        </button>
+
+        <% whatsapp = @storefront.public_profile.whatsapp.presence || @storefront.public_profile.phone %>
+        <% if whatsapp.present? && (normalized = Phone::NormalizeMx.call(raw: whatsapp)) %>
+          <% wa_text = t("storefronts.recipe.whatsapp_message",
+                         kitchen: @storefront.name,
+                         recipe:  @recipe.name,
+                         price:   humanized_money_with_symbol(@recipe.sale_price)) %>
+          <a href="https://wa.me/<%= normalized.sub(/\A\+/, "") %>?text=<%= ERB::Util.url_encode(wa_text) %>"
+             target="_blank" rel="noopener"
+             class="inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-6 py-3 text-[14px] font-medium no-underline"
+             style="background: transparent; color: #128C3B; border: 1px solid #A7D9B7;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.174.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.247-.694.247-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            <%= t("storefronts.recipe.whatsapp_cta", kitchen: @storefront.name) %>
+          </a>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <%# "Más de esta cocina" — horizontal scrollable strip. `hide-scroll` +
+      scroll-snap gives a native, iOS-friendly feel. %>
+  <% if @related.any? %>
+    <section class="mt-16">
+      <div class="mb-5">
+        <div class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em]"
+             style="color: var(--brand-1);">
+          <span class="inline-block h-px w-5" style="background: var(--brand-1);"></span>
+          <%= t("storefronts.recipe.related.kicker") %>
+        </div>
+        <h2 class="mt-1 font-serif text-[26px] leading-[1.1] tracking-tight text-ink">
+          <%= t("storefronts.recipe.related.headline_prefix") %>
+          <em style="color: var(--brand-1);"><%= t("storefronts.recipe.related.headline_accent") %></em>
+        </h2>
+      </div>
+      <%# Horizontal strip — native touch scroll on mobile, trackpad /
+          shift-wheel on desktop. Drag-to-scroll was attempted but fought
+          with the browser's native anchor-drag behavior on whole-card
+          links, so we stick with the standard scroll affordances. %>
+      <div class="flex snap-x snap-mandatory gap-[14px] overflow-x-auto overscroll-x-contain pb-1 kc-scroll-hide">
+        <% @related.each do |other| %>
+          <% other_photo = other.photos.first&.variant(resize_to_fill: [ 400, 260 ]) %>
+          <%= link_to storefront_recipe_path(slug: @storefront.slug, recipe_slug: other.slug),
+                class: "group flex w-[260px] shrink-0 snap-start flex-col overflow-hidden rounded-[14px] border border-line bg-surface no-underline transition hover:-translate-y-0.5 hover:shadow-lift" do %>
+            <div class="relative" style="aspect-ratio: 4 / 3;">
+              <% if other_photo %>
+                <%= image_tag other_photo,
+                      class: "absolute inset-0 h-full w-full object-cover",
+                      alt:   other.name %>
+              <% else %>
+                <div class="absolute inset-0 flex items-center justify-center font-serif italic text-[48px]"
+                     style="color: var(--brand-1);">
+                  <%= other.name.first.upcase %>
+                </div>
+              <% end %>
+            </div>
+            <div class="flex flex-col gap-1 p-3.5">
+              <div class="flex items-baseline justify-between gap-2">
+                <h3 class="truncate font-serif text-[18px] leading-[1.1] tracking-tight text-ink">
+                  <%= other.name %>
+                </h3>
+                <span class="shrink-0 font-serif text-[18px] text-ink"><%= humanized_money_with_symbol(other.sale_price) %></span>
+              </div>
+              <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+                <%= t("recipe.categories.#{other.category}", default: other.category.to_s.humanize) %>
+              </span>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</main>
