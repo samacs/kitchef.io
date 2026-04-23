@@ -1,1 +1,8 @@
 <%= yield %>
+
+--
+<% if content_for?(:mail_kitchen_name) %>
+<%= t("mailer.footer.from_kitchen", kitchen_name: content_for(:mail_kitchen_name)) %>
+<% else %>
+<%= t("mailer.footer.generic") %>
+<% end %>

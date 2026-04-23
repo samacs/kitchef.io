@@ -255,14 +255,22 @@
           </div>
         <% end %>
 
-        <div>
-          <label class="mb-2 block text-[13px] font-medium text-ink">
-            <%= t("account.fields.ordering_hours_label") %>
-          </label>
-          <p class="mb-3 text-[12.5px] text-muted">
-            <%= t("account.fields.ordering_hours_hint") %>
-          </p>
-          <%= render Accounts::OrderingHoursEditorComponent.new(account: @account) %>
+        <div class="rounded-card border border-line bg-bg/60 p-4">
+          <div class="flex items-baseline justify-between gap-3">
+            <div>
+              <div class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+                <%= t("account.fields.ordering_hours_label") %>
+              </div>
+              <p class="mt-1 text-[13px] text-ink-2 max-w-[440px]">
+                <%= t("account.fields.ordering_hours_moved_hint") %>
+              </p>
+            </div>
+            <%= link_to schedule_path,
+                  class: "inline-flex items-center gap-1.5 rounded-button border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 hover:border-line-2 no-underline" do %>
+              <%= icon(:calendar, size: :xs) %>
+              <%= t("account.fields.ordering_hours_edit_cta") %>
+            <% end %>
+          </div>
         </div>
       </section>
 

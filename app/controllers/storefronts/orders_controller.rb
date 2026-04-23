@@ -6,10 +6,13 @@ module Storefronts
         delivery_date: Date.current + 1
       )
       @order.items.build
+      @available_days = Schedules::AvailableWindows.for(account: @storefront)
+      @schedule_open  = @available_days.any? { |day| day.windows.any? }
     end
 
     def create
       payload = order_params.to_h.merge(items_attributes: items_from_cart_payload)
+      payload = apply_delivery_window(payload)
 
       result = Storefronts::PlaceOrder.call(
         storefront:      @storefront,
@@ -22,6 +25,9 @@ module Storefronts
           notice: t("storefronts.orders.created_flash")
       else
         @order = result.object || @storefront.orders.new(order_params)
+        @order.delivery_window_id = params.dig(:order, :delivery_window_id)
+        @available_days = Schedules::AvailableWindows.for(account: @storefront)
+        @schedule_open  = @available_days.any? { |day| day.windows.any? }
         flash.now[:alert] = t("storefronts.orders.create_error")
         render :new, status: :unprocessable_content
       end
@@ -37,23 +43,41 @@ module Storefronts
       return render "storefronts/not_found", status: :not_found if @order.account_id != @storefront.id
 
       @status_timeline = Storefronts::StatusTimeline.for(@order)
+      # Review/confirm block is gated on the signed email token. The email
+      # CTA URL includes `?t=…`; the direct post-submit redirect does not.
+      # That asymmetry is the identity gate — the block is only exposed to
+      # someone who received (and opened) the confirmation email.
+      @email_verified = @order.state == "placed" &&
+                        params[:t].present? &&
+                        Order.decode_review_token(params[:t])&.id == @order.id
     end
 
-    # Customer self-confirmation from the email CTA. GET + auto-confirm
-    # is deliberate: email clients may pre-fetch links, but the
-    # prefixed_id is already the URL secret and replays (confirming an
-    # already-confirmed order) are idempotent — AASM's guard returns
-    # false without mutating state.
+    # Customer self-confirmation — the review page's "Confirmar mi pedido"
+    # button posts here. Before the AASM transition fires, we persist any
+    # last-minute tweaks the customer made to the delivery address and
+    # notes — that's the "last chance to review" the plan calls for.
     #
-    # The operator-app confirm action lives at `/orders/:id/confirm`
-    # (authenticated); this public mirror accepts GET so one tap from
-    # the inbox moves the order forward.
+    # Idempotent: a replay on an already-confirmed order skips the address
+    # update (the order is immutable() once out of `placed`) and silently
+    # redirects back. Email clients can safely prefetch the page GET; only
+    # the explicit POST mutates anything.
     def confirm
       @order = Order.find_by_prefix_id(params[:id])
       return render "storefronts/not_found", status: :not_found if @order.nil?
       return render "storefronts/not_found", status: :not_found if @order.account_id != @storefront.id
 
+      # The email link posts with `?t=…`; the review form re-submits the
+      # token as a hidden field. Without a valid token we refuse — the
+      # page never should have rendered the confirm button in that case,
+      # but we belt-and-suspenders it here against direct POSTs.
+      token_order = Order.decode_review_token(params[:t])
+      unless token_order && token_order.id == @order.id
+        return redirect_to storefront_order_path(slug: @storefront.slug, id: @order.prefix_id),
+          alert: t("storefronts.orders.review_gate_required")
+      end
+
       if @order.aasm.may_fire_event?(:confirm)
+        update_review_fields(@order)
         Orders::Transition.call(order: @order, event: :confirm)
         sweep_operator_notifications(@order)
         flash[:notice] = t("storefronts.orders.self_confirmed")
@@ -63,6 +87,23 @@ module Storefronts
     end
 
     private
+
+    # The review page lets the customer edit her delivery_address,
+    # colonia, city and delivery_notes before confirming. Strong-params
+    # whitelist is scoped to `review` so a tampered POST can't reach
+    # anything stateful (price, items, state, etc.).
+    def update_review_fields(order)
+      review = params[:review]
+      return if review.blank?
+
+      attrs = review.permit(:delivery_address, :colonia, :city, :delivery_notes).to_h
+
+      # Pickup orders don't have an address to edit; don't force-write blank
+      # strings onto them. Delivery orders use `delivery_address: required`
+      # so Order's own validations surface a missing value on failed save.
+      attrs.delete("delivery_address") if order.delivery_type_pickup?
+      order.update(attrs) if attrs.any?
+    end
 
     # Mirror the operator-side sweep from OrdersController#mark_related_notifications_read
     # — when the customer self-confirms, drop the unread bell badge
@@ -123,9 +164,7 @@ module Storefronts
     def order_params
       params.require(:order).permit(
         :delivery_type,
-        :delivery_date,
-        :delivery_start_time_hhmm,
-        :delivery_end_time_hhmm,
+        :delivery_window_id,
         :delivery_address,
         :colonia,
         :city,
@@ -133,6 +172,35 @@ module Storefronts
         :notes,
         items_attributes: [ :recipe_id, :quantity, :notes ]
       )
+    end
+
+    # Decode the picker's window id into the canonical attributes Order
+    # actually stores. ASAP → dispatch_asap + delivery_date = today, times
+    # blank. Scheduled → dispatch_scheduled + the matching time range.
+    # Invalid/stale ids (operator deleted the window between render and
+    # submit) fall through as nil and Order validations surface the error.
+    def apply_delivery_window(attrs)
+      window_id = attrs.delete(:delivery_window_id)
+      return attrs if window_id.blank?
+
+      window = Schedules::AvailableWindows.decode(account: @storefront, id: window_id)
+      return attrs if window.nil?
+
+      if window.kind == :asap
+        attrs.merge(
+          delivery_mode:       :asap,
+          delivery_date:       window.date,
+          delivery_start_time: nil,
+          delivery_end_time:   nil
+        )
+      else
+        attrs.merge(
+          delivery_mode:       :scheduled,
+          delivery_date:       window.date,
+          delivery_start_time: window.from_time,
+          delivery_end_time:   window.to_time
+        )
+      end
     end
   end
 end

@@ -72,24 +72,9 @@
           <% end %>
         </div>
 
-        <div class="mt-5 grid gap-4 sm:grid-cols-3">
-          <div>
-            <%= o.label :delivery_date, t("storefronts.checkout.date"), class: "block text-[12px] font-medium text-muted mb-1" %>
-            <%= o.date_field :delivery_date, min: Date.current,
-                  class: "kc-sf-input w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
-          </div>
-          <div>
-            <%= o.label :delivery_start_time_hhmm, t("storefronts.checkout.start"), class: "block text-[12px] font-medium text-muted mb-1" %>
-            <%= o.text_field :delivery_start_time_hhmm, placeholder: "09:00", pattern: "[0-2][0-9]:[0-5][0-9]",
-                  class: "kc-sf-input w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono" %>
-            <p class="mt-1 text-[11px] text-muted"><%= t("storefronts.checkout.time_hint") %></p>
-          </div>
-          <div>
-            <%= o.label :delivery_end_time_hhmm, t("storefronts.checkout.end"), class: "block text-[12px] font-medium text-muted mb-1" %>
-            <%= o.text_field :delivery_end_time_hhmm, placeholder: "12:00", pattern: "[0-2][0-9]:[0-5][0-9]",
-                  class: "kc-sf-input w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono" %>
-            <p class="mt-1 text-[11px] text-muted"><%= t("storefronts.checkout.time_hint") %></p>
-          </div>
+        <div class="mt-5">
+          <label class="block text-[12px] font-medium text-muted mb-2"><%= t("storefronts.checkout.schedule.label") %></label>
+          <%= render Storefronts::DeliveryWindowPickerComponent.new(account: @storefront, precomputed_days: @available_days, selected_id: @order&.delivery_window_id) %>
         </div>
 
         <%# Address block — required when delivery is selected, hidden
@@ -157,17 +142,23 @@
         <p class="mt-1 text-[11px] text-muted"><%= t("storefronts.checkout.phone_hint") %></p>
       </div>
 
-      <%# Email is opt-in behind a disclosure so it doesn't feel required. %>
-      <details class="mt-4">
-        <summary class="cursor-pointer text-[13px] font-medium hover:text-ink"
-                 style="color: var(--brand-1);"><%= t("storefronts.checkout.email_toggle") %></summary>
-        <div class="mt-3">
-          <input type="email" name="customer[email]"
-                 placeholder="tu@correo.com"
-                 class="kc-sf-input w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink">
-          <p class="mt-1 text-[11px] text-muted"><%= t("storefronts.checkout.email_hint") %></p>
-        </div>
-      </details>
+      <%# Email is required — it's how we verify the customer's identity.
+          After submit, the kitchen sends a "confirma tu pedido" email
+          with a signed link; clicking that link is what exposes the
+          confirm action on the order page. Without a real mailbox, no
+          confirmation, no kitchen prep. Deferred to WhatsApp-verify
+          later. %>
+      <div class="mt-4">
+        <label class="block text-[12px] font-medium text-muted mb-1">
+          <%= t("storefronts.checkout.email") %>
+          <span class="text-err ml-0.5" aria-hidden="true">*</span>
+        </label>
+        <input type="email" name="customer[email]" required
+               inputmode="email" autocomplete="email"
+               placeholder="tu@correo.com"
+               class="kc-sf-input w-full rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink">
+        <p class="mt-1 text-[11px] text-muted"><%= t("storefronts.checkout.email_hint") %></p>
+      </div>
     </section>
 
     <%# Collapsible per-pedido customization — the Castiron pain-point fix.
@@ -214,6 +205,8 @@
       </a>
       <button type="submit"
               data-storefront-cart-target="submit"
+              data-schedule-closed="<%= !@schedule_open %>"
+              <%= "disabled" unless @schedule_open %>
               class="inline-flex items-center justify-center gap-2 rounded-[9px] px-6 py-3 text-[14px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">
         <%= t("storefronts.checkout.submit") %>

@@ -17,8 +17,8 @@ module PanelNavHelper
           PanelNavItem.new(:recipes,        t("panel.nav.recipes"),        :book_open,      recipes_path,                 nil),
           PanelNavItem.new(:ingredients,    t("panel.nav.ingredients"),    :carrot,         ingredients_path,             nil),
           PanelNavItem.new(:clients,        t("panel.nav.clients"),        :users,          clients_path,                 nil),
-          PanelNavItem.new(:delivery_slots, t("panel.nav.delivery_slots"), :calendar,       delivery_slots_path,          nil),
-          PanelNavItem.new(:production,     t("panel.nav.production"),     :chef_hat,       production_weekly_path,       nil)
+          PanelNavItem.new(:schedule,       t("panel.nav.schedule"),       :calendar,       schedule_path,                nil),
+          PanelNavItem.new(:production,     t("panel.nav.production"),     :chef_hat,       production_path,              nil)
         ]
       },
       {

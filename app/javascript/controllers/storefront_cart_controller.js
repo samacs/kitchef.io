@@ -192,15 +192,19 @@ export default class extends Controller {
     this.updateSubmit()
   }
 
-  // Checkout form submit button — disabled whenever the cart is empty.
-  // The server-side Orders::Place also blocks empty carts, but client-side
-  // disable turns the UX from "click, see error" to "can't click yet."
+  // Checkout form submit button — disabled whenever the cart is empty
+  // OR the kitchen's schedule is closed (server-rendered via the
+  // `data-schedule-closed` attribute). The server-side Orders::Place
+  // also blocks both conditions, but client-side disable turns the UX
+  // from "click, see error" to "can't click yet."
   updateSubmit() {
     if (!this.hasSubmitTarget) return
-    const empty = this.cart.items.length === 0
-    this.submitTarget.disabled = empty
-    this.submitTarget.classList.toggle("opacity-50", empty)
-    this.submitTarget.classList.toggle("cursor-not-allowed", empty)
+    const empty          = this.cart.items.length === 0
+    const scheduleClosed = this.submitTarget.dataset.scheduleClosed === "true"
+    const disabled       = empty || scheduleClosed
+    this.submitTarget.disabled = disabled
+    this.submitTarget.classList.toggle("opacity-50", disabled)
+    this.submitTarget.classList.toggle("cursor-not-allowed", disabled)
   }
 
   totalCents() {

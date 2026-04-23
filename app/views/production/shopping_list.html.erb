@@ -1,0 +1,55 @@
+<% content_for :title, t("production.shopping_list.title") %>
+<% content_for :page_title, t("production.shopping_list.title") %>
+<% content_for :page_subtitle, t("production.shopping_list.subtitle") %>
+
+<section class="mb-6 flex items-baseline justify-between gap-3">
+  <div class="flex flex-col gap-1">
+    <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+      <%= t("production.shopping_list.kicker") %>
+    </span>
+    <h1 class="font-serif text-[28px] leading-[1.1] text-ink tracking-tight">
+      <%= t("production.shopping_list.headline") %>
+    </h1>
+    <p class="font-mono text-[11.5px] text-muted uppercase tracking-[0.14em] pt-1">
+      <%= t("production.shopping_list.window", from: l(@list.starting, format: :long), to: l(@list.ending, format: :long)) %>
+    </p>
+  </div>
+  <button type="button"
+          onclick="window.print(); return false;"
+          class="hidden sm:inline-flex items-center gap-2 text-[12.5px] font-medium px-3 py-[7px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors print:hidden">
+    <%= icon(:printer, size: :xs) %>
+    <span><%= t("production.shopping_list.print_cta") %></span>
+  </button>
+</section>
+
+<% if @list.empty? %>
+  <section class="rounded-panel border border-line bg-surface/60 px-6 py-10 text-center">
+    <p class="font-serif text-[20px] text-ink"><%= t("production.shopping_list.empty.headline") %></p>
+    <p class="mt-2 text-muted text-[13.5px] max-w-prose mx-auto"><%= t("production.shopping_list.empty.sub") %></p>
+  </section>
+<% else %>
+  <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface print:border-none print:divide-ink/10">
+    <% @list.rows.each do |row| %>
+      <li class="flex items-start gap-4 px-4 py-4 print:py-3">
+        <span class="mt-[3px] inline-block w-5 h-5 rounded-sm border border-ink-2 shrink-0 print:w-6 print:h-6" aria-hidden="true"></span>
+        <div class="flex-1 flex flex-col gap-1">
+          <div class="flex items-baseline justify-between gap-3">
+            <span class="text-[17px] text-ink font-medium print:text-[19px]"><%= row.recipe_name %></span>
+            <span class="font-mono text-[14px] text-ink-2 shrink-0 tabular-nums print:text-[16px]">
+              <%= row.display_qty %> <%= t("units.#{row.unit}", default: row.unit) %>
+            </span>
+          </div>
+          <% unless row.prep_notes.empty? %>
+            <p class="text-[12.5px] text-muted leading-[1.4] print:text-[12px]">
+              <%= row.prep_notes.uniq.join(" · ") %>
+            </p>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+
+  <p class="mt-6 text-muted text-[12.5px] max-w-prose print:mt-10 print:text-[11px]">
+    <%= t("production.shopping_list.decomposition_nudge") %>
+  </p>
+<% end %>

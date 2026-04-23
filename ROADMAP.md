@@ -135,7 +135,7 @@ The storefront can *accept* an order and both sides now *know*: operator gets a 
 
 ---
 
-## Phase 5 — Production planning & daily ops (next)
+## Phase 5 — Production planning & daily ops (shipped)
 
 **Context.** After Phase 4, pedidos reliably land, confirm, and settle. The next pain is time-bounded: "Elena, it's Friday morning, what do I cook today? What do I need to buy? Who's getting what, and in what order?" The operator needs a single page that answers those three questions without scrolling a 40-card kanban.
 
@@ -154,43 +154,43 @@ Phase 5 is the week-view that sits *above* the kanban, plus the bits that turn a
 
 #### Slice 1 — Daily focus view (M)
 
-- [ ] `/production` (rename the stub) — a 7-day strip at the top (today-highlighted, scroll horizontally on mobile).
-- [ ] Each day card: pedido count, quick-action chips ("3 por confirmar", "5 a cocinar", "2 entregas"), fills from that day's `delivery_date`.
-- [ ] Tap a day → per-day panel below with two sections: **Cocinar hoy** (recipe × total qty summed across orders) and **Entregar hoy** (per-order handoff list with delivery window).
-- [ ] "Iniciar producción para todos" bulk action on the cook list — fires `start_production!` on every confirmed order for that day.
-- [ ] Print-friendly CSS for the daily panel (single-page, readable off paper).
+- [x] ~~`/production` (rename the stub) — a 7-day strip at the top (today-highlighted, scroll horizontally on mobile).~~
+- [x] ~~Each day card: pedido count, quick-action chips ("3 por confirmar", "5 a cocinar", "2 entregas"), fills from that day's `delivery_date`.~~
+- [x] ~~Tap a day → per-day panel below with two sections: **Cocinar hoy** (recipe × total qty summed across orders) and **Entregar hoy** (per-order handoff list with delivery window).~~
+- [x] ~~"Iniciar producción para todos" bulk action on the cook list — fires `start_production!` on every confirmed order for that day.~~
+- [x] ~~Print-friendly CSS for the daily panel (single-page, readable off paper).~~
 
-#### Slice 2 — Weekly shopping list (S in simple-mode, rewrites in Phase 8)
+#### Slice 2 — Weekly shopping list (S in simple-mode, rewrites in Phase 7)
 
-- [ ] `/production/shopping-list` — aggregates the next 7 days of confirmed-but-not-ready orders.
-- [ ] Simple-mode today: groups by *recipe name* with total qty + per-order notes roll-up ("Tamal verde — 12 porciones · 2 sin cilantro"). No ingredient math until Phase 8.
-- [ ] Print-friendly layout (giant checkboxes, no sidebar).
-- [ ] Subtle "Cuando termines tu recetario compuesto, esta lista baja al ingrediente" nudge — sets up Phase 8.
+- [x] ~~`/production/shopping-list` — aggregates the next 7 days of confirmed-but-not-ready orders.~~
+- [x] ~~Simple-mode today: groups by *recipe name* with total qty + per-order notes roll-up ("Tamal verde — 12 porciones · 2 sin cilantro"). No ingredient math until Phase 7.~~
+- [x] ~~Print-friendly layout (giant checkboxes, no sidebar).~~
+- [x] ~~Subtle "Cuando termines tu recetario compuesto, esta lista baja al ingrediente" nudge — sets up Phase 7.~~
 
 #### Slice 3 — Delivery-slot editor (M)
 
-- [ ] Operator weekly slot grid at `/delivery-slots` — reuse the ordering-hours layout pattern (Lun–Dom × time pickers × "Cerrado" toggle).
-- [ ] Per-slot capacity field (default unlimited, can set max N pedidos). No runtime throttling yet — just display.
-- [ ] Fill indicator next to each slot: "Sáb 11:00–13:00 · 4 de 8 pedidos".
-- [ ] Storefront checkout already reads slots via `DeliverySlot`; surface fill status in the customer's slot picker (greyed out when full, optional).
+- [x] ~~Operator weekly slot grid at `/delivery-slots` — reuse the ordering-hours layout pattern (Lun–Dom × time pickers × "Cerrado" toggle).~~ **(Retired in Phase 6 — replaced by the richer `/schedule` editor with weekly grid + exceptions + autosave.)**
+- [x] ~~Per-slot capacity field (default unlimited, can set max N pedidos). No runtime throttling yet — just display.~~ (Dropped with DeliverySlot in Phase 6.)
+- [x] ~~Fill indicator next to each slot: "Sáb 11:00–13:00 · 4 de 8 pedidos".~~ (Dropped with DeliverySlot in Phase 6.)
+- [x] ~~Storefront checkout already reads slots via `DeliverySlot`; surface fill status in the customer's slot picker (greyed out when full, optional).~~ (Storefront now reads from `Schedule` + `Availability` via `Schedules::AvailableWindows`.)
 
 #### Slice 4 — Runner view (S)
 
-- [ ] `/r/:token` (new top-level route) — read-only, per-day, token-signed URL.
-  - Token encodes `account_id` + `delivery_date`; signed with `Rails.application.message_verifier(:runner)`.
-  - Generated from a "Compartir ruta del día" button on the daily focus view.
-- [ ] Lists the day's delivery orders in colonia-grouped, geocoded order (same data the kanban has today — no new optimizer).
-- [ ] Each row: client name + address + window + line-items + "Ir en Maps" button (directions URL) + "Entregado" button.
-- [ ] "Entregado" POSTs to a tokenized endpoint that fires `Orders::Transition.call(order:, event: :deliver)`; no session auth, idempotent on re-clicks.
-- [ ] Add `r` to `Account::RESERVED_SLUGS` + `bin/check_reserved_slugs` to protect the runner mount.
+- [x] ~~`/r/:token` (new top-level route) — read-only, per-day, token-signed URL.~~
+  - [x] ~~Token encodes `account_id` + `delivery_date`; signed with `Rails.application.message_verifier(:runner)`.~~
+  - [x] ~~Generated from a "Compartir ruta del día" button on the daily focus view.~~
+- [x] ~~Lists the day's delivery orders in colonia-grouped, geocoded order (same data the kanban has today — no new optimizer).~~
+- [x] ~~Each row: client name + address + window + line-items + "Ir en Maps" button (directions URL) + "Entregado" button.~~
+- [x] ~~"Entregado" POSTs to a tokenized endpoint that fires `Orders::Transition.call(order:, event: :deliver)`; no session auth, idempotent on re-clicks.~~
+- [x] ~~Add `r` to `Account::RESERVED_SLUGS` + `bin/check_reserved_slugs` to protect the runner mount.~~
 
 #### Slice 5 — Bulk column actions (XS)
 
-- [ ] Kanban column header dropdown with one action per column:
-  - `placed` → "Confirmar todas"
-  - `confirmed` → "Iniciar producción de todas"
-  - `ready` → "Marcar todas en camino" (delivery only, pickup stays manual)
-- [ ] All are confirmation-gated (`turbo_confirm`); each triggers the same AASM event per-card via a new `Orders::BulkTransition` command.
+- [x] ~~Kanban column header dropdown with one action per column:~~
+  - [x] ~~`placed` → "Confirmar todas"~~
+  - [x] ~~`confirmed` → "Iniciar producción de todas"~~
+  - [x] ~~`ready` → "Marcar todas en camino" (delivery only, pickup stays manual)~~
+- [x] ~~All are confirmation-gated (`turbo_confirm`); each triggers the same AASM event per-card via a new `Orders::BulkTransition` command.~~
 
 ### Out (explicit deferrals)
 
@@ -270,40 +270,67 @@ Recommended merge order: **1 → 3 → 2 → 5 → 4**. The first three slices a
 
 ---
 
-## Phase 6 — Payments
+## Phase 6 — Scheduling, confirmation, storefront UX (shipped)
 
-Mexican-specific, lots of integration surface. **Defer until we have 10+ operators asking.**
+**Context.** Phase 5 closed the operations loop. Phase 6 tightened the customer side: a real `Schedule` with weekly availability + date exceptions (Agendario-style), two-step email-verified confirmation, and a picker that actually respects the kitchen's operating mode.
 
-- [ ] Mercado Pago link generation (v1.5 target — simplest wedge)
-- [ ] SPEI reference capture on Payment
-- [ ] Stripe Checkout for anticipos (v1.6)
-- [ ] Payment reconciliation dashboard
-- [ ] Customer-facing "Pagar anticipo" button on the confirmation page (currently only shows "Te contacto por WhatsApp")
+- [x] ~~Email infrastructure: `no-reply@kitchef.mx` as canonical From; display-name = kitchen; `Reply-To` = owner; Resend wired for production; letter_opener_web wired for development; shared `layouts/mailer.{html,text}.erb` for every mail to reuse chrome.~~
+- [x] ~~`Schedule` + `Availability` models (Agendario-adapted): one schedule per account via `after_create :ensure_schedule`; `Availability` uses `wday XOR date` at the DB level; `order_mode` enum (`advance` / `same_day` / `both`); `lead_time_minutes` (exposed as hours in the UI).~~
+- [x] ~~`/schedule` editor: weekly grid with multiple slots per day + date-specific exceptions; each row autosaves per-field via a nested `Schedules::AvailabilitiesController` (POST/PATCH/DELETE returning Turbo Streams) — no accepts_nested_attributes fragility, no "Save" button.~~
+- [x] ~~`Order#delivery_mode` enum (`scheduled` / `asap`) via new migration; storefront picker refactored to post a single `delivery_window_id`, server-side `Schedules::AvailableWindows.decode` re-validates on submit.~~
+- [x] ~~Storefront delivery picker redesign: segmented "Para hoy / Para después" (only in `both` mode) + one-tap ASAP card + date-chip strip / time-chip grid for scheduled windows. Respects `lead_time_minutes`, honors per-date exceptions, surfaces "Hoy no estamos cocinando" when closed today.~~
+- [x] ~~Two-step confirmation: email CTA lands on the order page with a signed `?t=…` review token; the confirm block + "Confirmar mi pedido" button only render when the token matches. Direct URL access (without the email) shows a "Revisa tu correo" nudge. `POST /:slug/orders/:id/confirm` re-validates the token server-side.~~
+- [x] ~~Email now required at checkout (identity-verification gate); `Storefronts::PlaceOrder` rejects submissions without one.~~
+- [x] ~~`Order#review_token` + `Order.decode_review_token` (7-day TTL, `message_verifier(:order_review)`).~~
+- [x] ~~WhatsApp pre-filled message (both on the confirmation page and in the placed email) now includes the operator's kanban deep-link `orders_url(anchor: dom_id(order))` — one tap takes the operator to the matching card, `target_highlight_controller` flashes it.~~
+- [x] ~~Dish detail page at `/:slug/platillos/:recipe_slug`: hero photo + kitchen strip + price + description + Add-to-cart + WhatsApp "Preguntar" + "Más de esta cocina" related-dishes strip (prefers other categories). Menu cards split into secondary "Ver" + primary "Agregar"; card image + title both link to the detail page.~~
+- [x] ~~Kanban + handoff-list cards now surface the short pedido id (`#gPbkHnr9`) so two near-identical pedidos from the same client are distinguishable at a glance.~~
+- [x] ~~Cleanup: removed `/delivery-slots` + `DeliverySlot` model + capacity/fill-level service (superseded by `/schedule` + `Availability`); removed `ordering_hours` JSON editor from `/account/edit` (replaced with a link to `/schedule`); `Storefronts::OrderingHours` rewritten to read from `Schedule`.~~
+
+### Phase 6 deferred (small but worth naming)
+
+- [ ] **Customer self-reschedule** — once confirmed, no way for the customer to move the window. WhatsApp conversation handles this today.
+- [ ] **Holiday preset library** — exceptions are 100% operator-driven; no "Mexican holidays auto-seeded" feature.
+- [ ] **Multiple schedules per account** — single-schedule is the v1. Revisit if an operator asks for different rules per branch / service.
+- [ ] **Capacity on `Availability`** — the old `DeliverySlot.capacity` display-only signal was dropped on the migration; can come back as `Availability#capacity` if operators ask to see fill rates.
+- [ ] **Twilio WhatsApp Business** — still wa.me deep-links only.
 
 ---
 
-## Phase 7 — Menu engineering
+## Phase 7 — Composable recipes (next)
 
-Pro-tier analytics that pays for itself by helping the operator price correctly. **Requires ≥ 60 days of pedido history per operator to be useful.**
+**Context.** The cost engine is already in the codebase — `Recipes::CostCalculator`, `Recipes::CycleDetector`, `Recipes::DependencyGraph`, `Recipes::UnitConverter`, and the polymorphic `RecipeComponent` join — but the operator UI can't reach any of it. Recipes are flat: name + photo + price + category. `accounts.settings.use_composable_recipes` is the feature flag that flips simple → advanced; it's false for everyone.
+
+**Why now (vs Menu engineering).** Menu engineering needs **≥60 days of real pedido history** per operator to be useful (stars/plowhorses, trendlines, etc.). With zero production operators today, menu engineering has no data to analyze. Composable recipes needs **zero history** — it's pure modeling + UX. It also unlocks the ingredient-level shopping list that Phase 5 explicitly nudged toward, and it's the quiet technical differentiator vs. Castiron-style cottage-food tools.
+
+**Why now (vs Payments).** Payments waits for explicit operator demand (plan says "defer until 10+ asking"). Composable recipes is foundational — every future cost / margin / reprice feature rides on top of it.
+
+- [ ] Real `/ingredients` CRUD (currently a stub): name, category, unit, default cost, supplier notes, last-price-changed-at.
+- [ ] Recipe decomposition form inside `/recipes/:id/edit`: components picker (ingredient OR other recipe), qty + unit, live cost preview.
+- [ ] Cycle detection at the form layer (`Recipes::CycleDetector` already runs on before_save; surface it BEFORE submit so the operator sees "Esta receta ya usa [X]" inline).
+- [ ] Cost-tree visualization on the recipe detail page — nested expandable tree all the way down to raw ingredients.
+- [ ] Saleable vs. internal toggle — already in the model; UI needs to expose "esta receta se vende / es una base" so internal preparations (masa, salsas, bases) live out of the saleable menu.
+- [ ] Ingredient-price-change impact panel — on ingredient update, show which recipes shift + their new costs; offer an optional "rescale menu prices to keep margin" action (`Recipes::DependencyGraph` is the engine).
+- [ ] Onboarding flow for first-time decomposition — activate `Onboarding::Decomposition` (currently stubbed). First decomposition flips `settings.use_composable_recipes` via `Onboarding::CompleteFirstDecomposition`.
+- [ ] Unit-conversion UX — kg↔g, l↔ml; strict cross-type (a recipe using grams can't pull from an ingredient tracked in liters without the operator setting a density hint, which is out-of-scope).
+- [ ] `Production::WeeklyShoppingList` rewrite — when the flag is on, return ingredient rows instead of recipe rows. Call signature stays identical (Phase 5 kept this seam on purpose).
+
+**Out (deferrals).**
+- Yield tracking ("esta batch rinde 20 tamales; si pidas 2, consume 2/20 del costo de la batch") — a whole second mental model on top of components.
+- Nutritional info — low priority in this market.
+- Recipe versioning / price history — only matters once we have months of purchase history.
+
+---
+
+## Phase 8 — Menu engineering
+
+Pro-tier analytics that pays for itself by helping the operator price correctly. **Requires ≥ 60 days of pedido history per operator to be useful — sequence after Phase 7 so we have cost data (not just sales data) to analyze.**
 
 - [ ] Stars / plowhorses / puzzles / dogs matrix with plain-language labels
 - [ ] Per-recipe monthly sales + margin trendlines
 - [ ] Ingredient-impact analysis (which raw inputs drive the most cost across the operation)
 - [ ] Reprice suggestions based on target margin + recent ingredient price moves
 - [ ] Monthly email digest with one actionable insight
-
----
-
-## Phase 8 — Composable recipes (advanced mode)
-
-The technical quiet-superpower. **Design is locked (PRD/TRD §6); UI is the unknown.**
-
-- [ ] Recipe decomposition form (component picker: ingredients OR other recipes)
-- [ ] Cycle-detection at the form layer (surface the error before submit)
-- [ ] Cost-tree visualization on the recipe detail page
-- [ ] Transitive cost propagation when an ingredient price changes (`Recipes::DependencyGraph` already ships, needs UI tie-in)
-- [ ] Onboarding flow for first-time decomposition (`Onboarding::Decomposition`, currently stubbed)
-- [ ] Unit-conversion UX (kg ↔ g, l ↔ ml, strict cross-type)
 
 ---
 
@@ -316,7 +343,19 @@ The technical quiet-superpower. **Design is locked (PRD/TRD §6); UI is the unkn
 
 ---
 
-## Phase 10 — Growth, retention, polish
+## Phase 10 — Payments (deferred until demand)
+
+Mexican-specific, lots of integration surface. **Defer until we have 10+ operators asking.** WhatsApp + the payment-pending chip + `mark_paid!` handle it until then.
+
+- [ ] Mercado Pago link generation (v1.5 target — simplest wedge)
+- [ ] SPEI reference capture on Payment
+- [ ] Stripe Checkout for anticipos (v1.6)
+- [ ] Payment reconciliation dashboard
+- [ ] Customer-facing "Pagar anticipo" button on the confirmation page (currently only shows "Te contacto por WhatsApp")
+
+---
+
+## Phase 11 — Growth, retention, polish
 
 - [ ] QR code generator for printed flyers (`rqrcode`)
 - [ ] Daily operator digest email (`DailyOperatorDigestJob` — scaffold exists, needs content)
@@ -345,10 +384,12 @@ The technical quiet-superpower. **Design is locked (PRD/TRD §6); UI is the unkn
 
 ## Working order — my recommendation
 
-1. ~~**Phase 4 first**~~ — shipped. The kitchen now hears every pedido and the customer gets a tracked confirmation with a one-tap self-confirm link. Payment was also refactored out of AASM — delivered is terminal, paid is a property.
-2. **Phase 5 next (production planning)** — the first operator who gets more than 20 pedidos/week will ask for this by the second week. Two of three alpha kitchens are already there.
-3. **Phase 8 (composable recipes)** turns Phase 5's simple-mode shopping list into an ingredient-level one. Worth building before Phase 6 if an operator asks for precise raw-input planning.
-4. **Phase 7 (menu engineering)** only makes sense after ~60 days of history, which implies ~2 months of live users first.
-5. **Phase 6 (payments)** comes after at least one kitchen has explicitly asked for it — until then, WhatsApp-for-payment + the payment-pending chip is enough. The WhatsApp-confirmation-message flow deferred from Phase 4 ships here.
+1. ~~**Phase 4**~~ — shipped. The kitchen hears every pedido, the customer gets a tracked confirmation, and payment is a property (not a state).
+2. ~~**Phase 5**~~ — shipped. Production planning + daily focus + runner view + bulk actions. The operator's morning routine lives on one page.
+3. ~~**Phase 6**~~ — shipped. Schedule with exceptions (Agendario-style), email-verified two-step confirmation, the storefront delivery picker that actually respects operating modes, and the dish detail page.
+4. **Phase 7 next (composable recipes)** — the cost engine is already in the codebase; this phase makes it visible. Unlocks the ingredient-level shopping list Phase 5 nudged toward. No history required — purely a modeling + UX phase. Picks up before menu engineering because menu engineering needs ≥60 days of pedido history to analyze, and we have zero operators in production.
+5. **Phase 8 (menu engineering)** ships after 60+ days of pedido history accumulate. Composable recipes (Phase 7) makes the cost side of the analysis meaningful; without it we'd only have sales data.
+6. **Phase 9 (finance lite)** — weekly/monthly P&L. Rides on top of Phase 7's cost data.
+7. **Phase 10 (payments)** — still deferred. Waits for explicit operator demand (10+ asking). WhatsApp + the payment chip + `mark_paid!` keep the loop honest in the meantime.
 
-Phases 9 and 10 are continuous; each ships a slice per quarter once the core loop is done.
+Phase 11 is continuous; each ships a slice per quarter once the core loop is done.

@@ -71,7 +71,7 @@ class Account < ApplicationRecord
     about account accounts admin-panel api-docs apis auth
     billing
     careers cart categories changelog checkout clients company contact cookies
-    dashboard delivery-slots demo docs docs-api documentation
+    dashboard demo docs docs-api documentation
     enterprise explore
     faq features feedback forgot-password
     help home how-it-works
@@ -82,8 +82,8 @@ class Account < ApplicationRecord
     new news notifications
     onboarding
     password passwords pricing privacy production products profile
-    register reports reset-password root
-    search settings sign-in signin sign-out signout sign-up signup
+    r register reports reset-password root
+    schedule search settings sign-in signin sign-out signout sign-up signup
     stats status subscribe subscription support
     team terms tour
     users
@@ -129,13 +129,28 @@ class Account < ApplicationRecord
   # client_id). Users cascades so destroying the owner tears down any
   # other members with it — the owner's `before_destroy :detach_from_account`
   # pre-nulls the circular FK so this doesn't loop back onto itself.
-  has_many :users,          dependent: :destroy
-  has_many :orders,         dependent: :destroy
-  has_many :clients,        dependent: :destroy
-  has_many :recipes,        dependent: :destroy
-  has_many :ingredients,    dependent: :destroy
-  has_many :delivery_slots, dependent: :destroy
-  has_one  :subscription,   dependent: :destroy
+  has_many :users,       dependent: :destroy
+  has_many :orders,      dependent: :destroy
+  has_many :clients,     dependent: :destroy
+  has_many :recipes,     dependent: :destroy
+  has_many :ingredients, dependent: :destroy
+  has_one  :schedule,    dependent: :destroy, inverse_of: :account
+  has_one  :subscription, dependent: :destroy
+
+  # Every account boots with a blank Schedule so storefront code can count
+  # on `account.schedule` being non-nil. Operators fill it in from
+  # `/schedule`; until then, the picker surfaces a "no horarios yet" state
+  # rather than blowing up.
+  after_create :ensure_schedule
+
+  # Idempotent fetch-or-create, for cases where the `after_create` callback
+  # didn't run (pre-Phase-6 accounts backfilled via the data migration, or
+  # direct SQL inserts in tests).
+  def schedule!
+    schedule || create_schedule!(order_mode: :advance, lead_time_minutes: 0)
+  rescue ActiveRecord::RecordNotUnique
+    reload_schedule
+  end
 
   # Variants match the three shapes the logo is rendered at across the
   # app: operator-app header avatar, storefront header mark, and
@@ -195,5 +210,13 @@ class Account < ApplicationRecord
   # shared.
   def should_generate_new_friendly_id?
     slug.blank?
+  end
+
+  private
+
+  def ensure_schedule
+    create_schedule!(order_mode: :advance, lead_time_minutes: 0) if schedule.nil?
+  rescue ActiveRecord::RecordNotUnique
+    reload_schedule
   end
 end

@@ -1,0 +1,19 @@
+es-MX:
+  runners:
+    show:
+      title: "Ruta de entregas · %{account}"
+      kicker: "Ruta"
+      headline: "Entregas de %{account}"
+      no_colonia: "Sin colonia"
+      deliver_cta: "Marcar entregado"
+      footer: "Enlace temporal · válido solo para hoy"
+      empty:
+        headline: "No hay entregas hoy"
+        sub: "Cuando haya pedidos para entregar, los verás aquí en orden."
+    invalid:
+      title: "Enlace vencido"
+      kicker: "Uy"
+      headline: "Este enlace ya no sirve"
+      sub: "Pídele a tu cocina que te comparta el enlace del día otra vez. Cada enlace vale solo para un día."
+    errors:
+      not_found: "Ese pedido no está en la ruta de hoy."

@@ -1,0 +1,77 @@
+<%# A single availability row. Plain <div> (not a <form>) so it can live
+    next to a `button_to` delete button + anywhere on the page without
+    nested-form shenanigans. `availability-row` Stimulus controller
+    handles debounced autosave + delete via fetch. %>
+<div id="<%= dom_id(availability) %>"
+     class="flex flex-wrap items-center gap-3 rounded-card-sm bg-bg border border-line p-3"
+     data-controller="availability-row"
+     data-availability-row-update-url-value="<%= schedule_availability_path(availability) %>"
+     data-availability-row-destroy-url-value="<%= schedule_availability_path(availability) %>"
+     data-availability-row-destroy-confirm-value="<%= t("schedules.slot.remove_confirm") %>">
+
+  <% if availability.override? %>
+    <div class="flex flex-col gap-0.5 min-w-[180px]">
+      <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-accent">
+        <%= l(availability.date, format: :long) %>
+      </span>
+      <input type="text"
+             name="availability[note]"
+             value="<%= availability.note %>"
+             placeholder="<%= t("schedules.exceptions.note_placeholder") %>"
+             data-availability-row-target="field"
+             data-action="change->availability-row#save input->availability-row#save"
+             class="rounded-input border border-transparent bg-transparent px-0 py-0.5 text-[13px] text-ink-2 focus:border-line hover:border-line transition-colors">
+    </div>
+  <% end %>
+
+  <div class="flex items-center gap-2">
+    <label class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+      <%= t("schedules.slot.from_label") %>
+    </label>
+    <input type="time"
+           name="availability[from_time_hhmm]"
+           value="<%= availability.from_time_hhmm %>"
+           data-availability-row-target="field"
+           data-action="change->availability-row#save"
+           class="rounded-input border border-line bg-surface px-2 py-1.5 text-[14px] text-ink font-mono w-[110px]">
+  </div>
+
+  <div class="flex items-center gap-2">
+    <label class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+      <%= t("schedules.slot.to_label") %>
+    </label>
+    <input type="time"
+           name="availability[to_time_hhmm]"
+           value="<%= availability.to_time_hhmm %>"
+           data-availability-row-target="field"
+           data-action="change->availability-row#save"
+           class="rounded-input border border-line bg-surface px-2 py-1.5 text-[14px] text-ink font-mono w-[110px]">
+  </div>
+
+  <% if availability.override? %>
+    <label class="inline-flex items-center gap-2">
+      <input type="hidden" name="availability[available]" value="0">
+      <input type="checkbox"
+             name="availability[available]"
+             value="1"
+             <%= "checked" if availability.available? %>
+             data-availability-row-target="field"
+             data-action="change->availability-row#save"
+             class="h-4 w-4 accent-accent">
+      <span class="text-[12.5px] text-ink-2"><%= t("schedules.slot.available_label") %></span>
+    </label>
+  <% end %>
+
+  <span data-availability-row-target="status"
+        data-label-saving="<%= t("schedules.autosave.saving") %>"
+        data-label-saved="<%= t("schedules.autosave.saved") %>"
+        data-label-error="<%= t("schedules.autosave.error") %>"
+        class="hidden font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted"></span>
+
+  <button type="button"
+          data-action="availability-row#delete"
+          class="ml-auto inline-flex items-center gap-1 text-[12px] text-muted hover:text-err transition-colors bg-transparent border-0 p-0 cursor-pointer">
+    <%= icon(:trash_2, size: :xs) %>
+    <span class="sr-only"><%= t("schedules.slot.remove") %></span>
+  </button>
+</div>

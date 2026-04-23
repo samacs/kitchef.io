@@ -75,22 +75,26 @@ es-MX:
       expiry: "El enlace expira en %{duration}."
       signature: "— El equipo de Kitchef"
 
+  mailer:
+    footer:
+      generic: "Te escribimos desde Kitchef. Si no esperabas este correo, puedes ignorarlo."
+      from_kitchen: "Este correo llegó porque pediste en la tienda de %{kitchen_name} en Kitchef."
+
   storefront_orders_mailer:
     placed:
-      subject: "Pedido recibido — %{kitchen_name}"
+      subject: "Confirma tu pedido — %{kitchen_name}"
       kicker: "Pedido recibido"
       greeting: "¡Pedido recibido, %{first_name}!"
-      lede: "Gracias por pedirle a %{kitchen_name}. Te confirmaremos por este medio o por WhatsApp en cuanto arrancamos a cocinar."
+      lede: "Gracias por pedirle a %{kitchen_name}. Antes de arrancarnos a cocinar, necesitamos que revises un par de datos y confirmes."
       when_label: "Fecha de entrega"
+      asap_label: "Lo antes posible"
       where_label: "Entrega"
       items_label: "Tu pedido"
       total_label: "Total"
       whatsapp_cta: "Escribir a %{kitchen_name} por WhatsApp"
-      whatsapp_message: "Hola %{kitchen_name}, vengo con mi pedido %{prefix_id}."
-      self_confirm_lede: "Toca el botón para confirmar tu pedido y que la cocina pueda empezar a prepararlo."
-      self_confirm_cta: "Confirmar mi pedido"
-      status_link: "Ver el estado de tu pedido"
-      footer: "Este correo llegó porque pediste en la tienda de %{kitchen_name} en Kitchef."
+      whatsapp_message: "Hola %{kitchen_name}, vengo con mi pedido %{prefix_id}. Aquí lo puedes ver en tu panel: %{link}"
+      review_lede: "Toca el botón para revisar tu dirección, agregar notas de entrega y confirmar tu pedido."
+      review_cta: "Revisar y confirmar mi pedido"
 
   user_menu:
     trigger_label: "Abrir menú de usuario"
@@ -113,7 +117,7 @@ es-MX:
       recipes: "Recetario"
       ingredients: "Ingredientes"
       clients: "Clientes"
-      delivery_slots: "Entregas"
+      schedule: "Horario"
       production: "Producción"
       reports_section: "Reportes"
       reports_menu: "Tu menú"

@@ -1,18 +1,29 @@
+<% detail_href = helpers.storefront_recipe_path(slug: recipe.account.slug, recipe_slug: recipe.slug) %>
 <article class="flex flex-col overflow-hidden rounded-[14px] border border-line bg-surface transition-shadow hover:shadow-lift">
-  <div class="relative" style="aspect-ratio: 4 / 3; background: var(--color-bg-2);">
+  <%# Image + title both deep-link to the dish detail page. The whole
+      top half of the card behaves like a native product tile — tap the
+      photo or the name, get the details; tap Agregar, add to cart. %>
+  <%= link_to detail_href,
+        class: "group relative block overflow-hidden no-underline",
+        style: "aspect-ratio: 4 / 3; background: var(--color-bg-2);",
+        aria: { label: t("storefronts.menu.view_dish_aria", name: name) } do %>
     <% if photo_variant %>
-      <%= image_tag photo_variant, class: "absolute inset-0 h-full w-full object-cover", alt: name %>
+      <%= image_tag photo_variant,
+            class: "absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]",
+            alt: name %>
     <% else %>
       <div class="absolute inset-0 flex items-center justify-center font-serif italic text-[56px]"
            style="color: var(--brand-1);">
         <%= name.first.upcase %>
       </div>
     <% end %>
-  </div>
+  <% end %>
 
   <div class="flex flex-1 flex-col gap-2.5 p-4">
     <div class="flex items-start justify-between gap-3">
-      <h3 class="font-serif text-[22px] leading-[1.1] tracking-tight text-ink"><%= name %></h3>
+      <h3 class="font-serif text-[22px] leading-[1.1] tracking-tight text-ink">
+        <%= link_to name, detail_href, class: "no-underline hover:underline" %>
+      </h3>
       <div class="shrink-0 text-right">
         <div class="font-serif text-[20px] leading-[1.1] text-ink"><%= price_display %></div>
       </div>
@@ -41,9 +52,16 @@
       </div>
     <% end %>
 
-    <div class="mt-auto pt-2">
+    <div class="mt-auto flex items-stretch gap-2 pt-2">
+      <%# "Ver" takes the customer to the dish detail page. Secondary
+          styling so the eye still lands on the primary "Agregar" CTA
+          — impulse-add stays one tap away. %>
+      <%= link_to helpers.storefront_recipe_path(slug: recipe.account.slug, recipe_slug: recipe.slug),
+            class: "inline-flex items-center justify-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 py-2.5 text-[13px] font-medium text-ink-2 no-underline transition hover:border-line-2" do %>
+        <%= t("storefronts.menu.view") %>
+      <% end %>
       <button type="button"
-              class="inline-flex w-full items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[14px] font-semibold transition"
+              class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[14px] font-semibold transition"
               style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);"
               data-action="click->storefront-cart#add"
               data-storefront-cart-payload-param="<%= payload %>">

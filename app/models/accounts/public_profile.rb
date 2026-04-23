@@ -46,13 +46,6 @@ module Accounts
     # `PickupReminderJob`. Operator-configurable, clamped 0..24.
     attribute :pickup_reminder_hours, :integer, default: DEFAULT_PICKUP_REMINDER_HOURS
 
-    # Accepting-orders weekly schedule — JSON blob:
-    #   { "0":"closed", "1":{"open":"09:00","close":"18:00"}, "2":… }
-    # Kept as a serialized string so the form posts a plain hidden field;
-    # the `Storefronts::OrderingHours` service parses + exposes
-    # `open_now?`, `next_opening`, `chip_label` etc.
-    attribute :ordering_hours, :string, default: ""
-
     validates :description, length: { maximum: DESCRIPTION_MAX }
     validates :tagline,     length: { maximum: 80 }
     validates :pickup_reminder_hours,
