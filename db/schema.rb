@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -62,6 +62,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "availabilities", force: :cascade do |t|
+    t.boolean "available", default: true, null: false
+    t.datetime "created_at", null: false
+    t.date "date"
+    t.integer "from_time", null: false
+    t.string "note"
+    t.bigint "schedule_id", null: false
+    t.integer "to_time", null: false
+    t.datetime "updated_at", null: false
+    t.integer "wday"
+    t.index ["schedule_id", "date"], name: "index_availabilities_on_schedule_id_and_date", where: "(date IS NOT NULL)"
+    t.index ["schedule_id", "wday"], name: "index_availabilities_on_schedule_id_and_wday", where: "(wday IS NOT NULL)"
+    t.index ["schedule_id"], name: "index_availabilities_on_schedule_id"
+    t.check_constraint "from_time < to_time", name: "chk_availabilities_from_before_to"
+    t.check_constraint "from_time >= 0 AND to_time <= 1440", name: "chk_availabilities_in_day"
+    t.check_constraint "wday >= 0 AND wday <= 6 OR wday IS NULL", name: "chk_availabilities_wday_range"
+    t.check_constraint "wday IS NOT NULL AND date IS NULL OR wday IS NULL AND date IS NOT NULL", name: "chk_availabilities_wday_xor_date"
+  end
+
   create_table "clients", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.text "allergies"
@@ -83,24 +102,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
     t.index ["account_id", "phone_normalized"], name: "uniq_clients_account_phone_active", unique: true, where: "((phone_normalized IS NOT NULL) AND (discarded_at IS NULL))"
     t.index ["account_id"], name: "index_clients_on_account_id"
     t.index ["discarded_at"], name: "index_clients_on_discarded_at"
-  end
-
-  create_table "delivery_slots", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.integer "capacity"
-    t.jsonb "colonias", default: [], null: false
-    t.datetime "created_at", null: false
-    t.integer "day_of_week", null: false
-    t.integer "end_time", null: false
-    t.integer "max_orders", default: 10, null: false
-    t.integer "position"
-    t.integer "start_time", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id", "day_of_week", "position"], name: "idx_on_account_id_day_of_week_position_d8830b082a"
-    t.index ["account_id"], name: "index_delivery_slots_on_account_id"
-    t.check_constraint "day_of_week >= 0 AND day_of_week <= 6", name: "chk_delivery_slots_day_of_week"
-    t.check_constraint "start_time < end_time", name: "chk_delivery_slots_start_before_end"
-    t.check_constraint "start_time >= 0 AND end_time <= 1440", name: "chk_delivery_slots_time_in_day"
   end
 
   create_table "friendly_id_slugs", force: :cascade do |t|
@@ -188,6 +189,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
     t.string "delivery_address"
     t.date "delivery_date", null: false
     t.integer "delivery_end_time"
+    t.integer "delivery_mode", default: 0, null: false
     t.text "delivery_notes"
     t.integer "delivery_start_time"
     t.integer "delivery_type", default: 0, null: false
@@ -210,6 +212,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
     t.bigint "tax_cents", default: 0, null: false
     t.bigint "total_cents", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "delivery_date", "delivery_mode"], name: "idx_orders_account_date_delivery_mode"
     t.index ["account_id", "delivery_date"], name: "index_orders_on_account_id_and_delivery_date"
     t.index ["account_id", "state", "position"], name: "index_orders_on_account_id_and_state_and_position"
     t.index ["account_id"], name: "index_orders_on_account_id"
@@ -275,6 +278,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
     t.index ["discarded_at"], name: "index_recipes_on_discarded_at"
   end
 
+  create_table "schedules", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "lead_time_minutes", default: 0, null: false
+    t.integer "order_mode", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_schedules_on_account_id", unique: true
+    t.check_constraint "lead_time_minutes >= 0", name: "chk_schedules_lead_time_nonnegative"
+    t.check_constraint "order_mode = ANY (ARRAY[0, 1, 2])", name: "chk_schedules_order_mode"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -333,8 +347,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
   add_foreign_key "accounts", "users", column: "owner_id"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "availabilities", "schedules"
   add_foreign_key "clients", "accounts"
-  add_foreign_key "delivery_slots", "accounts"
   add_foreign_key "ingredients", "accounts"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "recipes"
@@ -343,6 +357,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_000100) do
   add_foreign_key "payments", "orders"
   add_foreign_key "recipe_components", "recipes"
   add_foreign_key "recipes", "accounts"
+  add_foreign_key "schedules", "accounts"
   add_foreign_key "sessions", "users"
   add_foreign_key "subscriptions", "accounts"
   add_foreign_key "users", "accounts"

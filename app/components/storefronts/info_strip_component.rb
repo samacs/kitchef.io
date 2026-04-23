@@ -1,7 +1,9 @@
 module Storefronts
-  # Horarios + Entregas two-card strip below the hero. Reads from the
-  # account's public_profile; skips sections gracefully when a kitchen
-  # hasn't configured them yet.
+  # Horarios + Entregas two-card strip below the hero. Reads schedule
+  # data from the account's Schedule (weekly recurring windows only —
+  # exceptions are per-date and don't make sense on a static summary).
+  # Falls back to a single "Por encargo · WhatsApp" line when the
+  # kitchen hasn't configured any schedule yet.
   class InfoStripComponent < ApplicationComponent
     option :storefront
     option :ordering_hours  # Storefronts::OrderingHours::Result
@@ -13,18 +15,13 @@ module Storefronts
                    5 => "Viernes", 6 => "Sábado", 0 => "Domingo" }.freeze
 
     def schedule_rows
-      raw = public_profile.ordering_hours.to_s
-      return nil if raw.blank?
+      schedule = storefront.schedule
+      return nil if schedule.nil? || schedule.availabilities.recurring.none?
 
-      parsed = JSON.parse(raw) rescue {}
       DAY_LABELS.map do |wday, label|
-        entry = parsed[wday.to_s]
-        row = if entry.is_a?(Hash) && entry["open"] && entry["close"]
-          "#{entry["open"]}–#{entry["close"]}"
-        else
-          "Cerrado"
-        end
-        [ label, row ]
+        windows = schedule.availabilities.recurring.for_wday(wday).order(:from_time)
+        display = windows.empty? ? "Cerrado" : windows.map { |w| "#{w.from_time_hhmm}–#{w.to_time_hhmm}" }.join(" · ")
+        [ label, display ]
       end
     end
 

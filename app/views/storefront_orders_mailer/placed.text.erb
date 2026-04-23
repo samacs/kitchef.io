@@ -1,11 +1,16 @@
+<% content_for :mail_kitchen_name, @kitchen_name %>
 <%= t(".greeting", first_name: @client.first_name.presence || "") %>
 
 <%= t(".lede", kitchen_name: @kitchen_name) %>
 
 --
 <%= t(".when_label") %>:
+<% if @order.dispatch_asap? %>
+<%= t(".asap_label") %>
+<% else %>
 <%= l(@order.delivery_date, format: :long) rescue @order.delivery_date %><% if @order.delivery_start_time && @order.delivery_end_time %>
 <%= @order.delivery_start_time_hhmm %>–<%= @order.delivery_end_time_hhmm %><% end %>
+<% end %>
 
 <% if @order.delivery_address.present? %>
 <%= t(".where_label") %>:
@@ -19,18 +24,10 @@
 
 <%= t(".total_label") %>: <%= humanized_money_with_symbol(@order.total) %>
 
-<% if @self_confirm_url.present? %>
-<%= t(".self_confirm_lede") %>
-<%= t(".self_confirm_cta") %>: <%= @self_confirm_url %>
+<%= t(".review_lede") %>
+<%= t(".review_cta") %>: <%= @review_url %>
 
-<% end %>
 <% if @whatsapp_link.present? %>
 <%= t(".whatsapp_cta", kitchen_name: @kitchen_name) %>
 <%= @whatsapp_link %>
-
 <% end %>
-<%= t(".status_link") %>:
-<%= @status_url %>
-
---
-<%= t(".footer", kitchen_name: @kitchen_name) %>

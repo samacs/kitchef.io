@@ -14,6 +14,7 @@
 #  delivery_address        :string
 #  delivery_date           :date             not null
 #  delivery_end_time       :integer
+#  delivery_mode           :integer          default("scheduled"), not null
 #  delivery_notes          :text
 #  delivery_start_time     :integer
 #  delivery_type           :integer          default("delivery"), not null
@@ -42,6 +43,7 @@
 #
 # Indexes
 #
+#  idx_orders_account_date_delivery_mode              (account_id,delivery_date,delivery_mode)
 #  idx_orders_pickup_reminder_pending                 (ready_at) WHERE (((state)::text = 'ready'::text) AND (delivery_type = 1) AND (pickup_reminder_sent_at IS NULL))
 #  index_orders_on_account_id                         (account_id)
 #  index_orders_on_account_id_and_delivery_date       (account_id,delivery_date)
@@ -80,6 +82,16 @@ class Order < ApplicationRecord
     other:     99
   }.freeze
 
+  # `delivery_mode` answers "when is this going out?":
+  #
+  #   * `scheduled` (default) — customer picked a concrete window;
+  #     `delivery_start_time` + `delivery_end_time` are set.
+  #
+  #   * `asap` — same-day / Uber-style; the operator dispatches as soon
+  #     as the order is ready. `delivery_start_time`/`delivery_end_time`
+  #     stay NULL and the kanban surfaces "Lo antes posible".
+  DELIVERY_MODES = { scheduled: 0, asap: 1 }.freeze
+
   # Preset cancellation reasons. Codes are English identifiers; Spanish
   # labels live under `t("order.cancel_reasons.*")` in domain.yml. "other"
   # unlocks the free-text note and requires it to be filled.
@@ -99,6 +111,48 @@ class Order < ApplicationRecord
 
   enum :delivery_type, DELIVERY_TYPES, prefix: true
   enum :source,        SOURCES,        prefix: true
+  enum :delivery_mode, DELIVERY_MODES, prefix: :dispatch
+
+  # Virtual attribute — the storefront delivery picker posts a single
+  # `delivery_window_id` field encoding date + time range + kind. The
+  # storefront controller re-derives the canonical attributes from this
+  # id via `Schedules::AvailableWindows.decode` and writes them onto the
+  # order; this accessor is here so form_with can round-trip the value
+  # on validation failure without losing the customer's pick.
+  attr_accessor :delivery_window_id
+
+  # Identity-verification token minted at place-order time and included
+  # in the confirmation email's CTA URL. The storefront order show page
+  # gates its review/confirm block on a valid token — without it, the
+  # customer sees only the status timeline and a "check your email"
+  # nudge. Clicking the email link proves they own the inbox they gave
+  # us; the token ties a specific email → a specific order, and rotates
+  # automatically whenever `secret_key_base` rotates in prod.
+  #
+  # Expiration is implicit in the encoded `created_at`; tokens older
+  # than 7 days (REVIEW_TOKEN_TTL) are rejected on decode. Confirmed or
+  # canceled orders don't need the token either — the show page simply
+  # hides the review block once the order has advanced past `placed`.
+  REVIEW_TOKEN_PURPOSE = :order_review
+  REVIEW_TOKEN_TTL     = 7.days
+
+  def review_token
+    Rails.application.message_verifier(:order_review).generate(
+      { order_id: id, created_at: Time.current.to_i },
+      purpose: REVIEW_TOKEN_PURPOSE
+    )
+  end
+
+  def self.decode_review_token(token)
+    payload = Rails.application.message_verifier(:order_review)
+      .verify(token.to_s, purpose: REVIEW_TOKEN_PURPOSE)
+    return nil if Time.at(payload.fetch("created_at")) < REVIEW_TOKEN_TTL.ago
+
+    find_by(id: payload.fetch("order_id"))
+  rescue ActiveSupport::MessageVerifier::InvalidSignature,
+         KeyError, TypeError, ArgumentError
+    nil
+  end
 
   belongs_to :client, optional: true
   has_many :items,    class_name: "OrderItem", dependent: :destroy, inverse_of: :order

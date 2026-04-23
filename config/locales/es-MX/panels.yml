@@ -396,30 +396,66 @@ es-MX:
       cta: "Agregar platillo"
   ingredients:
     title: "Ingredientes"
-  delivery_slots:
-    title: "Horarios de entrega"
-    index:
-      title: "Horarios de entrega"
-      subtitle: "Define los días y horas en que puedes entregar, y cuántos pedidos caben en cada ventana."
-    create:
-      created: "Horario agregado."
+
+  schedules:
+    show:
+      title: "Tu horario"
+      subtitle: "Define cuándo aceptas pedidos y para cuándo entregas. Tus cambios se guardan solos."
     update:
       updated: "Horario actualizado."
-    destroy:
-      destroyed: "Horario eliminado."
-    form:
-      start_time_label: "Empieza"
-      end_time_label: "Termina"
-      capacity_label: "Cupo"
-      capacity_placeholder: "Sin tope"
-      save: "Guardar"
-      create_for_day: "Abrir %{day}"
-      close_day: "Cerrar este día"
-      destroy_confirm: "¿Cerrar las entregas del %{day}?"
-    capacity:
-      unlimited: "Sin tope"
-      display: "%{filled} de %{total} pedidos"
-      hint: "El cupo es una señal — por ahora no bloqueamos pedidos cuando se llena, pero verás cuánto se va ocupando la ventana para ajustarlo cuando haga falta."
+    autosave:
+      saving: "Guardando…"
+      saved: "Guardado"
+      error: "No se pudo guardar"
+    day_names:
+      "0": "Domingo"
+      "1": "Lunes"
+      "2": "Martes"
+      "3": "Miércoles"
+      "4": "Jueves"
+      "5": "Viernes"
+      "6": "Sábado"
+    mode:
+      title: "¿Cómo atiendes pedidos?"
+      subtitle: "Elige cómo trabajas. Puedes cambiarlo cuando cambie tu operación."
+      options:
+        advance:
+          label: "Con anticipación"
+          hint: "Tomas pedidos para cocinar después (tamales, pasteles, meal-prep)."
+        same_day:
+          label: "Para hoy mismo"
+          hint: "Cocinas al momento. Tus clientes piden y tú entregas lo antes posible."
+        both:
+          label: "Ambos"
+          hint: "A veces reservas, a veces sirves al vuelo."
+    lead_time:
+      label: "Aviso mínimo para pedidos con anticipación"
+      unit: "minutos"
+      hint: "Cuánto necesitas entre que te piden y la hora de entrega. 0 = cualquier ventana disponible; 720 = medio día; 1440 = un día completo."
+    weekly:
+      title: "Disponibilidad semanal"
+      subtitle: "Las ventanas que se repiten cada semana. Puedes agregar varias por día."
+    day:
+      open_count:
+        one: "%{count} ventana"
+        other: "%{count} ventanas"
+      closed: "Cerrado"
+      add_slot: "Agregar ventana"
+    slot:
+      from_label: "Abre"
+      to_label: "Cierra"
+      available_label: "Disponible"
+      remove: "Quitar"
+      remove_confirm: "¿Quitar esta ventana?"
+    exceptions:
+      title: "Excepciones por fecha"
+      subtitle: "Días específicos que se portan distinto: vacaciones, días festivos, o un puente con horario especial."
+      empty: "Aún no hay excepciones. Agrega una abajo cuando sepas de alguna."
+      note_placeholder: "Por ejemplo: Navidad"
+      add:
+        date_label: "Fecha"
+        hint: "Deja 'Disponible' desmarcado para cerrar ese día. Actívalo para dar un horario diferente."
+        submit: "Agregar excepción"
   account:
     title: "Tu cocina"
     page_title: "Tu cocina"
@@ -476,7 +512,8 @@ es-MX:
       payment_notes_placeholder: "Ej: Te contacto por WhatsApp para confirmar el anticipo."
       payment_notes_hint: "Se muestra al cliente al terminar su pedido."
       ordering_hours_label: "Horario de pedidos"
-      ordering_hours_hint: "Define los días y horas en que tu tienda acepta pedidos nuevos. Los clientes verán un letrero si llegan fuera de horario."
+      ordering_hours_moved_hint: "Tu horario semanal y las excepciones por fecha ahora viven en su propia pantalla. Desde ahí defines cuándo aceptas pedidos y para cuándo entregas."
+      ordering_hours_edit_cta: "Editar horario"
   subscription:
     title: "Plan"
 

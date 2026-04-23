@@ -1,0 +1,36 @@
+<% if any_windows? %>
+  <div class="flex flex-col gap-4" data-controller="delivery-window-picker">
+    <% days.each do |day| %>
+      <% next if day.windows.empty? %>
+      <div class="flex flex-col gap-2">
+        <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= day_header(day.date) %>
+        </div>
+        <div class="grid gap-2 sm:grid-cols-2">
+          <% day.windows.each do |window| %>
+            <label class="flex cursor-pointer items-start gap-3 rounded-[10px] border border-line bg-surface p-3 transition-colors hover:border-line-2 has-[:checked]:border-[color:var(--brand-1)] has-[:checked]:bg-[color:var(--brand-1-soft)]">
+              <input type="radio"
+                     name="order[delivery_window_id]"
+                     value="<%= window.id %>"
+                     <%= "checked" if selected?(window) %>
+                     class="mt-1 kc-sf-radio"
+                     style="accent-color: var(--brand-1);">
+              <span class="flex flex-col gap-0.5 min-w-0">
+                <span class="text-[14px] font-semibold text-ink">
+                  <%= window_label(window) %>
+                </span>
+                <% if window_sub(window).present? %>
+                  <span class="text-[12px] text-muted"><%= window_sub(window) %></span>
+                <% end %>
+              </span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="rounded-[10px] border border-line bg-bg/60 px-4 py-3 text-[13.5px] text-ink-2">
+    <%= t("storefronts.checkout.schedule.empty") %>
+  </div>
+<% end %>
