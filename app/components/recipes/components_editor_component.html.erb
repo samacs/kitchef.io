@@ -1,0 +1,182 @@
+<fieldset class="flex flex-col gap-4 rounded-card border border-line bg-bg-2/40 p-5 sm:p-6"
+          data-controller="recipes-components">
+  <legend class="sr-only"><%= t("recipes.components.legend") %></legend>
+
+  <div class="flex items-baseline justify-between gap-3">
+    <div class="flex flex-col gap-0.5">
+      <%= render Ui::KickerComponent.new(text: t("recipes.components.kicker")) %>
+      <h3 class="font-serif text-[20px] leading-[1.2] text-ink">
+        <%= t("recipes.components.headline") %>
+      </h3>
+    </div>
+
+    <%= helpers.render(partial: "recipes/cost_summary", locals: { recipe: recipe }) %>
+  </div>
+
+  <% if components.empty? %>
+    <p class="text-[13px] text-muted italic py-2">
+      <%= t("recipes.components.empty") %>
+    </p>
+  <% else %>
+    <ol class="flex flex-col divide-y divide-line rounded-card-sm bg-surface border border-line">
+      <% components.each_with_index do |component, index| %>
+        <li class="flex items-center gap-3 px-3 py-3 sm:px-4"
+            data-recipes-components-target="row">
+          <%= form.fields_for :components, component, child_index: index do |cf| %>
+            <%= cf.hidden_field :id %>
+            <%= cf.hidden_field :componentable_type %>
+            <%= cf.hidden_field :componentable_id %>
+            <input type="hidden" name="recipe[components_attributes][<%= index %>][_destroy]"
+                   value="0" data-recipes-components-target="destroyFlag" />
+
+            <%= cf.number_field :quantity,
+                  step: "0.01",
+                  min: 0,
+                  aria: { label: t("recipes.components.quantity_label") },
+                  class: "w-20 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] font-mono text-right tabular-nums focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" %>
+
+            <%= cf.select :unit,
+                  compatible_units(component).map { |u| [ I18n.t("units.#{u}", default: u), u ] },
+                  {},
+                  aria: { label: t("recipes.components.unit_label") },
+                  class: "w-24 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" %>
+          <% end %>
+
+          <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+            <span class="text-[13.5px] text-ink truncate"><%= component_name(component) %></span>
+            <% if component_type_label(component) %>
+              <span class="text-[11px] text-muted"><%= component_type_label(component) %></span>
+            <% end %>
+          </div>
+
+          <span class="font-mono text-[13px] text-ink-2 tabular-nums whitespace-nowrap">
+            <%= line_cost_label(component) %>
+          </span>
+
+          <button type="button"
+                  data-action="click->recipes-components#remove"
+                  aria-label="<%= t("recipes.components.remove_aria") %>"
+                  title="<%= t("recipes.components.remove_aria") %>"
+                  class="inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-err hover:bg-err/5 transition-colors">
+            <%= helpers.icon(:x, size: :sm) %>
+          </button>
+        </li>
+      <% end %>
+    </ol>
+  <% end %>
+
+  <details class="group rounded-card-sm border border-line bg-surface">
+    <summary class="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer select-none list-none">
+      <span class="inline-flex items-center gap-2 text-[13.5px] font-medium text-ink">
+        <%= helpers.icon(:plus, size: :sm) %>
+        <%= t("recipes.components.add_cta") %>
+      </span>
+      <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted group-open:hidden">
+        <%= t("recipes.components.add_hint") %>
+      </span>
+    </summary>
+
+    <div class="border-t border-line px-4 py-3 flex flex-col gap-3 max-h-[340px] overflow-y-auto kc-scroll">
+      <% if pickable_ingredients.any? %>
+        <div class="flex flex-col gap-1.5">
+          <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+            <%= t("recipes.components.picker.ingredients") %>
+          </span>
+          <ul class="flex flex-col gap-0.5">
+            <% pickable_ingredients.each do |ing| %>
+              <li>
+                <button type="button"
+                        data-action="click->recipes-components#add"
+                        data-componentable-type="Ingredient"
+                        data-componentable-id="<%= ing.id %>"
+                        data-componentable-name="<%= ing.name %>"
+                        data-componentable-unit="<%= ing.unit %>"
+                        class="w-full flex items-baseline justify-between gap-3 text-left px-2 py-1.5 rounded-input hover:bg-bg-2/60 transition-colors">
+                  <span class="text-[13px] text-ink truncate"><%= ing.name %></span>
+                  <span class="font-mono text-[11.5px] text-muted tabular-nums shrink-0">
+                    <%= helpers.humanized_money_with_symbol(ing.unit_cost) %> / <%= I18n.t("units.#{ing.unit}", default: ing.unit) %>
+                  </span>
+                </button>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if pickable_recipes.any? %>
+        <div class="flex flex-col gap-1.5">
+          <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+            <%= t("recipes.components.picker.recipes") %>
+          </span>
+          <ul class="flex flex-col gap-0.5">
+            <% pickable_recipes.each do |r| %>
+              <li>
+                <button type="button"
+                        data-action="click->recipes-components#add"
+                        data-componentable-type="Recipe"
+                        data-componentable-id="<%= r.id %>"
+                        data-componentable-name="<%= r.name %>"
+                        data-componentable-unit="<%= r.yield_unit %>"
+                        class="w-full flex items-baseline justify-between gap-3 text-left px-2 py-1.5 rounded-input hover:bg-bg-2/60 transition-colors">
+                  <span class="text-[13px] text-ink truncate">
+                    <%= r.name %>
+                    <% unless r.is_saleable? %>
+                      <span class="ml-1 text-[11px] text-muted italic">· <%= t("recipes.components.internal_tag") %></span>
+                    <% end %>
+                  </span>
+                  <% if r.cost_cents_cached %>
+                    <span class="font-mono text-[11.5px] text-muted tabular-nums shrink-0">
+                      <%= helpers.humanized_money_with_symbol(r.cost_cached) %> / <%= r.yield_quantity.to_s.sub(/\.0+\z/, "") %> <%= I18n.t("units.#{r.yield_unit}", default: r.yield_unit) %>
+                    </span>
+                  <% end %>
+                </button>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <% if pickable_ingredients.empty? && pickable_recipes.empty? %>
+        <p class="text-[12.5px] text-muted py-2">
+          <%= t("recipes.components.picker.empty") %>
+        </p>
+      <% end %>
+    </div>
+  </details>
+
+  <%# Row template for client-side adds. Stimulus controller clones and
+      fills in the hidden fields before inserting into the list. %>
+  <template data-recipes-components-target="blueprint">
+    <li class="flex items-center gap-3 px-3 py-3 sm:px-4"
+        data-recipes-components-target="row">
+      <input type="hidden" name="recipe[components_attributes][NEW_RECORD][componentable_type]" data-field="componentable_type" />
+      <input type="hidden" name="recipe[components_attributes][NEW_RECORD][componentable_id]"   data-field="componentable_id" />
+      <input type="hidden" name="recipe[components_attributes][NEW_RECORD][_destroy]" value="0" data-recipes-components-target="destroyFlag" />
+
+      <input type="number"
+             name="recipe[components_attributes][NEW_RECORD][quantity]"
+             step="0.01" min="0" value="1"
+             aria-label="<%= t("recipes.components.quantity_label") %>"
+             class="w-20 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] font-mono text-right tabular-nums focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
+
+      <select name="recipe[components_attributes][NEW_RECORD][unit]"
+              aria-label="<%= t("recipes.components.unit_label") %>"
+              data-field="unit"
+              class="w-24 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></select>
+
+      <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+        <span class="text-[13.5px] text-ink truncate" data-field="name"></span>
+      </div>
+
+      <span class="font-mono text-[13px] text-muted tabular-nums whitespace-nowrap">—</span>
+
+      <button type="button"
+              data-action="click->recipes-components#remove"
+              aria-label="<%= t("recipes.components.remove_aria") %>"
+              title="<%= t("recipes.components.remove_aria") %>"
+              class="inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-err hover:bg-err/5 transition-colors">
+        <%= helpers.icon(:x, size: :sm) %>
+      </button>
+    </li>
+  </template>
+</fieldset>

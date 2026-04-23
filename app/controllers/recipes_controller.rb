@@ -6,6 +6,14 @@ class RecipesController < AuthenticatedController
   def new;   end
   def edit;  end
 
+  # Read-only detail surface: name + photo + sale price + cost tree.
+  # The `/recipes` index links recipe cards to `#edit`; the cost tree
+  # is its own URL so the operator can share a link to "here's what
+  # this dish costs me to make" with her sous-chef or her accountant.
+  def show
+    @cost_tree_root = Recipes::CostTreeNode.build(recipe: recipe)
+  end
+
   def create
     result = Recipes::Create.call(account: Current.account, params: recipe_params)
     if result.success?
@@ -18,8 +26,20 @@ class RecipesController < AuthenticatedController
   def update
     result = Recipes::Update.call(recipe: recipe, params: recipe_params)
     if result.success?
+      # Recompute cost inline so the turbo-stream response carries the
+      # fresh number. The async RecipeCostRefreshJob still fires from
+      # RecipeComponent callbacks for fan-out, but for the submitter's
+      # own page we want the summary hot without waiting on Sidekiq.
+      Recipes::CostCalculator.for(recipe: recipe)
+
       respond_to do |format|
-        format.turbo_stream { head :no_content }
+        format.turbo_stream do
+          render turbo_stream: turbo_stream.replace(
+            "recipe_cost_summary",
+            partial: "recipes/cost_summary",
+            locals: { recipe: recipe }
+          )
+        end
         format.html { redirect_to recipes_path, notice: t(".updated") }
       end
     else
@@ -69,6 +89,22 @@ class RecipesController < AuthenticatedController
     end
   end
 
+  # Bulk margin reprice triggered from the ingredient impact panel.
+  # Takes either an ingredient (fan out via DependencyGraph) or an
+  # explicit list of recipe ids. Account-scoped: a stray id from
+  # another tenant is silently filtered.
+  def rescale_for_margin
+    ingredient = Current.account.ingredients.find_by(id: params[:ingredient_id]) if params[:ingredient_id].present?
+    recipe_ids = Current.account.recipes.where(id: Array(params[:recipe_ids])).pluck(:id)
+
+    result = Recipes::RescaleForMargin.call(
+      ingredient: ingredient,
+      recipe_ids: recipe_ids.presence
+    )
+
+    redirect_to ingredients_path, notice: t(".rescaled", count: result.object)
+  end
+
   private
 
   def find_or_build_recipe
@@ -84,6 +120,14 @@ class RecipesController < AuthenticatedController
   end
 
   def recipe_params
-    params.require(:recipe).permit(:name, :sale_price, :category, :description, :is_published, photos: [])
+    params.require(:recipe).permit(
+      :name, :sale_price, :category, :description, :is_published,
+      :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent,
+      photos: [],
+      components_attributes: [
+        :id, :componentable_type, :componentable_id,
+        :quantity, :unit, :notes, :position, :_destroy
+      ]
+    )
   end
 end

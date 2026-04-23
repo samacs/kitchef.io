@@ -1,0 +1,16 @@
+<li class="flex items-start gap-4 px-4 py-4 print:py-3">
+  <span class="mt-[3px] inline-block w-5 h-5 rounded-sm border border-ink-2 shrink-0 print:w-6 print:h-6" aria-hidden="true"></span>
+  <div class="flex-1 flex flex-col gap-1">
+    <div class="flex items-baseline justify-between gap-3">
+      <span class="text-[17px] text-ink font-medium print:text-[19px]"><%= row.recipe_name %></span>
+      <span class="font-mono text-[14px] text-ink-2 shrink-0 tabular-nums print:text-[16px]">
+        <%= row.display_qty %> <%= t("units.#{row.unit}", default: row.unit) %>
+      </span>
+    </div>
+    <% unless row.prep_notes.empty? %>
+      <p class="text-[12.5px] text-muted leading-[1.4] print:text-[12px]">
+        <%= row.prep_notes.uniq.join(" · ") %>
+      </p>
+    <% end %>
+  </div>
+</li>

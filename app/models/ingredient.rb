@@ -60,6 +60,7 @@ class Ingredient < ApplicationRecord
   validates :unit_cost_cents, numericality: { greater_than_or_equal_to: 0 }
 
   before_save :stamp_price_updated_at, if: :unit_cost_cents_changed?
+  after_commit :enqueue_cost_refresh, on: :update, if: :saved_change_to_unit_cost_cents?
 
   scope :by_category, ->(category) { where(category: category) }
 
@@ -67,5 +68,12 @@ class Ingredient < ApplicationRecord
 
   def stamp_price_updated_at
     self.price_updated_at = Time.current
+  end
+
+  def enqueue_cost_refresh
+    RecipeCostRefreshJob.perform_later(
+      componentable_type: "Ingredient",
+      componentable_id:   id
+    )
   end
 end

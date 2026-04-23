@@ -1,0 +1,53 @@
+<% affected = Recipes::DependencyGraph.recipes_depending_on(componentable: ingredient)
+                .kept.includes(:account).to_a %>
+
+<div class="max-w-[640px] mx-auto flex flex-col gap-6 p-5 sm:p-6">
+  <div class="bg-surface border border-line rounded-panel shadow-card p-6 sm:p-7 flex flex-col gap-4">
+    <div class="flex flex-col gap-2">
+      <%= render Ui::KickerComponent.new(text: t("ingredients.impact.kicker")) %>
+      <h2 class="font-serif text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.01em] text-ink">
+        <%= t("ingredients.impact.title") %>
+      </h2>
+      <p class="text-[13.5px] text-ink-2 leading-[1.55]">
+        <%= t("ingredients.impact.lede", name: ingredient.name) %>
+      </p>
+    </div>
+
+    <% if affected.empty? %>
+      <p class="text-[13.5px] text-muted"><%= t("ingredients.impact.empty") %></p>
+    <% else %>
+      <ul class="flex flex-col divide-y divide-line">
+        <% affected.each do |recipe| %>
+          <% cost = Recipes::CostCalculator.for(recipe: recipe)
+             margin_pct = if recipe.sale_price_cents.to_i.positive? && cost.cents > 0
+               (((recipe.sale_price_cents - cost.cents).to_f / recipe.sale_price_cents) * 100).round
+             end %>
+          <li class="py-3 flex items-baseline justify-between gap-3">
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <span class="text-[14px] font-medium text-ink truncate"><%= recipe.name %></span>
+              <span class="text-[12px] text-muted">
+                <%= t("ingredients.impact.new_cost") %>: <%= cost.format %>
+                <% if margin_pct %>
+                  · <%= t("ingredients.impact.new_margin") %> <%= margin_pct %>%
+                <% end %>
+              </span>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+
+      <%= button_to rescale_for_margin_recipes_path,
+            method: :post,
+            params: { ingredient_id: ingredient.id },
+            class: "w-full inline-flex items-center justify-center gap-2 text-[13.5px] font-semibold px-4 py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+        <%= t("ingredients.impact.rescale_cta") %>
+      <% end %>
+    <% end %>
+
+    <button type="button"
+            data-action="click->right-drawer#close"
+            class="self-start inline-flex items-center gap-2 text-[13px] font-medium text-ink-2 hover:text-ink transition-colors">
+      <%= t("ingredients.impact.dismiss") %>
+    </button>
+  </div>
+</div>

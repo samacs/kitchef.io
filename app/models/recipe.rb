@@ -67,6 +67,17 @@ class Recipe < ApplicationRecord
   has_many :component_recipes,     through: :components, source: :componentable, source_type: "Recipe"
   has_many :component_ingredients, through: :components, source: :componentable, source_type: "Ingredient"
 
+  # Accepts nested attributes from the decomposition form. `reject_if`
+  # drops fully blank rows so the form can render an empty "+ agregar"
+  # placeholder without creating a bogus row on submit.
+  accepts_nested_attributes_for :components,
+    allow_destroy: true,
+    reject_if: ->(attrs) {
+      attrs["componentable_type"].blank? ||
+        attrs["componentable_id"].blank? ||
+        attrs["quantity"].blank?
+    }
+
   # Reverse side — where is this recipe used as a component?
   # Destroy cascades so an Account.destroy can proceed; UI-level deletion
   # warns the operator about affected parent recipes.
@@ -99,6 +110,18 @@ class Recipe < ApplicationRecord
   scope :internal, -> { where(is_saleable: false) }
   scope :published, -> { where(is_saleable: true, is_published: true) }
   scope :by_category, ->(category) { where(category: category) }
+
+  # Candidates a given recipe could use as a component without creating a
+  # cycle. Filters out itself plus any recipe whose tree already reaches
+  # back to it. Used by the decomposition form's picker.
+  scope :usable_as_component_for, ->(parent) {
+    forbidden = [ parent.id ].compact
+    return kept if forbidden.empty?
+
+    forbidden += Recipes::DependencyGraph.recipes_depending_on(componentable: parent).ids
+
+    kept.where.not(id: forbidden.uniq)
+  }
 
   def internal?
     !is_saleable?

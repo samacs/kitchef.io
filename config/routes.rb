@@ -106,7 +106,8 @@ Rails.application.routes.draw do
       post :toggle_publish, path: "toggle-publish"
     end
     collection do
-      post :publish_all, path: "publish-all"
+      post :publish_all,        path: "publish-all"
+      post :rescale_for_margin, path: "rescale-for-margin"
     end
   end
   resources :ingredients

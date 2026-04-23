@@ -318,6 +318,36 @@ es-MX:
     internal_badge: "Interna"
     published_badge: "Publicada"
     draft_badge: "Borrador"
+    components:
+      kicker: "Composición"
+      headline: "Componentes"
+      legend: "Componentes de la receta"
+      cost_label: "Costo"
+      quantity_label: "Cantidad"
+      unit_label: "Unidad"
+      remove_aria: "Quitar componente"
+      empty: "Aún no agregas componentes. Cuando agregues ingredientes o recetas base, verás el costo real de esta receta."
+      add_cta: "Agregar componente"
+      add_hint: "Ingredientes y recetas base"
+      internal_tag: "interna"
+      picker:
+        ingredients: "Ingredientes"
+        recipes: "Recetas y bases"
+        empty: "Aún no tienes ingredientes ni recetas base. Agrega primero desde /ingredientes."
+    margin_chip:
+      label: "Margen %{pct}%"
+      loss: "Pérdida"
+      tooltip: "Tu margen objetivo es %{target}%"
+    cost_tree:
+      title: "Desglose de costo"
+      per_unit: "por %{unit}"
+      kicker: "Costo"
+      empty: "Agrega componentes para calcular el costo de esta receta."
+      internal_tag: "interna"
+    show:
+      subtitle: "Ficha y costo de este platillo"
+      edit_cta: "Editar"
+      sale_price: "Precio de venta"
     card:
       publish_cta: "Publicar en mi tienda"
       unpublish_cta: "Ocultar de mi tienda"
@@ -335,6 +365,8 @@ es-MX:
       count:
         one: "%{count} platillo"
         other: "%{count} platillos"
+      internal_section: "Bases y preparaciones"
+      internal_section_lede: "Recetas que no se venden solas. Úsalas como componentes de tus platillos finales."
     new:
       title: "Agregar platillo"
       subtitle: "Foto, nombre y precio bastan"
@@ -366,6 +398,8 @@ es-MX:
       publish_label: "Mostrar en mi tienda"
       publish_hint: "Tus clientes verán este platillo en tu menú público."
       publish_hint_needs_photo: "Sube una foto primero — sin ella, tu menú se ve incompleto."
+      saleable_label: "Esta receta se vende"
+      saleable_hint: "Aparece en tu menú y puede ser parte de un pedido. Si la usas sólo como base de otras recetas, desmárcala."
       submit_create: "Agregar platillo"
       submit_update: "Guardar cambios"
       cancel: "Cancelar"
@@ -387,6 +421,11 @@ es-MX:
         one: "Publicaste 1 platillo en tu menú."
         other: "Publicaste %{count} platillos en tu menú."
       publish_all_none: "No hay platillos listos para publicar. Agrega una foto a tus borradores primero."
+    rescale_for_margin:
+      rescaled:
+        zero: "Nada que ajustar — tus precios ya mantienen el margen objetivo."
+        one: "Ajustamos el precio de 1 receta para mantener tu margen objetivo."
+        other: "Ajustamos los precios de %{count} recetas para mantener tu margen objetivo."
     danger_zone:
       title: "¿Ya no lo cocinas?"
       sub: "Puedes eliminar este platillo y dejará de aparecer en tu menú. Lo conservamos en el historial por si cambias de opinión."
@@ -396,6 +435,80 @@ es-MX:
       cta: "Agregar platillo"
   ingredients:
     title: "Ingredientes"
+    index:
+      title: "Ingredientes"
+      subtitle: "Tu despensa y lo que pagas por cada insumo"
+      cta: "Agregar ingrediente"
+      count:
+        one: "%{count} ingrediente"
+        other: "%{count} ingredientes"
+      used_by_count:
+        one: "%{count} receta"
+        other: "%{count} recetas"
+      table:
+        name: "Nombre"
+        price: "Precio"
+        updated: "Última actualización"
+        used_by: "Usado en"
+    new:
+      title: "Agregar ingrediente"
+      subtitle: "Dato básico + precio actual"
+      kicker: "Nuevo ingrediente"
+      heading: "Suma a tu despensa"
+      lede: "Con nombre, unidad y precio basta. Cuando el precio cambie, te avisamos qué recetas afecta."
+    edit:
+      title: "Editar %{name}"
+      subtitle: "Actualiza nombre, unidad o precio"
+      kicker: "Editar ingrediente"
+    create:
+      created: "Ingrediente agregado."
+    update:
+      updated: "Cambios guardados."
+    destroy:
+      discarded: "Ingrediente eliminado."
+      in_use: "%{name} se usa en una o más recetas. Quítalo de ellas antes de eliminarlo."
+    form:
+      name_label: "Nombre"
+      name_placeholder: "Harina de maíz nixtamalizada"
+      category_label: "Categoría"
+      unit_label: "Unidad de compra"
+      unit_hint: "Como lo compras (kg, l, pieza)."
+      unit_cost_label: "Precio por unidad"
+      unit_cost_placeholder: "0.00"
+      unit_cost_hint: "Lo que pagas por una unidad. En pesos mexicanos."
+      supplier_label: "Proveedor (opcional)"
+      supplier_placeholder: "Mercado de San Juan"
+      supplier_hint: "Quién te lo vende, para acordarte después."
+      notes_label: "Notas (opcional)"
+      notes_placeholder: "Abre los lunes. Pedir con un día de anticipación."
+      submit_create: "Agregar ingrediente"
+      submit_update: "Guardar cambios"
+      cancel: "Cancelar"
+      back: "Volver a ingredientes"
+      delete: "Eliminar ingrediente"
+    row:
+      edit: "Editar"
+      delete: "Eliminar"
+      delete_confirm: "¿Eliminar %{name}? Si se usa en alguna receta, te vamos a avisar antes de borrarlo."
+    danger_zone:
+      title: "¿Ya no lo compras?"
+      sub: "Si no se usa en ninguna receta, lo eliminamos."
+    empty_state:
+      headline: "Tu despensa está vacía"
+      sub: "Agrega los ingredientes que compras. Esto te permite descomponer recetas y calcular costos."
+      cta: "Agregar ingrediente"
+    impact:
+      title: "Impacto en tus recetas"
+      kicker: "Precio actualizado"
+      lede: "Subiste el precio de %{name}. Esto es lo que cambió en tus recetas."
+      lede_down: "Bajaste el precio de %{name}. Esto es lo que cambió en tus recetas."
+      empty: "Ninguna receta usa este ingrediente todavía."
+      new_cost: "Nuevo costo"
+      new_margin: "Nuevo margen"
+      margin_target: "Margen objetivo: %{percent}%"
+      rescale_cta: "Mantener margen objetivo en todas"
+      rescale_done: "Listo — ajustamos los precios de venta para mantener tu margen objetivo."
+      dismiss: "Cerrar"
 
   schedules:
     show:
@@ -605,6 +718,18 @@ es-MX:
   onboarding:
     decomposition:
       title: "Descompón tu receta"
+      subtitle: "Así vamos a calcular tu costo"
+      kicker: "Costos de cocina"
+      headline: "Descompón %{name}"
+      lede: "Agrega los ingredientes o recetas base que lleva. Cuando guardes, desbloqueamos el modo avanzado: cada cambio de precio te mostrará qué recetas se mueven."
+      skip: "Ahora no"
+      submit: "Guardar y desbloquear"
+      create:
+        unlocked: "Listo — ya ves los costos de cada receta."
+      nudge:
+        title: "Convierte una receta en costo real"
+        lede: "Descompón tu primer platillo en ingredientes. A partir de ahí verás su costo, su margen y cómo cambian cuando sube un insumo."
+        cta: "Descompón una receta"
     shared:
       back: "Atrás"
       skip: "Saltar este paso"
