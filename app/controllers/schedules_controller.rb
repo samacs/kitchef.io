@@ -29,6 +29,6 @@ class SchedulesController < AuthenticatedController
   private
 
   def schedule_params
-    params.require(:schedule).permit(:order_mode, :lead_time_minutes)
+    params.require(:schedule).permit(:order_mode, :lead_time_hours)
   end
 end

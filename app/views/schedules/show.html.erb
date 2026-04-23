@@ -54,9 +54,9 @@
     </div>
 
     <div>
-      <%= f.label :lead_time_minutes, t("schedules.lead_time.label"), class: "block text-[13px] font-medium text-ink-2 mb-1" %>
+      <%= f.label :lead_time_hours, t("schedules.lead_time.label"), class: "block text-[13px] font-medium text-ink-2 mb-1" %>
       <div class="flex items-center gap-2">
-        <%= f.number_field :lead_time_minutes, min: 0, step: 15,
+        <%= f.number_field :lead_time_hours, min: 0, step: 1,
               class: "rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono w-[120px]" %>
         <span class="font-mono text-[12.5px] text-muted"><%= t("schedules.lead_time.unit") %></span>
       </div>

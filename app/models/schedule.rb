@@ -37,6 +37,23 @@ class Schedule < ApplicationRecord
   validates :lead_time_minutes,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
+  # --- Lead time accessor ------------------------------------------
+  #
+  # The UI lets the operator enter lead time in HOURS because "720
+  # minutos" is an impossible mental-math task. We keep the DB column
+  # in minutes so future-fine-grained lead times (15, 30, 45 min) stay
+  # possible without another migration — the conversion lives here.
+  def lead_time_hours
+    lead_time_minutes.to_i / 60
+  end
+
+  def lead_time_hours=(value)
+    # Clamp to 30 days of notice — anything beyond that is almost
+    # certainly a fat-finger and the storefront picker wouldn't surface
+    # windows far enough out to be useful anyway.
+    self.lead_time_minutes = (value.to_i * 60).clamp(0, 30 * 24 * 60)
+  end
+
   # --- Convenience scopes used by the storefront picker -------------
   #
   # Recurring = weekly windows that fire every week on the matching wday.

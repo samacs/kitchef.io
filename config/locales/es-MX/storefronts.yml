@@ -39,6 +39,8 @@ es-MX:
       title: "Menú de %{kitchen}"
       page_title: "Menú — %{kitchen}"
       add: "Agregar"
+      view: "Ver"
+      view_dish_aria: "Ver detalles de %{name}"
       reveal_more: "Ver más"
       reveal_less: "Ver menos"
       empty_title: "Todavía no hay platillos publicados"
@@ -108,6 +110,20 @@ es-MX:
       email_hint: "Te enviamos un enlace de confirmación a este correo. Al tocarlo confirmas tu pedido."
       back_to_menu: "Seguir viendo el menú"
       submit: "Hacer pedido"
+
+    # --- Dish detail page -------------------------------------------
+    recipe:
+      breadcrumb_aria: "Ruta de navegación"
+      back_to_menu: "Volver al menú"
+      from_the_kitchen: "De la cocina"
+      view_kitchen_cta: "Ver menú"
+      add_to_cart: "Agregar al carrito"
+      whatsapp_cta: "Preguntar a %{kitchen} por WhatsApp"
+      whatsapp_message: "Hola %{kitchen}, me interesa pedir %{recipe} (%{price}). ¿Me cuentas más?"
+      related:
+        kicker: "Te puede gustar"
+        headline_prefix: "Más de"
+        headline_accent: "esta cocina"
 
     # --- Order create flash -----------------------------------------
     orders:

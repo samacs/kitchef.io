@@ -430,8 +430,8 @@ es-MX:
           hint: "A veces reservas, a veces sirves al vuelo."
     lead_time:
       label: "Aviso mínimo para pedidos con anticipación"
-      unit: "minutos"
-      hint: "Cuánto necesitas entre que te piden y la hora de entrega. 0 = cualquier ventana disponible; 720 = medio día; 1440 = un día completo."
+      unit: "horas"
+      hint: "Cuánto necesitas entre que te piden y la hora de entrega. 0 = cualquier ventana disponible; 12 = medio día; 24 = un día completo."
     weekly:
       title: "Disponibilidad semanal"
       subtitle: "Las ventanas que se repiten cada semana. Puedes agregar varias por día."
