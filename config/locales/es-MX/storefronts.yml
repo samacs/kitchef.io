@@ -95,8 +95,28 @@ es-MX:
         label: "¿Cuándo lo quieres?"
         today: "Hoy"
         tomorrow: "Mañana"
-        asap_label: "Lo antes posible"
-        asap_sub: "La cocina lo manda cuando esté listo."
+        # --- Segmented control (only in `both` mode) --------------
+        tab_today: "Para hoy"
+        tab_later: "Para después"
+        # --- ASAP pick-card ---------------------------------------
+        asap_title: "Lo antes posible"
+        asap_subtitle: "La cocina lo manda en cuanto esté listo."
+        asap_badge: "Hoy"
+        asap_label: "Lo antes posible"   # legacy, confirmation page
+        asap_sub: "La cocina lo manda cuando esté listo." # legacy
+        # --- Scheduled branch -------------------------------------
+        pick_day: "Escoge el día"
+        pick_time: "Horario"
+        today_chip: "Hoy"
+        tomorrow_chip: "Mañana"
+        window_count:
+          one: "%{count} ventana"
+          other: "%{count} ventanas"
+        # --- Edge states ------------------------------------------
+        closed_today_title: "Hoy no estamos cocinando"
+        closed_today_body: "La cocina cerró por hoy. Puedes reservar para el próximo día disponible."
+        closed_today_cta: "Ver días disponibles"
+        no_upcoming: "No hay ventanas disponibles por el momento. Vuelve pronto."
         empty: "Esta cocina todavía no publica sus horarios. Vuelve pronto o escríbele por WhatsApp para coordinar."
       colonia: "Colonia"
       city: "Ciudad"

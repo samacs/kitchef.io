@@ -266,6 +266,49 @@
     accent-color: var(--brand-1);
   }
 
+  /* ---- Storefront delivery-window picker -------------------------
+     Segmented control (Hoy / Después) + chip row + time-chip grid.
+     Active state uses the kitchen's brand palette via `--brand-*`
+     tokens so the picker matches whatever palette the operator picked. */
+  .kc-seg-btn {
+    color: var(--color-muted);
+  }
+  .kc-seg-btn[data-state="active"] {
+    color: var(--brand-1-ink);
+    background: var(--brand-1);
+  }
+  .kc-seg-btn:hover {
+    color: var(--color-ink);
+  }
+  .kc-seg-btn[data-state="active"]:hover {
+    color: var(--brand-1-ink);
+  }
+
+  /* Day chip: picks up brand colors on active, subtle hover lift
+     otherwise. Use explicit transitions (no all-transition) so focus
+     outlines don't animate. */
+  .kc-day-chip {
+    transition: border-color .15s, background-color .15s;
+  }
+  .kc-day-chip:hover {
+    border-color: var(--color-line-2);
+  }
+  .kc-day-chip--active,
+  .kc-day-chip--active:hover {
+    border-color: var(--brand-1) !important;
+  }
+
+  /* Time chip: sits on a 2/3-column grid, radio is visually hidden
+     (sr-only). The `has-[:checked]` selector on the label would be
+     ideal, but we still pin explicit tokens as a fallback for older
+     browsers. */
+  .kc-time-chip {
+    transition: border-color .15s, background-color .15s;
+  }
+  .kc-time-chip:hover {
+    border-color: var(--color-line-2);
+  }
+
   /* Inline link styling used inside i18n-translated HTML strings where
      Tailwind utilities can't be applied directly. */
   .link {

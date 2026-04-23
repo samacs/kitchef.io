@@ -1,36 +1,164 @@
 <% if any_windows? %>
-  <div class="flex flex-col gap-4" data-controller="delivery-window-picker">
-    <% days.each do |day| %>
-      <% next if day.windows.empty? %>
-      <div class="flex flex-col gap-2">
-        <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
-          <%= day_header(day.date) %>
-        </div>
-        <div class="grid gap-2 sm:grid-cols-2">
-          <% day.windows.each do |window| %>
-            <label class="flex cursor-pointer items-start gap-3 rounded-[10px] border border-line bg-surface p-3 transition-colors hover:border-line-2 has-[:checked]:border-[color:var(--brand-1)] has-[:checked]:bg-[color:var(--brand-1-soft)]">
-              <input type="radio"
-                     name="order[delivery_window_id]"
-                     value="<%= window.id %>"
-                     <%= "checked" if selected?(window) %>
-                     class="mt-1 kc-sf-radio"
-                     style="accent-color: var(--brand-1);">
-              <span class="flex flex-col gap-0.5 min-w-0">
-                <span class="text-[14px] font-semibold text-ink">
-                  <%= window_label(window) %>
+  <div class="flex flex-col gap-5"
+       data-controller="delivery-window-picker"
+       data-delivery-window-picker-initial-branch-value="<%= default_branch %>">
+    <%# Hidden input — the ONE thing that posts. Stimulus writes into
+        it every time the selection changes; server re-decodes on submit. %>
+    <input type="hidden"
+           name="order[delivery_window_id]"
+           data-delivery-window-picker-target="hidden"
+           value="<%= default_selected_id %>">
+
+    <% if show_segmented? %>
+      <%# Segmented control — "Para hoy / Para después". Serif labels,
+          deep-green underline indicator on the active side. %>
+      <div class="relative inline-flex rounded-[10px] border border-line bg-bg p-1 self-start">
+        <button type="button"
+                data-delivery-window-picker-target="segment"
+                data-branch="hoy"
+                data-action="click->delivery-window-picker#selectBranch"
+                class="kc-seg-btn relative z-10 inline-flex items-center gap-2 rounded-[8px] px-4 py-2 text-[13.5px] font-semibold transition-colors">
+          <%= t("storefronts.checkout.schedule.tab_today") %>
+        </button>
+        <button type="button"
+                data-delivery-window-picker-target="segment"
+                data-branch="despues"
+                data-action="click->delivery-window-picker#selectBranch"
+                class="kc-seg-btn relative z-10 inline-flex items-center gap-2 rounded-[8px] px-4 py-2 text-[13.5px] font-semibold transition-colors">
+          <%= t("storefronts.checkout.schedule.tab_later") %>
+        </button>
+      </div>
+    <% end %>
+
+    <%# -------------------- HOY (ASAP) branch -------------------- %>
+    <% if show_hoy_branch? %>
+      <div data-delivery-window-picker-target="branchHoy" class="<%= "hidden" if default_branch != "hoy" %>">
+        <% if asap_available? %>
+          <label class="flex cursor-pointer items-start gap-4 rounded-[14px] border-2 p-5 transition-colors has-[:checked]:bg-[color:var(--brand-1-soft)]"
+                 style="border-color: var(--brand-1);">
+            <input type="radio"
+                   name="kc_delivery_pick"
+                   value="<%= asap_window.id %>"
+                   <%= "checked" if default_selected_id == asap_window.id %>
+                   data-delivery-window-picker-target="asap"
+                   data-action="change->delivery-window-picker#selectAsap"
+                   class="mt-1 h-4 w-4 shrink-0"
+                   style="accent-color: var(--brand-1);">
+            <div class="min-w-0 flex-1">
+              <div class="font-serif text-[24px] leading-[1.1] tracking-tight text-ink">
+                <%= t("storefronts.checkout.schedule.asap_title") %>
+              </div>
+              <p class="mt-1 text-[13.5px] text-ink-2 leading-[1.5]">
+                <%= t("storefronts.checkout.schedule.asap_subtitle") %>
+              </p>
+            </div>
+            <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] shrink-0"
+                  style="color: var(--brand-1);">
+              <%= t("storefronts.checkout.schedule.asap_badge") %>
+            </span>
+          </label>
+        <% else %>
+          <div class="rounded-[12px] border border-line bg-surface px-4 py-4">
+            <div class="font-serif text-[17px] text-ink">
+              <%= t("storefronts.checkout.schedule.closed_today_title") %>
+            </div>
+            <p class="mt-1 text-[13px] text-ink-2 leading-[1.5]">
+              <%= t("storefronts.checkout.schedule.closed_today_body") %>
+            </p>
+            <% if any_scheduled? %>
+              <button type="button"
+                      data-delivery-window-picker-target="switchToLater"
+                      data-action="click->delivery-window-picker#gotoLater"
+                      class="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold no-underline hover:underline"
+                      style="color: var(--brand-1);">
+                <%= t("storefronts.checkout.schedule.closed_today_cta") %>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M5 12h14M13 5l7 7-7 7"/>
+                </svg>
+              </button>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# --------------- DESPUÉS (scheduled) branch --------------- %>
+    <% if show_despues_branch? %>
+      <div data-delivery-window-picker-target="branchDespues" class="<%= "hidden" if default_branch != "despues" %>">
+        <% if any_scheduled? %>
+          <%# Day chip strip — horizontal scroll. Each chip stacks day
+              name, day number and window count, mono for the numerals so
+              "Mar 23 · 2" reads as data, not prose. %>
+          <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted mb-2">
+            <%= t("storefronts.checkout.schedule.pick_day") %>
+          </div>
+          <div class="-mx-1 flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-1 pb-1 kc-scroll-hide"
+               data-delivery-window-picker-target="dayStrip">
+            <% default_day_id = (default_selected_id&.split("|", 3)&.dig(1)) %>
+            <% scheduled_days.each_with_index do |day, idx| %>
+              <% is_active = default_day_id ? day.date.to_s == default_day_id : idx.zero? %>
+              <button type="button"
+                      data-delivery-window-picker-target="dayChip"
+                      data-date="<%= day.date %>"
+                      data-action="click->delivery-window-picker#selectDay"
+                      aria-pressed="<%= is_active %>"
+                      class="kc-day-chip group snap-start flex min-w-[76px] shrink-0 flex-col items-center gap-0.5 rounded-[12px] border px-3 py-2.5 transition-colors <%= is_active ? "kc-day-chip--active" : "" %>"
+                      style="<%= is_active ? "border-color: var(--brand-1); background: var(--brand-1-soft);" : "border-color: var(--color-line); background: var(--color-surface);" %>">
+                <span class="font-mono text-[10.5px] uppercase tracking-[0.14em]"
+                      style="<%= is_active ? "color: var(--brand-1);" : "color: var(--color-muted);" %>">
+                  <%= day_label(day.date) %>
                 </span>
-                <% if window_sub(window).present? %>
-                  <span class="text-[12px] text-muted"><%= window_sub(window) %></span>
+                <span class="font-serif text-[20px] leading-[1] tracking-tight"
+                      style="<%= is_active ? "color: var(--brand-1);" : "color: var(--color-ink);" %>">
+                  <%= day_number(day.date) %>
+                </span>
+                <span class="font-mono text-[9.5px] uppercase tracking-[0.1em]"
+                      style="color: var(--color-muted);">
+                  <%= window_count_label(day) %>
+                </span>
+              </button>
+            <% end %>
+          </div>
+
+          <%# Time chip grid — renders all windows for every day upfront,
+              hidden via `hidden` except for the active day. Lets the
+              Stimulus controller swap visibility without a re-render. %>
+          <div class="mt-4">
+            <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted mb-2">
+              <%= t("storefronts.checkout.schedule.pick_time") %>
+            </div>
+            <% scheduled_days.each_with_index do |day, idx| %>
+              <% is_active = default_day_id ? day.date.to_s == default_day_id : idx.zero? %>
+              <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 <%= "hidden" unless is_active %>"
+                   data-delivery-window-picker-target="timeGrid"
+                   data-date="<%= day.date %>">
+                <% day.windows.each do |window| %>
+                  <label class="kc-time-chip flex cursor-pointer items-center justify-center rounded-[10px] border p-3 text-center transition-colors has-[:checked]:border-[color:var(--brand-1)] has-[:checked]:bg-[color:var(--brand-1-soft)]">
+                    <input type="radio"
+                           name="kc_delivery_pick"
+                           value="<%= window.id %>"
+                           <%= "checked" if default_selected_id == window.id %>
+                           data-delivery-window-picker-target="timeRadio"
+                           data-action="change->delivery-window-picker#selectTime"
+                           class="sr-only">
+                    <span class="font-mono text-[13.5px] font-medium text-ink">
+                      <%= window.from_time_hhmm %>–<%= window.to_time_hhmm %>
+                    </span>
+                  </label>
                 <% end %>
-              </span>
-            </label>
-          <% end %>
-        </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="rounded-[12px] border border-line bg-surface px-4 py-4 text-[13px] text-ink-2">
+            <%= t("storefronts.checkout.schedule.no_upcoming") %>
+          </div>
+        <% end %>
       </div>
     <% end %>
   </div>
 <% else %>
-  <div class="rounded-[10px] border border-line bg-bg/60 px-4 py-3 text-[13.5px] text-ink-2">
+  <div class="rounded-[12px] border border-line bg-bg/60 px-4 py-3 text-[13.5px] text-ink-2">
     <%= t("storefronts.checkout.schedule.empty") %>
   </div>
 <% end %>

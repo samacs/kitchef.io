@@ -11,9 +11,9 @@ class StorefrontOrdersMailer < ApplicationMailer
     return if @account.discarded_at.present?
     return if @client&.email.blank?
 
-    @kitchen_name = @account.name
-    @whatsapp_link = build_whatsapp_link
+    @kitchen_name  = @account.name
     @host          = Rails.application.config.action_mailer.default_url_options.fetch(:host, "kitchef.mx")
+    @whatsapp_link = build_whatsapp_link
     # Email CTA lands the customer on the order page — the `?t=…` signed
     # token is what exposes the review/confirm block. The direct
     # post-submit redirect omits the token, so only a customer who opened
