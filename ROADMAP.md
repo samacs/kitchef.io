@@ -297,49 +297,162 @@ Recommended merge order: **1 → 3 → 2 → 5 → 4**. The first three slices a
 
 ---
 
-## Phase 7 — Composable recipes (next)
+## Phase 7 — Composable recipes (shipped)
 
-**Context.** The cost engine is already in the codebase — `Recipes::CostCalculator`, `Recipes::CycleDetector`, `Recipes::DependencyGraph`, `Recipes::UnitConverter`, and the polymorphic `RecipeComponent` join — but the operator UI can't reach any of it. Recipes are flat: name + photo + price + category. `accounts.settings.use_composable_recipes` is the feature flag that flips simple → advanced; it's false for everyone.
+**Context.** The cost engine was already in the codebase — `Recipes::CostCalculator`, `Recipes::CycleDetector`, `Recipes::DependencyGraph`, `Recipes::UnitConverter`, and the polymorphic `RecipeComponent` join. Phase 7 turned them on for the operator: recipes can now be composed of ingredients AND other recipes, arbitrarily deep, with live cost + margin everywhere they matter.
 
-**Why now (vs Menu engineering).** Menu engineering needs **≥60 days of real pedido history** per operator to be useful (stars/plowhorses, trendlines, etc.). With zero production operators today, menu engineering has no data to analyze. Composable recipes needs **zero history** — it's pure modeling + UX. It also unlocks the ingredient-level shopping list that Phase 5 explicitly nudged toward, and it's the quiet technical differentiator vs. Castiron-style cottage-food tools.
+- [x] ~~Real `/ingredients` CRUD (replaced the stub): name, category, unit, default cost, supplier notes, last-price-changed-at.~~
+- [x] ~~Recipe decomposition form inside `/recipes/:id/edit`: components picker (ingredient OR other recipe), qty + unit, live cost preview.~~
+- [x] ~~Cycle detection at the form layer — `Recipes::CycleDetector` runs in `RecipeComponent#before_save` + is surfaced pre-submit via the `usable_as_component_for` scope, so the picker never shows a choice that would cycle.~~
+- [x] ~~Cost-tree visualization on the recipe detail page — nested expandable tree down to raw ingredients (`Recipes::CostTreeComponent`).~~
+- [x] ~~Saleable vs. internal toggle — form exposes "esta receta se vende / es una base"; internal preparations (masa, salsas, bases) live out of the saleable menu and the `bases` category surfaces them on the index.~~
+- [x] ~~Ingredient-price-change impact panel — on ingredient update, shows which recipes shift + their new costs; offers a one-tap "rescale menu prices to keep margin" action backed by `Recipes::DependencyGraph`.~~
+- [x] ~~Onboarding flow for first-time decomposition — `Onboarding::Decomposition` is live; first successful decomposition flips `settings.use_composable_recipes` via `Onboarding::CompleteFirstDecomposition`.~~
+- [x] ~~Unit-conversion UX — kg↔g, l↔ml via `Recipes::UnitConverter`; strict on cross-type (grams ↔ liters requires a density hint, intentionally out-of-scope).~~
+- [x] ~~`Production::WeeklyShoppingList` respects the composable flag — when it's on, the list rolls up to ingredients; when off, it stays recipe-level (Phase 5 kept this seam on purpose).~~
+- [x] ~~`OrderItem#unit_cost_cents` now snapshots the real composed cost at order time, not a hand-tuned dummy — makes Phase 8's margin numbers meaningful.~~
 
-**Why now (vs Payments).** Payments waits for explicit operator demand (plan says "defer until 10+ asking"). Composable recipes is foundational — every future cost / margin / reprice feature rides on top of it.
+### Phase 7 deferred (small but worth naming)
 
-- [ ] Real `/ingredients` CRUD (currently a stub): name, category, unit, default cost, supplier notes, last-price-changed-at.
-- [ ] Recipe decomposition form inside `/recipes/:id/edit`: components picker (ingredient OR other recipe), qty + unit, live cost preview.
-- [ ] Cycle detection at the form layer (`Recipes::CycleDetector` already runs on before_save; surface it BEFORE submit so the operator sees "Esta receta ya usa [X]" inline).
-- [ ] Cost-tree visualization on the recipe detail page — nested expandable tree all the way down to raw ingredients.
-- [ ] Saleable vs. internal toggle — already in the model; UI needs to expose "esta receta se vende / es una base" so internal preparations (masa, salsas, bases) live out of the saleable menu.
-- [ ] Ingredient-price-change impact panel — on ingredient update, show which recipes shift + their new costs; offer an optional "rescale menu prices to keep margin" action (`Recipes::DependencyGraph` is the engine).
-- [ ] Onboarding flow for first-time decomposition — activate `Onboarding::Decomposition` (currently stubbed). First decomposition flips `settings.use_composable_recipes` via `Onboarding::CompleteFirstDecomposition`.
-- [ ] Unit-conversion UX — kg↔g, l↔ml; strict cross-type (a recipe using grams can't pull from an ingredient tracked in liters without the operator setting a density hint, which is out-of-scope).
-- [ ] `Production::WeeklyShoppingList` rewrite — when the flag is on, return ingredient rows instead of recipe rows. Call signature stays identical (Phase 5 kept this seam on purpose).
-
-**Out (deferrals).**
-- Yield tracking ("esta batch rinde 20 tamales; si pidas 2, consume 2/20 del costo de la batch") — a whole second mental model on top of components.
-- Nutritional info — low priority in this market.
-- Recipe versioning / price history — only matters once we have months of purchase history.
+- [ ] Yield tracking ("esta batch rinde 20 tamales; si pides 2, consume 2/20 del costo de la batch") — a whole second mental model on top of components. Moves into Phase 9.
+- [ ] Nutritional info — low priority in this market.
+- [ ] Recipe versioning / price history — only matters once we have months of purchase history; lands with Phase 9's purchase ledger.
 
 ---
 
-## Phase 8 — Menu engineering
+## Phase 8 — Finance & menu performance (shipped)
 
-Pro-tier analytics that pays for itself by helping the operator price correctly. **Requires ≥ 60 days of pedido history per operator to be useful — sequence after Phase 7 so we have cost data (not just sales data) to analyze.**
+**Context.** Phase 7 made recipe cost real (`OrderItem#unit_cost_cents` is a snapshot of the actual composed cost at order time, not a placeholder). Phase 8 turned that accumulated cost + sale data into the two surfaces an operator refreshes once a week: "¿cuánto gané esta semana?" and "¿qué platillos mueven mi negocio?". No new models — pure aggregation + presentation on top of `OrderItem` snapshots.
 
-- [ ] Stars / plowhorses / puzzles / dogs matrix with plain-language labels
-- [ ] Per-recipe monthly sales + margin trendlines
-- [ ] Ingredient-impact analysis (which raw inputs drive the most cost across the operation)
-- [ ] Reprice suggestions based on target margin + recent ingredient price moves
-- [ ] Monthly email digest with one actionable insight
+- [x] ~~`/reports/finance` (replaces the stub) — KPI triptych (this-window / previous-window / month-to-date), 8-week trend chart, day-by-day breakdown, CSV export.~~
+- [x] ~~`Reports::Finance` query — one SQL round-trip (`SUM + GROUP BY delivery_date`), returns immutable `PeriodStats` + `DayStats` structs. Revenue + COGS + margin all read from `OrderItem` snapshots so historical pedidos reflect that quarter's prices, not today's.~~
+- [x] ~~Five presets: `this_week`, `last_week`, `this_month`, `last_month`, `last_30_days`, plus custom `?from=&to=`.~~
+- [x] ~~Week-over-week / month-over-month / period-over-period compare surfaced on the primary KPI card. Month-to-date always shown alongside for ambient context.~~
+- [x] ~~Inline SVG trend chart (`Reports::TrendChartComponent`) — zero-KB client JS, renders identically on 4G phones; bypasses chartkick deliberately to avoid the Stimulus/Chart.js dance.~~
+- [x] ~~Empty-state copy ("Apenas empiezas — vuelve después de tu primera semana de entregas") when the window has < 3 delivered pedidos; KPIs still render (zeros are factual), but the chart + day list step aside.~~
+- [x] ~~`/reports/menu` — ranked lists, three buckets: **Tus estrellas** (top 3 by margin contribution), **Estables** (the middle), **Revisa estos** (idle platillos first, then bottom-of-pack by margin). Each row links to `/recipes/:slug` for the Phase 7 cost tree.~~
+- [x] ~~`Reports::RecipePerformance` query — per-recipe units-sold, revenue, COGS, margin, `last_sold_on` so idle platillos can say "último pedido hace N días" even when it's outside the window.~~
+- [x] ~~Dashboard weekly snapshot card (`Dashboards::WeeklySnapshotComponent`) at the top of `/` — revenue, pedidos, margen, week-over-week compare, links to `/reports/finance?range=this_week`. Muted when < 3 delivered pedidos this week so the operator doesn't see a hard zero.~~
+- [x] ~~CSV export on both reports (`?format=csv`), BOM-prefixed for Excel on es-MX, filename encodes the window.~~
+- [x] ~~Locale polish: `reports.finance.*`, `reports.menu_engineering.*`, `dashboard.weekly_snapshot.*` under `panels.yml`; new `weekday_long` / `short_day` / `short_day_compact` date formats.~~
+
+### Phase 8 deferred (explicit, small)
+
+- [ ] BCG 4-quadrant menu-engineering matrix (stars / plowhorses / puzzles / dogs) — needs ≥60 days + ≥20 distinct platillos per operator for the thresholds to settle. Revisit once two operators have that much history.
+- [ ] Fixed cost tracking (rent, gas, packaging) — net margin inputs, not gross. Different mental model; lands with Phase 9's ledger.
+- [ ] Per-client LTV / CAC / retention cohorts — needs ≥90 days of repeat pedidos.
+- [ ] PDF export — CSV handles the contador use case.
+- [ ] XLSX via `caxlsx` — gem is in the Gemfile but formatting + formulas is a rabbit hole; CSV is enough.
+- [ ] SAT / CFDI / IVA breakouts — operator-facing report, not fiscal; Phase 11+.
 
 ---
 
-## Phase 9 — Finance lite
+## Phase 9 — Catálogos, proveedores y compras (next)
 
-- [ ] Weekly / monthly ingresos / costos / margen bruto
-- [ ] Per-client lifetime value
-- [ ] Excel export via `caxlsx`
-- [ ] Deposit (anticipo) vs final-payment split views
+**Context.** Phase 7 gave us real recipe costs. Phase 8 turned those costs into revenue + margin numbers. The next honest question — "¿cuánto gasté *de verdad* esta semana?" — isn't a theoretical COGS from delivered pedidos; it's the actual grocery run. Today the shopping list at `/production/shopping-list` is read-only: it tells the operator what to buy, but doesn't remember what they bought, for how much, or from whom. This phase closes that loop.
+
+Phase 9 is also the natural home for two smaller UX asks that have been sitting open: editable **categorías** (currently fixed Rails enums for ingredients + recipes) and first-class **proveedores** (currently a free-text field on `Ingredient`). Both set up the purchase ledger — categories let the operator organize purchases by section of the market run, suppliers let a single ingredient track per-provider prices.
+
+**Why now.** Every feature past this point (fiscal exports, real net profit, reorder alerts, inventory depletion, Pro-tier price intelligence) needs a *purchase fact* to anchor on. Shipping any of them before the ledger lands means either backfilling data later or showing half-truths in the meantime.
+
+**Why this is bigger than it looks.** "Mark as bought" on the shopping list sounds like a checkbox. In reality it's ledger-based inventory: a `Purchase` entity, per-supplier price history, and a decision about whether recipe costs update retroactively (they shouldn't — Phase 7's `OrderItem#unit_cost_cents` snapshot stays locked). We'll lock those decisions before writing code.
+
+### Goals
+
+1. Operator adds a new category (ingredient or recipe) inline without waiting for a deploy.
+2. One ingredient tracks prices from multiple proveedores; the operator picks which one the cost engine uses.
+3. Shopping list turns from a read-only view into a persistent ledger — marking a line "comprada" records the real qty, real price, and which proveedor.
+4. `/reports/finance` grows a "Gastos reales" lane that sums actual `PurchaseItem` totals alongside the margin-from-snapshots already on the page.
+
+### Scope
+
+#### Slice 1 — Categorías editables (S)
+
+- [ ] Promote `category` to a first-class `Category` model — `account_id`-scoped, `kind` enum (`ingredient` / `recipe`), soft-deletable, positioned.
+- [ ] Migrate existing `Ingredient#category` + `Recipe#category` integer enums to `category_id` FKs; seed each account's category table with the current enum values so no operator sees a regression on first load.
+- [ ] Replace the fixed `<select>` on ingredient + recipe forms with a searchable combobox (Stimulus-only, no JS framework): types to filter existing, "↵ Agregar **nueva categoría**" inline, same pattern on `/ingredients` + `/recipes` index filters.
+- [ ] Internal preparations stay identifiable — the `bases` category is a seed row, not a flag. Keep the "esta receta es interna" boolean orthogonal.
+- [ ] Out for v1: per-category sort, color tags, icons, drag-reorder.
+
+#### Slice 2 — Proveedores (M)
+
+- [ ] New `Supplier` model — `name`, `phone`, `whatsapp`, `notes`, `colonia`, `city`, `account_id`, soft-deletable.
+- [ ] `/proveedores` index + new + edit (drawer form, same pattern as clients).
+- [ ] New `SupplierIngredient` join — `supplier_id`, `ingredient_id`, `unit_cost_cents`, `last_bought_on`, `notes`. One ingredient ↔ many suppliers.
+- [ ] Ingredient form — "Proveedores y precios" section: add a row per proveedor + price + unit. One row is flagged `is_default_cost_source: true`; the cost engine reads that one.
+- [ ] Migration — existing `Ingredient#supplier_name` free-text values become auto-created `Supplier` rows with no phone/notes; default `SupplierIngredient` is seeded with the current `unit_cost_cents`.
+- [ ] Nudge on the ingredient detail: "Tu mejor precio hoy es $X en [Proveedor]" when a non-default supplier is cheaper than the default.
+- [ ] `Recipes::CostCalculator` keeps its signature — it just follows `ingredient.default_supplier_price` instead of `ingredient.unit_cost_cents`.
+
+#### Slice 3 — Purchase ledger (L — the big one)
+
+- [ ] New models: `Purchase` (`date`, `supplier_id` optional, `total_cents`, `notes`, `account_id`) + `PurchaseItem` (`purchase_id`, `ingredient_id`, `quantity`, `unit`, `unit_cost_cents`, `notes`).
+- [ ] `/compras` CRUD: index (one row per Purchase), new, edit, show. Purchase form accepts multiple line items (same nested-rows pattern as the order form).
+- [ ] Creating a `PurchaseItem` upserts the matching `SupplierIngredient#unit_cost_cents` + stamps `last_bought_on`, but does **not** retroactively recompute `Recipe#cost_cents_cached`. Cache recalc stays an explicit operator action ("Actualizar costos con precios nuevos"), so closed pedido margins never shift under the operator's feet.
+- [ ] Unit conversions fold in — `Recipes::UnitConverter` normalizes the purchase unit against the ingredient's canonical unit so kg purchases update per-g prices cleanly.
+
+#### Slice 4 — "Marcar como comprada" on the shopping list (S, once 3 lands)
+
+- [ ] Each shopping-list line gets a "Marcar como comprada" action that opens a minimal drawer: qty-actually-bought, price-paid, proveedor (optional). Submitting creates a `PurchaseItem` under a day-scoped `Purchase`.
+- [ ] "Listo" checkmark persists across sessions (it's no longer ephemeral — it reflects a real ledger row).
+- [ ] Running tally at the top of the list: "Esta semana llevas $X en compras".
+
+#### Slice 5 — Gastos reales en /reports/finance (S)
+
+- [ ] Add a "Gastos" KPI + trendline to `/reports/finance` that sums `PurchaseItem.unit_cost_cents * quantity` over the window's purchase dates (not delivery dates — a shopping run on Tuesday belongs to Tuesday's expenses).
+- [ ] "Margen real" badge alongside "Margen bruto" — the real-margin number uses actual purchase totals; the gross-margin number keeps using `OrderItem` cost snapshots. Both live on the same card so the operator can see the gap.
+- [ ] CSV export adds the purchase lane.
+
+### Out (explicit deferrals)
+
+- **FIFO vs weighted-average cost accounting.** We track the *current default supplier price* only; FIFO waits for demand.
+- **Stock depletion ledger.** Inflows only in v1. Auto-decrement when a pedido ships is a whole second mental model (batch yields, leftover carry-over) — out.
+- **Auto-reorder alerts / low-stock notifications.** Depend on depletion.
+- **Batch/yield tracking** ("esta olla de tamales rindió 20, vendí 18, perdí 2") — Phase 7 deferral, stays out.
+- **Supplier payment tracking / accounts payable.** That's accounting software.
+- **Retroactive recipe cost recomputation when a purchase lands.** Deliberately no. The operator triggers recalc explicitly.
+- **Recipe versioning / price history.** Falls out naturally from the purchase ledger + supplier prices; surfacing it as a separate UI waits for explicit ask.
+
+### Key decisions to lock before building
+
+1. **Editable categories — one shared model or two (ingredient vs recipe)?** Proposed: one `Category` model with a `kind` enum. Cheaper today, splits cleanly later if the two evolve apart.
+2. **Which supplier price drives the cost engine?** Proposed: an explicit `is_default_cost_source` flag per ingredient. "Lowest active" is surfaced as a nudge but never auto-applied — operators need to know *why* a cost changed.
+3. **Does marking a purchase update the ingredient's unit cost?** Only the *specific supplier's* price for that ingredient. The default-cost-source choice stays the operator's.
+4. **Stock depletion — in or out for v1?** Out. Inflows only. Promote when operators ask "why does my on-hand count not match reality?".
+5. **Do recipes see retroactive cost changes on new purchases?** No. `OrderItem#unit_cost_cents` is snapshot-locked forever; `Recipe#cost_cents_cached` recomputes only on explicit operator action.
+6. **Can a `Purchase` exist without a `Supplier`?** Yes — quick Costco run entries shouldn't force a proveedor row. Nullable FK, UI prompts "(sin proveedor)".
+
+### Files to create / modify
+
+**Models (new)** — `Category`, `Supplier`, `SupplierIngredient`, `Purchase`, `PurchaseItem`.
+**Models (modify)** — `Ingredient` (swap `category` integer enum → `category_id`, drop `supplier_name` free text in favor of `SupplierIngredient`), `Recipe` (same category swap).
+**Controllers (new)** — `CategoriesController`, `SuppliersController`, `PurchasesController`.
+**Queries** — extend `Reports::Finance` with `purchases_total_cents_by_date`; new `Reports::RealMargin` service that joins purchases + delivered-pedido revenue for the window.
+**Views / components** — category combobox (`Ui::ComboboxComponent`), `Suppliers::FormComponent`, `Purchases::FormComponent`, `ShoppingList::MarkBoughtComponent`, `Reports::ExpenseTrendComponent`.
+**Routes** — `resources :categories` (scoped to ingredient + recipe via `kind`), `resources :suppliers` (also `/proveedores` alias), `resources :purchases` (also `/compras` alias). Update `Account::RESERVED_SLUGS` + run `bin/check_reserved_slugs`.
+**Locales** — new keys under `panels.yml`: `categories.*`, `suppliers.*`, `purchases.*`, `shopping_list.mark_bought.*`, `reports.finance.expenses.*`.
+
+### Effort estimate
+
+| Slice | Rough effort | Unlocks |
+|---|---|---|
+| 1 — Editable categories | S | Small UX win; clean foundation for the supplier + purchase UIs |
+| 2 — Proveedores + per-supplier prices | M | Real price comparison; prerequisite for the ledger |
+| 3 — Purchase ledger | L | The meat of the phase — persistent, auditable compras |
+| 4 — Mark-as-bought on shopping list | S | Ties the daily ops loop into the ledger |
+| 5 — Gastos reales in /reports/finance | S | Makes the finance report honest |
+
+**Recommended merge order: 1 → 2 → 3 → 4 → 5.** Categories and suppliers can ship independently in case Phase 9 takes longer than the 2–3 focused work-weeks it estimates — they're standalone operator wins.
+
+### Verification (from clean DB + seed)
+
+1. Add a new category "Dulces" on `/ingredients/new`. Refresh. Create a second ingredient; "Dulces" is in the combobox search.
+2. Add two proveedores to "Harina de maíz" — Mercado $32/kg, Costco $28/kg. Flag Mercado as default. The recipe cost tree uses $32/kg.
+3. Create a `Purchase` for Saturday with 2 kg harina at $29/kg from Costco. `SupplierIngredient[Costco,Harina]#unit_cost_cents` = 2900; Mercado row unchanged; recipe cost_cached unchanged.
+4. Trigger "Actualizar costos con precios nuevos" — recipe cost_cached recomputes; new `OrderItem` rows snapshot the new cost; older `OrderItem` rows stay locked.
+5. `/production/shopping-list` shows Saturday's run. Mark "Harina de maíz" as comprada with 2 kg at $29 — the line checkmark persists across reloads.
+6. `/reports/finance?range=this_week` shows a "Gastos" KPI = $58; margen real reflects it.
+7. `rubocop` / `brakeman` / `bin/check_reserved_slugs` / `bin/smoke_storefront_order` all stay clean.
 
 ---
 
@@ -387,9 +500,9 @@ Mexican-specific, lots of integration surface. **Defer until we have 10+ operato
 1. ~~**Phase 4**~~ — shipped. The kitchen hears every pedido, the customer gets a tracked confirmation, and payment is a property (not a state).
 2. ~~**Phase 5**~~ — shipped. Production planning + daily focus + runner view + bulk actions. The operator's morning routine lives on one page.
 3. ~~**Phase 6**~~ — shipped. Schedule with exceptions (Agendario-style), email-verified two-step confirmation, the storefront delivery picker that actually respects operating modes, and the dish detail page.
-4. **Phase 7 next (composable recipes)** — the cost engine is already in the codebase; this phase makes it visible. Unlocks the ingredient-level shopping list Phase 5 nudged toward. No history required — purely a modeling + UX phase. Picks up before menu engineering because menu engineering needs ≥60 days of pedido history to analyze, and we have zero operators in production.
-5. **Phase 8 (menu engineering)** ships after 60+ days of pedido history accumulate. Composable recipes (Phase 7) makes the cost side of the analysis meaningful; without it we'd only have sales data.
-6. **Phase 9 (finance lite)** — weekly/monthly P&L. Rides on top of Phase 7's cost data.
+4. ~~**Phase 7 (composable recipes)**~~ — shipped. Decomposition UI, cost tree, ingredient-impact panel, first-decomposition onboarding. `OrderItem#unit_cost_cents` now snapshots real composed cost at order time.
+5. ~~**Phase 8 (finance & menu performance)**~~ — shipped. `/reports/finance` (KPI triptych + 8-week trend + day-by-day + CSV), `/reports/menu` (estrellas / estables / revisa estos), dashboard weekly snapshot, empty-state handling. The full BCG matrix stays deferred until we've got ≥60 days of pedido history per operator.
+6. **Phase 9 next (catálogos, proveedores, compras)** — the operator-facing loop gets honest: editable categories, first-class suppliers with per-supplier prices, a persistent purchase ledger backing the shopping list, and "gastos reales" on the finance report. This is the phase that turns a read-only "lista de compras" into the operator's real expense record.
 7. **Phase 10 (payments)** — still deferred. Waits for explicit operator demand (10+ asking). WhatsApp + the payment chip + `mark_paid!` keep the loop honest in the meantime.
 
 Phase 11 is continuous; each ships a slice per quarter once the core loop is done.

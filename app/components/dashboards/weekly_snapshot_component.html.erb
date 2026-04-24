@@ -1,0 +1,38 @@
+<%= link_to reports_finance_path(range: :this_week),
+      class: "block p-5 rounded-card bg-surface border border-line shadow-card hover:border-line-2 transition" do %>
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex flex-col gap-3 min-w-0">
+      <%= render Ui::KickerComponent.new(text: t("dashboard.weekly_snapshot.kicker")) %>
+
+      <% if muted? %>
+        <p class="max-w-prose text-[14px] text-muted leading-relaxed">
+          <%= t("dashboard.weekly_snapshot.muted") %>
+        </p>
+      <% else %>
+        <div class="flex items-baseline gap-3 flex-wrap">
+          <span class="font-serif text-[30px] leading-[1.05] tracking-tight text-ink">
+            <%= helpers.humanized_money_with_symbol(revenue) %>
+          </span>
+          <span class="font-mono text-[12px] text-muted">·</span>
+          <span class="font-mono text-[13px] text-muted tabular-nums">
+            <%= t("dashboard.weekly_snapshot.orders", count: order_count) %>
+          </span>
+          <% if margin_pct %>
+            <span class="font-mono text-[12px] text-muted">·</span>
+            <span class="font-mono text-[13px] text-accent tabular-nums">
+              <%= t("dashboard.weekly_snapshot.margin_pct", pct: margin_pct) %>
+            </span>
+          <% end %>
+        </div>
+        <span class="font-mono text-[12px] text-muted">
+          <%= compare_label %>
+        </span>
+      <% end %>
+    </div>
+
+    <span class="font-mono text-[12px] font-medium text-accent whitespace-nowrap pt-1">
+      <%= t("dashboard.weekly_snapshot.see_all") %>
+      <span aria-hidden="true">→</span>
+    </span>
+  </div>
+<% end %>

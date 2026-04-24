@@ -1,0 +1,52 @@
+<%
+  base = "grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-baseline gap-3 py-3 px-4 rounded-card-sm border bg-surface hover:border-line-2 transition"
+  border = star? ? "border-accent/40" : "border-line"
+%>
+<%= link_to recipe_path(recipe), class: "#{base} #{border}" do %>
+  <span class="font-mono text-[12px] text-muted tabular-nums">
+    <% if star? %>
+      <span class="text-accent">★</span>
+    <% else %>
+      <span aria-hidden="true">·</span>
+    <% end %>
+  </span>
+
+  <span class="font-serif text-[15px] text-ink leading-tight truncate">
+    <%= recipe.name %>
+  </span>
+
+  <% if idle? %>
+    <span class="font-mono text-[12px] text-muted tabular-nums whitespace-nowrap">
+      <%= t("reports.menu_engineering.row.no_sales") %>
+    </span>
+  <% else %>
+    <span class="font-mono text-[12px] text-muted tabular-nums whitespace-nowrap">
+      <%= t("reports.menu_engineering.row.units", count: row.units_sold.to_i) %>
+    </span>
+  <% end %>
+
+  <% if idle? %>
+    <% if days_since_last_sale %>
+      <span class="font-mono text-[12px] text-muted tabular-nums whitespace-nowrap">
+        <%= t("reports.menu_engineering.row.last_sold", days: days_since_last_sale) %>
+      </span>
+    <% else %>
+      <span class="font-mono text-[12px] text-muted tabular-nums">—</span>
+    <% end %>
+  <% else %>
+    <% review_flag = review_tag %>
+    <div class="flex items-center gap-3 justify-end whitespace-nowrap">
+      <% if review_flag == :low_margin %>
+        <span class="font-mono text-[12px] text-err">
+          <%= t("reports.menu_engineering.row.margin_pct_low", pct: margin_pct) %>
+        </span>
+      <% end %>
+      <span class="font-mono text-[13px] font-medium text-ink tabular-nums">
+        <%= helpers.humanized_money_with_symbol(margin_money) %>
+      </span>
+      <span class="font-mono text-[12px] text-accent tabular-nums">
+        <%= t("reports.menu_engineering.row.margin_pct", pct: margin_pct || 0) %>
+      </span>
+    </div>
+  <% end %>
+<% end %>

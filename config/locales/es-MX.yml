@@ -8,6 +8,9 @@ es-MX:
       default: "%d/%m/%Y"
       short: "%d/%m/%y"
       long: "%-d de %B de %Y"
+      weekday_long: "%A %-d"
+      short_day: "%-d de %B"
+      short_day_compact: "%-d %b"
     day_names:     [domingo, lunes, martes, miércoles, jueves, viernes, sábado]
     abbr_day_names: [dom, lun, mar, mié, jue, vie, sáb]
     month_names:

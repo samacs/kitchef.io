@@ -1,0 +1,33 @@
+<%
+  row_classes = [
+    "grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-baseline gap-4 py-3 px-4 rounded-card-sm",
+    "border border-line bg-surface",
+    empty? ? "opacity-50" : nil
+  ].compact.join(" ")
+%>
+<div class="<%= row_classes %>">
+  <div class="flex flex-col min-w-0">
+    <span class="font-serif text-[15px] text-ink leading-tight capitalize">
+      <%= weekday_label %>
+    </span>
+    <span class="font-mono text-[11px] text-muted tracking-[0.08em]">
+      <%= date_label %>
+    </span>
+  </div>
+
+  <span class="font-mono text-[13px] text-muted tabular-nums whitespace-nowrap">
+    <%= t("reports.finance.day.orders_count", count: day_stats.order_count) %>
+  </span>
+
+  <% if empty? %>
+    <span class="font-mono text-[13px] text-muted tabular-nums">—</span>
+    <span class="font-mono text-[13px] text-muted tabular-nums">—</span>
+  <% else %>
+    <span class="font-mono text-[14px] font-medium text-ink tabular-nums whitespace-nowrap">
+      <%= helpers.humanized_money_with_symbol(revenue) %>
+    </span>
+    <span class="font-mono text-[13px] text-accent tabular-nums whitespace-nowrap">
+      <%= t("reports.finance.day.margin_pct", pct: day_stats.margin_pct || 0) %>
+    </span>
+  <% end %>
+</div>

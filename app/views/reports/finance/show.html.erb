@@ -1,0 +1,92 @@
+<% content_for :title, t("reports.finance.title") %>
+<% content_for :page_title, t("reports.finance.page_title") %>
+<% content_for :page_subtitle, t("reports.finance.page_subtitle") %>
+
+<section class="flex flex-col gap-8 max-w-[1040px]">
+  <%# --- Range picker ------------------------------------------------- %>
+  <header class="flex flex-col gap-3">
+    <%= render Ui::KickerComponent.new(text: t("reports.finance.kicker")) %>
+    <div class="flex flex-wrap items-center gap-3 justify-between">
+      <%= render Reports::RangePickerComponent.new(
+            active_preset: (@range_preset == :custom ? nil : @range_preset),
+            base_path: reports_finance_path) %>
+
+      <%= link_to reports_finance_path(format: :csv,
+                                       range: (@range_preset == :custom ? nil : @range_preset),
+                                       from:  (@range_preset == :custom ? @starting.iso8601 : nil),
+                                       to:    (@range_preset == :custom ? @ending.iso8601   : nil),
+                                       only_paid: (@only_paid ? 1 : nil)),
+            class: "inline-flex items-center gap-2 text-[13px] font-medium text-accent hover:underline" do %>
+        <%= icon(:download, size: :sm) %>
+        <%= t("reports.finance.csv.cta") %>
+      <% end %>
+    </div>
+
+    <p class="font-mono text-[12px] text-muted">
+      <%= t("reports.finance.range_label",
+            from: I18n.l(@starting, format: :long),
+            to:   I18n.l(@ending, format: :long)) %>
+    </p>
+  </header>
+
+  <%# --- KPI triptych ------------------------------------------------- %>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <%= render Reports::KpiCardComponent.new(
+          label:        t("reports.finance.kpi.current_#{@range_preset == :custom ? "custom" : @range_preset}"),
+          amount_cents: @stats.revenue_cents,
+          sub:          finance_sub_text(@stats),
+          delta_pct:    (@compare_stats ? finance_delta_pct(@stats, @compare_stats) : nil)) %>
+
+    <% if @compare_stats %>
+      <%= render Reports::KpiCardComponent.new(
+            label:        t("reports.finance.kpi.previous_#{@range_preset == :custom ? "period" : @range_preset}"),
+            amount_cents: @compare_stats.revenue_cents,
+            sub:          finance_sub_text(@compare_stats)) %>
+    <% else %>
+      <%= render Reports::KpiCardComponent.new(
+            label:        t("reports.finance.kpi.avg_order"),
+            amount_cents: @stats.avg_order_cents,
+            sub:          t("reports.finance.kpi.orders_only", count: @stats.order_count)) %>
+    <% end %>
+
+    <%= render Reports::KpiCardComponent.new(
+          label:        t("reports.finance.kpi.month_to_date"),
+          amount_cents: @month_to_date.revenue_cents,
+          sub:          finance_sub_text(@month_to_date),
+          href:         reports_finance_path(range: :this_month)) %>
+  </div>
+
+  <%# --- Empty state OR (chart + day breakdown) ----------------------- %>
+  <% if @stats.has_signal? %>
+    <section class="flex flex-col gap-3">
+      <div class="flex items-end justify-between gap-4 flex-wrap">
+        <%= render Ui::KickerComponent.new(text: t("reports.finance.trend.kicker")) %>
+        <span class="font-mono text-[11.5px] tracking-[0.12em] uppercase text-muted">
+          <%= t("reports.finance.trend.legend") %>
+        </span>
+      </div>
+      <article class="p-5 rounded-card bg-surface border border-line shadow-card">
+        <%= render Reports::TrendChartComponent.new(weeks: @trend_weeks) %>
+      </article>
+    </section>
+
+    <section class="flex flex-col gap-3">
+      <%= render Ui::KickerComponent.new(text: t("reports.finance.day_breakdown.kicker")) %>
+      <div class="flex flex-col gap-2">
+        <% @stats.by_day.each do |day| %>
+          <%= render Reports::DayRowComponent.new(day_stats: day) %>
+        <% end %>
+      </div>
+    </section>
+  <% else %>
+    <%= render Ui::CardComponent.new(variant: :showcase) do %>
+      <%= render Ui::KickerComponent.new(text: t("reports.finance.empty.kicker")) %>
+      <h2 class="font-serif text-[28px] leading-[1.1] tracking-tight text-ink">
+        <%= t("reports.finance.empty.headline") %>
+      </h2>
+      <p class="max-w-prose text-ink-2 leading-relaxed">
+        <%= t("reports.finance.empty.sub") %>
+      </p>
+    <% end %>
+  <% end %>
+</section>
