@@ -1,0 +1,43 @@
+<%# Tree node. Root (depth 0) renders without indentation; nested nodes
+    add left padding so the hierarchy is visible without guides. %>
+<% if node.leaf? %>
+  <div class="flex items-baseline justify-between gap-3 <%= depth.zero? ? '' : 'pl-5' %>">
+    <div class="flex items-baseline gap-2 min-w-0">
+      <span class="font-mono text-[12.5px] text-muted tabular-nums shrink-0">
+        <%= node.quantity_label %> <%= unit_label %>
+      </span>
+      <span class="text-[13.5px] text-ink-2 truncate"><%= node.name %></span>
+    </div>
+    <span class="font-mono text-[13px] text-ink-2 tabular-nums whitespace-nowrap shrink-0">
+      <%= format_money %>
+    </span>
+  </div>
+<% else %>
+  <details <%= 'open' if depth < 2 %> class="flex flex-col gap-2 <%= depth.zero? ? '' : 'pl-5' %>">
+    <summary class="flex items-baseline justify-between gap-3 cursor-pointer select-none list-none rounded-input px-2 py-1 -ml-2 hover:bg-bg-2/60 transition-colors">
+      <span class="flex items-baseline gap-2 min-w-0">
+        <span class="inline-block transition-transform group-open:rotate-90 text-muted text-[10px]">▸</span>
+        <% if depth.positive? %>
+          <span class="font-mono text-[12.5px] text-muted tabular-nums shrink-0">
+            <%= node.quantity_label %> <%= unit_label %>
+          </span>
+        <% end %>
+        <span class="<%= depth.zero? ? 'font-serif text-[18px] text-ink leading-tight' : 'text-[13.5px] text-ink' %> truncate">
+          <%= node.name %>
+          <% if node.internal %>
+            <span class="ml-1 text-[11px] text-muted italic">· <%= t("recipes.cost_tree.internal_tag") %></span>
+          <% end %>
+        </span>
+      </span>
+      <span class="font-mono <%= depth.zero? ? 'text-[18px] text-ink' : 'text-[13px] text-ink-2' %> tabular-nums whitespace-nowrap shrink-0">
+        <%= format_money %>
+      </span>
+    </summary>
+
+    <div class="flex flex-col gap-1.5 border-l border-line/60 ml-1 pl-3 py-1">
+      <% node.children.each do |child| %>
+        <%= render Recipes::CostTreeComponent.new(node: child, depth: depth + 1) %>
+      <% end %>
+    </div>
+  </details>
+<% end %>

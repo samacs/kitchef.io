@@ -158,41 +158,63 @@ attach_seed_image(cocina_elena, :logo,        url: seed_photo_url("elena_logo", 
 
 Subscription.create!(account: cocina_elena, plan: :free, status: :active)
 
+# Prices reflect late-2026 Mexican retail (Central de Abastos / mercados
+# populares pricing for an operator buying by the kilo, not supermarket
+# shelf). Rows kept alphabetical within category so the index page lands
+# predictably. Suppliers mirror what a real Condesa home-kitchen would
+# hit on her Thursday market run.
 elena_ingredients = [
-  [ "Harina de maíz nixtamalizada", "kg",  2400, :pantry ],
-  [ "Manteca de cerdo",             "kg",  8500, :pantry ],
-  [ "Azúcar",                       "kg",  2800, :pantry ],
-  [ "Sal",                          "kg",  1500, :pantry ],
-  [ "Polvo para hornear",           "kg", 12000, :pantry ],
-  [ "Pechuga de pollo",             "kg", 14500, :meats ],
-  [ "Puerco en pulpa",              "kg", 13800, :meats ],
-  [ "Res molida",                   "kg", 16500, :meats ],
-  [ "Leche entera",                 "l",   2400, :dairy ],
-  [ "Crema ácida",                  "kg",  6800, :dairy ],
-  [ "Queso fresco",                 "kg",  9800, :dairy ],
-  [ "Mantequilla",                  "kg", 14000, :dairy ],
-  [ "Tomate verde",                 "kg",  2800, :produce ],
-  [ "Chile serrano",                "kg",  6000, :produce ],
-  [ "Cebolla blanca",               "kg",  2200, :produce ],
-  [ "Cilantro",                     "kg",  8000, :produce ],
-  [ "Comino molido",                "kg", 32000, :spices ],
-  [ "Canela en polvo",              "kg", 45000, :spices ],
-  [ "Jamaica seca",                 "kg", 11000, :pantry ],
-  [ "Hoja de maíz",                 "piece",  80, :other ]
+  # Abarrotes
+  [ "Azúcar estándar",             "kg",   3200, :pantry,  "Bodega Aurrera" ],
+  [ "Harina de maíz nixtamalizada", "kg",   4500, :pantry,  "Maseca (bulto de 5kg)" ],
+  [ "Hoja de maíz",                "piece",  150, :other,   "Mercado de Medellín" ],
+  [ "Jamaica seca",                "kg",  16500, :pantry,   "Mercado de Jamaica" ],
+  [ "Manteca de cerdo",            "kg",  12000, :pantry,   "Carnicería El Fogón" ],
+  [ "Pasas güeras",                "kg",  11000, :pantry,   "Mercado de San Juan" ],
+  [ "Polvo para hornear",          "kg",  28000, :pantry,   "Abarrotes del barrio" ],
+  [ "Sal de mar",                  "kg",   3500, :pantry,   "Mercado de San Juan" ],
+  # Carnes
+  [ "Pechuga de pollo",            "kg",  17500, :meats,    "Pollería La Güera" ],
+  [ "Puerco en pulpa",             "kg",  18500, :meats,    "Carnicería El Fogón" ],
+  [ "Res molida especial",         "kg",  22000, :meats,    "Carnicería El Fogón" ],
+  # Lácteos
+  [ "Crema ácida",                 "kg",   8500, :dairy,    "Lácteos Los Volcanes" ],
+  [ "Huevo blanco",                "piece", 450, :dairy,    "Huevería Condesa" ],
+  [ "Leche entera",                "l",    3200, :dairy,    "Lácteos Los Volcanes" ],
+  [ "Mantequilla sin sal",         "kg",  22000, :dairy,    "Lácteos Los Volcanes" ],
+  [ "Queso fresco",                "kg",  14500, :dairy,    "Lácteos Los Volcanes" ],
+  # Verduras
+  [ "Ajo",                         "kg",  14000, :produce,  "Mercado de Jamaica" ],
+  [ "Cebolla blanca",              "kg",   2800, :produce,  "Mercado de Medellín" ],
+  [ "Chile poblano",               "kg",   5500, :produce,  "Mercado de Medellín" ],
+  [ "Chile serrano",               "kg",   6500, :produce,  "Mercado de Medellín" ],
+  [ "Cilantro",                    "kg",   8500, :produce,  "Mercado de Medellín" ],
+  [ "Tomate rojo",                 "kg",   3800, :produce,  "Mercado de Medellín" ],
+  [ "Tomate verde",                "kg",   3500, :produce,  "Mercado de Medellín" ],
+  # Especias
+  [ "Canela en polvo",             "kg",  55000, :spices,   "Mercado de San Juan" ],
+  [ "Comino molido",               "kg",  38000, :spices,   "Mercado de San Juan" ]
 ]
-elena_ingredients.each do |name, unit, cents, cat|
-  cocina_elena.ingredients.create!(name: name, unit: unit, unit_cost_cents: cents, category: cat)
+elena_ingredients.each do |name, unit, cents, cat, supplier|
+  cocina_elena.ingredients.create!(
+    name: name, unit: unit, unit_cost_cents: cents, category: cat,
+    supplier_name: supplier
+  )
 end
 
+# Sale prices reflect what a Condesa home-kitchen operator charges in
+# late 2026. Yields are per-unit so the operator can sell by the
+# tamal, por porción, por pastel, or por litro. Margins stay hidden
+# in simple mode — Elena doesn't see costs until she decomposes.
 elena_recipes = [
-  [ "Tamal verde",             2500, :mains,    1, "piece",   "tamal_verde" ],
-  [ "Tamal rojo",              2500, :mains,    1, "piece",   "tamal_rojo" ],
-  [ "Pozole rojo",            12000, :mains,    1, "serving", "pozole_rojo" ],
-  [ "Enchiladas suizas",      14000, :mains,    1, "serving", "enchiladas_suizas" ],
-  [ "Pastel de tres leches",  45000, :desserts, 1, "piece",   "pastel_tres_leches" ],
-  [ "Flan napolitano",        30000, :desserts, 1, "piece",   "flan_napolitano" ],
-  [ "Agua de jamaica",         4500, :drinks,   1, "l",       "agua_jamaica" ],
-  [ "Champurrado",             5000, :drinks,   1, "l",       "champurrado" ]
+  [ "Tamal verde",             2800, :mains,    1, "piece",   "tamal_verde" ],
+  [ "Tamal rojo de pollo",     2800, :mains,    1, "piece",   "tamal_rojo" ],
+  [ "Pozole rojo",            16500, :mains,    1, "serving", "pozole_rojo" ],
+  [ "Enchiladas suizas",      16500, :mains,    1, "serving", "enchiladas_suizas" ],
+  [ "Pastel de tres leches",  52000, :desserts, 1, "piece",   "pastel_tres_leches" ],
+  [ "Flan napolitano",        34000, :desserts, 1, "piece",   "flan_napolitano" ],
+  [ "Agua de jamaica (1L)",    5500, :drinks,   1, "l",       "agua_jamaica" ],
+  [ "Champurrado (1L)",        6500, :drinks,   1, "l",       "champurrado" ]
 ]
 puts "  …creating recipes + attaching photos"
 elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key|
@@ -326,29 +348,33 @@ attach_seed_image(taqueria_mario, :logo,        url: seed_photo_url("mario_logo"
 
 Subscription.create!(account: taqueria_mario, plan: :pro, status: :active)
 
+# Mario's supplier network is wholesale-heavy (Central de Abastos GDL +
+# Carnicería Paty for the proteins). Prices reflect wholesale-by-the-
+# kilo rates a taquería with daily volume would actually pay.
 mario_ingredients = {
-  "Harina de maíz nixtamalizada" => [ "kg",  2400, :pantry ],
-  "Manteca de cerdo"             => [ "kg",  8500, :pantry ],
-  "Sal"                          => [ "kg",  1500, :pantry ],
-  "Carne al pastor marinada"     => [ "kg", 18500, :meats ],
-  "Arrachera"                    => [ "kg", 26000, :meats ],
-  "Pechuga de pollo"             => [ "kg", 14500, :meats ],
-  "Tomate verde"                 => [ "kg",  2800, :produce ],
-  "Tomate rojo"                  => [ "kg",  3200, :produce ],
-  "Chile serrano"                => [ "kg",  6000, :produce ],
-  "Chile de árbol"               => [ "kg",  9800, :produce ],
-  "Cebolla blanca"               => [ "kg",  2200, :produce ],
-  "Cilantro"                     => [ "kg",  8000, :produce ],
-  "Piña"                         => [ "kg",  2800, :produce ],
-  "Ajo"                          => [ "kg",  7000, :produce ],
-  "Frijol bayo"                  => [ "kg",  3800, :pantry ],
-  "Queso Oaxaca"                 => [ "kg", 16500, :dairy ],
-  "Aceite de maíz"               => [ "l",   4200, :pantry ]
+  "Harina de maíz nixtamalizada" => [ "kg",   4500, :pantry,  "Maseca (bulto de 10kg)" ],
+  "Manteca de cerdo"             => [ "kg",  12000, :pantry,  "Carnicería Paty" ],
+  "Sal de mar"                   => [ "kg",   3500, :pantry,  "Abarrotes Providencia" ],
+  "Aceite de maíz"               => [ "l",    5200, :pantry,  "Abarrotes Providencia" ],
+  "Frijol bayo"                  => [ "kg",   4500, :pantry,  "Central de Abastos" ],
+  "Carne al pastor marinada"     => [ "kg",  24000, :meats,   "Carnicería Paty" ],
+  "Arrachera"                    => [ "kg",  38000, :meats,   "Carnicería Paty" ],
+  "Pechuga de pollo"             => [ "kg",  17500, :meats,   "Pollería del Centro" ],
+  "Queso Oaxaca"                 => [ "kg",  18500, :dairy,   "Lácteos El Rodeo" ],
+  "Tomate verde"                 => [ "kg",   3500, :produce, "Central de Abastos" ],
+  "Tomate rojo"                  => [ "kg",   3800, :produce, "Central de Abastos" ],
+  "Chile serrano"                => [ "kg",   6500, :produce, "Central de Abastos" ],
+  "Chile de árbol"               => [ "kg",  11500, :produce, "Central de Abastos" ],
+  "Cebolla blanca"               => [ "kg",   2800, :produce, "Central de Abastos" ],
+  "Cilantro"                     => [ "kg",   8500, :produce, "Central de Abastos" ],
+  "Piña"                         => [ "kg",   3200, :produce, "Central de Abastos" ],
+  "Ajo"                          => [ "kg",  14000, :produce, "Central de Abastos" ]
 }
 mario_ing = {}
-mario_ingredients.each do |name, (unit, cents, cat)|
+mario_ingredients.each do |name, (unit, cents, cat, supplier)|
   mario_ing[name] = taqueria_mario.ingredients.create!(
-    name: name, unit: unit, unit_cost_cents: cents, category: cat
+    name: name, unit: unit, unit_cost_cents: cents,
+    category: cat, supplier_name: supplier
   )
 end
 
@@ -361,7 +387,7 @@ masa = taqueria_mario.recipes.create!(
 [
   [ mario_ing["Harina de maíz nixtamalizada"], 1000, "g" ],
   [ mario_ing["Manteca de cerdo"],              200, "g" ],
-  [ mario_ing["Sal"],                            15, "g" ]
+  [ mario_ing["Sal de mar"],                     15, "g" ]
 ].each { |ing, qty, unit| masa.components.create!(componentable: ing, quantity: qty, unit: unit) }
 
 salsa_verde = taqueria_mario.recipes.create!(
@@ -402,7 +428,11 @@ frijoles = taqueria_mario.recipes.create!(
   [ mario_ing["Cebolla blanca"],    60, "g" ]
 ].each { |ing, qty, unit| frijoles.components.create!(componentable: ing, quantity: qty, unit: unit) }
 
-def build_taco(account, name:, carne:, carne_qty:, salsa:, salsa_qty:, price_cents:, masa:, mario_ing:)
+# Saleable recipes calibrated to land each dish right around Mario's
+# 60–65% target margin at 2026 Providencia prices. Qty per taco mirrors
+# a real taquería portion (45–50g of carne, not a full sit-down serving).
+def build_taco(account, name:, carne:, carne_qty:, salsa:, salsa_qty:, price_cents:, masa:, mario_ing:,
+               target_margin_percent: 65)
   rec = account.recipes.create!(
     name: name,
     sale_price_cents: price_cents,
@@ -410,62 +440,85 @@ def build_taco(account, name:, carne:, carne_qty:, salsa:, salsa_qty:, price_cen
     is_published: true,
     yield_quantity: 1, yield_unit: "piece",
     category: :mains,
-    target_margin_percent: 65
+    target_margin_percent: target_margin_percent
   )
-  rec.components.create!(componentable: masa,  quantity: 30,        unit: "g")
+  rec.components.create!(componentable: masa,  quantity: 28,        unit: "g")
   rec.components.create!(componentable: carne, quantity: carne_qty, unit: "g")
   rec.components.create!(componentable: salsa, quantity: salsa_qty, unit: "ml")
-  rec.components.create!(componentable: mario_ing["Cebolla blanca"], quantity: 8, unit: "g")
+  rec.components.create!(componentable: mario_ing["Cebolla blanca"], quantity: 6, unit: "g")
   rec.components.create!(componentable: mario_ing["Cilantro"],       quantity: 3, unit: "g")
   rec
 end
 
+# Taco al pastor — flagship. 50g of marinated pastor, salsa verde.
+#   Cost: ~$14.05, sale $35 → ~60% margin.
 build_taco(taqueria_mario, name: "Taco al pastor",
-  carne: mario_ing["Carne al pastor marinada"], carne_qty: 80,
-  salsa: salsa_verde, salsa_qty: 20, price_cents: 2500,
-  masa: masa, mario_ing: mario_ing)
-build_taco(taqueria_mario, name: "Taco de asada",
-  carne: mario_ing["Arrachera"], carne_qty: 75,
-  salsa: salsa_roja,  salsa_qty: 20, price_cents: 3000,
-  masa: masa, mario_ing: mario_ing)
-build_taco(taqueria_mario, name: "Taco de pollo",
-  carne: mario_ing["Pechuga de pollo"], carne_qty: 80,
-  salsa: salsa_verde, salsa_qty: 20, price_cents: 2200,
+  carne: mario_ing["Carne al pastor marinada"], carne_qty: 50,
+  salsa: salsa_verde, salsa_qty: 15, price_cents: 3500,
   masa: masa, mario_ing: mario_ing)
 
+# Taco de asada (arrachera) — premium protein, salsa roja, slightly tighter margin.
+#   Cost: ~$21.10, sale $48 → ~56% margin (the upsell pays for itself).
+build_taco(taqueria_mario, name: "Taco de asada",
+  carne: mario_ing["Arrachera"], carne_qty: 50,
+  salsa: salsa_roja,  salsa_qty: 15, price_cents: 4800,
+  masa: masa, mario_ing: mario_ing,
+  target_margin_percent: 60)
+
+# Taco de pollo — budget option. Salsa verde. Healthy margin.
+#   Cost: ~$10.80, sale $30 → ~64% margin.
+build_taco(taqueria_mario, name: "Taco de pollo",
+  carne: mario_ing["Pechuga de pollo"], carne_qty: 50,
+  salsa: salsa_verde, salsa_qty: 15, price_cents: 3000,
+  masa: masa, mario_ing: mario_ing)
+
+# Quesadilla — bigger masa portion, 60g queso Oaxaca.
+#   Cost: ~$15.10, sale $42 → ~64% margin.
 quesadilla = taqueria_mario.recipes.create!(
   name: "Quesadilla",
-  sale_price_cents: 4500, is_saleable: true, is_published: true,
+  sale_price_cents: 4200, is_saleable: true, is_published: true,
   yield_quantity: 1, yield_unit: "piece",
   category: :mains, target_margin_percent: 65
 )
 quesadilla.components.create!(componentable: masa,                      quantity: 80, unit: "g")
 quesadilla.components.create!(componentable: mario_ing["Queso Oaxaca"], quantity: 60, unit: "g")
-quesadilla.components.create!(componentable: salsa_verde,               quantity: 25, unit: "ml")
+quesadilla.components.create!(componentable: salsa_verde,               quantity: 20, unit: "ml")
 
+# Sope con frijol — thicker masa base + frijoles refritos + queso.
+#   Cost: ~$11.10, sale $32 → ~65% margin.
 sope = taqueria_mario.recipes.create!(
   name: "Sope con frijol",
-  sale_price_cents: 4000, is_saleable: true, is_published: true,
+  sale_price_cents: 3200, is_saleable: true, is_published: true,
   yield_quantity: 1, yield_unit: "piece",
-  category: :mains, target_margin_percent: 60
+  category: :mains, target_margin_percent: 65
 )
 sope.components.create!(componentable: masa,                        quantity: 100, unit: "g")
 sope.components.create!(componentable: frijoles,                    quantity:  80, unit: "g")
-sope.components.create!(componentable: salsa_roja,                  quantity:  25, unit: "ml")
+sope.components.create!(componentable: salsa_roja,                  quantity:  20, unit: "ml")
 sope.components.create!(componentable: mario_ing["Queso Oaxaca"],   quantity:  20, unit: "g")
 
+# Gringa al pastor — flour-style with 75g pastor + queso + piña.
+#   Cost: ~$34.50, sale $95 → ~64% margin.
 gringa = taqueria_mario.recipes.create!(
   name: "Gringa al pastor",
-  sale_price_cents: 6500, is_saleable: true, is_published: true,
+  sale_price_cents: 9500, is_saleable: true, is_published: true,
   yield_quantity: 1, yield_unit: "piece",
   category: :mains, target_margin_percent: 65
 )
 gringa.components.create!(componentable: masa,                                  quantity: 120, unit: "g")
-gringa.components.create!(componentable: mario_ing["Carne al pastor marinada"], quantity:  90, unit: "g")
+gringa.components.create!(componentable: mario_ing["Carne al pastor marinada"], quantity:  75, unit: "g")
 gringa.components.create!(componentable: mario_ing["Queso Oaxaca"],             quantity:  60, unit: "g")
-gringa.components.create!(componentable: mario_ing["Piña"],                     quantity:  30, unit: "g")
+gringa.components.create!(componentable: mario_ing["Piña"],                     quantity:  25, unit: "g")
 
 mario_saleable = taqueria_mario.recipes.saleable.to_a
+
+# Pre-populate cost caches so the recetario and cost-tree pages land
+# with real numbers on first visit, instead of waiting on Sidekiq to
+# drain the post-seed queue. CostCalculator persists `cost_cents_cached`
+# bottom-up, so running it on each saleable recipe also fills every
+# sub-recipe it reaches.
+puts "  …warming cost caches"
+mario_saleable.each { |r| Recipes::CostCalculator.for(recipe: r) }
 
 # Attach a photo to each saleable Mario recipe by name match. The keys
 # below correspond to SEED_PHOTO_IDS entries — names drifting from
@@ -518,7 +571,9 @@ end
       recipe:           recipe,
       quantity:         [ 1, 2, 2, 3, 4, 6 ].sample,
       unit_price_cents: recipe.sale_price_cents,
-      unit_cost_cents:  (recipe.sale_price_cents * 0.35).to_i
+      # Mario's recipes are decomposed, so snapshot the real cached cost.
+      # Falls back to a 35% estimate only if the cache is somehow empty.
+      unit_cost_cents:  recipe.cost_cents_cached.presence || (recipe.sale_price_cents * 0.35).to_i
     )
   end
   subtotal = order.items.sum { |it| it.unit_price_cents * it.quantity }

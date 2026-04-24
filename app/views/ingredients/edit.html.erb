@@ -1,0 +1,34 @@
+<% content_for :title, t("ingredients.edit.title", name: ingredient.name) %>
+<% content_for :page_title, t("ingredients.edit.title", name: ingredient.name) %>
+<% content_for :page_subtitle, t("ingredients.edit.subtitle") %>
+
+<%= turbo_frame_tag "drawer_content" do %>
+  <div class="max-w-[640px] mx-auto flex flex-col gap-6 p-5 sm:p-6">
+    <div class="bg-surface border border-line rounded-panel shadow-card p-6 sm:p-7">
+      <div class="flex flex-col gap-2 mb-6">
+        <%= render Ui::KickerComponent.new(text: t("ingredients.edit.kicker")) %>
+        <h2 class="font-serif text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.01em] text-ink">
+          <%= ingredient.name %>
+        </h2>
+      </div>
+
+      <%= render "form", ingredient: ingredient %>
+    </div>
+
+    <div class="bg-surface border border-line rounded-card p-5 flex items-center justify-between gap-4">
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[13.5px] font-medium text-ink">
+          <%= t("ingredients.danger_zone.title") %>
+        </span>
+        <span class="text-[12.5px] text-muted">
+          <%= t("ingredients.danger_zone.sub") %>
+        </span>
+      </div>
+      <%= button_to t("ingredients.form.delete"),
+            ingredient_path(ingredient),
+            method: :delete,
+            form: { data: { turbo_confirm: t("ingredients.row.delete_confirm", name: ingredient.name) } },
+            class: "inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-[9px] rounded-button bg-transparent text-err border border-err/40 hover:bg-err/5 transition-colors" %>
+    </div>
+  </div>
+<% end %>

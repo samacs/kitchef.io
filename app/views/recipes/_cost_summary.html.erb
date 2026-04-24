@@ -1,0 +1,9 @@
+<div id="recipe_cost_summary" class="flex items-center gap-2 shrink-0">
+  <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+    <%= t("recipes.components.cost_label") %>
+  </span>
+  <span class="font-mono text-[14px] text-ink tabular-nums">
+    <%= recipe.cost_cents_cached.present? ? humanized_money_with_symbol(recipe.cost_cached) : "—" %>
+  </span>
+  <%= render Recipes::MarginChipComponent.new(recipe: recipe) %>
+</div>

@@ -1,0 +1,19 @@
+<% content_for :title, t("ingredients.new.title") %>
+<% content_for :page_title, t("ingredients.new.title") %>
+<% content_for :page_subtitle, t("ingredients.new.subtitle") %>
+
+<div class="max-w-[640px] mx-auto">
+  <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9">
+    <div class="flex flex-col gap-2 mb-6">
+      <%= render Ui::KickerComponent.new(text: t("ingredients.new.kicker")) %>
+      <h2 class="font-serif text-[28px] leading-[1.1] tracking-[-0.01em] text-ink">
+        <%= t("ingredients.new.heading") %>
+      </h2>
+      <p class="text-[14px] text-ink-2 leading-[1.55] max-w-[46ch]">
+        <%= t("ingredients.new.lede") %>
+      </p>
+    </div>
+
+    <%= render "form", ingredient: ingredient %>
+  </div>
+</div>

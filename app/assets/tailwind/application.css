@@ -396,6 +396,18 @@
     color: var(--color-accent);
   }
 
+  /* Dark mode: the surface token sits only 3–4% lighter than bg-2, so
+     the selected option reads as unselected. Lift it with a stronger
+     surface + a visible accent-soft ring so the chosen mode is obvious
+     at a glance. */
+  :where(.dark) .kc-theme-option[data-active] {
+    background: var(--color-line-2);
+    color: var(--color-ink);
+    box-shadow:
+      inset 0 0 0 1px var(--color-accent-soft),
+      0 1px 2px rgba(0, 0, 0, .35);
+  }
+
   /* Subtle, design-tokened scrollbars for long scrollable panels (the
      orders kanban row, clients table, any ad-hoc container that opts
      in by class). Keeps scrollbars visible for discoverability but
@@ -444,5 +456,55 @@
   }
   .kc-kanban-col:hover::-webkit-scrollbar-thumb {
     background: var(--color-line-2);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Print: shopping list.
+   The kitchen owner pays for ink and paper — compact rows, small margins,
+   grayscale only, hide everything that isn't the list itself. The header
+   collapses to one tight line so a 20-item list fits on a single A4/Letter
+   page even with pen-sized checkboxes.
+--------------------------------------------------------------------------- */
+@media print {
+  @page {
+    size: auto;
+    margin: 10mm 12mm;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Strip every panel-chrome surface from print output. The shopping list
+     is the only surface with an explicit print affordance today; if
+     another page adds one, revisit this scope. */
+  body > div > aside,
+  body > div header.kc-chrome,
+  body [data-right-drawer-target="panel"],
+  body [data-right-drawer-target="backdrop"] {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .kc-print-shopping-list * {
+    color: #000 !important;
+    background: transparent !important;
+    border-color: #999 !important;
+    box-shadow: none !important;
+  }
+
+  .kc-print-shopping-list .kc-print-row {
+    page-break-inside: avoid;
+  }
+
+  .kc-print-shopping-list h1,
+  .kc-print-shopping-list h2 {
+    page-break-after: avoid;
   }
 }

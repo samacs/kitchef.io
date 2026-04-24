@@ -21,6 +21,32 @@
   </div>
 <% end %>
 
+<%# Decomposition nudge — appears only for accounts still in simple mode
+    with enough recipes to make decomposition meaningful. Dismissal lives
+    client-side for now (localStorage), so a new session sees it again;
+    a future version can persist dismissal as an account setting. %>
+<% if !Current.account.composable_recipes? && recipes.size >= 3 && (first_recipe = recipes.first) %>
+  <aside class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-card-sm border border-line bg-surface px-5 py-4 shadow-card">
+    <div class="flex items-start gap-3 min-w-0 flex-1">
+      <span class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full bg-accent-soft text-accent shrink-0">
+        <%= icon(:scale, size: :sm) %>
+      </span>
+      <div class="min-w-0 flex flex-col gap-1">
+        <div class="text-[14px] font-semibold text-ink">
+          <%= t("onboarding.decomposition.nudge.title") %>
+        </div>
+        <div class="text-[12.5px] text-ink-2 max-w-prose">
+          <%= t("onboarding.decomposition.nudge.lede") %>
+        </div>
+      </div>
+    </div>
+    <%= link_to onboarding_decomposition_path(first_recipe),
+          class: "shrink-0 inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+      <%= t("onboarding.decomposition.nudge.cta") %>
+    <% end %>
+  </aside>
+<% end %>
+
 <%# Bulk-publish banner — appears only when the operator has drafts with
     photos sitting ready. Saves the round-trip of opening each recipe
     just to flip the toggle when she's prepping a batch. %>
@@ -56,8 +82,9 @@
         cta_label_key: "recipes.empty_state.cta",
         cta_href: new_recipe_path) %>
 <% else %>
+  <% saleable, internal = recipes.partition(&:is_saleable?) %>
   <div class="flex flex-col gap-10">
-    <% recipes.group_by(&:category).each do |category, group| %>
+    <% saleable.group_by(&:category).each do |category, group| %>
       <section class="flex flex-col gap-4">
         <div class="flex items-baseline justify-between gap-3">
           <h2 class="font-serif text-[22px] leading-[1.15] tracking-[-0.01em] text-ink">
@@ -72,6 +99,32 @@
             <%= render Recipes::CardComponent.new(recipe: item) %>
           <% end %>
         </div>
+      </section>
+    <% end %>
+
+    <% if internal.any? %>
+      <section class="flex flex-col gap-4">
+        <details class="group">
+          <summary class="flex items-baseline justify-between gap-3 cursor-pointer select-none list-none py-2 -mx-2 px-2 rounded-input hover:bg-bg-2/40 transition-colors">
+            <div class="flex items-baseline gap-2">
+              <span class="inline-block transition-transform group-open:rotate-90 text-muted text-[10px]">▸</span>
+              <h2 class="font-serif text-[22px] leading-[1.15] tracking-[-0.01em] text-ink">
+                <%= t("recipes.index.internal_section") %>
+              </h2>
+            </div>
+            <span class="font-mono text-[12px] text-muted uppercase tracking-[0.14em]">
+              <%= t("recipes.index.count", count: internal.size) %>
+            </span>
+          </summary>
+          <p class="text-[13px] text-muted max-w-prose mb-4">
+            <%= t("recipes.index.internal_section_lede") %>
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            <% internal.each do |item| %>
+              <%= render Recipes::CardComponent.new(recipe: item) %>
+            <% end %>
+          </div>
+        </details>
       </section>
     <% end %>
   </div>

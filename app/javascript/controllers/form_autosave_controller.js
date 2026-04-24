@@ -60,6 +60,18 @@ export default class extends Controller {
       })
 
       if (res.ok) {
+        // Apply any Turbo Stream fragments the server returned. Callers
+        // who just want "save + status pill" respond with `head :no_content`
+        // and this branch is skipped; callers that want in-page DOM
+        // updates (e.g. live cost summary, row refresh) respond with
+        // turbo-stream markup.
+        const contentType = res.headers.get("Content-Type") || ""
+        if (contentType.includes("text/vnd.turbo-stream.html")) {
+          const body = await res.text()
+          if (body.trim().length > 0 && window.Turbo?.renderStreamMessage) {
+            window.Turbo.renderStreamMessage(body)
+          }
+        }
         this.showStatus("saved")
         this.#dispatchSuccess()
       } else {

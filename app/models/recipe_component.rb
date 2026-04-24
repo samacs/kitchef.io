@@ -33,7 +33,11 @@ class RecipeComponent < ApplicationRecord
   validates :unit, presence: true
   validate  :componentable_is_ingredient_or_recipe
   validate  :no_direct_self_reference
+  validate  :no_deep_cycle
   validate  :cross_account_components_rejected
+  validate  :unit_compatible_with_componentable
+
+  after_commit :enqueue_parent_cost_refresh, on: %i[create update destroy]
 
   # Returns the componentable's canonical cost unit (an Ingredient's unit
   # or a Recipe's yield_unit). Used by Recipes::CostCalculator to convert
@@ -58,6 +62,36 @@ class RecipeComponent < ApplicationRecord
     return unless componentable_id == recipe_id
 
     errors.add(:componentable, :self_reference)
+  end
+
+  # Belt-and-suspenders cycle check. The UI layer prevents the operator
+  # from picking a cyclic recipe via `Recipes::CycleDetector`; this
+  # validator rejects anything that slips past (direct API POSTs,
+  # console edits, etc.).
+  def no_deep_cycle
+    return unless componentable_type == "Recipe"
+    return if componentable_id.blank? || recipe_id.blank?
+    return if componentable_id == recipe_id # covered by :self_reference
+    return unless Recipes::CycleDetector.would_cycle?(parent: recipe, candidate: componentable)
+
+    errors.add(:componentable, :cycle)
+  end
+
+  def unit_compatible_with_componentable
+    canonical = componentable_canonical_unit
+    return if canonical.blank? || unit.blank?
+    return if Recipes::UnitConverter.compatible?(unit, canonical)
+
+    errors.add(:unit, :incompatible)
+  end
+
+  # After any component edit fires, refresh the parent recipe's cost
+  # cache AND every recipe that uses the parent (one level of fan-out
+  # is free; the job walks the rest via DependencyGraph).
+  def enqueue_parent_cost_refresh
+    return if recipe_id.blank?
+
+    RecipeCostRefreshJob.perform_later(recipe_id: recipe_id)
   end
 
   # Components must live in the same account as the parent recipe. Block at
