@@ -8,12 +8,21 @@ module Ingredients
     option :params
 
     def call
-      ingredient = account.ingredients.new(params.to_h)
+      attrs = params.to_h
+      attrs[:category_id] ||= default_ingredient_category_id
+
+      ingredient = account.ingredients.new(attrs)
       if ingredient.save
         success(ingredient)
       else
         Result.new(success: false, object: ingredient, errors: ingredient.errors)
       end
+    end
+
+    private
+
+    def default_ingredient_category_id
+      account.categories.for_kind(:ingredient).kept.order(:position, :name).pick(:id)
     end
   end
 end

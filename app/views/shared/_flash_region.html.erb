@@ -1,0 +1,36 @@
+<%#
+  Fixed-position flash host. Mounted once per layout; renders every
+  active Rails flash key in a stack that never shifts page content.
+
+  Layout:
+    * Mobile (default): strip pinned to the top of the viewport,
+      inset-x-0 with padding — full-width toast feels native on phones.
+    * sm+ : floats at top-right, max 420px wide, doesn't block the
+      desktop top bar's own content.
+
+  `pointer-events-none` on the outer container so the empty space
+  around the toasts stays click-through (especially important on
+  desktop where the region sits over the top bar); toasts themselves
+  reclaim pointer events. z-[70] clears the `drawer` (z-[60]) and
+  right-drawer backdrop without fighting the admin modal stack.
+
+  Per-key guard so we never emit an empty toast box — the
+  FlashComponent also renders nothing when `message` is blank, but
+  skipping the wrapper keeps the DOM tight for screen readers.
+%>
+<div class="kc-flash-region fixed inset-x-0 top-0 z-[70] flex flex-col gap-2 p-3 pointer-events-none
+            sm:inset-x-auto sm:right-4 sm:top-4 sm:left-auto sm:p-0
+            sm:w-[min(420px,calc(100vw-2rem))]"
+     aria-live="polite"
+     aria-atomic="false">
+  <% if flash[:notice].present? %>
+    <div class="pointer-events-auto">
+      <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
+    </div>
+  <% end %>
+  <% if flash[:alert].present? %>
+    <div class="pointer-events-auto">
+      <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert], dismiss_after_ms: nil) %>
+    </div>
+  <% end %>
+</div>

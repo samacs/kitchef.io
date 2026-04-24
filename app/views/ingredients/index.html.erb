@@ -10,17 +10,6 @@
   <% end %>
 <% end %>
 
-<% if flash[:notice].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-  </div>
-<% end %>
-<% if flash[:alert].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert], dismiss_after_ms: nil) %>
-  </div>
-<% end %>
-
 <% if ingredients.empty? %>
   <%= render Recipes::EmptyStateComponent.new(
         headline_key: "ingredients.empty_state.headline",
@@ -29,11 +18,11 @@
         cta_href: new_ingredient_path) %>
 <% else %>
   <div class="flex flex-col gap-10">
-    <% ingredients.group_by(&:category).each do |category, group| %>
+    <% ingredients.group_by(&:category).sort_by { |cat, _| cat&.position || 999 }.each do |category, group| %>
       <section class="flex flex-col gap-4">
         <div class="flex items-baseline justify-between gap-3">
           <h2 class="font-serif text-[22px] leading-[1.15] tracking-[-0.01em] text-ink">
-            <%= t("ingredient.categories.#{category}") %>
+            <%= category&.name || t("ingredients.index.uncategorized") %>
           </h2>
           <span class="font-mono text-[12px] text-muted uppercase tracking-[0.14em]">
             <%= t("ingredients.index.count", count: group.size) %>

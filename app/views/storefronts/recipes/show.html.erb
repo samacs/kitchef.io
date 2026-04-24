@@ -18,7 +18,7 @@
     <ol class="hidden sm:flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
       <li><%= link_to @storefront.name, back_href, class: "hover:text-ink-2 transition-colors" %></li>
       <li aria-hidden="true">·</li>
-      <li><%= t("recipe.categories.#{@recipe.category}", default: @recipe.category.to_s.humanize) %></li>
+      <li><%= @recipe.category&.name %></li>
       <li aria-hidden="true">·</li>
       <li class="text-ink-2 truncate max-w-[240px]"><%= @recipe.name %></li>
     </ol>
@@ -72,7 +72,7 @@
 
     <div class="lg:sticky lg:top-20">
       <div class="mb-4 flex flex-wrap items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
-        <span><%= t("recipe.categories.#{@recipe.category}", default: @recipe.category.to_s.humanize) %></span>
+        <span><%= @recipe.category&.name %></span>
       </div>
 
       <h1 class="font-serif text-[clamp(32px,4vw,48px)] leading-[1.05] tracking-tight text-ink">
@@ -184,7 +184,7 @@
                 <span class="shrink-0 font-serif text-[18px] text-ink"><%= humanized_money_with_symbol(other.sale_price) %></span>
               </div>
               <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
-                <%= t("recipe.categories.#{other.category}", default: other.category.to_s.humanize) %>
+                <%= other.category&.name %>
               </span>
             </div>
           <% end %>

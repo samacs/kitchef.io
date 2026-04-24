@@ -1,5 +1,5 @@
 class RecipesController < AuthenticatedController
-  expose :recipes, -> { Current.account.recipes.kept.order(category: :asc, position: :asc) }
+  expose :recipes, -> { Current.account.recipes.kept.includes(:category).order(category_id: :asc, position: :asc) }
   expose :recipe,  -> { find_or_build_recipe }
 
   def index; end
@@ -121,7 +121,7 @@ class RecipesController < AuthenticatedController
 
   def recipe_params
     params.require(:recipe).permit(
-      :name, :sale_price, :category, :description, :is_published,
+      :name, :sale_price, :category_id, :description, :is_published,
       :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent,
       photos: [],
       components_attributes: [

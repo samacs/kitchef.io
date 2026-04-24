@@ -1,0 +1,87 @@
+<% content_for :title, t("shopping_list.mark_bought.drawer_title", name: @ingredient.name) %>
+<% content_for :drawer_only, "1" %>
+
+<%= turbo_frame_tag "drawer_content" do %>
+  <div class="max-w-[560px] mx-auto flex flex-col gap-5 p-5 sm:p-6">
+    <div class="bg-surface border border-line rounded-panel shadow-card p-6 sm:p-7">
+      <div class="flex flex-col gap-2 mb-5">
+        <%= render Ui::KickerComponent.new(text: t("shopping_list.mark_bought.kicker")) %>
+        <h2 class="font-serif text-[24px] sm:text-[26px] leading-[1.1] tracking-[-0.01em] text-ink">
+          <%= @ingredient.name %>
+        </h2>
+        <p class="text-[13px] text-muted leading-[1.5]">
+          <%= t("shopping_list.mark_bought.lede") %>
+        </p>
+      </div>
+
+      <% supplier_options = Current.account.suppliers.kept.order(:name).pluck(:name, :id) %>
+      <%= form_with url: production_purchase_marks_path(@ingredient),
+            method: :post,
+            class: "flex flex-col gap-5" do |f| %>
+
+        <%= render Ui::ComboboxComponent.new(
+              name: "supplier_id",
+              id: "purchase_mark_supplier_id",
+              label: t("shopping_list.mark_bought.supplier_label"),
+              options: supplier_options,
+              value: @suggested_supplier_id,
+              placeholder: t("shopping_list.mark_bought.supplier_placeholder"),
+              hint: t("shopping_list.mark_bought.supplier_hint"),
+              create_path: suppliers_path,
+              create_params: {},
+              list_id: "combobox_mark_bought_supplier_options") %>
+
+        <div class="grid grid-cols-2 gap-3">
+          <label class="flex flex-col gap-2">
+            <span class="text-[13px] font-medium text-ink leading-none">
+              <%= t("shopping_list.mark_bought.quantity_label") %>
+            </span>
+            <input type="number" name="quantity"
+                   value="<%= @suggested_qty %>"
+                   step="0.001" min="0" required
+                   inputmode="decimal"
+                   class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2.5 text-[15px] font-mono tabular-nums transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+          </label>
+
+          <label class="flex flex-col gap-2">
+            <span class="text-[13px] font-medium text-ink leading-none">
+              <%= t("shopping_list.mark_bought.unit_label") %>
+            </span>
+            <%= select_tag :unit,
+                  options_for_select(
+                    Ingredient::UNITS.map { |u| [ I18n.t("units.#{u}", default: u), u ] },
+                    @suggested_unit
+                  ),
+                  class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2.5 text-[14px] transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+          </label>
+        </div>
+
+        <label class="flex flex-col gap-2">
+          <span class="text-[13px] font-medium text-ink leading-none">
+            <%= t("shopping_list.mark_bought.unit_cost_label") %>
+          </span>
+          <span class="relative flex items-center">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono pointer-events-none">$</span>
+            <input type="number" name="unit_cost"
+                   value="<%= @suggested_unit_cost.to_i.zero? ? nil : format('%.2f', @suggested_unit_cost / 100.0) %>"
+                   step="0.01" min="0" required
+                   inputmode="decimal"
+                   class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input pl-7 pr-16 py-2.5 text-[15px] font-mono tabular-nums transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">MXN</span>
+          </span>
+          <span class="text-[12px] text-muted"><%= t("shopping_list.mark_bought.unit_cost_hint") %></span>
+        </label>
+
+        <div class="flex items-center justify-between gap-3 pt-2">
+          <%= link_to t("shopping_list.mark_bought.cancel"),
+                production_shopping_list_path,
+                data: { action: "click->right-drawer#close" },
+                class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+
+          <%= f.submit t("shopping_list.mark_bought.submit"),
+                class: "inline-flex items-center justify-center gap-2 text-[15px] font-semibold px-[22px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

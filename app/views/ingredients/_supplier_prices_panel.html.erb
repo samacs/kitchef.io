@@ -1,0 +1,155 @@
+<%#
+  Proveedores y precios — per-ingredient price book.
+
+  Renders:
+    • A table of SupplierIngredient rows: supplier name, price, "default" toggle, remove.
+    • A compact add-row form (supplier combobox + precio input + submit).
+    • A "nudge" banner when a non-default supplier is cheaper than the current default.
+
+  Replaces itself via Turbo Stream on every write (see
+  Ingredients::SupplierPricesController#render_panel).
+%>
+<% supplier_rows = ingredient.supplier_ingredients.includes(:supplier).order("suppliers.name ASC").to_a %>
+<% default_row   = supplier_rows.find(&:is_default_cost_source?) %>
+<% cheaper_row   = supplier_rows.reject(&:is_default_cost_source?).select { |r| default_row && r.unit_cost_cents < default_row.unit_cost_cents }.min_by(&:unit_cost_cents) %>
+<% supplier_options = Current.account.suppliers.kept.order(:name).pluck(:name, :id) %>
+
+<section id="supplier_prices_panel" class="flex flex-col gap-4">
+  <header class="flex items-baseline justify-between gap-3">
+    <div class="flex flex-col gap-1">
+      <span class="font-mono text-[10.5px] uppercase tracking-[0.18em] text-muted">
+        <%= t("suppliers.pricing.section_title") %>
+      </span>
+      <p class="text-[12.5px] text-muted leading-[1.45] max-w-[52ch]">
+        <%= t("suppliers.pricing.section_lede") %>
+      </p>
+    </div>
+  </header>
+
+  <% if panel_error.present? %>
+    <div role="alert"
+         class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 text-[13px]">
+      <%= panel_error %>
+    </div>
+  <% end %>
+
+  <% if cheaper_row && default_row %>
+    <div class="rounded-card border border-accent/40 bg-accent-soft px-4 py-3 flex items-start justify-between gap-3">
+      <div class="flex items-start gap-2 text-[13px] text-accent-2 leading-[1.5]">
+        <span class="mt-[2px]"><%= icon(:trending_down, size: :sm) %></span>
+        <p>
+          <%= t("suppliers.pricing.nudge_cheaper",
+                supplier:      cheaper_row.supplier.name,
+                new_price:     humanized_money_with_symbol(cheaper_row.unit_cost),
+                current_price: humanized_money_with_symbol(default_row.unit_cost),
+                unit: t("units.#{ingredient.unit}", default: ingredient.unit)) %>
+        </p>
+      </div>
+      <%= button_to t("suppliers.pricing.make_default"),
+            ingredient_supplier_price_path(ingredient, cheaper_row, make_default: 1),
+            method: :patch,
+            form: { data: { turbo_stream: true } },
+            class: "shrink-0 inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-[6px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors" %>
+    </div>
+  <% end %>
+
+  <% if supplier_rows.any? %>
+    <div class="bg-surface border border-line rounded-card overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-bg-2/40 border-b border-line">
+          <tr>
+            <th class="px-3 py-2 text-left text-[11px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("suppliers.index.table.name") %></th>
+            <th class="px-3 py-2 text-right text-[11px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("ingredients.form.unit_cost_label") %></th>
+            <th class="px-3 py-2 text-center text-[11px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("suppliers.pricing.default_label") %></th>
+            <th class="px-3 py-2 text-right"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% supplier_rows.each do |row| %>
+            <tr class="border-b border-line last:border-b-0 <%= row.is_default_cost_source? ? 'bg-accent-soft/30' : '' %>">
+              <td class="px-3 py-2.5">
+                <span class="text-[13.5px] text-ink"><%= row.supplier.name %></span>
+                <% if row.last_bought_on %>
+                  <span class="block font-mono text-[11px] text-muted">
+                    <%= t("suppliers.pricing.last_bought", date: l(row.last_bought_on, format: :long)) %>
+                  </span>
+                <% end %>
+              </td>
+              <td class="px-3 py-2.5 text-right font-mono text-[13px] text-ink tabular-nums whitespace-nowrap">
+                <%= humanized_money_with_symbol(row.unit_cost) %>
+                <span class="text-muted">/ <%= t("units.#{ingredient.unit}", default: ingredient.unit) %></span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <% if row.is_default_cost_source? %>
+                  <span class="inline-flex items-center gap-1 text-[11.5px] font-semibold text-accent">
+                    <%= icon(:check, size: :xs) %>
+                    <%= t("suppliers.pricing.default_label") %>
+                  </span>
+                <% else %>
+                  <%= button_to t("suppliers.pricing.make_default"),
+                        ingredient_supplier_price_path(ingredient, row, make_default: 1),
+                        method: :patch,
+                        form: { data: { turbo_stream: true } },
+                        class: "inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2.5 py-[5px] rounded-input bg-transparent text-ink-2 border border-line hover:border-accent hover:text-accent transition-colors" %>
+                <% end %>
+              </td>
+              <td class="px-3 py-2.5 text-right">
+                <%= button_to ingredient_supplier_price_path(ingredient, row),
+                      method: :delete,
+                      form: { data: { turbo_stream: true, turbo_confirm: t("suppliers.pricing.remove") + "?" } },
+                      aria: { label: t("suppliers.pricing.remove") },
+                      title: t("suppliers.pricing.remove"),
+                      class: "inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-err border border-transparent hover:border-err/40 transition-colors" do %>
+                  <%= icon(:x, size: :xs) %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-[13px] text-muted leading-[1.5] py-4 px-4 bg-bg-2/40 border border-dashed border-line rounded-card">
+      <%= t("suppliers.pricing.empty") %>
+    </p>
+  <% end %>
+
+  <%# Add new price form. Combobox picks an existing supplier; the operator
+      creates a new supplier via /proveedores/nuevo (drawer) when needed. %>
+  <%= form_with url: ingredient_supplier_prices_path(ingredient),
+        method: :post,
+        class: "flex flex-col sm:flex-row sm:items-end gap-3 bg-surface border border-line rounded-card p-4",
+        data: { turbo_stream: true } do |f| %>
+    <div class="flex-1 min-w-0">
+      <%= render Ui::ComboboxComponent.new(
+            name: "supplier_id",
+            id: "supplier_ingredient_supplier_id",
+            label: t("suppliers.pricing.add_cta"),
+            options: supplier_options,
+            placeholder: t("suppliers.form.name_placeholder"),
+            required: true,
+            create_path: suppliers_path,
+            create_params: {},
+            list_id: "combobox_ingredient_supplier_options") %>
+    </div>
+
+    <label for="supplier_ingredient_unit_cost" class="flex flex-col gap-2 sm:w-[180px]">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("ingredients.form.unit_cost_label") %>
+      </span>
+      <span class="relative flex items-center">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono pointer-events-none">$</span>
+        <%= f.number_field :unit_cost,
+              id: "supplier_ingredient_unit_cost",
+              step: "0.01",
+              min: 0,
+              inputmode: "decimal",
+              placeholder: "0.00",
+              class: "w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input pl-7 pr-3 py-2.5 text-[14px] leading-[1.3] font-mono transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+      </span>
+    </label>
+
+    <%= f.submit t("suppliers.pricing.add_cta"),
+          class: "inline-flex items-center justify-center gap-2 text-[13px] font-semibold px-4 py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
+  <% end %>
+</section>

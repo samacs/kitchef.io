@@ -10,7 +10,8 @@ class StorefrontsController < Storefronts::BaseController
     @ordering_hours = Storefronts::OrderingHours.for(@storefront)
     @recipes_by_category = @storefront
       .recipes.kept.published
-      .order(category: :asc, position: :asc)
+      .includes(:category)
+      .order(category_id: :asc, position: :asc)
       .group_by(&:category)
     @viewing_own_storefront = Current.user.present? && Current.user.owned_account&.id == @storefront.id
     @draft_count = @viewing_own_storefront ? @storefront.recipes.kept.saleable.where(is_published: false).count : 0

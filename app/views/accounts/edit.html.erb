@@ -2,16 +2,9 @@
 <% content_for :page_title, t("account.page_title") %>
 <% content_for :page_subtitle, t("account.page_subtitle") %>
 
-<%# Any global flash still surfaces (e.g. from button_to destroy-logo
-    posts), but the autosave flow uses a per-page inline indicator
-    rather than flashes on every keystroke save. %>
-<% if flash[:notice] %>
-  <div class="mb-5"><%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %></div>
-<% end %>
-<% if flash[:alert] %>
-  <div class="mb-5"><%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %></div>
-<% end %>
-
+<%# Autosave uses a per-page inline indicator rather than flashes on
+    every keystroke save. Any one-off flash (destroy-logo, destroy-
+    cover button_to posts) surfaces through the shared flash region. %>
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
   <%# ================================================================
       LEFT — form (spans 2 of 3 columns on lg+)

@@ -11,12 +11,6 @@
 <div data-controller="storefront-cart-clear" hidden></div>
 
 <main class="mx-auto max-w-[760px] px-5 py-10">
-  <% if flash[:notice] %>
-    <div class="mb-6">
-      <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-    </div>
-  <% end %>
-
   <% lede_key =
     if @order.state == "placed"
       "storefronts.confirmation.lede"

@@ -1,0 +1,17 @@
+<% content_for :title, t("purchases.edit.title", date: l(purchase.purchased_on, format: :long)) %>
+<% content_for :page_title, t("purchases.edit.title", date: l(purchase.purchased_on, format: :long)) %>
+<% content_for :page_subtitle, t("purchases.edit.subtitle") %>
+
+<div class="max-w-[720px] mx-auto">
+  <header class="mb-6 flex flex-col gap-2">
+    <%= render Ui::KickerComponent.new(text: t("purchases.edit.kicker")) %>
+    <h1 class="font-serif text-[28px] sm:text-[32px] leading-[1.1] tracking-tight text-ink">
+      <%= purchase.supplier_name || t("purchases.no_supplier") %>
+    </h1>
+    <p class="font-mono text-[12px] text-muted">
+      <%= l(purchase.purchased_on, format: :long) %>
+    </p>
+  </header>
+
+  <%= render "form", purchase: purchase %>
+</div>

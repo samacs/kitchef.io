@@ -101,6 +101,26 @@ Rails.application.routes.draw do
     end
   end
 
+  # Phase 9 — proveedores & per-supplier price history. Combobox inline
+  # flow on the ingredient form hits #create via JSON; the management
+  # surface at /proveedores lives for the "I just opened a new shop"
+  # and "bulk-edit contact info" cases.
+  resources :suppliers,
+    path: "proveedores",
+    path_names: { new: "nuevo", edit: "editar" } do
+    collection do
+      get :search
+    end
+  end
+
+  # Purchase ledger — the "paper receipt + thumb" surface. The mobile-
+  # first new-purchase form lives at /compras/nuevo; index is the
+  # chronological list of what's been bought; CSV export feeds the
+  # operator's contador.
+  resources :purchases,
+    path: "compras",
+    path_names: { new: "nuevo", edit: "editar" }
+
   resources :recipes do
     member do
       post :toggle_publish, path: "toggle-publish"
@@ -110,7 +130,19 @@ Rails.application.routes.draw do
       post :rescale_for_margin, path: "rescale-for-margin"
     end
   end
-  resources :ingredients
+  resources :ingredients do
+    # Nested per-ingredient Supplier price rows, controlled from the
+    # "Proveedores y precios" panel inside the ingredient edit drawer.
+    resources :supplier_prices, only: %i[create update destroy],
+      controller: "ingredients/supplier_prices"
+  end
+
+  # Inline Agregar flow from the Ui::ComboboxComponent — operator types
+  # a new category name in the picker, presses ↵, this endpoint creates
+  # the row and returns JSON + a Turbo Stream that updates the datalist.
+  # No management UI in v1; the inline creator + the restrict_with_error
+  # guard on Category#destroy is the whole surface.
+  resources :categories, only: %i[create destroy]
 
   # One schedule per account — weekly grid + date-specific exceptions.
   # Replaces the Phase 5 /delivery-slots editor and the ordering-hours
@@ -129,6 +161,10 @@ Rails.application.routes.draw do
   # stub is gone — `/production` now lands on the real planner.
   get "/production",               to: "production#show",          as: :production
   get "/production/shopping-list", to: "production#shopping_list", as: :production_shopping_list
+  # "Marcar como comprada" drawer + submit — per-ingredient quick-record
+  # into today's Purchase for the chosen supplier.
+  get  "/production/shopping-list/mark/:ingredient_id/new", to: "production/purchase_marks#new",    as: :new_production_purchase_mark
+  post "/production/shopping-list/mark/:ingredient_id",     to: "production/purchase_marks#create", as: :production_purchase_marks
   post "/production/bulk-start-production",
     to: "production#bulk_start_production",
     as: :production_bulk_start_production

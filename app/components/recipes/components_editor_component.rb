@@ -16,7 +16,7 @@ module Recipes
     end
 
     def pickable_ingredients
-      recipe.account.ingredients.kept.order(:category, :name)
+      recipe.account.ingredients.kept.includes(:category).order(:category_id, :name)
     end
 
     # Recipes that can be safely added as a component without cycling.

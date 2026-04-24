@@ -50,14 +50,22 @@
       </div>
     </div>
 
-    <%# Skip the drawer shell when the request is ALREADY targeting the
-        drawer frame — otherwise the response contains two elements
-        with `id="drawer_content"` (the shell + the actual content),
-        the browser parser handles duplicate IDs unpredictably, and
-        Turbo sometimes snaps the empty one into the drawer, leaving
-        the customer with "Content missing". %>
-    <% unless turbo_frame_request_id == "drawer_content" %>
+    <%# Skip the drawer shell when the response would otherwise end up
+        with two `id="drawer_content"` elements. Two triggers:
+        1. The request carries a `Turbo-Frame: drawer_content` header
+           (a real frame navigation — shell already lives in the open
+           drawer, no need to re-emit).
+        2. The view opts out via `content_for(:drawer_only)` — covers
+           the case where the browser hits the URL without the Turbo-
+           Frame header (Turbo link prefetch on hover, page reload,
+           shared link, any `Accept: */*` fetch). The view is a pure
+           drawer fragment, so rendering the shell again would
+           duplicate the frame id and Turbo sometimes snaps the empty
+           one into the drawer, leaving "Content missing". %>
+    <% unless turbo_frame_request_id == "drawer_content" || content_for?(:drawer_only) %>
       <%= render "shared/right_drawer" %>
     <% end %>
+
+    <%= render "shared/flash_region" %>
   </body>
 </html>

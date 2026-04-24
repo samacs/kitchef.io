@@ -297,6 +297,9 @@ es-MX:
       phone_hint: "Móvil mexicano. Lo usamos para WhatsApp y notificaciones."
       email_label: "Correo (opcional)"
       email_placeholder: "lupita@correo.mx"
+      rfc_label: "RFC (opcional)"
+      rfc_placeholder: "RAGL850101HDF"
+      rfc_hint: "Sólo si necesitas facturar. 12 o 13 caracteres como aparece en su constancia."
       colonia_label: "Colonia"
       colonia_placeholder: "Condesa"
       city_label: "Ciudad"
@@ -379,6 +382,7 @@ es-MX:
         other: "%{count} platillos"
       internal_section: "Bases y preparaciones"
       internal_section_lede: "Recetas que no se venden solas. Úsalas como componentes de tus platillos finales."
+      uncategorized: "Sin categoría"
     new:
       title: "Agregar platillo"
       subtitle: "Foto, nombre y precio bastan"
@@ -396,6 +400,7 @@ es-MX:
       sale_price_placeholder: "0.00"
       sale_price_hint: "En pesos mexicanos. Es lo que cobras a tus clientas por una porción."
       category_label: "Categoría"
+      category_placeholder: "Busca o crea una categoría"
       description_label: "Descripción (opcional)"
       description_placeholder: |-
         Masa nixtamalizada en casa, relleno de pollo con salsa verde.
@@ -445,6 +450,200 @@ es-MX:
       headline: "Tu recetario está vacío"
       sub: "Agrega tu primer platillo para empezar a recibir pedidos. Lo verás aparecer en tu menú público."
       cta: "Agregar platillo"
+  categories:
+    destroy:
+      in_use:
+        one: "Esta categoría tiene %{count} platillo o ingrediente. Muévelo a otra antes de eliminarla."
+        other: "Esta categoría tiene %{count} platillos o ingredientes. Muévelos a otra antes de eliminarla."
+      discarded: "Categoría eliminada."
+
+  suppliers:
+    title: "Proveedores"
+    index:
+      title: "Proveedores"
+      subtitle: "A quién le compras y qué tan seguido"
+      cta: "Agregar proveedor"
+      search_placeholder: "Busca por nombre, teléfono o colonia"
+      count:
+        one: "%{count} proveedor"
+        other: "%{count} proveedores"
+      ingredient_count:
+        one: "%{count} ingrediente"
+        other: "%{count} ingredientes"
+      table:
+        name: "Nombre"
+        phone: "Teléfono"
+        ingredients: "Ingredientes"
+        last_bought: "Última compra"
+    new:
+      title: "Agregar proveedor"
+      subtitle: "Con el nombre basta — el resto lo llenas cuando lo necesites."
+      kicker: "Nuevo proveedor"
+      heading: "Suma a tu red"
+      lede: "Mercados, carnicerías, abarrotes. Guarda a quién le compras para que puedas comparar precios después."
+    edit:
+      title: "Editar %{name}"
+      subtitle: "Actualiza contacto y notas"
+      kicker: "Editar proveedor"
+    create:
+      created: "Proveedor agregado."
+    update:
+      updated: "Cambios guardados."
+    destroy:
+      discarded: "Proveedor eliminado."
+    form:
+      name_label: "Nombre"
+      name_placeholder: "Mercado de San Juan"
+      phone_label: "Teléfono"
+      phone_placeholder: "662 188 4355"
+      phone_hint: "Lo puedes dejar vacío si solo te acuerdas del puesto."
+      whatsapp_label: "WhatsApp (opcional)"
+      whatsapp_placeholder: "+52 55 1234 5678"
+      street_address_label: "Calle y número"
+      street_address_placeholder: "Av. Insurgentes Sur 1234"
+      street_address_hint: "Opcional, pero ayuda a ubicarlo en el mapa."
+      colonia_label: "Colonia"
+      colonia_placeholder: "Condesa"
+      city_label: "Ciudad"
+      city_placeholder: "Ciudad de México"
+      notes_label: "Notas (opcional)"
+      notes_placeholder: "Abre de lunes a sábado. Pedir chamorro con un día de anticipación."
+      rfc_label: "RFC (opcional)"
+      rfc_placeholder: "RAGL850101H7A"
+      rfc_hint: "Sólo si te va a facturar. 12 o 13 caracteres como aparece en su constancia."
+      submit_create: "Agregar proveedor"
+      submit_update: "Guardar cambios"
+      cancel: "Cancelar"
+      done: "Listo"
+      delete: "Eliminar proveedor"
+    row:
+      edit: "Editar"
+      delete: "Eliminar"
+      delete_confirm: "¿Eliminar %{name}? Los precios que le compraste quedan en tu historial de compras."
+    danger_zone:
+      title: "¿Ya no le compras?"
+      sub: "Lo sacamos de tu lista. Su historial de compras queda para tus reportes."
+    location:
+      kicker: "Ubicación"
+      lede: "Guarda la dirección y te dejamos un mapa para llegar rápido."
+      alt: "Mapa de %{name}"
+      open_in_maps: "Abrir en Google Maps"
+      map_pending: "Generando el mapa — refresca en un momento."
+      geocoding_failed: "No pudimos ubicar esta dirección. Revisa si hay un dedazo y vuelve a guardar."
+      empty: "Agrega calle, colonia y ciudad para ubicarlo en el mapa."
+    empty_state:
+      headline: "Aún no agregas proveedores"
+      sub: "Empieza con el mercado donde compras más seguido. Te va a servir cuando registres compras."
+      cta: "Agregar proveedor"
+    search:
+      empty: "No encontramos ningún proveedor con ese dato."
+    pricing:
+      section_title: "Proveedores y precios"
+      section_lede: "Quién te lo vende y a qué precio. El proveedor marcado como «default» es el que cuenta en el costo de tus recetas."
+      add_cta: "Agregar proveedor"
+      default_label: "Default"
+      make_default: "Marcar como default"
+      remove: "Quitar"
+      per_unit: "por %{unit}"
+      last_bought: "Comprado %{date}"
+      empty: "Aún no ligas este ingrediente a ningún proveedor. Agrega uno para empezar a llevar su historial."
+      nudge_cheaper: "%{supplier} te vende este ingrediente más barato (%{new_price}/%{unit} vs %{current_price}/%{unit}). ¿Hacerlo default?"
+
+  purchases:
+    title: "Compras"
+    no_supplier: "Sin proveedor"
+    index:
+      title: "Compras"
+      subtitle: "Lo que sale de tu bolsillo — registra cada pasada al mercado."
+      cta: "Nueva compra"
+      export_cta: "Descargar CSV"
+      count:
+        one: "%{count} compra"
+        other: "%{count} compras"
+      total_window: "Total del periodo"
+      table:
+        date: "Fecha"
+        supplier: "Proveedor"
+        items: "Items"
+        total: "Total"
+        photo: "Ticket"
+      empty_state:
+        headline: "Aún no registras compras"
+        sub: "Cada vez que vas al mercado, mueve la lista de compras a «comprada» o registra una compra completa aquí. Tu contador lo agradece."
+        cta: "Registrar mi primera compra"
+    show:
+      title: "Compra del %{date}"
+      kicker: "Ticket"
+      back_cta: "Volver a compras"
+      edit_cta: "Editar"
+      delete_cta: "Eliminar"
+      delete_confirm: "¿Eliminar esta compra? Se queda en tu historial por PaperTrail, pero sale del reporte."
+      item_count:
+        one: "%{count} item"
+        other: "%{count} items"
+      no_photo: "Sin foto del ticket"
+      totals:
+        items_total: "Suma de items"
+        override: "Total capturado"
+        override_hint: "Incluye propinas, descuentos o ajustes."
+    new:
+      title: "Nueva compra"
+      subtitle: "Fecha, proveedor y los items que compraste"
+      kicker: "Registrar compra"
+      heading: "¿Qué compraste hoy?"
+      lede: "Te permite llevar historial de precios y usar tus gastos reales en el reporte de finanzas."
+    edit:
+      title: "Editar compra del %{date}"
+      subtitle: "Ajusta el ticket si algo quedó mal capturado"
+      kicker: "Editar compra"
+    create:
+      created: "Compra registrada por %{total}."
+    update:
+      updated: "Compra actualizada."
+    destroy:
+      discarded: "Compra eliminada."
+    form:
+      date_label: "Fecha de compra"
+      supplier_label: "Proveedor"
+      supplier_placeholder: "Mercado de San Juan"
+      supplier_hint: "Déjalo en «Sin proveedor» si fue una compra suelta."
+      no_supplier_option: "Sin proveedor"
+      photo_label: "Foto del ticket"
+      photo_hint: "Opcional. Tómale foto con tu celular para que tu contador lo pueda cruzar después."
+      photo_change: "Cambiar foto"
+      photo_remove: "Quitar foto"
+      items_heading: "Items"
+      items_lede: "Un renglón por cada ingrediente que compraste."
+      add_item: "Agregar línea"
+      remove_item: "Quitar"
+      ingredient_label: "Ingrediente"
+      ingredient_placeholder: "Busca o agrega"
+      quantity_label: "Cantidad"
+      quantity_placeholder: "0"
+      unit_label: "Unidad"
+      unit_cost_label: "Precio por unidad"
+      unit_cost_placeholder: "0.00"
+      item_notes_label: "Notas"
+      running_total: "Total"
+      override_label: "Total del ticket"
+      override_hint: "Captúralo si el ticket muestra un total distinto (propinas, descuentos). Si lo dejas en blanco, usamos la suma de arriba."
+      notes_label: "Notas (opcional)"
+      notes_placeholder: "Llegó media hora tarde pero trajo piñas extra."
+      submit_create: "Guardar compra"
+      submit_update: "Guardar cambios"
+      cancel: "Cancelar"
+      delete: "Eliminar compra"
+    csv:
+      headers:
+        date: "Fecha"
+        supplier: "Proveedor"
+        ingredient: "Ingrediente"
+        quantity: "Cantidad"
+        unit: "Unidad"
+        unit_cost: "Precio unitario (MXN)"
+        subtotal: "Subtotal (MXN)"
+        notes: "Notas"
+
   ingredients:
     title: "Ingredientes"
     index:
@@ -483,11 +682,14 @@ es-MX:
       name_label: "Nombre"
       name_placeholder: "Harina de maíz nixtamalizada"
       category_label: "Categoría"
+      category_placeholder: "Busca o crea una categoría"
+      category_hint: "Agrupa ingredientes similares. Escribe para crear una nueva."
       unit_label: "Unidad de compra"
       unit_hint: "Como lo compras (kg, l, pieza)."
       unit_cost_label: "Precio por unidad"
       unit_cost_placeholder: "0.00"
       unit_cost_hint: "Lo que pagas por una unidad. En pesos mexicanos."
+      unit_cost_no_supplier_hint: "Se usa hasta que ligues este ingrediente a un proveedor."
       supplier_label: "Proveedor (opcional)"
       supplier_placeholder: "Mercado de San Juan"
       supplier_hint: "Quién te lo vende, para acordarte después."
@@ -509,6 +711,7 @@ es-MX:
       headline: "Tu despensa está vacía"
       sub: "Agrega los ingredientes que compras. Esto te permite descomponer recetas y calcular costos."
       cta: "Agregar ingrediente"
+    uncategorized: "Sin categoría"
     impact:
       title: "Impacto en tus recetas"
       kicker: "Precio actualizado"
@@ -722,6 +925,29 @@ es-MX:
       empty:
         headline: "Aún no hay qué comprar"
         sub: "Cuando tengas pedidos confirmados para los próximos siete días, verás aquí un resumen listo para llevar al mercado."
+      week_totals:
+        kicker: "Lo que llevas esta semana"
+        marked_count:
+          one: "%{count} item marcado"
+          other: "%{count} items marcados"
+
+  shopping_list:
+    mark_bought:
+      cta: "Marcar como comprada"
+      drawer_title: "Marcar %{name} como comprada"
+      kicker: "Registrar compra"
+      lede: "Guarda lo que pagaste y a quién le compraste. Queda en tu historial para el reporte de gastos."
+      supplier_label: "Proveedor"
+      supplier_placeholder: "Busca un proveedor"
+      supplier_hint: "Déjalo en blanco si fue una compra suelta sin registro de proveedor."
+      quantity_label: "Cantidad"
+      unit_label: "Unidad"
+      unit_cost_label: "Precio por unidad"
+      unit_cost_hint: "En pesos mexicanos."
+      submit: "Guardar"
+      cancel: "Cancelar"
+    mark_bought_create:
+      marked: "%{name} registrada como comprada."
 
   reports:
     menu_engineering:
@@ -825,6 +1051,17 @@ es-MX:
           margin: "Margen MXN"
           margin_pct: "Margen %"
           order_count: "Pedidos"
+          expenses: "Gastos MXN"
+          real_margin: "Margen real MXN"
+      expenses:
+        kpi_label: "Gastos en ingredientes"
+        kpi_sub:
+          one: "%{count} compra"
+          other: "%{count} compras"
+        real_margin_label: "Margen real"
+        real_margin_hint: "Ingresos − gastos reales en ingredientes de este periodo"
+        drift_hint: "La diferencia con el margen bruto refleja cambios de precio después de cada pedido."
+        day_column: "Gastos"
 
   onboarding:
     decomposition:

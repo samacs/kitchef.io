@@ -1,5 +1,32 @@
-<li class="kc-print-row flex items-start gap-4 px-4 py-4 print:gap-2 print:px-0 print:py-[3px]">
-  <span class="mt-[3px] inline-block w-5 h-5 rounded-sm border border-ink-2 shrink-0 print:w-[11px] print:h-[11px] print:mt-[4px] print:border-[#555]" aria-hidden="true"></span>
+<%#
+  Shopping-list ingredient row. Phase 9 adds:
+    * a "Marcar como comprada" button that opens the mark-bought drawer
+    * when the ingredient has already been bought in the current window,
+      a persistent ✓ with the actual price paid + supplier name
+  Locals:
+    row              — Production::WeeklyShoppingList::IngredientRow
+    marked_summary   — ProductionController::MarkSummary or nil
+%>
+<% ingredient = row.ingredient %>
+<% marked = marked_summary %>
+<% last_item = marked&.last_item %>
+<% last_supplier = last_item&.purchase&.supplier_name %>
+<% last_unit_cost = last_item&.unit_cost_cents %>
+<% last_unit = last_item&.unit %>
+<% mark_url = ingredient ? new_production_purchase_mark_path(
+  ingredient_id: ingredient.id,
+  qty: row.display_qty,
+  unit: row.unit
+) : nil %>
+<li class="kc-print-row flex items-start gap-4 px-4 py-4 print:gap-2 print:px-0 print:py-[3px] <%= marked ? 'bg-accent-soft/30' : '' %>">
+  <% if marked %>
+    <span class="mt-[3px] inline-flex items-center justify-center w-5 h-5 rounded-sm bg-accent text-bg shrink-0 print:w-[11px] print:h-[11px] print:mt-[4px] print:bg-white print:border print:border-[#555]" aria-hidden="true">
+      <%= icon(:check, size: :xs) %>
+    </span>
+  <% else %>
+    <span class="mt-[3px] inline-block w-5 h-5 rounded-sm border border-ink-2 shrink-0 print:w-[11px] print:h-[11px] print:mt-[4px] print:border-[#555]" aria-hidden="true"></span>
+  <% end %>
+
   <div class="flex-1 flex flex-col gap-1 print:gap-0">
     <div class="flex items-baseline justify-between gap-3 print:gap-2">
       <span class="text-[17px] text-ink font-medium print:text-[11.5px] print:font-normal"><%= row.ingredient_name %></span>
@@ -7,6 +34,18 @@
         <%= row.display_qty %> <%= t("units.#{row.unit}", default: row.unit) %>
       </span>
     </div>
+
+    <% if marked %>
+      <p class="text-[12.5px] text-accent leading-[1.4] print:hidden flex flex-wrap items-center gap-x-2">
+        <span class="font-semibold">
+          ✓ <%= humanized_money_with_symbol(Money.new(last_unit_cost, "MXN")) %>/<%= t("units.#{last_unit}", default: last_unit) %>
+        </span>
+        <% if last_supplier %>
+          <span class="text-ink-2">· <%= last_supplier %></span>
+        <% end %>
+      </p>
+    <% end %>
+
     <% unless row.source_recipes.empty? %>
       <p class="text-[12.5px] text-muted leading-[1.4] print:hidden">
         <%= row.source_recipes.uniq.first(4).join(" · ") %>
@@ -16,4 +55,13 @@
       </p>
     <% end %>
   </div>
+
+  <% if mark_url && ingredient %>
+    <%= drawer_link_to mark_url,
+          aria: { label: t("shopping_list.mark_bought.cta") },
+          title: t("shopping_list.mark_bought.cta"),
+          class: "shrink-0 mt-[2px] inline-flex items-center justify-center w-9 h-9 rounded-input text-muted hover:text-accent hover:bg-accent-soft transition-colors print:hidden" do %>
+      <%= icon(marked ? :pencil : :shopping_cart, size: :sm) %>
+    <% end %>
+  <% end %>
 </li>

@@ -63,7 +63,7 @@ class ClientsController < AuthenticatedController
 
   def client_params
     params.require(:client).permit(
-      :first_name, :last_name, :phone, :email,
+      :first_name, :last_name, :phone, :email, :rfc,
       :colonia, :city, :street_address, :notes
     )
   end

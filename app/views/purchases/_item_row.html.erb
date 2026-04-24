@@ -1,0 +1,89 @@
+<%#
+  Single line in the purchase form. Rendered both server-side (for
+  persisted items + the initial empty row) and via the JS "add row"
+  mechanic — see purchase_items_controller.js. When rendered from
+  JS, the template carries `__INDEX__` placeholders the controller
+  rewrites to the next integer.
+
+  Locals:
+    item   — PurchaseItem (may be new_record)
+    index  — integer or the literal string "__INDEX__" when rendering
+             the JS template
+    ingredient_options — [[name, id], ...]
+%>
+<% prefix = "purchase[items_attributes][#{index}]" %>
+<% row_id = "purchase_item_row_#{index}" %>
+<li id="<%= row_id %>"
+    data-purchase-items-target="row"
+    class="rounded-card border border-line bg-surface px-3 py-3 sm:px-4 sm:py-4 flex flex-col gap-3">
+  <% if item.persisted? %>
+    <input type="hidden" name="<%= prefix %>[id]" value="<%= item.id %>">
+  <% end %>
+  <input type="hidden" name="<%= prefix %>[_destroy]" value="0">
+
+  <div class="flex items-start gap-3">
+    <div class="flex-1 min-w-0">
+      <%= render Ui::ComboboxComponent.new(
+            name: "#{prefix}[ingredient_id]",
+            id: "purchase_item_ingredient_#{index}",
+            label: t("purchases.form.ingredient_label"),
+            options: ingredient_options,
+            value: item.ingredient_id,
+            placeholder: t("purchases.form.ingredient_placeholder"),
+            required: true,
+            create_path: ingredients_path,
+            create_params: {},
+            list_id: "combobox_purchase_item_#{index}_options") %>
+    </div>
+    <button type="button"
+            data-action="click->purchase-items#remove"
+            aria-label="<%= t("purchases.form.remove_item") %>"
+            title="<%= t("purchases.form.remove_item") %>"
+            class="mt-[22px] shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-input text-muted hover:text-err border border-transparent hover:border-err/40 transition-colors">
+      <%= icon(:x, size: :sm) %>
+    </button>
+  </div>
+
+  <div class="grid grid-cols-3 gap-2">
+    <label class="flex flex-col gap-1.5">
+      <span class="text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("purchases.form.quantity_label") %></span>
+      <input type="number"
+             name="<%= prefix %>[quantity]"
+             value="<%= item.quantity %>"
+             data-role="quantity"
+             step="0.001"
+             min="0"
+             inputmode="decimal"
+             placeholder="<%= t("purchases.form.quantity_placeholder") %>"
+             required
+             class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2.5 text-[15px] leading-[1.3] font-mono tabular-nums transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+    </label>
+
+    <label class="flex flex-col gap-1.5">
+      <span class="text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("purchases.form.unit_label") %></span>
+      <%= select_tag "#{prefix}[unit]",
+            options_for_select(
+              Ingredient::UNITS.map { |u| [ I18n.t("units.#{u}", default: u), u ] },
+              item.unit
+            ),
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2.5 text-[14px] leading-[1.3] transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </label>
+
+    <label class="flex flex-col gap-1.5">
+      <span class="text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("purchases.form.unit_cost_label") %></span>
+      <span class="relative flex items-center">
+        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono pointer-events-none text-[13px]">$</span>
+        <input type="number"
+               name="<%= prefix %>[unit_cost]"
+               value="<%= (item.unit_cost_cents.to_i.zero? ? nil : format('%.2f', item.unit_cost_cents / 100.0)) %>"
+               data-role="unit-cost"
+               step="0.01"
+               min="0"
+               inputmode="decimal"
+               placeholder="<%= t("purchases.form.unit_cost_placeholder") %>"
+               required
+               class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input pl-6 pr-2 py-2.5 text-[15px] leading-[1.3] font-mono tabular-nums transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+      </span>
+    </label>
+  </div>
+</li>

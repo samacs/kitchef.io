@@ -1,0 +1,101 @@
+<% content_for :title, t("purchases.show.title", date: l(purchase.purchased_on, format: :long)) %>
+<% content_for :page_title, t("purchases.show.title", date: l(purchase.purchased_on, format: :long)) %>
+
+<% content_for :page_action do %>
+  <div class="flex items-center gap-2">
+    <%= link_to edit_purchase_path(purchase),
+          class: "inline-flex items-center gap-2 text-[13px] font-medium px-3.5 py-[8px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
+      <%= icon(:pencil, size: :xs) %>
+      <span><%= t("purchases.show.edit_cta") %></span>
+    <% end %>
+    <%= button_to purchase_path(purchase),
+          method: :delete,
+          form: { data: { turbo_confirm: t("purchases.show.delete_confirm") } },
+          class: "inline-flex items-center gap-2 text-[13px] font-medium px-3.5 py-[8px] rounded-button bg-transparent text-err border border-err/40 hover:bg-err/5 transition-colors" do %>
+      <%= icon(:trash_2, size: :xs) %>
+      <span><%= t("purchases.show.delete_cta") %></span>
+    <% end %>
+  </div>
+<% end %>
+
+<article class="max-w-[720px] mx-auto flex flex-col gap-6">
+  <header class="flex flex-col gap-1">
+    <%= render Ui::KickerComponent.new(text: t("purchases.show.kicker")) %>
+    <h1 class="font-serif text-[28px] sm:text-[32px] leading-[1.1] tracking-tight text-ink">
+      <%= purchase.supplier_name || t("purchases.no_supplier") %>
+    </h1>
+    <p class="font-mono text-[12px] text-muted">
+      <%= l(purchase.purchased_on, format: :long) %> ·
+      <%= t("purchases.show.item_count", count: purchase.item_count) %>
+    </p>
+  </header>
+
+  <% if purchase.receipt_photo.attached? %>
+    <figure class="bg-surface border border-line rounded-panel shadow-card overflow-hidden">
+      <%= link_to url_for(purchase.receipt_photo.variant(:hero)), target: "_blank" do %>
+        <%= image_tag purchase.receipt_photo.variant(:card),
+              class: "w-full h-auto object-contain" %>
+      <% end %>
+    </figure>
+  <% else %>
+    <p class="text-[12px] text-muted italic"><%= t("purchases.show.no_photo") %></p>
+  <% end %>
+
+  <section class="bg-surface border border-line rounded-panel shadow-card overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-bg-2/40 border-b border-line">
+        <tr>
+          <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.csv.headers.ingredient") %></th>
+          <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.csv.headers.quantity") %></th>
+          <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.csv.headers.unit_cost") %></th>
+          <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.csv.headers.subtotal") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% purchase.items.each do |item| %>
+          <tr class="border-b border-line last:border-b-0">
+            <td class="px-4 py-3 text-[14px] text-ink"><%= item.ingredient.name %></td>
+            <td class="px-4 py-3 text-right font-mono text-[13px] text-ink-2 tabular-nums whitespace-nowrap">
+              <%= item.quantity %> <%= t("units.#{item.unit}", default: item.unit) %>
+            </td>
+            <td class="px-4 py-3 text-right font-mono text-[13px] text-ink-2 tabular-nums whitespace-nowrap">
+              <%= humanized_money_with_symbol(Money.new(item.unit_cost_cents, "MXN")) %>
+            </td>
+            <td class="px-4 py-3 text-right font-mono text-[13px] text-ink font-semibold tabular-nums whitespace-nowrap">
+              <%= humanized_money_with_symbol(item.subtotal) %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+      <tfoot class="border-t-2 border-line bg-bg-2/40">
+        <tr>
+          <td colspan="3" class="px-4 py-3 text-right font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+            <%= purchase.total_matches_items? ? t("purchases.show.totals.items_total") : t("purchases.show.totals.override") %>
+          </td>
+          <td class="px-4 py-3 text-right font-serif text-[20px] text-ink tabular-nums">
+            <%= humanized_money_with_symbol(purchase.total) %>
+          </td>
+        </tr>
+        <% unless purchase.total_matches_items? %>
+          <tr>
+            <td colspan="4" class="px-4 pb-3 text-right text-[11.5px] text-muted">
+              <%= t("purchases.show.totals.override_hint") %>
+            </td>
+          </tr>
+        <% end %>
+      </tfoot>
+    </table>
+  </section>
+
+  <% if purchase.notes.present? %>
+    <aside class="bg-bg-2/40 border border-line rounded-card px-4 py-3">
+      <p class="text-[13px] text-ink-2 leading-[1.55]"><%= simple_format(purchase.notes) %></p>
+    </aside>
+  <% end %>
+
+  <%= link_to purchases_path,
+        class: "self-start inline-flex items-center gap-2 text-[13px] font-medium text-ink-2 hover:text-ink transition-colors" do %>
+    <%= icon(:arrow_left, size: :xs) %>
+    <span><%= t("purchases.show.back_cta") %></span>
+  <% end %>
+</article>

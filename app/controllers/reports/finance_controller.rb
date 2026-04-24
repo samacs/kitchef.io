@@ -132,7 +132,9 @@ module Reports
           t("reports.finance.csv.headers.cogs"),
           t("reports.finance.csv.headers.margin"),
           t("reports.finance.csv.headers.margin_pct"),
-          t("reports.finance.csv.headers.order_count")
+          t("reports.finance.csv.headers.order_count"),
+          t("reports.finance.csv.headers.expenses"),
+          t("reports.finance.csv.headers.real_margin")
         ]
         @stats.by_day.each do |day|
           csv << [
@@ -141,7 +143,9 @@ module Reports
             cents_to_mxn(day.cogs_cents),
             cents_to_mxn(day.margin_cents),
             day.margin_pct,
-            day.order_count
+            day.order_count,
+            cents_to_mxn(day.purchases_cents),
+            cents_to_mxn(day.revenue_cents - day.purchases_cents)
           ]
         end
       end.then { |body| "\uFEFF" + body }  # BOM so Excel on es-MX opens cleanly

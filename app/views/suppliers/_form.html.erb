@@ -1,0 +1,115 @@
+<%= form_with model: supplier,
+      url: supplier.persisted? ? supplier_path(supplier) : suppliers_path,
+      class: "flex flex-col gap-5",
+      data: supplier.persisted? ? { controller: "form-autosave", action: "change->form-autosave#save" } : {} do |form| %>
+
+  <% if supplier.errors.any? %>
+    <div role="alert"
+         class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+      <span class="text-[12px] font-mono uppercase tracking-[0.14em]">
+        <%= t("onboarding.shared.errors_title") %>
+      </span>
+      <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+        <% supplier.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= render Ui::TextFieldComponent.new(
+        name: "supplier[name]",
+        id: "supplier_name",
+        label: t("suppliers.form.name_label"),
+        placeholder: t("suppliers.form.name_placeholder"),
+        value: supplier.name,
+        required: true,
+        autofocus: supplier.new_record?,
+        maxlength: 80) %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <%= render Ui::TextFieldComponent.new(
+          name: "supplier[phone]",
+          id: "supplier_phone",
+          type: :tel,
+          label: t("suppliers.form.phone_label"),
+          placeholder: t("suppliers.form.phone_placeholder"),
+          value: supplier.phone,
+          hint: t("suppliers.form.phone_hint")) %>
+    <%= render Ui::TextFieldComponent.new(
+          name: "supplier[whatsapp]",
+          id: "supplier_whatsapp",
+          type: :tel,
+          label: t("suppliers.form.whatsapp_label"),
+          placeholder: t("suppliers.form.whatsapp_placeholder"),
+          value: supplier.whatsapp) %>
+  </div>
+
+  <%= render Ui::TextFieldComponent.new(
+        name: "supplier[street_address]",
+        id: "supplier_street_address",
+        label: t("suppliers.form.street_address_label"),
+        placeholder: t("suppliers.form.street_address_placeholder"),
+        value: supplier.street_address,
+        hint: t("suppliers.form.street_address_hint")) %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <%= render Ui::TextFieldComponent.new(
+          name: "supplier[colonia]",
+          id: "supplier_colonia",
+          label: t("suppliers.form.colonia_label"),
+          placeholder: t("suppliers.form.colonia_placeholder"),
+          value: supplier.colonia) %>
+    <%= render Ui::TextFieldComponent.new(
+          name: "supplier[city]",
+          id: "supplier_city",
+          label: t("suppliers.form.city_label"),
+          placeholder: t("suppliers.form.city_placeholder"),
+          value: supplier.city) %>
+  </div>
+
+  <%= render Ui::TextFieldComponent.new(
+        name: "supplier[rfc]",
+        id: "supplier_rfc",
+        label: t("suppliers.form.rfc_label"),
+        placeholder: t("suppliers.form.rfc_placeholder"),
+        value: supplier.rfc,
+        hint: t("suppliers.form.rfc_hint"),
+        maxlength: 13) %>
+
+  <label for="supplier_notes" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("suppliers.form.notes_label") %>
+    </span>
+    <%= form.text_area :notes,
+          id: "supplier_notes",
+          rows: 3,
+          placeholder: t("suppliers.form.notes_placeholder"),
+          class: "w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y" %>
+  </label>
+
+  <% if supplier.persisted? %>
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <span data-form-autosave-target="status"
+            data-label-saving="<%= t("orders.form.autosave.saving") %>"
+            data-label-saved="<%= t("orders.form.autosave.saved") %>"
+            data-label-error="<%= t("orders.form.autosave.error") %>"
+            class="hidden font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted data-[state=saved]:text-accent data-[state=error]:text-err transition-colors">
+      </span>
+      <%= link_to t("suppliers.form.done"),
+            suppliers_path,
+            data: { action: "click->right-drawer#close", form_autosave_skip: true },
+            class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+    </div>
+  <% else %>
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <%= link_to t("suppliers.form.cancel"),
+            suppliers_path,
+            data: { action: "click->right-drawer#close" },
+            class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+
+      <%= form.submit t("suppliers.form.submit_create"),
+            class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
+    </div>
+  <% end %>
+<% end %>

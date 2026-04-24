@@ -3,8 +3,9 @@
     <%= helpers.drawer_link_to edit_path,
           class: "inline-flex flex-col gap-0.5 text-left no-underline" do %>
       <span class="text-[14px] font-medium text-ink hover:underline"><%= ingredient.name %></span>
-      <% if ingredient.supplier_name.present? %>
-        <span class="text-[12px] text-muted"><%= ingredient.supplier_name %></span>
+      <% default_supplier_name = ingredient.default_supplier&.name %>
+      <% if default_supplier_name %>
+        <span class="text-[12px] text-muted"><%= default_supplier_name %></span>
       <% end %>
     <% end %>
   </td>

@@ -12,16 +12,6 @@
 
 <%= turbo_stream_from Current.account, :orders %>
 
-<% if flash[:notice].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-  </div>
-<% end %>
-<% if flash[:alert].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %>
-  </div>
-<% end %>
 
 <% if orders.empty? %>
   <%= render Recipes::EmptyStateComponent.new(

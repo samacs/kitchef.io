@@ -47,13 +47,23 @@ export default class extends Controller {
     const formData = new FormData(form)
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
 
+    // Generate a Turbo request-id and register it with Turbo's session
+    // so any `broadcasts_refreshes_to` stream the server fires for this
+    // save gets deduped when it echoes back on this tab. Without this,
+    // saving an order (which has `broadcasts_refreshes_to`) reflects
+    // as a refresh stream → Turbo reloads /orders → the open drawer
+    // closes mid-edit. Other tabs still receive the normal broadcast.
+    const requestId = (crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`)
+    window.Turbo?.session?.recentRequests?.add?.(requestId)
+
     try {
       const res = await fetch(form.action, {
         method: form.method.toUpperCase() || "POST",
         headers: {
           "Accept": "text/vnd.turbo-stream.html, text/html",
           "X-CSRF-Token": csrfToken || "",
-          "X-Requested-With": "XMLHttpRequest"
+          "X-Requested-With": "XMLHttpRequest",
+          "X-Turbo-Request-Id": requestId
         },
         body: formData,
         credentials: "same-origin"

@@ -5,9 +5,10 @@ module Reports
   # dominated by zeros.
   class DayRowComponent < ApplicationComponent
     option :day_stats
+    option :show_expenses, default: -> { false }
 
     def empty?
-      day_stats.order_count.zero?
+      day_stats.order_count.zero? && day_stats.purchases_cents.zero?
     end
 
     def weekday_label
@@ -24,6 +25,14 @@ module Reports
 
     def margin
       Money.new(day_stats.margin_cents, "MXN")
+    end
+
+    def expenses
+      Money.new(day_stats.purchases_cents, "MXN")
+    end
+
+    def has_expenses?
+      day_stats.purchases_cents.positive?
     end
   end
 end

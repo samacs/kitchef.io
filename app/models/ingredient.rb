@@ -3,7 +3,6 @@
 # Table name: ingredients
 #
 #  id               :bigint           not null, primary key
-#  category         :integer          default("pantry"), not null
 #  currency         :string           default("MXN"), not null
 #  discarded_at     :datetime
 #  name             :string           not null
@@ -16,17 +15,20 @@
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  account_id       :bigint           not null
+#  category_id      :bigint           not null
 #
 # Indexes
 #
-#  index_ingredients_on_account_id                            (account_id)
-#  index_ingredients_on_account_id_and_category_and_position  (account_id,category,position)
-#  index_ingredients_on_account_id_and_name                   (account_id,name)
-#  index_ingredients_on_discarded_at                          (discarded_at)
+#  index_ingredients_on_account_id                               (account_id)
+#  index_ingredients_on_account_id_and_category_id_and_position  (account_id,category_id,position)
+#  index_ingredients_on_account_id_and_name                      (account_id,name)
+#  index_ingredients_on_category_id                              (category_id)
+#  index_ingredients_on_discarded_at                             (discarded_at)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (category_id => categories.id)
 #
 class Ingredient < ApplicationRecord
   include AccountScoped
@@ -34,20 +36,12 @@ class Ingredient < ApplicationRecord
   include HasSoftDelete
 
   has_paper_trail
-  positioned on: [ :account, :category ]
+  positioned on: [ :account, :category_id ]
   monetize :unit_cost_cents
 
-  UNITS      = %w[g kg ml l piece].freeze
-  CATEGORIES = {
-    pantry:  0,
-    meats:   1,
-    dairy:   2,
-    produce: 3,
-    spices:  4,
-    other:  99
-  }.freeze
+  UNITS = %w[g kg ml l piece].freeze
 
-  enum :category, CATEGORIES, prefix: true
+  belongs_to :category
 
   # Destroy cascades — this matches "delete the whole kitchen" semantics.
   # Per-ingredient deletion in the UI is guarded at the controller level
@@ -55,16 +49,39 @@ class Ingredient < ApplicationRecord
   has_many :recipe_components, as: :componentable, dependent: :destroy
   has_many :recipes_using,     through: :recipe_components, source: :recipe
 
+  # Phase 9: per-supplier price rows. `unit_cost_cents` on this record
+  # becomes a write-through cache of the default row (see
+  # `SupplierIngredient#refresh_ingredient_cost_cache_if_default`).
+  has_many :supplier_ingredients, dependent: :destroy
+  has_many :suppliers, through: :supplier_ingredients
+  has_many :purchase_items, dependent: :destroy
+
+  has_one :default_supplier_ingredient,
+    -> { where(is_default_cost_source: true) },
+    class_name: "SupplierIngredient"
+  has_one :default_supplier, through: :default_supplier_ingredient, source: :supplier
+
   validates :name, presence: true, length: { maximum: 80 }
   validates :unit, presence: true, inclusion: { in: UNITS }
   validates :unit_cost_cents, numericality: { greater_than_or_equal_to: 0 }
+  validate  :category_belongs_to_same_account
 
   before_save :stamp_price_updated_at, if: :unit_cost_cents_changed?
   after_commit :enqueue_cost_refresh, on: :update, if: :saved_change_to_unit_cost_cents?
 
-  scope :by_category, ->(category) { where(category: category) }
+  scope :by_category, ->(category_id) { where(category_id: category_id) }
+
+  def category_name
+    category&.name
+  end
 
   private
+
+  def category_belongs_to_same_account
+    return if category.blank? || account_id.blank?
+    return if category.account_id == account_id
+    errors.add(:category, :wrong_account)
+  end
 
   def stamp_price_updated_at
     self.price_updated_at = Time.current

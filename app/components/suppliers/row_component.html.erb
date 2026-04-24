@@ -1,0 +1,43 @@
+<tr id="<%= helpers.dom_id(supplier) %>" class="border-b border-line last:border-b-0 hover:bg-bg-2/40 transition-colors">
+  <td class="px-4 py-3">
+    <%= helpers.drawer_link_to edit_path,
+          class: "inline-flex flex-col gap-0.5 text-left no-underline" do %>
+      <span class="text-[14px] font-medium text-ink hover:underline"><%= supplier.name %></span>
+      <% if colonia_display %>
+        <span class="text-[12px] text-muted"><%= colonia_display %></span>
+      <% end %>
+    <% end %>
+  </td>
+  <td class="px-4 py-3 font-mono text-[13px] text-ink-2 whitespace-nowrap tabular-nums">
+    <%= phone_display || "—" %>
+  </td>
+  <td class="px-4 py-3 font-mono text-[13px] text-muted text-right whitespace-nowrap">
+    <% if ingredient_count.positive? %>
+      <%= t("suppliers.index.ingredient_count", count: ingredient_count) %>
+    <% else %>
+      <span class="text-muted/60">—</span>
+    <% end %>
+  </td>
+  <td class="px-4 py-3 text-[12px] text-muted whitespace-nowrap">
+    <%= last_bought_label || "—" %>
+  </td>
+  <td class="px-4 py-3 text-right">
+    <div class="inline-flex items-center gap-1">
+      <%= helpers.drawer_link_to edit_path,
+            aria: { label: t("suppliers.row.edit") },
+            title: t("suppliers.row.edit"),
+            class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-ink hover:border-line transition-colors" do %>
+        <%= helpers.icon(:pencil, size: :sm) %>
+      <% end %>
+
+      <%= button_to helpers.supplier_path(supplier),
+            method: :delete,
+            form: { class: "inline-flex", data: { turbo_confirm: t("suppliers.row.delete_confirm", name: supplier.name) } },
+            aria: { label: t("suppliers.row.delete") },
+            title: t("suppliers.row.delete"),
+            class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-err hover:border-err/40 transition-colors" do %>
+        <%= helpers.icon(:trash_2, size: :sm) %>
+      <% end %>
+    </div>
+  </td>
+</tr>

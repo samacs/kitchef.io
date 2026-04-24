@@ -1,21 +1,25 @@
 <%# Full-bleed static map + overlayed "Cómo llegar" CTA. Reserved for
     the en_route column where the runner needs the map front-and-center;
     other delivery cards get the compact navigation icon in the footer
-    action cluster (see _card.html.erb). %>
+    action cluster (see _card.html.erb).
+
+    Image source is the cached :thumb variant of the ActiveStorage
+    attachment set up by the Geocodable concern on Order. One Google
+    Static Maps fetch per coord change — zero fetches per page view
+    once the cache warms. %>
 <% url = directions_url_for(order) %>
 <% return unless url %>
-<% thumb = static_map_url_for(order, width: 560, height: 200) %>
 
 <%= link_to url, target: "_blank", rel: "noopener noreferrer",
       class: "group relative block rounded-card overflow-hidden border border-accent/30 bg-bg-2" do %>
-  <% if thumb %>
-    <img src="<%= thumb %>"
-         alt="<%= t("orders.map.alt") %>"
-         loading="lazy"
-         width="280" height="100"
-         referrerpolicy="origin"
-         class="block w-full h-[100px] object-cover" />
-  <% end %>
+  <%= static_map_image_tag(order,
+        variant: :thumb,
+        alt: t("orders.map.alt"),
+        loading: "lazy",
+        width: 280,
+        height: 100,
+        referrerpolicy: "origin",
+        class: "block w-full h-[100px] object-cover") %>
   <div class="absolute inset-0 flex items-end justify-center px-3 pb-3 bg-gradient-to-t from-ink/60 via-transparent to-transparent">
     <span class="inline-flex items-center gap-1.5 px-3 py-[6px] rounded-button bg-accent text-bg border border-accent text-[12.5px] font-semibold shadow-cta group-hover:bg-accent-2 group-hover:border-accent-2 transition-colors">
       <%= icon(:navigation, size: :xs) %>

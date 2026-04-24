@@ -10,16 +10,6 @@
   <% end %>
 <% end %>
 
-<% if flash[:notice].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-  </div>
-<% end %>
-<% if flash[:alert].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %>
-  </div>
-<% end %>
 
 <%# 7-day strip. Horizontal scroll on narrow screens via scroll-snap so
     each card snaps cleanly. `@media print` on this section hides the
@@ -37,7 +27,12 @@
     <% end %>
   </div>
 
-  <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-5 lg:-mx-7 px-5 lg:px-7 overscroll-x-contain kc-scroll snap-x snap-mandatory">
+  <%# Full-bleed scroll: `-mx-*` cancels main's padding so the last
+      card can trail off the viewport cleanly. Leading padding is
+      noticeably larger than `main`'s own padding so the first card
+      (at scroll-left = 0) has a real cushion, visually matching the
+      breathing room the trailing overflow gets once cards scroll out. %>
+  <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-5 lg:-mx-7 pl-8 lg:pl-12 pr-5 lg:pr-7 overscroll-x-contain kc-scroll snap-x snap-mandatory scroll-pl-8 lg:scroll-pl-12">
     <% @week_overview.each do |row| %>
       <%= render Production::DayCardComponent.new(
             row: row,

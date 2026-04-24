@@ -1,0 +1,183 @@
+<%#
+  Mobile-first purchase form. The operator keys this with one thumb at
+  the mercado, receipt in hand. Key UX moves:
+    * every numeric input gets `inputmode="decimal"` for the number pad
+    * big, chunky quantity + price inputs (text-[15px], py-2.5)
+    * running total sticks at the bottom so the operator doesn't scroll
+    * "Agregar línea" tap target is full-width + thumb-sized
+    * receipt upload front-and-center (not hidden at the bottom)
+%>
+<% supplier_options = Current.account.suppliers.kept.order(:name).pluck(:name, :id) %>
+<% ingredient_options = Current.account.ingredients.kept.order(:name).pluck(:name, :id) %>
+<% item_row_template = render "purchases/item_row",
+     item: PurchaseItem.new,
+     index: "__INDEX__",
+     ingredient_options: ingredient_options %>
+
+<%= form_with model: purchase,
+      url: purchase.persisted? ? purchase_path(purchase) : purchases_path,
+      multipart: true,
+      class: "flex flex-col gap-6" do |form| %>
+
+  <% if purchase.errors.any? %>
+    <div role="alert"
+         class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+      <span class="text-[12px] font-mono uppercase tracking-[0.14em]">
+        <%= t("onboarding.shared.errors_title") %>
+      </span>
+      <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+        <% purchase.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# Step 1 — fecha + proveedor. Two fields, side-by-side on sm+. %>
+  <section class="bg-surface border border-line rounded-panel shadow-card p-5 sm:p-6 flex flex-col gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <label for="purchase_purchased_on" class="flex flex-col gap-2">
+        <span class="text-[13px] font-medium text-ink leading-none">
+          <%= t("purchases.form.date_label") %>
+        </span>
+        <%= form.date_field :purchased_on,
+              id: "purchase_purchased_on",
+              value: purchase.purchased_on || Date.current,
+              required: true,
+              class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+      </label>
+
+      <%= render Ui::ComboboxComponent.new(
+            name: "purchase[supplier_id]",
+            id: "purchase_supplier_id",
+            label: t("purchases.form.supplier_label"),
+            options: supplier_options,
+            value: purchase.supplier_id,
+            placeholder: t("purchases.form.supplier_placeholder"),
+            hint: t("purchases.form.supplier_hint"),
+            create_path: suppliers_path,
+            create_params: {},
+            list_id: "combobox_purchase_supplier_options") %>
+    </div>
+  </section>
+
+  <%# Step 2 — foto del ticket. Front-and-center so the operator doesn't
+      forget; mobile camera capture via capture=environment. %>
+  <section class="bg-surface border border-line rounded-panel shadow-card p-5 sm:p-6 flex flex-col gap-3">
+    <div class="flex flex-col gap-1">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("purchases.form.photo_label") %>
+      </span>
+      <span class="text-[12px] text-muted"><%= t("purchases.form.photo_hint") %></span>
+    </div>
+
+    <% if purchase.receipt_photo.attached? %>
+      <div class="flex items-start gap-4">
+        <%= image_tag purchase.receipt_photo.variant(:card),
+              class: "w-[120px] h-[120px] object-cover rounded-card border border-line" %>
+        <div class="flex flex-col gap-2">
+          <%= form.file_field :receipt_photo,
+                id: "purchase_receipt_photo",
+                accept: "image/*",
+                capture: "environment",
+                class: "text-[13px] text-ink-2" %>
+          <span class="text-[11.5px] text-muted"><%= t("purchases.form.photo_change") %></span>
+        </div>
+      </div>
+    <% else %>
+      <%= form.file_field :receipt_photo,
+            id: "purchase_receipt_photo",
+            accept: "image/*",
+            capture: "environment",
+            class: "block w-full text-[13px] text-ink-2 file:mr-3 file:py-2 file:px-3 file:rounded-input file:border-0 file:text-[13px] file:font-semibold file:bg-accent-soft file:text-accent hover:file:bg-accent/10" %>
+    <% end %>
+  </section>
+
+  <%# Step 3 — items. Dynamic, one line per ingredient. The template
+      attribute needs `CGI.escapeHTML(...).html_safe` rather than
+      `j(...)`, plain output, or `h(...)`: `j` emits JS-string escapes
+      that break HTML attribute parsing, plain output skips escaping
+      for SafeBuffer, `h` is a no-op on SafeBuffer. CGI.escapeHTML
+      always escapes; `html_safe` prevents ERB from double-escaping
+      the result. %>
+  <section data-controller="purchase-items"
+           data-purchase-items-template-value="<%= CGI.escapeHTML(item_row_template).html_safe %>"
+           class="bg-surface border border-line rounded-panel shadow-card p-5 sm:p-6 flex flex-col gap-4">
+    <header class="flex items-start justify-between gap-3">
+      <div class="flex flex-col gap-1">
+        <h3 class="font-serif text-[20px] leading-[1.15] tracking-tight text-ink">
+          <%= t("purchases.form.items_heading") %>
+        </h3>
+        <p class="text-[12.5px] text-muted leading-[1.45] max-w-[42ch]">
+          <%= t("purchases.form.items_lede") %>
+        </p>
+      </div>
+    </header>
+
+    <ul data-purchase-items-target="list" class="flex flex-col gap-3">
+      <% purchase.items.each_with_index do |item, i| %>
+        <%= render "purchases/item_row", item: item, index: i, ingredient_options: ingredient_options %>
+      <% end %>
+    </ul>
+
+    <button type="button"
+            data-action="click->purchase-items#add"
+            class="w-full inline-flex items-center justify-center gap-2 text-[14px] font-medium py-3 rounded-button bg-accent-soft text-accent border border-dashed border-accent/40 hover:bg-accent/10 transition-colors">
+      <%= icon(:plus, size: :sm) %>
+      <span><%= t("purchases.form.add_item") %></span>
+    </button>
+
+    <div class="sticky bottom-0 -mx-5 sm:-mx-6 -mb-5 sm:-mb-6 mt-2 px-5 sm:px-6 py-4 bg-bg-2/80 backdrop-blur border-t border-line flex items-baseline justify-between">
+      <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+        <%= t("purchases.form.running_total") %>
+      </span>
+      <span data-purchase-items-target="runningTotal"
+            class="font-serif text-[28px] tracking-tight text-ink tabular-nums">
+        $0.00
+      </span>
+    </div>
+  </section>
+
+  <%# Step 4 — opcionales: override + notas. %>
+  <section class="bg-surface border border-line rounded-panel shadow-card p-5 sm:p-6 flex flex-col gap-5">
+    <label for="purchase_total_override" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("purchases.form.override_label") %>
+      </span>
+      <span class="relative flex items-center">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono pointer-events-none">$</span>
+        <input type="number"
+               name="purchase[total_override]"
+               id="purchase_total_override"
+               value="<%= (purchase.total_cents_override.to_i.zero? ? nil : format('%.2f', purchase.total_cents_override / 100.0)) %>"
+               step="0.01"
+               min="0"
+               inputmode="decimal"
+               placeholder="0.00"
+               class="w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input pl-7 pr-16 py-2.5 text-[14px] leading-[1.3] font-mono transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">MXN</span>
+      </span>
+      <span class="text-[12px] text-muted"><%= t("purchases.form.override_hint") %></span>
+    </label>
+
+    <label for="purchase_notes" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("purchases.form.notes_label") %>
+      </span>
+      <%= form.text_area :notes,
+            id: "purchase_notes",
+            rows: 2,
+            placeholder: t("purchases.form.notes_placeholder"),
+            class: "w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y" %>
+    </label>
+  </section>
+
+  <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+    <%= link_to t("purchases.form.cancel"),
+          purchases_path,
+          class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[12px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+
+    <%= form.submit(purchase.persisted? ? t("purchases.form.submit_update") : t("purchases.form.submit_create"),
+          class: "inline-flex items-center justify-center gap-2 text-[15px] font-semibold px-[22px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta w-full sm:w-auto") %>
+  </div>
+<% end %>

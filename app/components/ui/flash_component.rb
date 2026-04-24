@@ -54,12 +54,13 @@ module Ui
     end
 
     def classes
-      base = "relative flex items-start gap-2.5 px-4 py-3 pr-10 rounded-[10px] text-[13px] font-medium leading-[1.4] " \
+      base = "kc-flash relative flex items-start gap-2.5 px-4 py-3 pr-10 rounded-[10px] " \
+             "text-[13px] font-medium leading-[1.4] shadow-lift " \
              "transition-opacity duration-200 data-[leaving]:opacity-0"
       tone = if alert?
         "bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30"
       else
-        "bg-accent-soft text-accent border border-transparent"
+        "bg-accent-soft text-accent border border-accent/20"
       end
       "#{base} #{tone}"
     end

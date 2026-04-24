@@ -112,7 +112,7 @@ module Production
       end
 
       buckets.values
-        .sort_by { |b| [ (b[:ingredient]&.category || "other").to_s, b[:ingredient]&.name.to_s.downcase ] }
+        .sort_by { |b| [ b[:ingredient]&.category&.position || 999, b[:ingredient]&.name.to_s.downcase ] }
         .map do |b|
           IngredientRow.new(
             ingredient:      b[:ingredient],

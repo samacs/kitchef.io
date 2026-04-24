@@ -10,12 +10,6 @@
   <% end %>
 <% end %>
 
-<% if flash[:notice].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-  </div>
-<% end %>
-
 <% if clients.empty? && params[:q].blank? %>
   <%= render Recipes::EmptyStateComponent.new(
         headline_key: "clients.empty_state.headline",
@@ -24,13 +18,24 @@
         cta_href: new_client_path) %>
 <% else %>
   <div class="flex flex-col gap-5">
-    <%= form_with url: clients_path, method: :get, class: "flex items-center gap-3" do |form| %>
+    <%= form_with url: clients_path,
+          method: :get,
+          html: {
+            class: "flex items-center gap-3",
+            data: {
+              controller: "search-debounce",
+              action: "input->search-debounce#search submit->search-debounce#search",
+              turbo_frame: "clients_results",
+              turbo_action: "advance"
+            }
+          } do |form| %>
       <span class="relative flex-1 max-w-[420px]">
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
           <%= icon(:search, size: :xs) %>
         </span>
         <%= form.search_field :q,
               value: params[:q],
+              autocomplete: "off",
               placeholder: t("clients.index.search_placeholder"),
               class: "w-full pl-9 pr-3 py-2 bg-surface border border-line rounded-input text-[13.5px] text-ink placeholder:text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
       </span>
@@ -39,29 +44,6 @@
       </span>
     <% end %>
 
-    <% if clients.any? %>
-      <div class="bg-surface border border-line rounded-panel shadow-card overflow-x-auto kc-scroll">
-        <table class="w-full min-w-[640px]">
-          <thead class="bg-bg-2/40 border-b border-line">
-            <tr>
-              <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("clients.index.table.name") %></th>
-              <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("clients.index.table.phone") %></th>
-              <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("clients.index.table.colonia") %></th>
-              <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("clients.index.table.orders") %></th>
-              <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <% clients.each do |c| %>
-              <%= render Clients::RowComponent.new(client: c) %>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <p class="text-[13px] text-muted leading-[1.5] py-6 text-center bg-surface border border-line rounded-panel">
-        <%= t("clients.search.empty") %>
-      </p>
-    <% end %>
+    <%= render "results", clients: clients %>
   </div>
 <% end %>

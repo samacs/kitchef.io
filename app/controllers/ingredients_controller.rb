@@ -1,5 +1,9 @@
 class IngredientsController < AuthenticatedController
-  expose :ingredients, -> { Current.account.ingredients.kept.order(category: :asc, position: :asc, name: :asc) }
+  expose :ingredients, -> {
+    Current.account.ingredients.kept
+      .includes(:category)
+      .order(category_id: :asc, position: :asc, name: :asc)
+  }
   expose :ingredient,  -> { find_or_build_ingredient }
 
   def index; end
@@ -10,11 +14,16 @@ class IngredientsController < AuthenticatedController
   end
 
   def create
-    result = Ingredients::Create.call(account: Current.account, params: ingredient_params)
-    if result.success?
-      redirect_to ingredients_path, notice: t(".created")
-    else
-      render :new, status: :unprocessable_content, locals: { ingredient: result.object }
+    result = Ingredients::Create.call(account: Current.account, params: create_attrs)
+
+    respond_to do |format|
+      if result.success?
+        format.html { redirect_to ingredients_path, notice: t(".created") }
+        format.json { render json: serialize(result.object), status: :created }
+      else
+        format.html { render :new, status: :unprocessable_content, locals: { ingredient: result.object } }
+        format.json { render json: { errors: result.object.errors.full_messages }, status: :unprocessable_content }
+      end
     end
   end
 
@@ -71,9 +80,29 @@ class IngredientsController < AuthenticatedController
     # (direct int). The form submits the former; tests/console may use
     # the latter.
     permitted = params.require(:ingredient).permit(
-      :name, :category, :unit, :unit_cost, :unit_cost_cents, :supplier_name, :notes
+      :name, :category_id, :unit, :unit_cost, :unit_cost_cents, :notes
     )
     permitted.delete(:unit_cost) if permitted[:unit_cost].blank? && permitted[:unit_cost_cents].present?
     permitted
+  end
+
+  # Accept both shapes:
+  #   * Nested (regular form):    `ingredient[name]=…&ingredient[unit]=…`
+  #   * Flat (combobox JSON POST): `name=…` — operator types a new
+  #     ingredient straight into the Ui::ComboboxComponent picker on
+  #     the purchase form. We seed a sensible default unit (kg — the
+  #     most common market purchase unit) and let `Ingredients::Create`
+  #     pin the first category. She edits the rest later from
+  #     /ingredients.
+  def create_attrs
+    if params[:ingredient].present?
+      ingredient_params
+    else
+      { name: params.require(:name).to_s.strip, unit: "kg" }
+    end
+  end
+
+  def serialize(ingredient)
+    { id: ingredient.id, label: ingredient.name }
   end
 end

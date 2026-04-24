@@ -51,6 +51,15 @@
         placeholder: t("clients.form.email_placeholder"),
         value: client.email) %>
 
+  <%= render Ui::TextFieldComponent.new(
+        name: "client[rfc]",
+        id: "client_rfc",
+        label: t("clients.form.rfc_label"),
+        placeholder: t("clients.form.rfc_placeholder"),
+        value: client.rfc,
+        hint: t("clients.form.rfc_hint"),
+        maxlength: 13) %>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <%= render Ui::TextFieldComponent.new(
           name: "client[colonia]",

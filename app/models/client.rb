@@ -15,6 +15,7 @@
 #  phone            :string
 #  phone_normalized :string
 #  references_note  :text
+#  rfc              :string
 #  street_address   :string
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
@@ -24,6 +25,7 @@
 #
 #  index_clients_on_account_id            (account_id)
 #  index_clients_on_account_id_and_email  (account_id,email)
+#  index_clients_on_account_id_and_rfc    (account_id,rfc) WHERE (rfc IS NOT NULL)
 #  index_clients_on_discarded_at          (discarded_at)
 #  uniq_clients_account_phone_active      (account_id,phone_normalized) UNIQUE WHERE ((phone_normalized IS NOT NULL) AND (discarded_at IS NULL))
 #
@@ -35,6 +37,7 @@ class Client < ApplicationRecord
   include AccountScoped
   include HasPrefixedId.new(prefix: "cli")
   include HasSoftDelete
+  include HasRfc
 
   has_paper_trail
 
@@ -61,6 +64,7 @@ class Client < ApplicationRecord
       OR LOWER(last_name) LIKE :q
       OR phone_normalized LIKE :q
       OR LOWER(email) LIKE :q
+      OR LOWER(rfc) LIKE :q
     SQL
   }
 

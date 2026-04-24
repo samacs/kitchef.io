@@ -53,26 +53,27 @@ class Account < ApplicationRecord
   RESERVED_SLUGS = %w[
     acerca admin ajustes api app asistencia asistente assets ayuda
     blog buscar
-    categoria categorias como-funciona contacto cocina
+    categoria categorias como-funciona compra compras contacto cocina
     directorio
     empleos entrar equipo explorar
     facturacion favicon fotos
+    gastos
     health
     kitchef
     legal
     nosotros nuestra-historia notificaciones
-    pagos panel pedidos precios prensa privacidad preguntas
+    pagos panel pedidos precios prensa privacidad proveedor proveedores preguntas
     rails recetario recetas recuperar recursos registro robots
-    salir sesion sitemap soporte
-    terminos
+    salir sesion sitemap soporte suministros
+    terminos tickets
     up usuarios
     webhooks
 
     about account accounts admin-panel api-docs apis auth
     billing
-    careers cart categories changelog checkout clients company contact cookies
+    careers cart categories category changelog checkout clients company contact cookies
     dashboard demo docs docs-api documentation
-    enterprise explore
+    enterprise explore expenses expense
     faq features feedback forgot-password
     help home how-it-works
     integrations
@@ -81,12 +82,13 @@ class Account < ApplicationRecord
     menus
     new news notifications
     onboarding
-    password passwords pricing privacy production products profile
+    password passwords pricing privacy production products profile purchase purchases
     r register reports reset-password root
-    schedule search settings sign-in signin sign-out signout sign-up signup
+    schedule search settings sign-in signin sign-out signout sign-up signup supplier suppliers
     stats status subscribe subscription support
     team terms tour
     users
+    vendor vendors
     welcome
 
     baker baking bakery
@@ -129,19 +131,23 @@ class Account < ApplicationRecord
   # client_id). Users cascades so destroying the owner tears down any
   # other members with it — the owner's `before_destroy :detach_from_account`
   # pre-nulls the circular FK so this doesn't loop back onto itself.
-  has_many :users,       dependent: :destroy
-  has_many :orders,      dependent: :destroy
-  has_many :clients,     dependent: :destroy
-  has_many :recipes,     dependent: :destroy
-  has_many :ingredients, dependent: :destroy
-  has_one  :schedule,    dependent: :destroy, inverse_of: :account
-  has_one  :subscription, dependent: :destroy
+  has_many :users,                dependent: :destroy
+  has_many :orders,               dependent: :destroy
+  has_many :purchases,            dependent: :destroy   # PurchaseItem FK → ingredients (cascade)
+  has_many :clients,              dependent: :destroy
+  has_many :suppliers,            dependent: :destroy   # SupplierIngredient FK → ingredients (cascade)
+  has_many :recipes,              dependent: :destroy
+  has_many :ingredients,          dependent: :destroy
+  has_many :categories,           dependent: :destroy   # last — ingredients + recipes FK to it
+  has_one  :schedule,             dependent: :destroy, inverse_of: :account
+  has_one  :subscription,         dependent: :destroy
 
   # Every account boots with a blank Schedule so storefront code can count
   # on `account.schedule` being non-nil. Operators fill it in from
   # `/schedule`; until then, the picker surfaces a "no horarios yet" state
   # rather than blowing up.
   after_create :ensure_schedule
+  after_create :bootstrap_default_categories
 
   # Idempotent fetch-or-create, for cases where the `after_create` callback
   # didn't run (pre-Phase-6 accounts backfilled via the data migration, or
@@ -212,11 +218,34 @@ class Account < ApplicationRecord
     slug.blank?
   end
 
+  # Per-account default Category rows — the starting buckets Phase 9
+  # hands every new operator (matches the Spanish names the data
+  # migration backfilled for existing accounts). Idempotent so re-runs
+  # (console exploration, test helpers) don't double-seed.
+  DEFAULT_INGREDIENT_CATEGORIES = [
+    "Abarrotes", "Carnes", "Lácteos", "Frutas y verduras", "Especias", "Otros"
+  ].freeze
+
+  DEFAULT_RECIPE_CATEGORIES = [
+    "Platos fuertes", "Entradas", "Postres", "Bebidas", "Bases y preparaciones", "Otros"
+  ].freeze
+
   private
 
   def ensure_schedule
     create_schedule!(order_mode: :advance, lead_time_minutes: 0) if schedule.nil?
   rescue ActiveRecord::RecordNotUnique
     reload_schedule
+  end
+
+  def bootstrap_default_categories
+    DEFAULT_INGREDIENT_CATEGORIES.each_with_index do |name, idx|
+      categories.create_with(position: idx).find_or_create_by!(kind: :ingredient, name: name)
+    end
+    DEFAULT_RECIPE_CATEGORIES.each_with_index do |name, idx|
+      categories.create_with(position: idx).find_or_create_by!(kind: :recipe, name: name)
+    end
+  rescue ActiveRecord::RecordNotUnique
+    # Lost a race — other thread seeded the same rows. Fine.
   end
 end
