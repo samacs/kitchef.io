@@ -34,6 +34,22 @@
     </button>
   </section>
 
+  <% if @weekly_spent_cents.to_i.positive? %>
+    <aside class="mb-5 rounded-card border border-accent/30 bg-accent-soft px-4 py-3 flex items-center justify-between gap-3 print:hidden">
+      <div class="flex items-baseline gap-3">
+        <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-accent">
+          <%= t("production.shopping_list.week_totals.kicker") %>
+        </span>
+        <span class="font-serif text-[22px] text-accent-2 tabular-nums">
+          <%= humanized_money_with_symbol(Money.new(@weekly_spent_cents, "MXN")) %>
+        </span>
+      </div>
+      <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-accent-2">
+        <%= t("production.shopping_list.week_totals.marked_count", count: @weekly_marked_count) %>
+      </span>
+    </aside>
+  <% end %>
+
   <% if @list.empty? %>
     <section class="rounded-panel border border-line bg-surface/60 px-6 py-10 text-center print:hidden">
       <p class="font-serif text-[20px] text-ink"><%= t("production.shopping_list.empty.headline") %></p>
@@ -41,13 +57,16 @@
     </section>
   <% elsif @list.advanced? %>
     <div class="flex flex-col gap-6 print:gap-2">
-      <% @list.rows.group_by(&:category).each do |category, group| %>
+      <% @list.rows.group_by(&:category).sort_by { |cat, _| cat&.position || 999 }.each do |category, group| %>
         <section class="flex flex-col gap-2 print:gap-0">
           <h2 class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted print:text-[9.5px] print:tracking-[0.12em] print:mb-0.5 print:mt-2 print:first:mt-0">
-            <%= t("ingredient.categories.#{category}") %>
+            <%= category&.name || t("ingredients.index.uncategorized") %>
           </h2>
           <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface print:border-0 print:rounded-none print:divide-[#d4d4d4]">
-            <%= render partial: "production/shopping_list/ingredient_row", collection: group, as: :row %>
+            <% group.each do |row| %>
+              <%= render partial: "production/shopping_list/ingredient_row",
+                    locals: { row: row, marked_summary: (@marked_by_ingredient[row.ingredient&.id] if @marked_by_ingredient) } %>
+            <% end %>
           </ul>
         </section>
       <% end %>

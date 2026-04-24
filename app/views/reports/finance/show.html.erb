@@ -30,7 +30,8 @@
   </header>
 
   <%# --- KPI triptych ------------------------------------------------- %>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <% has_expense_lane = @stats.has_purchase_signal? %>
+  <div class="grid grid-cols-1 md:grid-cols-3 <%= has_expense_lane ? 'lg:grid-cols-4' : '' %> gap-4">
     <%= render Reports::KpiCardComponent.new(
           label:        t("reports.finance.kpi.current_#{@range_preset == :custom ? "custom" : @range_preset}"),
           amount_cents: @stats.revenue_cents,
@@ -54,7 +55,35 @@
           amount_cents: @month_to_date.revenue_cents,
           sub:          finance_sub_text(@month_to_date),
           href:         reports_finance_path(range: :this_month)) %>
+
+    <% if has_expense_lane %>
+      <%= render Reports::KpiCardComponent.new(
+            label:        t("reports.finance.expenses.kpi_label"),
+            amount_cents: @stats.purchases_cents,
+            sub:          t("reports.finance.expenses.kpi_sub", count: @stats.purchase_count),
+            href:         purchases_path) %>
+    <% end %>
   </div>
+
+  <%# --- Margen real badge --------------------------------------------- %>
+  <% if has_expense_lane && @stats.revenue_cents.positive? %>
+    <div class="rounded-card border border-accent/20 bg-accent-soft/40 px-4 py-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+      <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-accent-2">
+        <%= t("reports.finance.expenses.real_margin_label") %>
+      </span>
+      <span class="font-serif text-[22px] leading-[1] tracking-tight text-ink tabular-nums">
+        <%= humanized_money_with_symbol(Money.new(@stats.real_margin_cents, "MXN")) %>
+      </span>
+      <% if @stats.real_margin_pct %>
+        <span class="font-mono text-[12px] text-accent">
+          (<%= @stats.real_margin_pct %>%)
+        </span>
+      <% end %>
+      <span class="text-[12px] text-ink-2 leading-[1.5] flex-1 min-w-0 basis-full sm:basis-auto">
+        <%= t("reports.finance.expenses.real_margin_hint") %> · <%= t("reports.finance.expenses.drift_hint") %>
+      </span>
+    </div>
+  <% end %>
 
   <%# --- Empty state OR (chart + day breakdown) ----------------------- %>
   <% if @stats.has_signal? %>
@@ -74,7 +103,7 @@
       <%= render Ui::KickerComponent.new(text: t("reports.finance.day_breakdown.kicker")) %>
       <div class="flex flex-col gap-2">
         <% @stats.by_day.each do |day| %>
-          <%= render Reports::DayRowComponent.new(day_stats: day) %>
+          <%= render Reports::DayRowComponent.new(day_stats: day, show_expenses: has_expense_lane) %>
         <% end %>
       </div>
     </section>

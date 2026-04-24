@@ -1,0 +1,30 @@
+<%#
+  Suppliers index results — list table or empty-query message. Wrapped
+  in a Turbo Frame so the live-search form swaps it in place.
+%>
+<%= turbo_frame_tag "suppliers_results" do %>
+  <% if suppliers.any? %>
+    <div class="bg-surface border border-line rounded-panel shadow-card overflow-x-auto kc-scroll">
+      <table class="w-full min-w-[720px]">
+        <thead class="bg-bg-2/40 border-b border-line">
+          <tr>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("suppliers.index.table.name") %></th>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("suppliers.index.table.phone") %></th>
+            <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("suppliers.index.table.ingredients") %></th>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("suppliers.index.table.last_bought") %></th>
+            <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% suppliers.each do |s| %>
+            <%= render Suppliers::RowComponent.new(supplier: s) %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-[13px] text-muted leading-[1.5] py-6 text-center bg-surface border border-line rounded-panel">
+      <%= t("suppliers.search.empty") %>
+    </p>
+  <% end %>
+<% end %>

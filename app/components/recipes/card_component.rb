@@ -8,7 +8,7 @@ module Recipes
     option :recipe
 
     def category_label
-      I18n.t("recipe.categories.#{recipe.category}")
+      recipe.category&.name
     end
 
     def price_label

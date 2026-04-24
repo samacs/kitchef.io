@@ -225,6 +225,24 @@
     animation: kc-highlight-flash 2.2s ease-out;
   }
 
+  /* Flash toasts rendered inside `.kc-flash-region` (shared/_flash_region).
+     Mobile slides down from the viewport top; desktop slides in from
+     the right. Single 240ms ease-out — enough to read the motion as
+     "arrived from somewhere" without making the operator wait. */
+  .kc-flash {
+    animation: kc-flash-enter .24s ease-out both;
+  }
+  @keyframes kc-flash-enter {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @media (min-width: 640px) {
+    @keyframes kc-flash-enter {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+  }
+
   /* Notification row styling. `.kc-notification` itself only smooths
      the read/unread color transition; the `kc-notification-enter`
      keyframe plays once when a row is inserted via Turbo Stream so a

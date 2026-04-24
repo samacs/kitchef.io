@@ -6,7 +6,7 @@ module Ingredients
     option :ingredient
 
     def category_label
-      I18n.t("ingredient.categories.#{ingredient.category}")
+      ingredient.category&.name
     end
 
     def unit_label

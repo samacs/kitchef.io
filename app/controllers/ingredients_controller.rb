@@ -1,5 +1,9 @@
 class IngredientsController < AuthenticatedController
-  expose :ingredients, -> { Current.account.ingredients.kept.order(category: :asc, position: :asc, name: :asc) }
+  expose :ingredients, -> {
+    Current.account.ingredients.kept
+      .includes(:category)
+      .order(category_id: :asc, position: :asc, name: :asc)
+  }
   expose :ingredient,  -> { find_or_build_ingredient }
 
   def index; end
@@ -71,7 +75,7 @@ class IngredientsController < AuthenticatedController
     # (direct int). The form submits the former; tests/console may use
     # the latter.
     permitted = params.require(:ingredient).permit(
-      :name, :category, :unit, :unit_cost, :unit_cost_cents, :supplier_name, :notes
+      :name, :category_id, :unit, :unit_cost, :unit_cost_cents, :notes
     )
     permitted.delete(:unit_cost) if permitted[:unit_cost].blank? && permitted[:unit_cost_cents].present?
     permitted

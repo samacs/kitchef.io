@@ -13,7 +13,28 @@ class ProductionController < AuthenticatedController
   def shopping_list
     @starting = Date.current
     @list = Production::WeeklyShoppingList.for(account: Current.account, starting: @starting)
+
+    # Phase 9 — overlay the purchase ledger so rows already marked as
+    # comprada render with a persistent ✓ + the actual price she paid.
+    # Scope: purchases whose purchased_on falls inside the shopping-list
+    # window. Keyed by ingredient_id so the per-row lookup is O(1).
+    end_date = @list.ending
+    purchased_items = PurchaseItem
+      .joins(:purchase)
+      .where(purchases: { account_id: Current.account.id, discarded_at: nil, purchased_on: @starting..end_date })
+      .includes(purchase: :supplier)
+      .group_by(&:ingredient_id)
+    @marked_by_ingredient = purchased_items.transform_values do |items|
+      MarkSummary.new(
+        last_item:   items.max_by { |i| i.purchase.purchased_on },
+        total_cents: items.sum(&:subtotal_cents)
+      )
+    end
+    @weekly_spent_cents = @marked_by_ingredient.values.sum(&:total_cents)
+    @weekly_marked_count = @marked_by_ingredient.size
   end
+
+  MarkSummary = Data.define(:last_item, :total_cents)
 
   # "Iniciar producción de todas" bulk action, firing on every `confirmed`
   # order whose `delivery_date` matches. Scoped to a single day so the

@@ -3,7 +3,6 @@
 # Table name: recipes
 #
 #  id                    :bigint           not null, primary key
-#  category              :integer          default("mains"), not null
 #  cost_cents_cached     :bigint
 #  description           :text
 #  discarded_at          :datetime
@@ -19,18 +18,21 @@
 #  created_at            :datetime         not null
 #  updated_at            :datetime         not null
 #  account_id            :bigint           not null
+#  category_id           :bigint           not null
 #
 # Indexes
 #
-#  index_recipes_on_account_id                            (account_id)
-#  index_recipes_on_account_id_and_category_and_position  (account_id,category,position)
-#  index_recipes_on_account_id_and_is_saleable            (account_id,is_saleable)
-#  index_recipes_on_account_id_and_slug                   (account_id,slug) UNIQUE
-#  index_recipes_on_discarded_at                          (discarded_at)
+#  index_recipes_on_account_id                               (account_id)
+#  index_recipes_on_account_id_and_category_id_and_position  (account_id,category_id,position)
+#  index_recipes_on_account_id_and_is_saleable               (account_id,is_saleable)
+#  index_recipes_on_account_id_and_slug                      (account_id,slug) UNIQUE
+#  index_recipes_on_category_id                              (category_id)
+#  index_recipes_on_discarded_at                             (discarded_at)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (category_id => categories.id)
 #
 class Recipe < ApplicationRecord
   extend FriendlyId
@@ -40,21 +42,13 @@ class Recipe < ApplicationRecord
 
   friendly_id :name, use: :scoped, scope: :account
   has_paper_trail
-  positioned on: [ :account, :category ]
+  positioned on: [ :account, :category_id ]
   monetize :sale_price_cents
   monetize :cost_cents_cached, as: :cost_cached, allow_nil: true
 
   YIELD_UNITS = %w[piece g kg ml l serving].freeze
-  CATEGORIES = {
-    mains:     0,
-    starters:  1,
-    desserts:  2,
-    drinks:    3,
-    bases:     4,    # internal preparations: masa, salsas, bases_y_preparaciones
-    other:    99
-  }.freeze
 
-  enum :category, CATEGORIES, prefix: true
+  belongs_to :category
 
   # Components — the polymorphic join that enables decomposition. A parent
   # Recipe has many components, each pointing at either an Ingredient or
@@ -105,11 +99,12 @@ class Recipe < ApplicationRecord
     content_type: %i[image/jpeg image/png image/webp image/heic],
     size: { less_than: 5.megabytes }
   validate :published_requires_saleable
+  validate :category_belongs_to_same_account
 
   scope :saleable, -> { where(is_saleable: true) }
   scope :internal, -> { where(is_saleable: false) }
   scope :published, -> { where(is_saleable: true, is_published: true) }
-  scope :by_category, ->(category) { where(category: category) }
+  scope :by_category, ->(category_id) { where(category_id: category_id) }
 
   # Candidates a given recipe could use as a component without creating a
   # cycle. Filters out itself plus any recipe whose tree already reaches
@@ -135,6 +130,10 @@ class Recipe < ApplicationRecord
     slug.blank? || will_save_change_to_name?
   end
 
+  def category_name
+    category&.name
+  end
+
   private
 
   def published_requires_saleable
@@ -142,5 +141,11 @@ class Recipe < ApplicationRecord
     return if is_saleable?
 
     errors.add(:is_published, :requires_saleable)
+  end
+
+  def category_belongs_to_same_account
+    return if category.blank? || account_id.blank?
+    return if category.account_id == account_id
+    errors.add(:category, :wrong_account)
   end
 end

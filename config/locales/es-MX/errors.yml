@@ -18,6 +18,8 @@ es-MX:
       self_reference: "una receta no puede ser componente de sí misma"
       cycle: "usar esta receta crearía un ciclo en tus componentes"
       cross_account: "no pertenece a esta cocina"
+      wrong_account: "no pertenece a esta cocina"
+      invalid_rfc: "formato no válido. Debe tener 12 o 13 caracteres (ej. RAGL850101H7A)"
       incompatible: "no es compatible con la unidad del componente"
       invalid: "no es válido"
       after_start_time: "debe ser después de la hora de inicio"

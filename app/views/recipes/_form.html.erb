@@ -70,16 +70,17 @@
     <span class="text-[12px] text-muted"><%= t("recipes.form.sale_price_hint") %></span>
   </label>
 
-  <label for="recipe_category" class="flex flex-col gap-2">
-    <span class="text-[13px] font-medium text-ink leading-none">
-      <%= t("recipes.form.category_label") %>
-    </span>
-    <%= form.select :category,
-          Recipe::CATEGORIES.keys.map { |key| [ I18n.t("recipe.categories.#{key}"), key ] },
-          {},
-          id: "recipe_category",
-          class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] transition-[border-color,box-shadow] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-  </label>
+  <%= render Ui::ComboboxComponent.new(
+        name: "recipe[category_id]",
+        id: "recipe_category_id",
+        label: t("recipes.form.category_label"),
+        options: Category.picker_options_for(account: Current.account, kind: :recipe),
+        value: recipe.category_id,
+        placeholder: t("recipes.form.category_placeholder"),
+        required: true,
+        create_path: categories_path,
+        create_params: { kind: "recipe" },
+        list_id: "combobox_recipe_options") %>
 
   <label for="recipe_description" class="flex flex-col gap-2">
     <span class="text-[13px] font-medium text-ink leading-none">

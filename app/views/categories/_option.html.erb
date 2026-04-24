@@ -1,0 +1,4 @@
+<%# Appended to a Ui::ComboboxComponent's <datalist> by CategoriesController#create
+    so that subsequent opens of the same picker on the same page show
+    the freshly-created category without a full reload. %>
+<option value="<%= category.id %>" data-label="<%= category.name %>"><%= category.name %></option>

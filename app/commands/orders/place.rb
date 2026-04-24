@@ -36,7 +36,8 @@ module Orders
       end
 
       if order.save
-        enqueue_geocoding(order)
+        # Geocoding enqueue is handled by the Geocodable concern's
+        # after_commit callback — no explicit dispatch needed.
         success(order)
       else
         Result.new(success: false, object: order, errors: order.errors)
@@ -57,10 +58,6 @@ module Orders
       else
         scope.find_by(id: raw_id)
       end
-    end
-
-    def enqueue_geocoding(order)
-      GeocodeOrderJob.perform_later(order.id) if order.needs_geocoding?
     end
 
     def price_from(item_attrs, recipe)

@@ -2,12 +2,6 @@
 <% content_for :page_title, t("dashboard.title") %>
 <% content_for :page_subtitle, t("dashboard.subtitle") %>
 
-<% if flash[:notice].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-  </div>
-<% end %>
-
 <% if total_count.zero? %>
   <%= render Recipes::EmptyStateComponent.new(
         headline_key: "dashboard.empty_state.headline",

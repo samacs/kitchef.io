@@ -1,6 +1,8 @@
 <%
+  grid_cols = show_expenses ? "grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]" : "grid-cols-[minmax(0,1fr)_auto_auto_auto]"
   row_classes = [
-    "grid grid-cols-[minmax(0,1fr)_auto_auto_auto] items-baseline gap-4 py-3 px-4 rounded-card-sm",
+    "grid items-baseline gap-4 py-3 px-4 rounded-card-sm",
+    grid_cols,
     "border border-line bg-surface",
     empty? ? "opacity-50" : nil
   ].compact.join(" ")
@@ -19,7 +21,7 @@
     <%= t("reports.finance.day.orders_count", count: day_stats.order_count) %>
   </span>
 
-  <% if empty? %>
+  <% if day_stats.order_count.zero? %>
     <span class="font-mono text-[13px] text-muted tabular-nums">—</span>
     <span class="font-mono text-[13px] text-muted tabular-nums">—</span>
   <% else %>
@@ -29,5 +31,15 @@
     <span class="font-mono text-[13px] text-accent tabular-nums whitespace-nowrap">
       <%= t("reports.finance.day.margin_pct", pct: day_stats.margin_pct || 0) %>
     </span>
+  <% end %>
+
+  <% if show_expenses %>
+    <% if has_expenses? %>
+      <span class="font-mono text-[13px] text-warn tabular-nums whitespace-nowrap">
+        −<%= helpers.humanized_money_with_symbol(expenses) %>
+      </span>
+    <% else %>
+      <span class="font-mono text-[13px] text-muted/60 tabular-nums">—</span>
+    <% end %>
   <% end %>
 </div>

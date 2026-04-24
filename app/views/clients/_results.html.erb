@@ -1,0 +1,33 @@
+<%#
+  Clients index results — the list table (or empty message). Rendered
+  in two places:
+    1. Inside the shared Turbo Frame "clients_results" on index (live
+       search swaps this partial in place).
+    2. Directly when the controller responds to a frame-only request.
+%>
+<%= turbo_frame_tag "clients_results" do %>
+  <% if clients.any? %>
+    <div class="bg-surface border border-line rounded-panel shadow-card overflow-x-auto kc-scroll">
+      <table class="w-full min-w-[640px]">
+        <thead class="bg-bg-2/40 border-b border-line">
+          <tr>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("clients.index.table.name") %></th>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("clients.index.table.phone") %></th>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("clients.index.table.colonia") %></th>
+            <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("clients.index.table.orders") %></th>
+            <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% clients.each do |c| %>
+            <%= render Clients::RowComponent.new(client: c) %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p class="text-[13px] text-muted leading-[1.5] py-6 text-center bg-surface border border-line rounded-panel">
+      <%= t("clients.search.empty") %>
+    </p>
+  <% end %>
+<% end %>

@@ -10,16 +10,6 @@
   <% end %>
 <% end %>
 
-<% if flash[:notice].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-  </div>
-<% end %>
-<% if flash[:alert].present? %>
-  <div class="mb-5">
-    <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %>
-  </div>
-<% end %>
 
 <%# 7-day strip. Horizontal scroll on narrow screens via scroll-snap so
     each card snaps cleanly. `@media print` on this section hides the

@@ -49,7 +49,7 @@
         <div class="mb-10">
           <div class="mb-4 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
             <span class="inline-block h-px w-4 bg-current"></span>
-            <%= t("recipe.categories.#{category}", default: category.to_s.humanize) %>
+            <%= category&.name %>
           </div>
           <div class="grid gap-[18px]" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
             <% recipes.each do |recipe| %>

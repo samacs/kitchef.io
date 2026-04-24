@@ -6,23 +6,19 @@ module Orders
     option :order
     option :params
 
-    # Address columns whose change should re-trigger geocoding. If the
-    # operator only tweaked the delivery_notes or delivery_date, there's
-    # no need to spend a Google quota request.
-    GEO_RELEVANT = %w[delivery_address colonia city delivery_type].freeze
-
     def call
       attrs       = params.to_h.deep_symbolize_keys
       items_attrs = attrs.delete(:items_attributes) || {}
 
       order.assign_attributes(attrs)
-      address_changed = order.changed & GEO_RELEVANT
 
       apply_items(items_attrs)
 
       if order.save
-        reset_geocoding(order) if address_changed.any?
-        enqueue_geocoding(order)
+        # Geocoding + static map cascade is handled by the Geocodable
+        # concern's after_commit callback (clears stale coords on
+        # address change, enqueues GeocodeJob, refreshes static_map on
+        # coord change).
         success(order)
       else
         Result.new(success: false, object: order, errors: order.errors)
@@ -30,19 +26,6 @@ module Orders
     end
 
     private
-
-    def reset_geocoding(order)
-      order.update_columns(
-        latitude:            nil,
-        longitude:           nil,
-        geocoded_at:         nil,
-        geocoding_failed_at: nil
-      )
-    end
-
-    def enqueue_geocoding(order)
-      GeocodeOrderJob.perform_later(order.id) if order.needs_geocoding?
-    end
 
     def apply_items(items_attrs)
       items_attrs.each_value do |item_attrs|

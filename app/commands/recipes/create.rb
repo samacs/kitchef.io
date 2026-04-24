@@ -30,6 +30,11 @@ module Recipes
       # explicitly mark this as a draft via the form toggle.
       attrs[:is_published] = has_photo?(attrs) if attrs[:is_published].nil?
 
+      # Fallback category for simple mode: Phase 9 replaced the enum
+      # with a FK. If the form didn't submit a category, pin the
+      # account's first recipe category so the save still succeeds.
+      attrs[:category_id] ||= default_recipe_category_id
+
       recipe = account.recipes.new(attrs)
       if recipe.save
         success(recipe)
@@ -45,6 +50,10 @@ module Recipes
       return false if photos.blank?
 
       Array(photos).any? { |p| p.respond_to?(:size) && p.size.positive? }
+    end
+
+    def default_recipe_category_id
+      account.categories.for_kind(:recipe).kept.order(:position, :name).pick(:id)
     end
   end
 end

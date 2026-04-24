@@ -195,12 +195,61 @@ elena_ingredients = [
   [ "Canela en polvo",             "kg",  55000, :spices,   "Mercado de San Juan" ],
   [ "Comino molido",               "kg",  38000, :spices,   "Mercado de San Juan" ]
 ]
+# Phase 9: `category` is a FK to a per-account Category row. These legacy
+# enum symbols map onto the Spanish names the data migration seeded.
+INGREDIENT_CATEGORY_NAMES = {
+  pantry:  "Abarrotes",
+  meats:   "Carnes",
+  dairy:   "Lácteos",
+  produce: "Frutas y verduras",
+  spices:  "Especias",
+  other:   "Otros"
+}.freeze
+
+RECIPE_CATEGORY_NAMES = {
+  mains:    "Platos fuertes",
+  starters: "Entradas",
+  desserts: "Postres",
+  drinks:   "Bebidas",
+  bases:    "Bases y preparaciones",
+  other:    "Otros"
+}.freeze
+
+def ingredient_category_for(account, key)
+  account.categories.for_kind(:ingredient).find_by!(name: INGREDIENT_CATEGORY_NAMES.fetch(key))
+end
+
+def recipe_category_for(account, key)
+  account.categories.for_kind(:recipe).find_by!(name: RECIPE_CATEGORY_NAMES.fetch(key))
+end
+
 elena_ingredients.each do |name, unit, cents, cat, supplier|
   cocina_elena.ingredients.create!(
-    name: name, unit: unit, unit_cost_cents: cents, category: cat,
+    name: name, unit: unit, unit_cost_cents: cents,
+    category: ingredient_category_for(cocina_elena, cat),
     supplier_name: supplier
   )
 end
+
+# Phase 9: attach the first-party Supplier + SupplierIngredient records.
+# Walks the ingredients we just created, materializes one Supplier per
+# distinct `supplier_name`, and defaults a SupplierIngredient row so the
+# cost engine cascade (Phase 7 → recomputes on default_supplier change)
+# keeps behaving as before.
+def seed_default_suppliers!(account)
+  account.ingredients.kept.where.not(supplier_name: [ nil, "" ]).find_each do |ing|
+    supplier = account.suppliers.kept.find_or_create_by!(name: ing.supplier_name.to_s.strip)
+    next if ing.supplier_ingredients.exists?
+    ing.supplier_ingredients.create!(
+      supplier: supplier,
+      unit_cost_cents: ing.unit_cost_cents,
+      last_bought_on: Date.current,
+      is_default_cost_source: true
+    )
+  end
+end
+
+seed_default_suppliers!(cocina_elena)
 
 # Sale prices reflect what a Condesa home-kitchen operator charges in
 # late 2026. Yields are per-unit so the operator can sell by the
@@ -224,7 +273,7 @@ elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key
     is_saleable: true,
     yield_quantity: qty,
     yield_unit: unit,
-    category: cat,
+    category: recipe_category_for(cocina_elena, cat),
     is_published: true,
     target_margin_percent: 60
   )
@@ -374,15 +423,39 @@ mario_ing = {}
 mario_ingredients.each do |name, (unit, cents, cat, supplier)|
   mario_ing[name] = taqueria_mario.ingredients.create!(
     name: name, unit: unit, unit_cost_cents: cents,
-    category: cat, supplier_name: supplier
+    category: ingredient_category_for(taqueria_mario, cat),
+    supplier_name: supplier
   )
 end
+
+seed_default_suppliers!(taqueria_mario)
+
+# Mario shops at two places for some ingredients — give a handful a
+# secondary, cheaper alternative so the "hacerlo default?" nudge has
+# something to surface in demos.
+mario_alt_supplier = taqueria_mario.suppliers.kept.find_or_create_by!(name: "Costco Providencia")
+{
+  "Harina de maíz nixtamalizada" => 4200,   # vs 4500 at Maseca
+  "Manteca de cerdo"             => 11500,  # vs 12000 default
+  "Pechuga de pollo"             => 16800   # vs 17500 default
+}.each do |name, cents|
+  ing = mario_ing[name]
+  next unless ing
+  ing.supplier_ingredients.find_or_create_by!(supplier: mario_alt_supplier) do |si|
+    si.unit_cost_cents = cents
+    si.last_bought_on = Date.current - 5.days
+    si.is_default_cost_source = false
+  end
+end
+
+mario_bases_cat = recipe_category_for(taqueria_mario, :bases)
+mario_mains_cat = recipe_category_for(taqueria_mario, :mains)
 
 masa = taqueria_mario.recipes.create!(
   name: "Masa fresca",
   is_saleable: false,
   yield_quantity: 1800, yield_unit: "g",
-  category: :bases
+  category: mario_bases_cat
 )
 [
   [ mario_ing["Harina de maíz nixtamalizada"], 1000, "g" ],
@@ -394,7 +467,7 @@ salsa_verde = taqueria_mario.recipes.create!(
   name: "Salsa verde",
   is_saleable: false,
   yield_quantity: 500, yield_unit: "ml",
-  category: :bases
+  category: mario_bases_cat
 )
 [
   [ mario_ing["Tomate verde"],   400, "g" ],
@@ -407,7 +480,7 @@ salsa_roja = taqueria_mario.recipes.create!(
   name: "Salsa roja",
   is_saleable: false,
   yield_quantity: 500, yield_unit: "ml",
-  category: :bases
+  category: mario_bases_cat
 )
 [
   [ mario_ing["Tomate rojo"],       400, "g" ],
@@ -420,7 +493,7 @@ frijoles = taqueria_mario.recipes.create!(
   name: "Frijoles refritos",
   is_saleable: false,
   yield_quantity: 1000, yield_unit: "g",
-  category: :bases
+  category: mario_bases_cat
 )
 [
   [ mario_ing["Frijol bayo"],      400, "g" ],
@@ -439,7 +512,7 @@ def build_taco(account, name:, carne:, carne_qty:, salsa:, salsa_qty:, price_cen
     is_saleable: true,
     is_published: true,
     yield_quantity: 1, yield_unit: "piece",
-    category: :mains,
+    category: recipe_category_for(account, :mains),
     target_margin_percent: target_margin_percent
   )
   rec.components.create!(componentable: masa,  quantity: 28,        unit: "g")
@@ -478,7 +551,7 @@ quesadilla = taqueria_mario.recipes.create!(
   name: "Quesadilla",
   sale_price_cents: 4200, is_saleable: true, is_published: true,
   yield_quantity: 1, yield_unit: "piece",
-  category: :mains, target_margin_percent: 65
+  category: mario_mains_cat, target_margin_percent: 65
 )
 quesadilla.components.create!(componentable: masa,                      quantity: 80, unit: "g")
 quesadilla.components.create!(componentable: mario_ing["Queso Oaxaca"], quantity: 60, unit: "g")
@@ -490,7 +563,7 @@ sope = taqueria_mario.recipes.create!(
   name: "Sope con frijol",
   sale_price_cents: 3200, is_saleable: true, is_published: true,
   yield_quantity: 1, yield_unit: "piece",
-  category: :mains, target_margin_percent: 65
+  category: mario_mains_cat, target_margin_percent: 65
 )
 sope.components.create!(componentable: masa,                        quantity: 100, unit: "g")
 sope.components.create!(componentable: frijoles,                    quantity:  80, unit: "g")
@@ -503,7 +576,7 @@ gringa = taqueria_mario.recipes.create!(
   name: "Gringa al pastor",
   sale_price_cents: 9500, is_saleable: true, is_published: true,
   yield_quantity: 1, yield_unit: "piece",
-  category: :mains, target_margin_percent: 65
+  category: mario_mains_cat, target_margin_percent: 65
 )
 gringa.components.create!(componentable: masa,                                  quantity: 120, unit: "g")
 gringa.components.create!(componentable: mario_ing["Carne al pastor marinada"], quantity:  75, unit: "g")
@@ -538,6 +611,46 @@ mario_saleable.each do |recipe|
   key = mario_photo_keys[recipe.name]
   next unless key
   attach_seed_image(recipe, :photos, url: seed_photo_url(key), filename: "#{key}-#{recipe.id}.jpg")
+end
+
+# Phase 9: a handful of realistic purchases so the gastos lane in
+# /reports/finance lights up on demo. Spread across the last 3 weeks.
+puts "  …seeding Mario purchase ledger"
+central_de_abastos = taqueria_mario.suppliers.kept.find_by(name: "Central de Abastos")
+carniceria_paty    = taqueria_mario.suppliers.kept.find_by(name: "Carnicería Paty")
+[
+  [ 18.days.ago, central_de_abastos, [
+      [ "Tomate verde",    "3",   "kg", "35.00" ],
+      [ "Cebolla blanca",  "2",   "kg", "28.00" ],
+      [ "Chile serrano",   "0.5", "kg", "65.00" ],
+      [ "Ajo",             "0.3", "kg", "140.00" ]
+    ] ],
+  [ 12.days.ago, carniceria_paty, [
+      [ "Carne al pastor marinada", "2",   "kg", "245.00" ],
+      [ "Arrachera",                "1.5", "kg", "380.00" ]
+    ] ],
+  [ 5.days.ago, central_de_abastos, [
+      [ "Tomate rojo",     "4",   "kg", "38.00" ],
+      [ "Cilantro",        "0.4", "kg", "85.00" ],
+      [ "Piña",            "2",   "kg", "32.00" ]
+    ] ],
+  [ 2.days.ago, carniceria_paty, [
+      [ "Pechuga de pollo", "2.5", "kg", "180.00" ]
+    ] ]
+].each do |days, supplier, lines|
+  result = Purchases::Create.call(
+    account: taqueria_mario,
+    params: {
+      purchased_on: days.to_date,
+      supplier_id: supplier&.id,
+      items_attributes: lines.each_with_index.map do |(name, qty, unit, cost), i|
+        ing = mario_ing[name]
+        next nil unless ing
+        [ i.to_s, { ingredient_id: ing.id, quantity: qty, unit: unit, unit_cost: cost } ]
+      end.compact.to_h
+    }
+  )
+  puts "    purchase #{days.to_date.iso8601} failed: #{result.errors.full_messages}" unless result.success?
 end
 
 mario_colonias = [ "Condesa", "Del Valle", "Polanco", "Coyoacán", "Narvarte",
@@ -596,4 +709,6 @@ puts "\n==> done"
   puts "    recipes:     saleable=#{a.recipes.saleable.count}, internal=#{a.recipes.internal.count}"
   puts "    clients:     #{a.clients.count}"
   puts "    orders:      #{a.orders.count} (#{a.orders.group(:state).count})"
+  puts "    suppliers:   #{a.suppliers.count}"
+  puts "    purchases:   #{a.purchases.count}"
 end

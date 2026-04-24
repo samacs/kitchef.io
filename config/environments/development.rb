@@ -62,9 +62,20 @@ Rails.application.configure do
   # base_url isn't fully available (mailers, background jobs). Without
   # this, a redirect after sign-in can land at `http://lvh.me/` (no port)
   # and appear broken.
-  config.action_mailer.default_url_options      = { host: "lvh.me", port: 3000, protocol: "https" }
-  config.action_controller.default_url_options  = { host: "lvh.me", port: 3000, protocol: "https" }
-  Rails.application.routes.default_url_options  = { host: "lvh.me", port: 3000, protocol: "https" }
+  # Four places the same host/port/protocol gets read from by different
+  # Rails subsystems. Keep them in sync:
+  #   * action_mailer     — mailer URL helpers (OrderConfirmationEmail, …)
+  #   * action_controller — `redirect_to` that can't see the current request
+  #   * routes            — `*_url` helpers rendered outside requests
+  #   * application.config — Rails 8.1+ ActiveJob / ActiveStorage
+  #     deserialization hooks reach for this exact attribute (Sidekiq
+  #     raises `undefined method 'default_url_options'` on AnalyzeJob
+  #     without it).
+  url_opts = { host: "lvh.me", port: 3000, protocol: "https" }
+  config.action_mailer.default_url_options      = url_opts
+  config.action_controller.default_url_options  = url_opts
+  config.default_url_options                    = url_opts
+  Rails.application.routes.default_url_options  = url_opts
 
   # Allow lvh.me and its subdomains through Host Authorization. We keep the
   # middleware enabled (defense against DNS rebinding); we only widen the

@@ -22,9 +22,9 @@ module Storefronts
     # than "more of the same." Falls back to any category when there
     # aren't enough candidates in the other-category pool.
     def related_recipes(recipe)
-      published = @storefront.recipes.kept.published
-      other_cats = published.where.not(category: recipe.category).where.not(id: recipe.id)
-      same_cat   = published.where(category: recipe.category).where.not(id: recipe.id)
+      published = @storefront.recipes.kept.published.includes(:category)
+      other_cats = published.where.not(category_id: recipe.category_id).where.not(id: recipe.id)
+      same_cat   = published.where(category_id: recipe.category_id).where.not(id: recipe.id)
 
       (other_cats.order(position: :asc).limit(6).to_a +
        same_cat.order(position: :asc).limit(6).to_a).uniq.first(6)

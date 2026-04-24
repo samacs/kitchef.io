@@ -16,12 +16,6 @@
     </p>
   </div>
 
-  <% if flash[:alert] %>
-    <div class="mb-6">
-      <%= render Ui::FlashComponent.new(kind: :alert, message: flash[:alert]) %>
-    </div>
-  <% end %>
-
   <% if @order&.errors&.any? %>
     <div class="mb-6 rounded-[12px] border border-err/40 bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] px-4 py-3 text-err">
       <div class="text-[12px] font-mono uppercase tracking-[0.14em]">

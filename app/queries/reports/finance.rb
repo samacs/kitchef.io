@@ -19,7 +19,7 @@ module Reports
 
     PRESETS = %i[this_week last_week this_month last_month last_30_days].freeze
 
-    DayStats = Data.define(:date, :revenue_cents, :cogs_cents, :order_count) do
+    DayStats = Data.define(:date, :revenue_cents, :cogs_cents, :purchases_cents, :order_count) do
       def margin_cents = revenue_cents - cogs_cents
 
       def margin_pct
@@ -30,8 +30,8 @@ module Reports
 
     PeriodStats = Data.define(
       :starting, :ending,
-      :revenue_cents, :cogs_cents,
-      :order_count, :avg_order_cents,
+      :revenue_cents, :cogs_cents, :purchases_cents,
+      :order_count, :purchase_count, :avg_order_cents,
       :by_day
     ) do
       def gross_margin_cents = revenue_cents - cogs_cents
@@ -41,8 +41,20 @@ module Reports
         (gross_margin_cents.to_f / revenue_cents * 100).round
       end
 
-      def empty?      = order_count.zero?
-      def has_signal? = order_count >= 3
+      # "Margen real" — revenue minus *actual* money spent on
+      # ingredients in the window, not the snapshotted COGS. Surfaces
+      # the gap between the cost at order time and the cost of today's
+      # reality. Only meaningful when we have purchase data.
+      def real_margin_cents = revenue_cents - purchases_cents
+
+      def real_margin_pct
+        return nil if revenue_cents.zero? || purchases_cents.zero?
+        (real_margin_cents.to_f / revenue_cents * 100).round
+      end
+
+      def empty?              = order_count.zero? && purchase_count.zero?
+      def has_signal?         = order_count >= 3
+      def has_purchase_signal? = purchase_count.positive?
     end
 
     option :account
@@ -83,30 +95,37 @@ module Reports
     # --------------------------------------------------------------------
 
     def call
-      rows_by_date = aggregate.index_by { |r| r[:date] }
+      rows_by_date     = aggregate.index_by { |r| r[:date] }
+      purchases_by_day = aggregate_purchases.index_by { |r| r[:date] }
 
       by_day = (starting..ending).map do |date|
-        row = rows_by_date[date]
+        row  = rows_by_date[date]
+        prow = purchases_by_day[date]
         DayStats.new(
-          date:          date,
-          revenue_cents: row ? row[:revenue] : 0,
-          cogs_cents:    row ? row[:cogs]    : 0,
-          order_count:   row ? row[:orders]  : 0
+          date:            date,
+          revenue_cents:   row  ? row[:revenue]  : 0,
+          cogs_cents:      row  ? row[:cogs]     : 0,
+          purchases_cents: prow ? prow[:total]   : 0,
+          order_count:     row  ? row[:orders]   : 0
         )
       end
 
-      revenue_total = by_day.sum(&:revenue_cents)
-      cogs_total    = by_day.sum(&:cogs_cents)
-      order_total   = by_day.sum(&:order_count)
+      revenue_total    = by_day.sum(&:revenue_cents)
+      cogs_total       = by_day.sum(&:cogs_cents)
+      purchases_total  = by_day.sum(&:purchases_cents)
+      order_total      = by_day.sum(&:order_count)
+      purchase_count   = purchases_by_day.values.sum { |r| r[:purchases_count].to_i }
 
       PeriodStats.new(
-        starting:        starting,
-        ending:          ending,
-        revenue_cents:   revenue_total,
-        cogs_cents:      cogs_total,
-        order_count:     order_total,
-        avg_order_cents: order_total.zero? ? 0 : (revenue_total.to_f / order_total).round,
-        by_day:          by_day
+        starting:         starting,
+        ending:           ending,
+        revenue_cents:    revenue_total,
+        cogs_cents:       cogs_total,
+        purchases_cents:  purchases_total,
+        order_count:      order_total,
+        purchase_count:   purchase_count,
+        avg_order_cents:  order_total.zero? ? 0 : (revenue_total.to_f / order_total).round,
+        by_day:           by_day
       )
     end
 
@@ -143,6 +162,34 @@ module Reports
           revenue: row["revenue"].to_i,
           cogs:    row["cogs"].to_i,
           orders:  row["orders"].to_i
+        }
+      end
+    end
+
+    # Phase 9 — "gastos reales" per day. Sums the line-item subtotals
+    # (qty × unit_cost_cents) across every non-discarded Purchase whose
+    # `purchased_on` falls in the window. One SQL round-trip, same shape
+    # as `aggregate` above so the per-day merge in `#call` stays trivial.
+    def aggregate_purchases
+      sql = ActiveRecord::Base.send(:sanitize_sql_array, [ <<~SQL.squish, account.id, starting, ending ])
+        SELECT
+          purchases.purchased_on AS date,
+          COALESCE(SUM(purchase_items.quantity * purchase_items.unit_cost_cents), 0)::bigint AS total,
+          COUNT(DISTINCT purchases.id)::bigint AS purchases_count
+        FROM purchases
+        LEFT JOIN purchase_items ON purchase_items.purchase_id = purchases.id
+        WHERE purchases.account_id = ?
+          AND purchases.discarded_at IS NULL
+          AND purchases.purchased_on BETWEEN ? AND ?
+        GROUP BY purchases.purchased_on
+        ORDER BY purchases.purchased_on
+      SQL
+
+      ActiveRecord::Base.connection.exec_query(sql, "Reports::Finance.purchases").map do |row|
+        {
+          date:            row["date"].is_a?(Date) ? row["date"] : Date.parse(row["date"].to_s),
+          total:           row["total"].to_i,
+          purchases_count: row["purchases_count"].to_i
         }
       end
     end

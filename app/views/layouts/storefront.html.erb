@@ -83,5 +83,7 @@
         confirmation), not just on `/:slug` where the component used
         to live inside `<main>`. %>
     <%= render Storefronts::CartDrawerComponent.new(storefront: @storefront) if @storefront %>
+
+    <%= render "shared/flash_region" %>
   </body>
 </html>

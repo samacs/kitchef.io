@@ -1,0 +1,17 @@
+<% content_for :title, t("purchases.new.title") %>
+<% content_for :page_title, t("purchases.new.title") %>
+<% content_for :page_subtitle, t("purchases.new.subtitle") %>
+
+<div class="max-w-[720px] mx-auto">
+  <header class="mb-6 flex flex-col gap-2">
+    <%= render Ui::KickerComponent.new(text: t("purchases.new.kicker")) %>
+    <h1 class="font-serif text-[28px] sm:text-[32px] leading-[1.1] tracking-tight text-ink">
+      <%= t("purchases.new.heading") %>
+    </h1>
+    <p class="text-[14px] text-ink-2 leading-[1.55] max-w-[52ch]">
+      <%= t("purchases.new.lede") %>
+    </p>
+  </header>
+
+  <%= render "form", purchase: @purchase %>
+</div>

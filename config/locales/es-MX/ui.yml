@@ -7,3 +7,7 @@ es-MX:
   ui:
     flash:
       dismiss: "Cerrar aviso"
+    combobox:
+      toggle: "Abrir opciones"
+      empty: "Nada que coincida"
+      create_prefix: "Agregar"

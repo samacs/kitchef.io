@@ -116,6 +116,8 @@ es-MX:
       orders: "Pedidos"
       recipes: "Recetario"
       ingredients: "Ingredientes"
+      suppliers: "Proveedores"
+      purchases: "Compras"
       clients: "Clientes"
       schedule: "Horario"
       production: "Producción"

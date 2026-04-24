@@ -1,9 +1,6 @@
 <% content_for :title, t(".seo_title") %>
 
 <div class="w-full max-w-[520px] flex flex-col gap-5">
-  <%= render Ui::FlashComponent.new(kind: :alert,  message: flash[:alert]) %>
-  <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-
   <% if @errors.present? %>
     <div role="alert"
          class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">

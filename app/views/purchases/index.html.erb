@@ -1,0 +1,60 @@
+<% content_for :title, t("purchases.index.title") %>
+<% content_for :page_title, t("purchases.index.title") %>
+<% content_for :page_subtitle, t("purchases.index.subtitle") %>
+
+<% content_for :page_action do %>
+  <%= link_to new_purchase_path,
+        class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+    <%= icon(:plus, size: :xs) %>
+    <span><%= t("purchases.index.cta") %></span>
+  <% end %>
+<% end %>
+
+<% if purchases.empty? %>
+  <%= render Recipes::EmptyStateComponent.new(
+        headline_key: "purchases.index.empty_state.headline",
+        sub_key:      "purchases.index.empty_state.sub",
+        cta_label_key: "purchases.index.empty_state.cta",
+        cta_href: new_purchase_path) %>
+<% else %>
+  <% window_total = purchases.sum(&:total_cents) %>
+  <div class="flex flex-col gap-5">
+    <div class="flex flex-wrap items-baseline justify-between gap-3">
+      <div class="flex items-baseline gap-4">
+        <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("purchases.index.count", count: purchases.size) %>
+        </span>
+        <span class="font-serif text-[22px] tracking-tight text-ink">
+          <%= humanized_money_with_symbol(Money.new(window_total, "MXN")) %>
+        </span>
+        <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("purchases.index.total_window") %>
+        </span>
+      </div>
+      <%= link_to purchases_path(format: :csv),
+            class: "inline-flex items-center gap-2 text-[13px] font-medium text-accent hover:underline" do %>
+        <%= icon(:download, size: :sm) %>
+        <%= t("purchases.index.export_cta") %>
+      <% end %>
+    </div>
+
+    <div class="bg-surface border border-line rounded-panel shadow-card overflow-x-auto kc-scroll">
+      <table class="w-full min-w-[640px]">
+        <thead class="bg-bg-2/40 border-b border-line">
+          <tr>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.index.table.date") %></th>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.index.table.supplier") %></th>
+            <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.index.table.items") %></th>
+            <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.index.table.total") %></th>
+            <th class="px-4 py-2.5 text-center text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("purchases.index.table.photo") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% purchases.each do |purchase| %>
+            <%= render Purchases::IndexRowComponent.new(purchase: purchase) %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

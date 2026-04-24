@@ -1,9 +1,6 @@
 <% content_for :title, t("passwords.edit.title_html") %>
 
 <div class="w-full max-w-[460px] flex flex-col gap-5">
-  <%= render Ui::FlashComponent.new(kind: :alert,  message: flash[:alert]) %>
-  <%= render Ui::FlashComponent.new(kind: :notice, message: flash[:notice]) %>
-
   <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
     <div class="flex flex-col gap-3">
       <%= render Ui::KickerComponent.new(text: t(".kicker")) %>

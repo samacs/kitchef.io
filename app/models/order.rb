@@ -62,6 +62,9 @@ class Order < ApplicationRecord
   include AccountScoped
   include HasPrefixedId.new(prefix: "ord")
   include HasSoftDelete
+  include Geocodable
+
+  geocodable_by :delivery_address, :colonia, :city
 
   include AASM
   has_paper_trail
@@ -272,24 +275,12 @@ class Order < ApplicationRecord
   def delivery? = delivery_type_delivery?
   def pickup?   = delivery_type_pickup?
 
-  # Geocoding helpers. Only delivery-type pedidos with a usable address
-  # participate — pickup orders never need a runner-facing map, shipping
-  # orders are routed by the courier (DiDi/Rappi/Estafeta), and an order
-  # without any street detail would just geocode to a broad city centroid
-  # (misleading for the runner's directions).
-  def geocoding_address
-    parts = [ delivery_address, colonia, city ].compact_blank
-    return nil if parts.empty?
-
-    (parts + [ "México" ]).join(", ")
-  end
-
-  def geocoded?
-    latitude.present? && longitude.present?
-  end
-
-  def needs_geocoding?
-    delivery? && !canceled? && geocoding_address.present? && !geocoded?
+  # Geocoding inherits from Geocodable (above). We only override the
+  # gate: pickup orders never need a runner-facing map, shipping orders
+  # are routed by the courier (DiDi/Rappi/Estafeta), and canceled
+  # orders shouldn't burn Google quota.
+  def geocodable?
+    delivery? && !canceled?
   end
 
   # Scope used by `PickupReminderScanJob` — pickup pedidos in `ready`
@@ -300,17 +291,6 @@ class Order < ApplicationRecord
     where(state: "ready", delivery_type: DELIVERY_TYPES[:pickup], pickup_reminder_sent_at: nil)
       .where("ready_at < ?", cutoff_time)
   }
-
-  # Cooldown between failed attempts so GeocodeOrderJob doesn't hammer
-  # Google on a permanently-bad address. After the cooldown the job
-  # can retry (e.g. the operator fixed a typo).
-  GEOCODING_RETRY_COOLDOWN = 1.hour
-
-  def geocoding_on_cooldown?
-    return false if geocoding_failed_at.blank?
-
-    geocoding_failed_at > GEOCODING_RETRY_COOLDOWN.ago
-  end
 
   def canceled?
     state == "canceled"

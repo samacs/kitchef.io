@@ -1,0 +1,28 @@
+<tr id="<%= helpers.dom_id(purchase) %>" class="border-b border-line last:border-b-0 hover:bg-bg-2/40 transition-colors">
+  <td class="px-4 py-3">
+    <%= link_to show_path, class: "inline-flex flex-col gap-0.5 text-left no-underline" do %>
+      <span class="text-[14px] font-medium text-ink hover:underline"><%= date_label %></span>
+      <% if purchase.notes.present? %>
+        <span class="text-[12px] text-muted truncate max-w-[320px]"><%= purchase.notes %></span>
+      <% end %>
+    <% end %>
+  </td>
+  <td class="px-4 py-3 text-[13.5px] text-ink-2 whitespace-nowrap">
+    <%= supplier_label %>
+  </td>
+  <td class="px-4 py-3 text-right font-mono text-[13px] text-muted whitespace-nowrap tabular-nums">
+    <%= items_label %>
+  </td>
+  <td class="px-4 py-3 text-right font-mono text-[14px] text-ink font-semibold whitespace-nowrap tabular-nums">
+    <%= total_label %>
+  </td>
+  <td class="px-4 py-3 text-center">
+    <% if receipt_attached? %>
+      <span class="inline-flex items-center gap-1 text-accent text-[11.5px] font-semibold">
+        <%= helpers.icon(:paperclip, size: :xs) %>
+      </span>
+    <% else %>
+      <span class="text-muted/40">—</span>
+    <% end %>
+  </td>
+</tr>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_23_214600) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
     t.check_constraint "wday IS NOT NULL AND date IS NULL OR wday IS NULL AND date IS NOT NULL", name: "chk_availabilities_wday_xor_date"
   end
 
+  create_table "categories", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
+    t.integer "kind", default: 0, null: false
+    t.string "name", null: false
+    t.integer "position"
+    t.datetime "updated_at", null: false
+    t.index "account_id, kind, lower((name)::text)", name: "uniq_categories_account_kind_name", unique: true, where: "(discarded_at IS NULL)"
+    t.index ["account_id", "kind", "position"], name: "index_categories_on_account_id_and_kind_and_position"
+    t.index ["account_id"], name: "index_categories_on_account_id"
+    t.index ["discarded_at"], name: "index_categories_on_discarded_at"
+  end
+
   create_table "clients", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.text "allergies"
@@ -96,10 +110,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
     t.string "phone"
     t.string "phone_normalized"
     t.text "references_note"
+    t.string "rfc"
     t.string "street_address"
     t.datetime "updated_at", null: false
     t.index ["account_id", "email"], name: "index_clients_on_account_id_and_email"
     t.index ["account_id", "phone_normalized"], name: "uniq_clients_account_phone_active", unique: true, where: "((phone_normalized IS NOT NULL) AND (discarded_at IS NULL))"
+    t.index ["account_id", "rfc"], name: "index_clients_on_account_id_and_rfc", where: "(rfc IS NOT NULL)"
     t.index ["account_id"], name: "index_clients_on_account_id"
     t.index ["discarded_at"], name: "index_clients_on_discarded_at"
   end
@@ -117,7 +133,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
 
   create_table "ingredients", force: :cascade do |t|
     t.bigint "account_id", null: false
-    t.integer "category", default: 0, null: false
+    t.bigint "category_id", null: false
     t.datetime "created_at", null: false
     t.string "currency", default: "MXN", null: false
     t.datetime "discarded_at"
@@ -129,9 +145,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
     t.string "unit", null: false
     t.bigint "unit_cost_cents", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id", "category", "position"], name: "index_ingredients_on_account_id_and_category_and_position"
+    t.index ["account_id", "category_id", "position"], name: "index_ingredients_on_account_id_and_category_id_and_position"
     t.index ["account_id", "name"], name: "index_ingredients_on_account_id_and_name"
     t.index ["account_id"], name: "index_ingredients_on_account_id"
+    t.index ["category_id"], name: "index_ingredients_on_category_id"
     t.index ["discarded_at"], name: "index_ingredients_on_discarded_at"
   end
 
@@ -239,6 +256,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
     t.index ["order_id"], name: "index_payments_on_order_id"
   end
 
+  create_table "purchase_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", default: "MXN", null: false
+    t.bigint "ingredient_id", null: false
+    t.text "notes"
+    t.integer "position"
+    t.bigint "purchase_id", null: false
+    t.decimal "quantity", precision: 10, scale: 3, null: false
+    t.string "unit", null: false
+    t.bigint "unit_cost_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["ingredient_id"], name: "index_purchase_items_on_ingredient_id"
+    t.index ["purchase_id", "position"], name: "index_purchase_items_on_purchase_id_and_position"
+    t.index ["purchase_id"], name: "index_purchase_items_on_purchase_id"
+  end
+
+  create_table "purchases", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", default: "MXN", null: false
+    t.datetime "discarded_at"
+    t.text "notes"
+    t.date "purchased_on", null: false
+    t.bigint "supplier_id"
+    t.bigint "total_cents", default: 0, null: false
+    t.bigint "total_cents_override"
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "purchased_on"], name: "index_purchases_on_account_id_and_purchased_on"
+    t.index ["account_id"], name: "index_purchases_on_account_id"
+    t.index ["discarded_at"], name: "index_purchases_on_discarded_at"
+    t.index ["supplier_id"], name: "index_purchases_on_supplier_id"
+  end
+
   create_table "recipe_components", force: :cascade do |t|
     t.bigint "componentable_id", null: false
     t.string "componentable_type", null: false
@@ -256,7 +306,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
 
   create_table "recipes", force: :cascade do |t|
     t.bigint "account_id", null: false
-    t.integer "category", default: 0, null: false
+    t.bigint "category_id", null: false
     t.bigint "cost_cents_cached"
     t.datetime "created_at", null: false
     t.text "description"
@@ -271,10 +321,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
     t.datetime "updated_at", null: false
     t.decimal "yield_quantity", precision: 10, scale: 3, default: "1.0", null: false
     t.string "yield_unit", default: "porcion", null: false
-    t.index ["account_id", "category", "position"], name: "index_recipes_on_account_id_and_category_and_position"
+    t.index ["account_id", "category_id", "position"], name: "index_recipes_on_account_id_and_category_id_and_position"
     t.index ["account_id", "is_saleable"], name: "index_recipes_on_account_id_and_is_saleable"
     t.index ["account_id", "slug"], name: "index_recipes_on_account_id_and_slug", unique: true
     t.index ["account_id"], name: "index_recipes_on_account_id"
+    t.index ["category_id"], name: "index_recipes_on_category_id"
     t.index ["discarded_at"], name: "index_recipes_on_discarded_at"
   end
 
@@ -314,6 +365,47 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
     t.index ["stripe_subscription_id"], name: "index_subscriptions_on_stripe_subscription_id", unique: true, where: "(stripe_subscription_id IS NOT NULL)"
   end
 
+  create_table "supplier_ingredients", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "currency", default: "MXN", null: false
+    t.bigint "ingredient_id", null: false
+    t.boolean "is_default_cost_source", default: false, null: false
+    t.date "last_bought_on"
+    t.text "notes"
+    t.bigint "supplier_id", null: false
+    t.bigint "unit_cost_cents", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["ingredient_id"], name: "index_supplier_ingredients_on_ingredient_id"
+    t.index ["ingredient_id"], name: "uniq_default_supplier_per_ingredient", unique: true, where: "(is_default_cost_source = true)"
+    t.index ["supplier_id", "ingredient_id"], name: "uniq_supplier_ingredient", unique: true
+    t.index ["supplier_id"], name: "index_supplier_ingredients_on_supplier_id"
+  end
+
+  create_table "suppliers", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "city"
+    t.string "colonia"
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
+    t.datetime "geocoded_at"
+    t.datetime "geocoding_failed_at"
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
+    t.string "name", null: false
+    t.text "notes"
+    t.string "phone"
+    t.string "phone_normalized"
+    t.string "rfc"
+    t.string "street_address"
+    t.datetime "updated_at", null: false
+    t.string "whatsapp"
+    t.index ["account_id", "name"], name: "index_suppliers_on_account_id_and_name"
+    t.index ["account_id", "phone_normalized"], name: "uniq_suppliers_account_phone_active", unique: true, where: "((phone_normalized IS NOT NULL) AND (discarded_at IS NULL))"
+    t.index ["account_id", "rfc"], name: "index_suppliers_on_account_id_and_rfc", where: "(rfc IS NOT NULL)"
+    t.index ["account_id"], name: "index_suppliers_on_account_id"
+    t.index ["discarded_at"], name: "index_suppliers_on_discarded_at"
+  end
+
   create_table "users", force: :cascade do |t|
     t.bigint "account_id"
     t.boolean "admin", default: false, null: false
@@ -348,17 +440,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_22_130000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "availabilities", "schedules"
+  add_foreign_key "categories", "accounts"
   add_foreign_key "clients", "accounts"
   add_foreign_key "ingredients", "accounts"
+  add_foreign_key "ingredients", "categories"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "recipes"
   add_foreign_key "orders", "accounts"
   add_foreign_key "orders", "clients"
   add_foreign_key "payments", "orders"
+  add_foreign_key "purchase_items", "ingredients", on_delete: :cascade
+  add_foreign_key "purchase_items", "purchases", on_delete: :cascade
+  add_foreign_key "purchases", "accounts"
+  add_foreign_key "purchases", "suppliers", on_delete: :nullify
   add_foreign_key "recipe_components", "recipes"
   add_foreign_key "recipes", "accounts"
+  add_foreign_key "recipes", "categories"
   add_foreign_key "schedules", "accounts"
   add_foreign_key "sessions", "users"
   add_foreign_key "subscriptions", "accounts"
+  add_foreign_key "supplier_ingredients", "ingredients", on_delete: :cascade
+  add_foreign_key "supplier_ingredients", "suppliers", on_delete: :cascade
+  add_foreign_key "suppliers", "accounts"
   add_foreign_key "users", "accounts"
 end
