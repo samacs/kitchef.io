@@ -1,0 +1,38 @@
+<div class="w-full">
+  <svg viewBox="0 0 <%= Reports::TrendChartComponent::WIDTH %> <%= Reports::TrendChartComponent::HEIGHT %>"
+       preserveAspectRatio="xMidYMid meet"
+       class="w-full h-auto"
+       role="img"
+       aria-label="<%= t("reports.finance.trend.aria") %>">
+    <% weeks.each_with_index do |week, i| %>
+      <% bar = bar_for(i) %>
+      <% if bar[:height] > 0 %>
+        <rect x="<%= bar[:x] %>" y="<%= bar[:y] %>"
+              width="<%= bar[:width] %>" height="<%= bar[:height] %>"
+              rx="2" ry="2"
+              class="fill-accent" />
+      <% else %>
+        <rect x="<%= bar[:x] %>" y="<%= Reports::TrendChartComponent::PAD_TOP + inner_height - 2 %>"
+              width="<%= bar[:width] %>" height="2"
+              rx="1" ry="1"
+              class="fill-line" />
+      <% end %>
+      <text x="<%= label_x(i) %>"
+            y="<%= Reports::TrendChartComponent::HEIGHT - 14 %>"
+            text-anchor="middle"
+            class="fill-muted"
+            style="font: 500 10px 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.06em;">
+        <%= week_label(week) %>
+      </text>
+      <% if week.revenue_cents > 0 && week.margin_pct %>
+        <text x="<%= label_x(i) %>"
+              y="<%= Reports::TrendChartComponent::HEIGHT - 2 %>"
+              text-anchor="middle"
+              class="fill-accent"
+              style="font: 600 10px 'JetBrains Mono', ui-monospace, monospace;">
+          <%= week.margin_pct %>%
+        </text>
+      <% end %>
+    <% end %>
+  </svg>
+</div>

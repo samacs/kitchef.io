@@ -1,0 +1,44 @@
+<%
+  wrapper_classes = [
+    "flex flex-col gap-2 p-5 rounded-card bg-surface border border-line shadow-card",
+    muted ? "opacity-70" : nil
+  ].compact.join(" ")
+%>
+
+<% body = capture do %>
+  <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-muted">
+    <%= label %>
+  </span>
+  <span class="font-serif text-[28px] leading-[1.05] text-ink tracking-tight">
+    <%= helpers.humanized_money_with_symbol(amount) %>
+  </span>
+  <% if sub.present? || delta_label %>
+    <div class="flex items-center gap-3 flex-wrap">
+      <% if sub.present? %>
+        <span class="font-mono text-[12px] text-muted"><%= sub %></span>
+      <% end %>
+      <% if delta_label %>
+        <%
+          delta_class = case delta_tone
+                        when :up   then "text-accent"
+                        when :down then "text-err"
+                        else "text-muted"
+                        end
+        %>
+        <span class="font-mono text-[12px] font-medium <%= delta_class %>">
+          <%= delta_label %>
+        </span>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
+
+<% if href.present? %>
+  <%= link_to href, class: "#{wrapper_classes} hover:border-line-2 transition" do %>
+    <%= body %>
+  <% end %>
+<% else %>
+  <article class="<%= wrapper_classes %>">
+    <%= body %>
+  </article>
+<% end %>

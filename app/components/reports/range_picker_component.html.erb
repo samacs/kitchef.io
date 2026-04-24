@@ -1,0 +1,14 @@
+<div class="flex flex-wrap items-center gap-2" role="group" aria-label="<%= t("reports.finance.range_picker.aria") %>">
+  <% presets.each do |preset| %>
+    <%
+      classes = [
+        "inline-flex items-center px-3 py-[7px] rounded-full border text-[13px] font-medium transition",
+        active?(preset) ? "bg-accent border-accent text-bg" : "bg-surface border-line text-ink hover:border-line-2"
+      ].join(" ")
+    %>
+    <%= link_to t("reports.finance.ranges.#{preset}"),
+          "#{base_path}?range=#{preset}",
+          class: classes,
+          "aria-current": (active?(preset) ? "page" : nil) %>
+  <% end %>
+</div>

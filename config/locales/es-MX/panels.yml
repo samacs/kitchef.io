@@ -2,6 +2,18 @@ es-MX:
   dashboard:
     title: "Tu cocina hoy"
     subtitle: "Una vista de todo lo que pasa hoy"
+    weekly_snapshot:
+      kicker: "Esta semana"
+      orders:
+        one: "%{count} pedido"
+        other: "%{count} pedidos"
+      margin_pct: "%{pct}% margen"
+      compare_up: "vs. %{amount} la semana pasada (+%{pct}%)"
+      compare_down: "vs. %{amount} la semana pasada (%{pct}%)"
+      compare_flat: "vs. %{amount} la semana pasada"
+      no_baseline: "Primera semana con pedidos — aún sin comparación."
+      see_all: "Ver todo"
+      muted: "Aún no tenemos suficientes pedidos esta semana para calcular."
     placeholder: "Aquí vivirán tu kanban de pedidos, tu producción de la semana y las métricas que importan. Por ahora es un lugar reservado."
     menu_section:
       kicker: "Tu menú"
@@ -714,8 +726,105 @@ es-MX:
   reports:
     menu_engineering:
       title: "Tu menú"
+      page_title: "Rendimiento del menú"
+      page_subtitle: "Qué platillos mueven la aguja de tu negocio."
+      kicker: "Menú"
+      range_label: "Del %{from} al %{to}"
+      sections:
+        stars:
+          kicker: "Tus estrellas"
+          headline: "Lo que carga tu negocio"
+          lede: "Los platillos con mayor aporte al margen en esta ventana."
+        steady:
+          kicker: "Estables"
+          headline: "Ritmo constante"
+          lede: "Se venden bien y dejan margen sano, sin ser los de cabecera."
+        review:
+          kicker: "Revisa estos"
+          headline: "Revisa estos platillos"
+          lede: "Poco volumen, margen bajo o sin ventas recientes. Piensa si cambiar el precio, cocinarlos bajo pedido o quitarlos del menú."
+      row:
+        units:
+          one: "%{count} vendido"
+          other: "%{count} vendidos"
+        margin_total: "$%{amount} margen"
+        margin_pct: "%{pct}% margen"
+        margin_pct_low: "Margen bajo %{pct}%"
+        last_sold: "Último pedido hace %{days} días"
+        no_sales: "Sin ventas en la ventana"
+      empty:
+        kicker: "Apenas empiezas"
+        headline: "Aquí vas a ver qué platillos mueven tu negocio."
+        sub: "Cuando entregues tus primeros pedidos, vas a ver aquí cuáles dejan más margen y cuáles revisar."
+      csv:
+        cta: "Exportar a CSV"
+        headers:
+          recipe: "Platillo"
+          units_sold: "Unidades"
+          revenue: "Ingresos MXN"
+          cogs: "Costo MXN"
+          margin: "Margen MXN"
+          margin_pct: "Margen %"
     finance:
       title: "Finanzas"
+      page_title: "Finanzas"
+      page_subtitle: "Cuánto vendiste, cuánto te costó, cuánto ganaste."
+      kicker: "Finanzas"
+      range_label: "Del %{from} al %{to}"
+      kpi:
+        current_this_week: "Esta semana"
+        current_last_week: "Semana pasada"
+        current_this_month: "Este mes"
+        current_last_month: "Mes pasado"
+        current_last_30_days: "Últimos 30 días"
+        current_custom: "Ventana personalizada"
+        previous_this_week: "Semana pasada"
+        previous_this_month: "Mes pasado"
+        previous_last_30_days: "30 días previos"
+        previous_period: "Ventana previa"
+        month_to_date: "Mes en curso"
+        avg_order: "Ticket promedio"
+        orders_only:
+          zero: "Sin pedidos"
+          one: "%{count} pedido"
+          other: "%{count} pedidos"
+        margin_pct: "%{pct}% margen"
+        orders_margin:
+          one: "%{count} pedido · %{pct}% margen"
+          other: "%{count} pedidos · %{pct}% margen"
+      ranges:
+        this_week: "Esta semana"
+        last_week: "Semana pasada"
+        this_month: "Este mes"
+        last_month: "Mes pasado"
+        last_30_days: "Últimos 30 días"
+      range_picker:
+        aria: "Elegir rango de fechas"
+      trend:
+        kicker: "Últimas 8 semanas"
+        legend: "Ingresos por semana · margen abajo"
+        aria: "Ingresos de las últimas 8 semanas"
+      day_breakdown:
+        kicker: "Día por día"
+      day:
+        orders_count:
+          zero: "Sin pedidos"
+          one: "%{count} pedido"
+          other: "%{count} pedidos"
+        margin_pct: "%{pct}% margen"
+      empty:
+        kicker: "Apenas empiezas"
+        headline: "Vuelve después de tu primera semana de entregas."
+        sub: "Cuando entregues al menos tres pedidos en la ventana elegida, aquí vas a ver tus ingresos, costo y margen — día por día."
+      csv:
+        cta: "Exportar a CSV"
+        headers:
+          date: "Fecha"
+          revenue: "Ingresos MXN"
+          cogs: "Costo MXN"
+          margin: "Margen MXN"
+          margin_pct: "Margen %"
+          order_count: "Pedidos"
 
   onboarding:
     decomposition:

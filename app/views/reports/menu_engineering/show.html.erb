@@ -1,0 +1,92 @@
+<% content_for :title, t("reports.menu_engineering.title") %>
+<% content_for :page_title, t("reports.menu_engineering.page_title") %>
+<% content_for :page_subtitle, t("reports.menu_engineering.page_subtitle") %>
+
+<section class="flex flex-col gap-8 max-w-[1040px]">
+  <header class="flex flex-col gap-3">
+    <%= render Ui::KickerComponent.new(text: t("reports.menu_engineering.kicker")) %>
+    <div class="flex flex-wrap items-center gap-3 justify-between">
+      <%= render Reports::RangePickerComponent.new(
+            active_preset: (@range_preset == :custom ? nil : @range_preset),
+            base_path: reports_menu_engineering_path) %>
+
+      <%= link_to reports_menu_engineering_path(format: :csv,
+                                                range: (@range_preset == :custom ? nil : @range_preset),
+                                                from:  (@range_preset == :custom ? @starting.iso8601 : nil),
+                                                to:    (@range_preset == :custom ? @ending.iso8601   : nil)),
+            class: "inline-flex items-center gap-2 text-[13px] font-medium text-accent hover:underline" do %>
+        <%= icon(:download, size: :sm) %>
+        <%= t("reports.menu_engineering.csv.cta") %>
+      <% end %>
+    </div>
+
+    <p class="font-mono text-[12px] text-muted">
+      <%= t("reports.menu_engineering.range_label",
+            from: I18n.l(@starting, format: :long),
+            to:   I18n.l(@ending, format: :long)) %>
+    </p>
+  </header>
+
+  <% if @has_signal %>
+    <% if @stars.any? %>
+      <section class="flex flex-col gap-3">
+        <div class="flex flex-col gap-1">
+          <%= render Ui::KickerComponent.new(text: t("reports.menu_engineering.sections.stars.kicker")) %>
+          <h2 class="font-serif text-[22px] leading-[1.15] text-ink tracking-tight">
+            <%= t("reports.menu_engineering.sections.stars.headline") %>
+          </h2>
+          <p class="text-[13px] text-muted max-w-prose"><%= t("reports.menu_engineering.sections.stars.lede") %></p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <% @stars.each do |row| %>
+            <%= render Reports::RecipeRowComponent.new(row: row, variant: :star) %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <% if @steady.any? %>
+      <section class="flex flex-col gap-3">
+        <div class="flex flex-col gap-1">
+          <%= render Ui::KickerComponent.new(text: t("reports.menu_engineering.sections.steady.kicker")) %>
+          <h2 class="font-serif text-[22px] leading-[1.15] text-ink tracking-tight">
+            <%= t("reports.menu_engineering.sections.steady.headline") %>
+          </h2>
+          <p class="text-[13px] text-muted max-w-prose"><%= t("reports.menu_engineering.sections.steady.lede") %></p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <% @steady.each do |row| %>
+            <%= render Reports::RecipeRowComponent.new(row: row, variant: :steady) %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <% if @review.any? %>
+      <section class="flex flex-col gap-3">
+        <div class="flex flex-col gap-1">
+          <%= render Ui::KickerComponent.new(text: t("reports.menu_engineering.sections.review.kicker")) %>
+          <h2 class="font-serif text-[22px] leading-[1.15] text-ink tracking-tight">
+            <%= t("reports.menu_engineering.sections.review.headline") %>
+          </h2>
+          <p class="text-[13px] text-muted max-w-prose"><%= t("reports.menu_engineering.sections.review.lede") %></p>
+        </div>
+        <div class="flex flex-col gap-2">
+          <% @review.each do |row| %>
+            <%= render Reports::RecipeRowComponent.new(row: row, variant: :review) %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  <% else %>
+    <%= render Ui::CardComponent.new(variant: :showcase) do %>
+      <%= render Ui::KickerComponent.new(text: t("reports.menu_engineering.empty.kicker")) %>
+      <h2 class="font-serif text-[28px] leading-[1.1] tracking-tight text-ink">
+        <%= t("reports.menu_engineering.empty.headline") %>
+      </h2>
+      <p class="max-w-prose text-ink-2 leading-relaxed">
+        <%= t("reports.menu_engineering.empty.sub") %>
+      </p>
+    <% end %>
+  <% end %>
+</section>

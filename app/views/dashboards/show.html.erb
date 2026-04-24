@@ -15,6 +15,10 @@
         cta_label_key: "dashboard.empty_state.cta",
         cta_href: new_recipe_path) %>
 <% else %>
+  <section class="mb-10 max-w-[720px]">
+    <%= render Dashboards::WeeklySnapshotComponent.new(account: Current.account) %>
+  </section>
+
   <% if today_count.positive? %>
     <section class="flex flex-col gap-4 mb-10">
       <div class="flex flex-col gap-2">
