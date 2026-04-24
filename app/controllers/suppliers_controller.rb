@@ -14,7 +14,7 @@ class SuppliersController < AuthenticatedController
   end
 
   def create
-    supplier = Current.account.suppliers.new(supplier_params)
+    supplier = Current.account.suppliers.new(create_attrs)
 
     respond_to do |format|
       if supplier.save
@@ -61,6 +61,20 @@ class SuppliersController < AuthenticatedController
       :street_address, :colonia, :city,
       :notes
     )
+  end
+
+  # Accept both shapes on create:
+  #   * Nested (regular form):    `supplier[name]=…&supplier[phone]=…`
+  #   * Flat (combobox JSON POST): `name=…`  — operator types a new
+  #     supplier directly into the Ui::ComboboxComponent picker, we
+  #     persist just the name and let them fill in phone/RFC/etc.
+  #     later by opening the supplier row.
+  def create_attrs
+    if params[:supplier].present?
+      supplier_params
+    else
+      { name: params.require(:name).to_s.strip }
+    end
   end
 
   def serialize(supplier)

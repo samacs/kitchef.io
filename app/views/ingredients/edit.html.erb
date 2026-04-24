@@ -1,6 +1,7 @@
 <% content_for :title, t("ingredients.edit.title", name: ingredient.name) %>
 <% content_for :page_title, t("ingredients.edit.title", name: ingredient.name) %>
 <% content_for :page_subtitle, t("ingredients.edit.subtitle") %>
+<% content_for :drawer_only, "1" %>
 
 <%= turbo_frame_tag "drawer_content" do %>
   <div class="max-w-[640px] mx-auto flex flex-col gap-6 p-5 sm:p-6">

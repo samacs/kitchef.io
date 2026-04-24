@@ -128,6 +128,8 @@
             options: supplier_options,
             placeholder: t("suppliers.form.name_placeholder"),
             required: true,
+            create_path: suppliers_path,
+            create_params: {},
             list_id: "combobox_ingredient_supplier_options") %>
     </div>
 
@@ -150,11 +152,4 @@
     <%= f.submit t("suppliers.pricing.add_cta"),
           class: "inline-flex items-center justify-center gap-2 text-[13px] font-semibold px-4 py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" %>
   <% end %>
-
-  <p class="text-[11.5px] text-muted leading-[1.5]">
-    <%= link_to new_supplier_path, data: { turbo_frame: "drawer_content", action: "click->right-drawer#open" },
-          class: "text-accent hover:underline" do %>
-      + <%= t("suppliers.index.cta") %>
-    <% end %>
-  </p>
 </section>

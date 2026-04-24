@@ -1,4 +1,5 @@
 <% content_for :title, t("shopping_list.mark_bought.drawer_title", name: @ingredient.name) %>
+<% content_for :drawer_only, "1" %>
 
 <%= turbo_frame_tag "drawer_content" do %>
   <div class="max-w-[560px] mx-auto flex flex-col gap-5 p-5 sm:p-6">
@@ -26,6 +27,8 @@
               value: @suggested_supplier_id,
               placeholder: t("shopping_list.mark_bought.supplier_placeholder"),
               hint: t("shopping_list.mark_bought.supplier_hint"),
+              create_path: suppliers_path,
+              create_params: {},
               list_id: "combobox_mark_bought_supplier_options") %>
 
         <div class="grid grid-cols-2 gap-3">

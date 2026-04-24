@@ -45,9 +45,25 @@ module Production
         purchase.save!   # recomputes total_cents
       end
 
-      redirect_to production_shopping_list_path, notice: t("shopping_list.mark_bought_create.marked", name: @ingredient.name)
+      flash[:notice] = t("shopping_list.mark_bought_create.marked", name: @ingredient.name)
+
+      respond_to do |format|
+        # The form lives inside the drawer's `drawer_content` frame. A
+        # plain redirect to /production/shopping-list would make Turbo
+        # look for a matching frame in that page and fall back to
+        # "Content missing" since the shopping list itself has no
+        # drawer_content frame. `close_drawer_and_refresh` empties the
+        # frame (drawer slides shut) and morph-refreshes the underlying
+        # page so the new ✓ mark + updated totals appear in place.
+        format.turbo_stream { render turbo_stream: close_drawer_and_refresh }
+        format.html { redirect_to production_shopping_list_path }
+      end
     rescue ActiveRecord::RecordInvalid => e
-      redirect_to production_shopping_list_path, alert: e.message
+      flash[:alert] = e.message
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: close_drawer_and_refresh }
+        format.html { redirect_to production_shopping_list_path }
+      end
     end
 
     private

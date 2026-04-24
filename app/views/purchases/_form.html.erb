@@ -55,6 +55,8 @@
             value: purchase.supplier_id,
             placeholder: t("purchases.form.supplier_placeholder"),
             hint: t("purchases.form.supplier_hint"),
+            create_path: suppliers_path,
+            create_params: {},
             list_id: "combobox_purchase_supplier_options") %>
     </div>
   </section>
@@ -91,9 +93,15 @@
     <% end %>
   </section>
 
-  <%# Step 3 — items. Dynamic, one line per ingredient. %>
+  <%# Step 3 — items. Dynamic, one line per ingredient. The template
+      attribute needs `CGI.escapeHTML(...).html_safe` rather than
+      `j(...)`, plain output, or `h(...)`: `j` emits JS-string escapes
+      that break HTML attribute parsing, plain output skips escaping
+      for SafeBuffer, `h` is a no-op on SafeBuffer. CGI.escapeHTML
+      always escapes; `html_safe` prevents ERB from double-escaping
+      the result. %>
   <section data-controller="purchase-items"
-           data-purchase-items-template-value="<%= j(item_row_template) %>"
+           data-purchase-items-template-value="<%= CGI.escapeHTML(item_row_template).html_safe %>"
            class="bg-surface border border-line rounded-panel shadow-card p-5 sm:p-6 flex flex-col gap-4">
     <header class="flex items-start justify-between gap-3">
       <div class="flex flex-col gap-1">

@@ -31,6 +31,8 @@
             value: item.ingredient_id,
             placeholder: t("purchases.form.ingredient_placeholder"),
             required: true,
+            create_path: ingredients_path,
+            create_params: {},
             list_id: "combobox_purchase_item_#{index}_options") %>
     </div>
     <button type="button"
