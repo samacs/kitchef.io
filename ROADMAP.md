@@ -520,7 +520,42 @@ Phase 10 closes the other half of the ledger: fixed-cost tracking, a real "utili
 
 ---
 
-## Phase 11 — Payments (deferred until demand)
+## Phase 11 — Personalización de platillos (planned)
+
+**Context.** Today every pedido is a flat `{recipe, qty, unit_price}` — a customer who orders "Pastel de 3 leches" can't pick 10-vs-20 porciones, can't swap strawberry for peach filling, can't ask for the meringue in rosa, and can't type a dedicatoria. On a torta, she can't tell the operator "sin jitomate". On a hamburguesa, she can't pick the bread. All of that lives today in free-text `delivery_notes` the operator has to re-read by hand — a conversion killer and an operational tax at the same time.
+
+The original storefront design mock already specified a flexible customization schema for a pastel (sized filling + flavor radio + meringue color swatch + extras checkboxes + dedicatoria textarea + delivery date/time). Phase 11 builds the model that makes that schema real, plus extends it with **removable ingredients** ("quitar jitomate") and **selectable ingredients** ("elige tu pan") — two asks the original design didn't cover but that operators running tortas/hamburguesas/ensaladas hit immediately.
+
+**Why now (vs. later).** It's a conversion lever — operators with customization on their highest-AOV platillos (pasteles, tortas, meal-prep combos) see the same pedido lift Shopify operators see when they enable product options. It's also the unlock for future stock depletion work: ingredient availability only gates options if options exist at the ingredient level in the first place.
+
+**Why this is substantial.** Four surfaces: operator recipe editor rework, storefront dish detail, cart + checkout round-trip, kanban/runner card rendering. Plus a `RecipeComponent#is_removable` flag that feeds into the existing Phase 7 cost engine (removed ingredient = subtract its contribution from the snapshot). Availability gating on ingredient stock is explicitly OUT — that waits for the stock depletion phase.
+
+### Scope
+
+- [ ] `RecipeOptionGroup` model per recipe — `kind` enum (`radio` / `check` / `swatch` / `textarea`), `label`, `sub`, `required`, `position`.
+- [ ] `RecipeOption` model per group — `label`, `sub`, `price_delta_cents`, `is_default`, `color_hex` (swatch), `position`. Radio groups enforce single default; check groups allow any default count.
+- [ ] `RecipeComponent#is_removable` boolean — when true, the storefront surfaces a "Quitar …" checkbox next to the component's ingredient name. Unticking subtracts that component's cost contribution from the order-item cost snapshot.
+- [ ] Operator recipe editor grows an **"Opciones de personalización"** section — add group, add options per group, set deltas + defaults. Plus per-component "se puede quitar" checkboxes in the existing components table.
+- [ ] Storefront `/:slug/platillos/:recipe_slug` renders every option group in the order declared, live-calculates total as the customer picks, disables the Add-to-Cart CTA until every `required: true` group has a selection.
+- [ ] Cart persists each line's `selected_options` (JSON) + `removed_components` (array of component ids) + the computed `options_price_delta_cents`.
+- [ ] `OrderItem` gains `selected_options` (jsonb) + `removed_components` (jsonb array) + `options_price_delta_cents` (bigint). All snapshotted at order time — edits to the recipe's option catalog later never rewrite history.
+- [ ] Kanban card + runner row render the selected options as muted chips under the item name ("20 porciones · Fresa · Velas"); removed components surface as a red-tinted "sin jitomate" tag so the cook sees it at a glance.
+- [ ] WhatsApp message templates include the option selections so the operator's confirmation flow stays readable.
+
+### Out (explicit deferrals)
+
+- **Ingredient availability gating** — "this option is out of stock" UI + storefront hide-when-out behavior. Needs the stock depletion phase first. Phase 11 ships with every option always selectable.
+- **Conditional option logic** — "if Size=30 porciones then Extras max=3" or "si Relleno=mixto, agrega 10min al lead time". Too much DSL for v1.
+- **Option-level photos** — e.g. a swatch of the actual cake color. Color hex is enough; photos wait for demand.
+- **Per-customer saved combinations** — "pedir igual que la última vez" on the customer-facing side.
+- **Bulk cloning of option groups across recipes** — copy from Torta de Jamón into Torta de Pierna. Manual copy holds the line for v1; revisit if operators ask.
+- **Recipe variants as a first-class model** — the "Tamaño" options on a pastel could theoretically become separate Recipe rows with shared cost trees. Keeping them as Options is simpler and matches the design.
+
+See `~/.claude/plans/phase-11-personalizacion-de-platillos.md` for the full plan.
+
+---
+
+## Phase 12 — Payments (deferred until demand)
 
 Mexican-specific, lots of integration surface. **Defer until we have 10+ operators asking.** WhatsApp + the payment-pending chip + `mark_paid!` handle it until then.
 
@@ -532,7 +567,7 @@ Mexican-specific, lots of integration surface. **Defer until we have 10+ operato
 
 ---
 
-## Phase 12 — Growth, retention, polish
+## Phase 13 — Growth, retention, polish
 
 - [ ] QR code generator for printed flyers (`rqrcode`)
 - [ ] Daily operator digest email (`DailyOperatorDigestJob` — scaffold exists, needs content)
@@ -568,6 +603,9 @@ Mexican-specific, lots of integration surface. **Defer until we have 10+ operato
 5. ~~**Phase 8 (finance & menu performance)**~~ — shipped. `/reports/finance` (KPI triptych + 8-week trend + day-by-day + CSV), `/reports/menu` (estrellas / estables / revisa estos), dashboard weekly snapshot, empty-state handling. The full BCG matrix stays deferred until we've got ≥60 days of pedido history per operator.
 6. ~~**Phase 9 (catálogos, proveedores, compras)**~~ — shipped. Editable categorías, first-class proveedores with per-supplier price history, persistent purchase ledger feeding the shopping list + finance report's "gastos reales" + "margen real" badge. Plus the `Geocodable` concern, polymorphic `GeocodeJob` + `StaticMapJob`, cached static-map attachments, fixed-position flash region, Turbo live-search with debounce, and a batch of drawer/autosave reliability fixes that benefit every surface. The operator's lista de compras is now the operator's real expense record.
 7. **Phase 10 next (rentabilidad real — costos fijos y utilidad neta)** — the last piece to make `/reports/finance` tell the operator's actual take-home number. Fixed-cost tracking (renta, gas, plataformas, empaque), real Utilidad Neta alongside Margen bruto + Margen real, "Costo fijo por pedido" tile, and per-pedido packaging that moves into the variable bucket where it belongs. Narrower than Phase 9 — one model + one editor + two new cells on the report, ~1 focused work-week.
-8. **Phase 11 (payments)** — still deferred. Waits for explicit operator demand (10+ asking). WhatsApp + the payment chip + `mark_paid!` keep the loop honest in the meantime.
+8. **Phase 11 (personalización de platillos)** — storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients ("sin jitomate") + selectable ingredients ("elige el pan"). Recipe editor gains an "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. The ceiling on AOV per pedido; unlocks every hamburger/torta/ensalada operator waiting in the alpha pool. Availability gating on ingredient stock stays deferred until depletion ships.
+9. **Phase 12 (payments)** — still deferred. Waits for explicit operator demand (10+ asking). WhatsApp + the payment chip + `mark_paid!` keep the loop honest in the meantime.
 
-Phase 12 is continuous; each ships a slice per quarter once the core loop is done.
+Phases 10 and 11 are roughly independent — 10 is operator-facing back-office (finishes the "real profitability" arc from Phase 9), 11 is customer-facing growth. Build whichever gets louder signal first; both estimate at ~1 work-week.
+
+Phase 13 is continuous; each ships a slice per quarter once the core loop is done.
