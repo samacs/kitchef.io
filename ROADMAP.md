@@ -555,15 +555,44 @@ See `~/.claude/plans/phase-11-personalizacion-de-platillos.md` for the full plan
 
 ---
 
-## Phase 12 — Payments (deferred until demand)
+## Phase 12 — Instrucciones de pago + propina (planned)
 
-Mexican-specific, lots of integration surface. **Defer until we have 10+ operators asking.** WhatsApp + the payment-pending chip + `mark_paid!` handle it until then.
+**Context.** Today the storefront checkout captures name + phone + address + window + notes, then hands off to WhatsApp. The customer never sees how she's expected to pay — no "transfiere a esta CLABE", no "cobro en efectivo, ¿con cuánto pagas?", no "paga en línea con tarjeta". The operator then spends the next WhatsApp exchange re-typing her bank details, asking how much change to bring, or quoting a card fee off the top of her head. Manual, noisy, and the information is scattered.
 
-- [ ] Mercado Pago link generation (v1.5 target — simplest wedge)
-- [ ] SPEI reference capture on Payment
-- [ ] Stripe Checkout for anticipos (v1.6)
-- [ ] Payment reconciliation dashboard
-- [ ] Customer-facing "Pagar anticipo" button on the confirmation page (currently only shows "Te contacto por WhatsApp")
+Phase 12 closes that by **displaying** payment instructions, not **processing** payments. The kitchen owner configures her bank details + accepted methods once at `/account/edit`. The customer picks her method at checkout — SPEI transfer, cash-on-delivery with change amount, or tarjeta placeholder — and sees the details the operator already gave her, with a Copiar button for the CLABE and a little SPEI explainer. Plus a proper propina picker ($0 / $15 / $30 / Otro) baked into the same card.
+
+Actual gateway integrations (Mercado Pago link generation, Stripe Checkout for anticipos, card-on-file) stay deferred — they're high-leverage but they're their own phase. What we need first is the UI + data plumbing that lets an operator say "acepto efectivo y transferencia, aquí está mi CLABE" and have the storefront honor it cleanly. That reference is [maspedidos.menu](https://maspedidos.menu), a Mexican service shipping exactly this.
+
+**Why now.** Every alpha operator has a bank account and accepts cash; none has a Mercado Pago merchant ID. Shipping "pick your method + here are the instructions" gives them 90% of the value with 10% of the integration surface. Shipping a Stripe integration first leaves the 80% of operators without a payment processor stuck on WhatsApp negotiations indefinitely.
+
+**Why this is small.** No gateway code, no webhooks, no reconciliation. One StoreModel extension (`Accounts::PaymentSettings`), four new `Order` fields (`payment_method`, `tip_cents`, `cash_payment_amount_cents`, `terms_accepted_at`), a new config card on `/account/edit`, and a new section on the storefront checkout. ~1 focused work-week.
+
+### Scope
+
+- [ ] New `Accounts::PaymentSettings` StoreModel on `Account#settings` — `accepts_cash`, `accepts_transfer`, `accepts_card`, `transfer_holder`, `transfer_bank`, `transfer_clabe` (18-digit CLABE validation), `transfer_account_number` (optional), `card_instructions` (free text while we wait on Stripe/MP), `tip_presets_cents` (array of three presets, default `[0, 1500, 3000]`).
+- [ ] `/account/edit` gains a **"Pagos"** card below the existing config. Autosave-friendly. SPEI fields are grouped together and only surface when `accepts_transfer` is on.
+- [ ] `Order` columns: `payment_method` enum (`cash: 0, transfer: 1, card: 2`), `tip_cents` (bigint, default 0), `cash_payment_amount_cents` (bigint, nullable — how much the customer plans to hand over), `terms_accepted_at` (timestamp).
+- [ ] Storefront checkout grows a **"Método de pago"** card (only methods the kitchen accepts are shown, radio-select, method-specific reveal):
+  - **Efectivo** → numeric "Cantidad con la que pagarás" input so the operator can prepare change. Validates `≥ order total`.
+  - **Transferencia bancaria** → read-only panel with Titular + Banco + CLABE + Tarjeta number, each row with a Copiar button wired to Clipboard API. SPEI hint banner.
+  - **Tarjeta** → shows whatever `card_instructions` the operator typed (or a muted "Próximamente" placeholder if empty).
+- [ ] **Propina** card above Método de pago with three preset chips + "Otro" that reveals a numeric input. Writes to `Order#tip_cents`.
+- [ ] Terms acknowledgment line under the submit button — "Al enviar, aceptas nuestros [Términos y Condiciones](…)". Captures `terms_accepted_at` on submit (keep the existing `User#terms_accepted_at` pattern but on `Order` for storefront).
+- [ ] Kanban card renders a method chip (`💵 Efectivo · $200` / `🏦 SPEI` / `💳 Tarjeta`) + a propina chip when nonzero.
+- [ ] Order show page breaks out subtotal + tip + method — the cook reads "lleva cambio para $200" at a glance.
+- [ ] Customer confirmation email + WhatsApp message include the chosen method + tip + the SPEI details (for transfer) + change amount (for cash). So the customer has everything in her inbox if the storefront page closes.
+
+### Out (explicit deferrals — picked up in Phase 12.5+ or later)
+
+- [ ] **Mercado Pago link generation.** The single highest-leverage gateway integration for Mexico. Merits its own mini-phase (12.5). Model: `PaymentLink` with `provider: :mercado_pago, external_id, status, amount_cents`; Mercado Pago Checkout Links API for anticipo collection; webhook controller for status updates.
+- [ ] **SPEI reference capture on `Payment`.** Operator logs an incoming transfer with reference + amount; reconciliation dashboard shows unreconciled transfers next to unpaid pedidos.
+- [ ] **Stripe Checkout for anticipos.** For operators with a registered business / tax ID. Card + OXXO + SPEI. Gets its own sub-phase when 3+ operators ask.
+- [ ] **Card-on-file.** Stored cards for repeat customers — big surface, regulatory overhead, waits for meaningful demand.
+- [ ] **Customer-facing "Pagar anticipo" button** on the order confirmation page. Currently the confirmation page only shows "Te contacto por WhatsApp"; once the gateway integrations land, this is where they plug in.
+- [ ] **Automatic reconciliation between gateway webhook + Payment + Order.** Currently `mark_paid!` is manual; automated reconciliation ships with the gateway sub-phases.
+- [ ] **Split payments / anticipo vs resto.** A customer pays 50% via Stripe on place, 50% in cash on delivery. Real operator need but waits for gateway integration.
+
+See `~/.claude/plans/phase-12-pagos-spei-propina.md` for the full plan.
 
 ---
 
@@ -604,8 +633,8 @@ Mexican-specific, lots of integration surface. **Defer until we have 10+ operato
 6. ~~**Phase 9 (catálogos, proveedores, compras)**~~ — shipped. Editable categorías, first-class proveedores with per-supplier price history, persistent purchase ledger feeding the shopping list + finance report's "gastos reales" + "margen real" badge. Plus the `Geocodable` concern, polymorphic `GeocodeJob` + `StaticMapJob`, cached static-map attachments, fixed-position flash region, Turbo live-search with debounce, and a batch of drawer/autosave reliability fixes that benefit every surface. The operator's lista de compras is now the operator's real expense record.
 7. **Phase 10 next (rentabilidad real — costos fijos y utilidad neta)** — the last piece to make `/reports/finance` tell the operator's actual take-home number. Fixed-cost tracking (renta, gas, plataformas, empaque), real Utilidad Neta alongside Margen bruto + Margen real, "Costo fijo por pedido" tile, and per-pedido packaging that moves into the variable bucket where it belongs. Narrower than Phase 9 — one model + one editor + two new cells on the report, ~1 focused work-week.
 8. **Phase 11 (personalización de platillos)** — storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients ("sin jitomate") + selectable ingredients ("elige el pan"). Recipe editor gains an "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. The ceiling on AOV per pedido; unlocks every hamburger/torta/ensalada operator waiting in the alpha pool. Availability gating on ingredient stock stays deferred until depletion ships.
-9. **Phase 12 (payments)** — still deferred. Waits for explicit operator demand (10+ asking). WhatsApp + the payment chip + `mark_paid!` keep the loop honest in the meantime.
+9. **Phase 12 (instrucciones de pago + propina)** — display-only v1, no gateway integrations. Kitchen configures SPEI details + accepted methods at `/account/edit`; storefront checkout grows a Propina card + Método de pago card (Efectivo / SPEI / Tarjeta) with method-specific UI (cash-change input, CLABE + Copiar, placeholder for card). Kanban + confirmation email + WhatsApp render the method + propina so the operator + customer never lose the context. ~1 focused work-week. Mercado Pago / Stripe / reconciliation dashboard get their own sub-phases (12.5+) once 3+ operators ask.
 
-Phases 10 and 11 are roughly independent — 10 is operator-facing back-office (finishes the "real profitability" arc from Phase 9), 11 is customer-facing growth. Build whichever gets louder signal first; both estimate at ~1 work-week.
+Phases 10 and 11 are roughly independent — 10 is operator-facing back-office (finishes the "real profitability" arc from Phase 9), 11 is customer-facing growth. Build whichever gets louder signal first; both estimate at ~1 work-week. Phase 12 can land any time after Phase 6 (storefront checkout structure) — it doesn't depend on 10 or 11.
 
 Phase 13 is continuous; each ships a slice per quarter once the core loop is done.
