@@ -2,52 +2,65 @@
 <% content_for :page_title, t("production.shopping_list.title") %>
 <% content_for :page_subtitle, t("production.shopping_list.subtitle") %>
 
-<section class="mb-6 flex items-baseline justify-between gap-3">
-  <div class="flex flex-col gap-1">
-    <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
-      <%= t("production.shopping_list.kicker") %>
-    </span>
-    <h1 class="font-serif text-[28px] leading-[1.1] text-ink tracking-tight">
-      <%= t("production.shopping_list.headline") %>
-    </h1>
-    <p class="font-mono text-[11.5px] text-muted uppercase tracking-[0.14em] pt-1">
-      <%= t("production.shopping_list.window", from: l(@list.starting, format: :long), to: l(@list.ending, format: :long)) %>
-    </p>
-  </div>
-  <button type="button"
-          onclick="window.print(); return false;"
-          class="hidden sm:inline-flex items-center gap-2 text-[12.5px] font-medium px-3 py-[7px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors print:hidden">
-    <%= icon(:printer, size: :xs) %>
-    <span><%= t("production.shopping_list.print_cta") %></span>
-  </button>
-</section>
+<% content_for :page_action do %>
+  <%= link_to production_path,
+        class: "inline-flex items-center gap-2 text-[13px] font-medium px-3.5 py-[8px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors print:hidden" do %>
+    <%= icon(:arrow_left, size: :xs) %>
+    <span><%= t("production.shopping_list.back_cta") %></span>
+  <% end %>
+<% end %>
 
-<% if @list.empty? %>
-  <section class="rounded-panel border border-line bg-surface/60 px-6 py-10 text-center">
-    <p class="font-serif text-[20px] text-ink"><%= t("production.shopping_list.empty.headline") %></p>
-    <p class="mt-2 text-muted text-[13.5px] max-w-prose mx-auto"><%= t("production.shopping_list.empty.sub") %></p>
+<article class="kc-print-shopping-list">
+  <section class="mb-6 flex items-baseline justify-between gap-3 print:mb-3 print:gap-2">
+    <div class="flex flex-col gap-1 print:gap-0">
+      <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted print:hidden">
+        <%= t("production.shopping_list.kicker") %>
+      </span>
+      <h1 class="font-serif text-[28px] leading-[1.1] text-ink tracking-tight print:text-[16px] print:font-sans print:font-semibold print:leading-tight">
+        <%= t("production.shopping_list.headline") %>
+        <span class="hidden print:inline font-normal text-ink-2 font-mono text-[10.5px] ml-2">
+          · <%= t("production.shopping_list.window", from: l(@list.starting, format: :short), to: l(@list.ending, format: :short)) %>
+        </span>
+      </h1>
+      <p class="font-mono text-[11.5px] text-muted uppercase tracking-[0.14em] pt-1 print:hidden">
+        <%= t("production.shopping_list.window", from: l(@list.starting, format: :long), to: l(@list.ending, format: :long)) %>
+      </p>
+    </div>
+    <button type="button"
+            onclick="window.print(); return false;"
+            class="hidden sm:inline-flex items-center gap-2 text-[12.5px] font-medium px-3 py-[7px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors print:hidden">
+      <%= icon(:printer, size: :xs) %>
+      <span><%= t("production.shopping_list.print_cta") %></span>
+    </button>
   </section>
-<% elsif @list.advanced? %>
-  <div class="flex flex-col gap-6">
-    <% @list.rows.group_by(&:category).each do |category, group| %>
-      <section class="flex flex-col gap-2">
-        <h2 class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted print:mt-4">
-          <%= t("ingredient.categories.#{category}") %>
-        </h2>
-        <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface print:border-none print:divide-ink/10">
-          <%= render partial: "production/shopping_list/ingredient_row", collection: group, as: :row %>
-        </ul>
-      </section>
-    <% end %>
-  </div>
-<% else %>
-  <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface print:border-none print:divide-ink/10">
-    <%= render partial: "production/shopping_list/recipe_row", collection: @list.rows, as: :row %>
-  </ul>
-<% end %>
 
-<% if !@list.empty? && !@list.advanced? %>
-  <p class="mt-6 text-muted text-[12.5px] max-w-prose print:mt-10 print:text-[11px]">
-    <%= t("production.shopping_list.decomposition_nudge") %>
-  </p>
-<% end %>
+  <% if @list.empty? %>
+    <section class="rounded-panel border border-line bg-surface/60 px-6 py-10 text-center print:hidden">
+      <p class="font-serif text-[20px] text-ink"><%= t("production.shopping_list.empty.headline") %></p>
+      <p class="mt-2 text-muted text-[13.5px] max-w-prose mx-auto"><%= t("production.shopping_list.empty.sub") %></p>
+    </section>
+  <% elsif @list.advanced? %>
+    <div class="flex flex-col gap-6 print:gap-2">
+      <% @list.rows.group_by(&:category).each do |category, group| %>
+        <section class="flex flex-col gap-2 print:gap-0">
+          <h2 class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted print:text-[9.5px] print:tracking-[0.12em] print:mb-0.5 print:mt-2 print:first:mt-0">
+            <%= t("ingredient.categories.#{category}") %>
+          </h2>
+          <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface print:border-0 print:rounded-none print:divide-[#d4d4d4]">
+            <%= render partial: "production/shopping_list/ingredient_row", collection: group, as: :row %>
+          </ul>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface print:border-0 print:rounded-none print:divide-[#d4d4d4]">
+      <%= render partial: "production/shopping_list/recipe_row", collection: @list.rows, as: :row %>
+    </ul>
+  <% end %>
+
+  <% if !@list.empty? && !@list.advanced? %>
+    <p class="mt-6 text-muted text-[12.5px] max-w-prose print:hidden">
+      <%= t("production.shopping_list.decomposition_nudge") %>
+    </p>
+  <% end %>
+</article>
