@@ -27,7 +27,12 @@
     <% end %>
   </div>
 
-  <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-5 lg:-mx-7 px-5 lg:px-7 overscroll-x-contain kc-scroll snap-x snap-mandatory">
+  <%# Full-bleed scroll: `-mx-*` cancels main's padding so the last
+      card can trail off the viewport cleanly. The leading padding is
+      bumped a notch past main's content so the first card (at scroll
+      position 0) has a visible cushion instead of sitting flush with
+      the section title — matches the trailing overflow feel. %>
+  <div class="flex gap-2.5 overflow-x-auto pb-1 -mx-5 lg:-mx-7 pl-6 lg:pl-8 pr-5 lg:pr-7 overscroll-x-contain kc-scroll snap-x snap-mandatory scroll-pl-6 lg:scroll-pl-8">
     <% @week_overview.each do |row| %>
       <%= render Production::DayCardComponent.new(
             row: row,
