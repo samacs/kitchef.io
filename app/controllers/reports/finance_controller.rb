@@ -134,9 +134,14 @@ module Reports
           t("reports.finance.csv.headers.margin_pct"),
           t("reports.finance.csv.headers.order_count"),
           t("reports.finance.csv.headers.expenses"),
-          t("reports.finance.csv.headers.real_margin")
+          t("reports.finance.csv.headers.real_margin"),
+          t("reports.finance.csv.headers.fixed_costs"),
+          t("reports.finance.csv.headers.net_profit"),
+          t("reports.finance.csv.headers.net_profit_pct")
         ]
         @stats.by_day.each do |day|
+          net_cents = day.revenue_cents - day.purchases_cents - day.fixed_costs_cents
+          net_pct   = day.revenue_cents.zero? ? nil : ((net_cents.to_f / day.revenue_cents * 100).round)
           csv << [
             day.date.iso8601,
             cents_to_mxn(day.revenue_cents),
@@ -145,7 +150,10 @@ module Reports
             day.margin_pct,
             day.order_count,
             cents_to_mxn(day.purchases_cents),
-            cents_to_mxn(day.revenue_cents - day.purchases_cents)
+            cents_to_mxn(day.revenue_cents - day.purchases_cents),
+            cents_to_mxn(day.fixed_costs_cents),
+            cents_to_mxn(net_cents),
+            net_pct
           ]
         end
       end.then { |body| "\uFEFF" + body }  # BOM so Excel on es-MX opens cleanly

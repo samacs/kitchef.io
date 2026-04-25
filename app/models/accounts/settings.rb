@@ -30,11 +30,21 @@ module Accounts
     # Dashboard affordances for newer operators — dismissed after first week.
     attribute :show_cost_hints, :boolean, default: true
 
+    # Phase 10 — per-pedido packaging baseline. Hydrated onto every new
+    # Order at place/update time so the cost sits in the variable bucket
+    # with ingredientes instead of disappearing into "margen bruto" math.
+    # Override per-pedido in the order drawer.
+    attribute :default_packaging_cents, :integer, default: 0
+
     validates :digest_time,
       format: { with: /\A([01]\d|2[0-3]):[0-5]\d\z/ },
       allow_nil: true
 
     validates :onboarding_advanced_mode_choice,
       inclusion: { in: %w[yes no skip], allow_nil: true }
+
+    validates :default_packaging_cents,
+      numericality: { only_integer: true, greater_than_or_equal_to: 0 },
+      allow_nil: true
   end
 end

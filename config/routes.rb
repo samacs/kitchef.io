@@ -121,6 +121,19 @@ Rails.application.routes.draw do
     path: "compras",
     path_names: { new: "nuevo", edit: "editar" }
 
+  # Phase 10 — fixed costs (renta, gas, plataformas). One row per
+  # recurring line item; the finance report prorates them against the
+  # window to land on "Utilidad neta".
+  resources :fixed_costs,
+    path: "costos-fijos",
+    path_names: { new: "nuevo", edit: "editar" }
+
+  # Inline creator for the fixed-cost category combobox (same pattern
+  # as CategoriesController#create). No management UI in v1 — inline
+  # creation + restrict_with_error on destroy is the whole surface.
+  resources :fixed_cost_categories, only: %i[create destroy],
+    path: "fixed-cost-categories"
+
   resources :recipes do
     member do
       post :toggle_publish, path: "toggle-publish"

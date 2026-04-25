@@ -1,0 +1,45 @@
+<tr id="<%= helpers.dom_id(fixed_cost) %>" class="border-b border-line last:border-b-0 hover:bg-bg-2/40 transition-colors">
+  <td class="px-4 py-3">
+    <%= helpers.drawer_link_to edit_path,
+          class: "inline-flex flex-col gap-0.5 text-left no-underline" do %>
+      <span class="text-[14px] font-medium text-ink hover:underline">
+        <%= category_name %>
+      </span>
+      <% if fixed_cost.notes.present? %>
+        <span class="text-[12px] text-muted line-clamp-1"><%= fixed_cost.notes %></span>
+      <% end %>
+    <% end %>
+  </td>
+  <td class="px-4 py-3 font-mono text-[13.5px] text-ink tabular-nums whitespace-nowrap">
+    <% if fixed_cost.per_pedido? %>
+      <%= helpers.humanized_money_with_symbol(per_pedido_amount) %>
+    <% else %>
+      <%= helpers.humanized_money_with_symbol(amount) %>
+    <% end %>
+  </td>
+  <td class="px-4 py-3 font-mono text-[12px] text-muted uppercase tracking-[0.14em] whitespace-nowrap">
+    <%= recurrence_label %>
+  </td>
+  <td class="px-4 py-3 text-[12px] text-muted">
+    <%= period_label %>
+  </td>
+  <td class="px-4 py-3 text-right">
+    <div class="inline-flex items-center gap-1">
+      <%= helpers.drawer_link_to edit_path,
+            aria: { label: t("fixed_costs.row.edit") },
+            title: t("fixed_costs.row.edit"),
+            class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-ink hover:border-line transition-colors" do %>
+        <%= helpers.icon(:pencil, size: :sm) %>
+      <% end %>
+
+      <%= button_to helpers.fixed_cost_path(fixed_cost),
+            method: :delete,
+            form: { class: "inline-flex", data: { turbo_confirm: t("fixed_costs.row.delete_confirm") } },
+            aria: { label: t("fixed_costs.row.delete") },
+            title: t("fixed_costs.row.delete"),
+            class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-err hover:border-err/40 transition-colors" do %>
+        <%= helpers.icon(:trash_2, size: :sm) %>
+      <% end %>
+    </div>
+  </td>
+</tr>

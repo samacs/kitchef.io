@@ -31,7 +31,8 @@
 
   <%# --- KPI triptych ------------------------------------------------- %>
   <% has_expense_lane = @stats.has_purchase_signal? %>
-  <div class="grid grid-cols-1 md:grid-cols-3 <%= has_expense_lane ? 'lg:grid-cols-4' : '' %> gap-4">
+  <% has_fixed_costs  = @stats.has_fixed_costs? %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
     <%= render Reports::KpiCardComponent.new(
           label:        t("reports.finance.kpi.current_#{@range_preset == :custom ? "custom" : @range_preset}"),
           amount_cents: @stats.revenue_cents,
@@ -62,6 +63,26 @@
             amount_cents: @stats.purchases_cents,
             sub:          t("reports.finance.expenses.kpi_sub", count: @stats.purchase_count),
             href:         purchases_path) %>
+    <% end %>
+  </div>
+
+  <%# --- Utilidad neta + costo fijo por pedido ------------------------- %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <% if has_fixed_costs %>
+      <%= render Reports::NetProfitKpiCardComponent.new(stats: @stats) %>
+      <%= render Reports::KpiCardComponent.new(
+            label:        t("reports.finance.fixed_costs.kpi_label"),
+            amount_cents: @stats.fixed_costs_cents,
+            sub:          t("reports.finance.fixed_costs.kpi_sub"),
+            href:         fixed_costs_path) %>
+      <% if @stats.fixed_cost_per_order_cents %>
+        <%= render Reports::KpiCardComponent.new(
+              label:        t("reports.finance.fixed_costs.per_order_label"),
+              amount_cents: @stats.fixed_cost_per_order_cents,
+              sub:          t("reports.finance.fixed_costs.per_order_sub", count: @stats.order_count)) %>
+      <% end %>
+    <% else %>
+      <%= render Reports::NetProfitEmptyStateComponent.new %>
     <% end %>
   </div>
 
@@ -103,7 +124,10 @@
       <%= render Ui::KickerComponent.new(text: t("reports.finance.day_breakdown.kicker")) %>
       <div class="flex flex-col gap-2">
         <% @stats.by_day.each do |day| %>
-          <%= render Reports::DayRowComponent.new(day_stats: day, show_expenses: has_expense_lane) %>
+          <%= render Reports::DayRowComponent.new(
+                day_stats: day,
+                show_expenses: has_expense_lane,
+                show_fixed_costs: has_fixed_costs) %>
         <% end %>
       </div>
     </section>

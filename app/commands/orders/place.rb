@@ -15,6 +15,14 @@ module Orders
       items_attrs = Array(attrs.delete(:items_attributes)&.values || attrs.delete(:items) || [])
 
       order = account.orders.new(attrs)
+      # Hydrate per-pedido packaging from account defaults unless the
+      # caller explicitly posted a value. Lets Phase 10 start collecting
+      # packaging immediately without every form path needing to know
+      # about the setting.
+      if order.packaging_cents.to_i.zero? && account.settings.default_packaging_cents.to_i.positive?
+        order.packaging_cents = account.settings.default_packaging_cents.to_i
+      end
+
       items_attrs.each do |item_attrs|
         next if item_attrs.values_at(:recipe_id, :quantity).all?(&:blank?)
 
@@ -25,7 +33,7 @@ module Orders
           recipe:           recipe,
           quantity:         (item_attrs[:quantity].presence || 1).to_d,
           unit_price_cents: price_from(item_attrs, recipe),
-          unit_cost_cents:  recipe.cost_cents_cached.to_i,
+          unit_cost_cents:  recipe.cost_cents_cached.to_i + recipe.packaging_cents.to_i,
           notes:            item_attrs[:notes].presence
         )
       end

@@ -164,9 +164,10 @@ class OrdersController < AuthenticatedController
 
   def new_order
     Current.account.orders.new(
-      delivery_date: Date.current,
-      delivery_type: :delivery,
-      source:        :manual
+      delivery_date:   Date.current,
+      delivery_type:   :delivery,
+      source:          :manual,
+      packaging_cents: Current.account.settings.default_packaging_cents.to_i
     )
   end
 
@@ -175,7 +176,19 @@ class OrdersController < AuthenticatedController
       :client_id, :delivery_type, :source, :delivery_date,
       :delivery_start_time_hhmm, :delivery_end_time_hhmm,
       :colonia, :city, :delivery_address, :delivery_notes, :notes,
+      :packaging, :packaging_cents,
       items_attributes: %i[id recipe_id quantity unit_price notes _destroy]
-    )
+    ).then { |p| normalize_packaging(p) }
+  end
+
+  # Convert a free-form peso input ("10", "10.50") to cents once on the
+  # way in. Keeps the form honest whether the operator types cents
+  # directly or a familiar pesos number.
+  def normalize_packaging(permitted)
+    raw = permitted.delete(:packaging)
+    return permitted if raw.blank?
+    normalized = raw.to_s.gsub(",", ".").to_d
+    permitted[:packaging_cents] = (normalized * 100).to_i
+    permitted
   end
 end

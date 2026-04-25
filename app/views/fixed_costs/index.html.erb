@@ -1,0 +1,49 @@
+<% content_for :title, t("fixed_costs.index.title") %>
+<% content_for :page_title, t("fixed_costs.index.title") %>
+<% content_for :page_subtitle, t("fixed_costs.index.subtitle") %>
+
+<% content_for :page_action do %>
+  <%= link_to new_fixed_cost_path,
+        class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+    <%= icon(:plus, size: :xs) %>
+    <span><%= t("fixed_costs.index.cta") %></span>
+  <% end %>
+<% end %>
+
+<% if fixed_costs.empty? %>
+  <%= render Recipes::EmptyStateComponent.new(
+        headline_key: "fixed_costs.empty_state.headline",
+        sub_key:      "fixed_costs.empty_state.sub",
+        cta_label_key: "fixed_costs.empty_state.cta",
+        cta_href: new_fixed_cost_path) %>
+<% else %>
+  <div class="flex flex-col gap-5">
+    <div class="flex flex-wrap items-baseline gap-4">
+      <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+        <%= t("fixed_costs.index.count", count: fixed_costs.size) %>
+      </span>
+      <span class="text-[13px] text-ink-2 leading-[1.55] max-w-[56ch]">
+        <%= t("fixed_costs.index.hint") %>
+      </span>
+    </div>
+
+    <div class="bg-surface border border-line rounded-panel shadow-card overflow-x-auto kc-scroll">
+      <table class="w-full min-w-[720px]">
+        <thead class="bg-bg-2/40 border-b border-line">
+          <tr>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("fixed_costs.index.table.category") %></th>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("fixed_costs.index.table.amount") %></th>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("fixed_costs.index.table.recurrence") %></th>
+            <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("fixed_costs.index.table.period") %></th>
+            <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% fixed_costs.each do |fc| %>
+            <%= render FixedCosts::RowComponent.new(fixed_cost: fc) %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

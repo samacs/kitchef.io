@@ -27,6 +27,22 @@
         <span class="font-mono text-[12px] text-muted">
           <%= compare_label %>
         </span>
+
+        <% if has_fixed_costs? %>
+          <div class="flex items-baseline gap-3 flex-wrap mt-1 pt-2 border-t border-line/60">
+            <span class="font-mono text-[11px] font-medium text-accent-2 uppercase tracking-[0.14em]">
+              <%= t("dashboard.weekly_snapshot.net_profit_label") %>
+            </span>
+            <span class="font-serif text-[18px] leading-[1.2] text-ink tabular-nums">
+              <%= helpers.humanized_money_with_symbol(net_profit) %>
+            </span>
+            <% if net_profit_pct %>
+              <span class="font-mono text-[12px] text-muted tabular-nums">
+                <%= t("dashboard.weekly_snapshot.net_profit_pct", pct: net_profit_pct) %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
       <% end %>
     </div>
 

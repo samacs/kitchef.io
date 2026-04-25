@@ -118,6 +118,7 @@ es-MX:
       ingredients: "Ingredientes"
       suppliers: "Proveedores"
       purchases: "Compras"
+      fixed_costs: "Costos fijos"
       clients: "Clientes"
       schedule: "Horario"
       production: "Producción"

@@ -14,6 +14,8 @@ es-MX:
       no_baseline: "Primera semana con pedidos — aún sin comparación."
       see_all: "Ver todo"
       muted: "Aún no tenemos suficientes pedidos esta semana para calcular."
+      net_profit_label: "Utilidad neta"
+      net_profit_pct: "(%{pct}%)"
     placeholder: "Aquí vivirán tu kanban de pedidos, tu producción de la semana y las métricas que importan. Por ahora es un lugar reservado."
     menu_section:
       kicker: "Tu menú"
@@ -227,6 +229,10 @@ es-MX:
       unit_price_label: "Precio"
       line_total_label: "Subtotal"
       total_label: "Total"
+      packaging:
+        label: "Empaque de este pedido"
+        hint: "Bolsa, servilleta, etiqueta — se suma al total."
+        default_hint: "Default de tu cocina: %{amount}"
       submit_create: "Capturar pedido"
       submit_update: "Guardar cambios"
       done: "Listo"
@@ -237,6 +243,8 @@ es-MX:
         saving: "Guardando…"
         saved: "Guardado"
         error: "No se pudo guardar"
+    card:
+      packaging_suffix: "+%{amount} empaque"
     danger_zone:
       title: "¿Te equivocaste de pedido?"
       sub: "Puedes eliminar este pedido y dejará de aparecer en tu kanban. Lo conservamos en el historial."
@@ -644,6 +652,83 @@ es-MX:
         subtotal: "Subtotal (MXN)"
         notes: "Notas"
 
+  fixed_costs:
+    title: "Costos fijos"
+    index:
+      title: "Costos fijos"
+      subtitle: "Renta, gas, plataformas y todo lo que pagas pase lo que pase."
+      cta: "Agregar costo fijo"
+      hint: "Los prorrateamos contra el periodo que elijas en /finanzas para calcular tu utilidad neta."
+      count:
+        one: "%{count} costo fijo"
+        other: "%{count} costos fijos"
+      table:
+        category: "Categoría"
+        amount: "Monto"
+        recurrence: "Recurrencia"
+        period: "Periodo"
+    new:
+      title: "Agregar costo fijo"
+      subtitle: "Un solo dato por línea — la renta, el gas, la suscripción de una plataforma."
+      kicker: "Nuevo costo fijo"
+      heading: "¿Qué te cuesta cada mes?"
+      lede: "La renta, el gas, el paquete de Didi/Rappi. Lo que pagas te vendan o no te vendan. Lo prorrateamos por día para que tu utilidad neta cuadre con la realidad."
+    edit:
+      title: "Editar costo fijo"
+      subtitle: "Ajusta monto, recurrencia o cierra la línea."
+      kicker: "Editar costo fijo"
+    create:
+      created: "Costo fijo registrado."
+    update:
+      updated: "Cambios guardados."
+    destroy:
+      discarded: "Costo fijo eliminado."
+    recurrence:
+      monthly: "Mensual"
+      weekly: "Semanal"
+      yearly: "Anual"
+      one_time: "Una sola vez"
+      per_pedido: "Por pedido"
+    period:
+      open: "Desde %{start}"
+      closed: "Del %{start} al %{ending}"
+    form:
+      category_label: "Categoría"
+      category_placeholder: "Elige una categoría"
+      category_hint: "Renta, gas, empaque, plataformas — elige la que le quede."
+      amount_label: "Monto"
+      amount_hint: "Lo que te cuesta por periodo (sin signos, en pesos)."
+      recurrence_label: "Cada cuándo"
+      recurrence_hint: "Mensual es lo más común; semanal para plataformas."
+      start_date_label: "Inicia"
+      end_date_label: "Termina (opcional)"
+      end_date_hint: "Déjalo vacío si sigue activo."
+      per_pedido_toggle: "¿Se cobra por pedido en lugar de por periodo?"
+      cost_per_pedido_label: "Costo por pedido"
+      cost_per_pedido_hint: "Para comisiones por pedido (Didi, Rappi). Multiplica por los pedidos entregados del periodo."
+      notes_label: "Notas (opcional)"
+      notes_placeholder: "Contrato hasta septiembre. El casero sube 10% cada año."
+      submit_create: "Agregar costo fijo"
+      submit_update: "Guardar cambios"
+      cancel: "Cancelar"
+      delete: "Eliminar costo fijo"
+    row:
+      edit: "Editar"
+      delete: "Eliminar"
+      delete_confirm: "¿Eliminar este costo fijo? Deja de aparecer en tus reportes a partir de hoy."
+    danger_zone:
+      title: "¿Ya no lo pagas?"
+      sub: "Lo sacamos de tu lista y deja de sumarse al cálculo."
+    empty_state:
+      headline: "Aún no registras costos fijos"
+      sub: "Empieza por tu renta. Cuando lo tengas, tu reporte de finanzas va a mostrar tu utilidad neta junto al margen bruto."
+      cta: "Agregar costo fijo"
+
+  fixed_cost_categories:
+    destroy:
+      discarded: "Categoría eliminada."
+      in_use: "%{name} tiene %{count} costos fijos activos. Reasígnalos antes de eliminarla."
+
   ingredients:
     title: "Ingredientes"
     index:
@@ -842,6 +927,10 @@ es-MX:
       ordering_hours_label: "Horario de pedidos"
       ordering_hours_moved_hint: "Tu horario semanal y las excepciones por fecha ahora viven en su propia pantalla. Desde ahí defines cuándo aceptas pedidos y para cuándo entregas."
       ordering_hours_edit_cta: "Editar horario"
+      default_packaging:
+        label: "Empaque por pedido"
+        hint: "Lo que te cuesta el empaque estándar por pedido (bolsa, servilletas, etiqueta). Se suma al total de cada pedido nuevo."
+        cents_hint: "En centavos (ej: 800 = $8.00)."
   subscription:
     title: "Plan"
 
@@ -1053,6 +1142,9 @@ es-MX:
           order_count: "Pedidos"
           expenses: "Gastos MXN"
           real_margin: "Margen real MXN"
+          fixed_costs: "Costo fijo MXN"
+          net_profit: "Utilidad neta MXN"
+          net_profit_pct: "Utilidad neta %"
       expenses:
         kpi_label: "Gastos en ingredientes"
         kpi_sub:
@@ -1062,6 +1154,21 @@ es-MX:
         real_margin_hint: "Ingresos − gastos reales en ingredientes de este periodo"
         drift_hint: "La diferencia con el margen bruto refleja cambios de precio después de cada pedido."
         day_column: "Gastos"
+      fixed_costs:
+        kpi_label: "Costos fijos"
+        kpi_sub: "Prorrateados al periodo"
+        per_order_label: "Costo fijo por pedido"
+        per_order_sub:
+          one: "%{count} pedido entregado"
+          other: "%{count} pedidos entregados"
+      net_profit:
+        label: "Utilidad neta"
+        pct_suffix: "%{pct}%"
+        sub: "Después de %{amount} en costos fijos"
+        empty:
+          label: "Utilidad neta"
+          sub: "Suma renta, gas y plataformas para ver cuánto te llevas a casa después de todo."
+          cta: "Agregar tus costos fijos"
 
   onboarding:
     decomposition:

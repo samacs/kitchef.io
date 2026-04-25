@@ -53,20 +53,20 @@ class Account < ApplicationRecord
   RESERVED_SLUGS = %w[
     acerca admin ajustes api app asistencia asistente assets ayuda
     blog buscar
-    categoria categorias como-funciona compra compras contacto cocina
+    categoria categorias como-funciona compra compras contacto cocina costos costos-fijos
     directorio
-    empleos entrar equipo explorar
-    facturacion favicon fotos
+    empaque empleos entrar equipo explorar
+    facturacion favicon fijos fotos
     gastos
     health
     kitchef
     legal
     nosotros nuestra-historia notificaciones
-    pagos panel pedidos precios prensa privacidad proveedor proveedores preguntas
-    rails recetario recetas recuperar recursos registro robots
+    pagos panel pedidos plataformas precios prensa privacidad proveedor proveedores preguntas
+    rails recetario recetas recuperar recursos registro renta robots
     salir sesion sitemap soporte suministros
     terminos tickets
-    up usuarios
+    up usuarios utilidades
     webhooks
 
     about account accounts admin-panel api-docs apis auth
@@ -74,7 +74,7 @@ class Account < ApplicationRecord
     careers cart categories category changelog checkout clients company contact cookies
     dashboard demo docs docs-api documentation
     enterprise explore expenses expense
-    faq features feedback forgot-password
+    faq features feedback fixed fixed-cost-categories fixed-costs forgot-password
     help home how-it-works
     integrations
     jobs join
@@ -82,12 +82,12 @@ class Account < ApplicationRecord
     menus
     new news notifications
     onboarding
-    password passwords pricing privacy production products profile purchase purchases
-    r register reports reset-password root
+    packaging password passwords platform platforms pricing privacy production products profile purchase purchases
+    r register rent reports reset-password root
     schedule search settings sign-in signin sign-out signout sign-up signup supplier suppliers
     stats status subscribe subscription support
     team terms tour
-    users
+    users utilities
     vendor vendors
     welcome
 
@@ -131,16 +131,18 @@ class Account < ApplicationRecord
   # client_id). Users cascades so destroying the owner tears down any
   # other members with it — the owner's `before_destroy :detach_from_account`
   # pre-nulls the circular FK so this doesn't loop back onto itself.
-  has_many :users,                dependent: :destroy
-  has_many :orders,               dependent: :destroy
-  has_many :purchases,            dependent: :destroy   # PurchaseItem FK → ingredients (cascade)
-  has_many :clients,              dependent: :destroy
-  has_many :suppliers,            dependent: :destroy   # SupplierIngredient FK → ingredients (cascade)
-  has_many :recipes,              dependent: :destroy
-  has_many :ingredients,          dependent: :destroy
-  has_many :categories,           dependent: :destroy   # last — ingredients + recipes FK to it
-  has_one  :schedule,             dependent: :destroy, inverse_of: :account
-  has_one  :subscription,         dependent: :destroy
+  has_many :users,                  dependent: :destroy
+  has_many :orders,                 dependent: :destroy
+  has_many :purchases,              dependent: :destroy   # PurchaseItem FK → ingredients (cascade)
+  has_many :clients,                dependent: :destroy
+  has_many :suppliers,              dependent: :destroy   # SupplierIngredient FK → ingredients (cascade)
+  has_many :recipes,                dependent: :destroy
+  has_many :ingredients,            dependent: :destroy
+  has_many :fixed_costs,            dependent: :destroy   # before categories — FKs into fixed_cost_categories
+  has_many :fixed_cost_categories,  dependent: :destroy
+  has_many :categories,             dependent: :destroy   # last — ingredients + recipes FK to it
+  has_one  :schedule,               dependent: :destroy, inverse_of: :account
+  has_one  :subscription,           dependent: :destroy
 
   # Every account boots with a blank Schedule so storefront code can count
   # on `account.schedule` being non-nil. Operators fill it in from
@@ -148,6 +150,7 @@ class Account < ApplicationRecord
   # rather than blowing up.
   after_create :ensure_schedule
   after_create :bootstrap_default_categories
+  after_create :bootstrap_default_fixed_cost_categories
 
   # Idempotent fetch-or-create, for cases where the `after_create` callback
   # didn't run (pre-Phase-6 accounts backfilled via the data migration, or
@@ -230,6 +233,17 @@ class Account < ApplicationRecord
     "Platos fuertes", "Entradas", "Postres", "Bebidas", "Bases y preparaciones", "Otros"
   ].freeze
 
+  # Phase 10 — five starter buckets for fixed-cost tracking. Matches the
+  # kinds on FixedCostCategory (rent / utilities / packaging / platform /
+  # other). Operators add more via the inline combobox on /costos-fijos.
+  DEFAULT_FIXED_COST_CATEGORIES = [
+    [ "Renta",            :rent ],
+    [ "Gas y servicios",  :utilities ],
+    [ "Empaque",          :packaging ],
+    [ "Plataformas",      :platform ],
+    [ "Otros",            :other ]
+  ].freeze
+
   private
 
   def ensure_schedule
@@ -244,6 +258,14 @@ class Account < ApplicationRecord
     end
     DEFAULT_RECIPE_CATEGORIES.each_with_index do |name, idx|
       categories.create_with(position: idx).find_or_create_by!(kind: :recipe, name: name)
+    end
+  rescue ActiveRecord::RecordNotUnique
+    # Lost a race — other thread seeded the same rows. Fine.
+  end
+
+  def bootstrap_default_fixed_cost_categories
+    DEFAULT_FIXED_COST_CATEGORIES.each_with_index do |(name, kind), idx|
+      fixed_cost_categories.create_with(position: idx).find_or_create_by!(kind: kind, name: name)
     end
   rescue ActiveRecord::RecordNotUnique
     # Lost a race — other thread seeded the same rows. Fine.

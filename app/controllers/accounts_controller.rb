@@ -65,7 +65,8 @@ class AccountsController < AuthenticatedController
         phone whatsapp instagram
         colonia city
         delivery_zones payment_notes pickup_reminder_hours
-      ]
+      ],
+      settings: %i[default_packaging_cents]
     )
   end
 end

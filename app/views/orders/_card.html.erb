@@ -80,6 +80,11 @@
       <span class="font-mono text-[14px] font-medium text-ink">
         <%= humanized_money_with_symbol(order.total) %>
       </span>
+      <% if order.packaging_cents.to_i.positive? %>
+        <span class="font-mono text-[11px] text-muted tracking-[0.08em]">
+          <%= t("orders.card.packaging_suffix", amount: humanized_money_with_symbol(order.packaging)) %>
+        </span>
+      <% end %>
       <% if order.paid? %>
         <span class="inline-flex items-center gap-1 text-accent"
               aria-label="<%= t("orders.payment_status.paid_aria") %>"

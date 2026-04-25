@@ -21,6 +21,7 @@ module Accounts
       attrs = attributes.to_h.deep_symbolize_keys
       branding_attrs = attrs.delete(:branding) || {}
       profile_attrs  = attrs.delete(:public_profile) || {}
+      settings_attrs = attrs.delete(:settings) || {}
 
       account.assign_attributes(attrs.slice(:name))
 
@@ -34,6 +35,10 @@ module Accounts
       profile = account.public_profile
       profile.assign_attributes(profile_attrs.compact)
       account.public_profile = profile
+
+      settings = account.settings
+      settings.assign_attributes(settings_attrs.compact)
+      account.settings = settings
 
       account.logo.attach(logo) if logo.present?
       account.cover_photo.attach(cover_photo) if cover_photo.present?

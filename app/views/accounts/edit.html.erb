@@ -265,6 +265,30 @@
             <% end %>
           </div>
         </div>
+
+        <%# ---- Packaging default ------------------------------------- %>
+        <%= f.fields_for :settings, @account.settings do |s| %>
+          <div class="rounded-card border border-line bg-bg/60 p-4">
+            <div class="flex items-baseline justify-between gap-3 flex-wrap">
+              <div class="max-w-[420px]">
+                <div class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+                  <%= t("account.fields.default_packaging.label") %>
+                </div>
+                <p class="mt-1 text-[13px] text-ink-2">
+                  <%= t("account.fields.default_packaging.hint") %>
+                </p>
+              </div>
+              <span class="relative flex items-center">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[13px]">$</span>
+                <%= s.number_field :default_packaging_cents,
+                      step: 1,
+                      min: 0,
+                      class: "w-[140px] bg-surface text-ink border border-line hover:border-line-2 rounded-input pl-7 pr-3 py-2 text-[14px] leading-[1.3] font-mono tabular-nums outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+              </span>
+            </div>
+            <p class="mt-2 text-[11.5px] text-muted"><%= t("account.fields.default_packaging.cents_hint") %></p>
+          </div>
+        <% end %>
       </section>
 
       <div class="flex items-center justify-start">

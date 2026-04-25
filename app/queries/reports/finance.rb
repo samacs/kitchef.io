@@ -19,7 +19,7 @@ module Reports
 
     PRESETS = %i[this_week last_week this_month last_month last_30_days].freeze
 
-    DayStats = Data.define(:date, :revenue_cents, :cogs_cents, :purchases_cents, :order_count) do
+    DayStats = Data.define(:date, :revenue_cents, :cogs_cents, :purchases_cents, :fixed_costs_cents, :order_count) do
       def margin_cents = revenue_cents - cogs_cents
 
       def margin_pct
@@ -30,8 +30,9 @@ module Reports
 
     PeriodStats = Data.define(
       :starting, :ending,
-      :revenue_cents, :cogs_cents, :purchases_cents,
+      :revenue_cents, :cogs_cents, :purchases_cents, :fixed_costs_cents,
       :order_count, :purchase_count, :avg_order_cents,
+      :fixed_costs_by_category,
       :by_day
     ) do
       def gross_margin_cents = revenue_cents - cogs_cents
@@ -52,9 +53,28 @@ module Reports
         (real_margin_cents.to_f / revenue_cents * 100).round
       end
 
+      # Phase 10 — "Utilidad neta" = ingresos − gastos reales (compras) −
+      # costos fijos prorrateados. Recipe-level packaging is already folded
+      # into `cogs_cents` via the OrderItem snapshot, and per-pedido Order
+      # packaging shows up under purchases_cents too (see #aggregate below).
+      def net_profit_cents
+        revenue_cents - purchases_cents - fixed_costs_cents
+      end
+
+      def net_profit_pct
+        return nil if revenue_cents.zero?
+        (net_profit_cents.to_f / revenue_cents * 100).round
+      end
+
+      def fixed_cost_per_order_cents
+        return nil if order_count.zero?
+        (fixed_costs_cents.to_f / order_count).round
+      end
+
       def empty?              = order_count.zero? && purchase_count.zero?
       def has_signal?         = order_count >= 3
       def has_purchase_signal? = purchase_count.positive?
+      def has_fixed_costs?     = fixed_costs_cents.positive?
     end
 
     option :account
@@ -98,34 +118,58 @@ module Reports
       rows_by_date     = aggregate.index_by { |r| r[:date] }
       purchases_by_day = aggregate_purchases.index_by { |r| r[:date] }
 
-      by_day = (starting..ending).map do |date|
+      by_day_rows = (starting..ending).to_a
+
+      # Phase 10 — prorate every active FixedCost row across the window.
+      # Per-pedido rows multiply by the delivered count from this window
+      # so a Didi/Rappi commission scales with actual volume. The
+      # per-day drizzle is purely presentational — the operator sees
+      # "$500/día" on each day when she's paying $15k/mes rent.
+      order_total = by_day_rows.sum { |d| rows_by_date[d]&.dig(:orders).to_i }
+      allocation = FixedCosts::AllocationForWindow.call(
+        account:       account,
+        starting:      starting,
+        ending:        ending,
+        pedido_count:  order_total
+      )
+
+      days_in_window = by_day_rows.size
+      per_day_fixed  = days_in_window.zero? ? 0 : (allocation.total_cents / days_in_window)
+      remainder      = days_in_window.zero? ? 0 : allocation.total_cents - (per_day_fixed * days_in_window)
+
+      by_day = by_day_rows.each_with_index.map do |date, idx|
         row  = rows_by_date[date]
         prow = purchases_by_day[date]
+        # Drizzle the rounding remainder into the last day so the
+        # per-day sum still exactly reconciles to the period total.
+        fixed_today = per_day_fixed + (idx == days_in_window - 1 ? remainder : 0)
         DayStats.new(
-          date:            date,
-          revenue_cents:   row  ? row[:revenue]  : 0,
-          cogs_cents:      row  ? row[:cogs]     : 0,
-          purchases_cents: prow ? prow[:total]   : 0,
-          order_count:     row  ? row[:orders]   : 0
+          date:              date,
+          revenue_cents:     row  ? row[:revenue]  : 0,
+          cogs_cents:        row  ? row[:cogs]     : 0,
+          purchases_cents:   prow ? prow[:total]   : 0,
+          fixed_costs_cents: fixed_today,
+          order_count:       row  ? row[:orders]   : 0
         )
       end
 
       revenue_total    = by_day.sum(&:revenue_cents)
       cogs_total       = by_day.sum(&:cogs_cents)
       purchases_total  = by_day.sum(&:purchases_cents)
-      order_total      = by_day.sum(&:order_count)
       purchase_count   = purchases_by_day.values.sum { |r| r[:purchases_count].to_i }
 
       PeriodStats.new(
-        starting:         starting,
-        ending:           ending,
-        revenue_cents:    revenue_total,
-        cogs_cents:       cogs_total,
-        purchases_cents:  purchases_total,
-        order_count:      order_total,
-        purchase_count:   purchase_count,
-        avg_order_cents:  order_total.zero? ? 0 : (revenue_total.to_f / order_total).round,
-        by_day:           by_day
+        starting:                starting,
+        ending:                  ending,
+        revenue_cents:           revenue_total,
+        cogs_cents:              cogs_total,
+        purchases_cents:         purchases_total,
+        fixed_costs_cents:       allocation.total_cents,
+        order_count:             order_total,
+        purchase_count:          purchase_count,
+        avg_order_cents:         order_total.zero? ? 0 : (revenue_total.to_f / order_total).round,
+        fixed_costs_by_category: allocation.by_category,
+        by_day:                  by_day
       )
     end
 
@@ -140,20 +184,44 @@ module Reports
       states = only_paid ? PAID_ONLY_STATES : DEFAULT_STATES
       placeholders = Array.new(states.length, "?").join(", ")
 
-      sql = ActiveRecord::Base.send(:sanitize_sql_array, [ <<~SQL.squish, account.id, starting, ending, *states ])
+      # Phase 10 — packaging is part of the variable-cost bucket alongside
+      # ingredientes. We sum item-level cogs (which already includes
+      # recipe-level packaging snapshot per OrderItem#snapshot_costs) and
+      # then add per-pedido Order#packaging_cents as a flat adjustment
+      # per order. The two subqueries keep each join honest: item-level
+      # sums multiply quantity, order-level sums need one row per order.
+      sql = ActiveRecord::Base.send(:sanitize_sql_array, [ <<~SQL.squish, account.id, starting, ending, *states, account.id, starting, ending, *states ])
         SELECT
-          orders.delivery_date AS date,
-          COALESCE(SUM(order_items.unit_price_cents * order_items.quantity), 0)::bigint AS revenue,
-          COALESCE(SUM(order_items.unit_cost_cents  * order_items.quantity), 0)::bigint AS cogs,
-          COUNT(DISTINCT orders.id)::bigint AS orders
-        FROM orders
-        LEFT JOIN order_items ON order_items.order_id = orders.id
-        WHERE orders.account_id = ?
-          AND orders.discarded_at IS NULL
-          AND orders.delivery_date BETWEEN ? AND ?
-          AND orders.state IN (#{placeholders})
-        GROUP BY orders.delivery_date
-        ORDER BY orders.delivery_date
+          items.date,
+          items.revenue,
+          items.cogs + COALESCE(packaging.total, 0) AS cogs,
+          items.orders
+        FROM (
+          SELECT
+            orders.delivery_date AS date,
+            COALESCE(SUM(order_items.unit_price_cents * order_items.quantity), 0)::bigint AS revenue,
+            COALESCE(SUM(order_items.unit_cost_cents  * order_items.quantity), 0)::bigint AS cogs,
+            COUNT(DISTINCT orders.id)::bigint AS orders
+          FROM orders
+          LEFT JOIN order_items ON order_items.order_id = orders.id
+          WHERE orders.account_id = ?
+            AND orders.discarded_at IS NULL
+            AND orders.delivery_date BETWEEN ? AND ?
+            AND orders.state IN (#{placeholders})
+          GROUP BY orders.delivery_date
+        ) AS items
+        LEFT JOIN (
+          SELECT
+            orders.delivery_date AS date,
+            SUM(orders.packaging_cents)::bigint AS total
+          FROM orders
+          WHERE orders.account_id = ?
+            AND orders.discarded_at IS NULL
+            AND orders.delivery_date BETWEEN ? AND ?
+            AND orders.state IN (#{placeholders})
+          GROUP BY orders.delivery_date
+        ) AS packaging ON packaging.date = items.date
+        ORDER BY items.date
       SQL
 
       ActiveRecord::Base.connection.exec_query(sql, "Reports::Finance").map do |row|

@@ -1,0 +1,4 @@
+<%# Appended to the fixed-cost category combobox's <datalist> by
+    FixedCostCategoriesController#create so subsequent opens of the
+    picker on the same page show the freshly-created category. %>
+<option value="<%= category.id %>" data-label="<%= category.name %>"><%= category.name %></option>
