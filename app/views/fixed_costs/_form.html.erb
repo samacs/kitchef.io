@@ -1,4 +1,3 @@
-<% categories = Current.account.fixed_cost_categories.kept.alphabetical %>
 <% amount_display = fixed_cost.amount_cents.to_i.zero? ? "" : format("%.2f", fixed_cost.amount_cents / 100.0) %>
 <% cost_per_pedido_display = fixed_cost.cost_per_pedido_cents.to_i.zero? ? "" : format("%.2f", fixed_cost.cost_per_pedido_cents / 100.0) %>
 
@@ -20,18 +19,17 @@
     </div>
   <% end %>
 
-  <label for="fixed_cost_fixed_cost_category_id" class="flex flex-col gap-2">
-    <span class="text-[13px] font-medium text-ink leading-none">
-      <%= t("fixed_costs.form.category_label") %>
-    </span>
-    <%= form.select :fixed_cost_category_id,
-          categories.map { |c| [ c.name, c.id ] },
-          { include_blank: t("fixed_costs.form.category_placeholder") },
-          id: "fixed_cost_fixed_cost_category_id",
-          required: true,
-          class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-    <span class="text-[12px] text-muted"><%= t("fixed_costs.form.category_hint") %></span>
-  </label>
+  <%= render Ui::ComboboxComponent.new(
+        name: "fixed_cost[fixed_cost_category_id]",
+        id: "fixed_cost_fixed_cost_category_id",
+        label: t("fixed_costs.form.category_label"),
+        options: FixedCostCategory.picker_options_for(account: Current.account),
+        value: fixed_cost.fixed_cost_category_id,
+        placeholder: t("fixed_costs.form.category_placeholder"),
+        hint: t("fixed_costs.form.category_hint"),
+        required: true,
+        create_path: fixed_cost_categories_path,
+        list_id: "combobox_fixed_cost_category_options") %>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <label for="fixed_cost_amount" class="flex flex-col gap-2">

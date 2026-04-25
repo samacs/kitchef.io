@@ -13,6 +13,7 @@ module Ui
     option :method,   optional: true
     option :danger,   default: -> { false }
     option :trailing, optional: true
+    option :target,   optional: true
 
     def call
       return anchor_link if method.blank? || href.blank?
@@ -37,9 +38,13 @@ module Ui
     private
 
     def anchor_link
-      content_tag(:a, body,
+      attrs = {
         href: href || "#", class: classes, role: "menuitem", tabindex: "-1",
-        data: { action: "click->dropdown#close" })
+        data: { action: "click->dropdown#close" }
+      }
+      attrs[:target] = target if target.present?
+      attrs[:rel] = "noopener" if target == "_blank"
+      content_tag(:a, body, **attrs)
     end
 
     def classes
