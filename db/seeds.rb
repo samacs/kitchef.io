@@ -274,6 +274,8 @@ elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key
   # detail page and the OrderItem snapshots reflect it at order time.
   recipe_packaging = name.match?(/pastel|flan/i) ? 3500 : 0
 
+  recipe_lead_time = name.match?(/pastel/i) ? 48 : (name.match?(/flan/i) ? 24 : 0)
+
   recipe = cocina_elena.recipes.create!(
     name: name,
     sale_price_cents: cents,
@@ -283,7 +285,8 @@ elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key
     category: recipe_category_for(cocina_elena, cat),
     is_published: true,
     target_margin_percent: 60,
-    packaging_cents: recipe_packaging
+    packaging_cents: recipe_packaging,
+    lead_time_hours: recipe_lead_time
   )
   attach_seed_image(recipe, :photos,
     url: seed_photo_url(photo_key),

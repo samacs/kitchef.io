@@ -28,6 +28,14 @@
         <div class="font-serif text-[20px] leading-[1.1] text-ink"><%= price_display %></div>
       </div>
     </div>
+    <% if requires_advance_notice? %>
+      <div class="flex items-center gap-1.5 -mt-0.5">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted shrink-0" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+        <span class="font-mono text-[11px] text-muted leading-tight"><%= lead_time_badge %></span>
+      </div>
+    <% end %>
     <% if description.present? %>
       <div data-controller="reveal"
            data-reveal-collapsed-class="line-clamp-3"

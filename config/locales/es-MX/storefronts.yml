@@ -152,6 +152,10 @@ es-MX:
         price_delta_plus: "+%{amount}"
         price_delta_minus: "-%{amount}"
         estimated_total: "Total estimado"
+      lead_time:
+        badge: "Pide con %{label} de anticipación"
+        notice: "Este platillo se prepara por encargo y necesita %{label} de anticipación."
+        earliest: "Disponible a partir del %{date}"
       related:
         kicker: "Te puede gustar"
         headline_prefix: "Más de"

@@ -114,6 +114,7 @@ export default class extends Controller {
         recipe_slug: payload.recipe_slug || null,
         name: payload.name,
         price_cents: payload.price_cents,
+        lead_time_hours: payload.lead_time_hours || 0,
         photo: payload.photo || null,
         qty: 1,
         notes: ""
@@ -159,6 +160,7 @@ export default class extends Controller {
       name: payload.name,
       price_cents: payload.price_cents + deltaCents,
       base_price_cents: payload.price_cents,
+      lead_time_hours: payload.lead_time_hours || 0,
       photo: payload.photo || null,
       qty: 1,
       notes: "",

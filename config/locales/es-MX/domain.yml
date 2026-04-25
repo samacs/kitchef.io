@@ -94,6 +94,15 @@ es-MX:
         one: "1 notificación"
         other: "%{count} notificaciones"
 
+  recipes:
+    lead_time:
+      hours:
+        one: "%{count} hora"
+        other: "%{count} horas"
+      days:
+        one: "%{count} día"
+        other: "%{count} días"
+
   subscription:
     plans:
       free: "Gratis"

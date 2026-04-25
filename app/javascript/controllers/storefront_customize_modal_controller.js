@@ -96,6 +96,7 @@ export default class extends Controller {
     const recipeSlug = btn.dataset.recipeSlug
     const name = btn.dataset.recipeName
     const basePriceCents = parseInt(btn.dataset.basePriceCents, 10)
+    const leadTimeHours = parseInt(btn.dataset.leadTimeHours || "0", 10)
     const photo = btn.dataset.recipePhoto || null
 
     const optionsCtrl = this.application.getControllerForElementAndIdentifier(
@@ -127,6 +128,7 @@ export default class extends Controller {
       name: name,
       price_cents: basePriceCents + deltaCents,
       base_price_cents: basePriceCents,
+      lead_time_hours: leadTimeHours,
       photo: photo,
       qty: 1,
       notes: "",

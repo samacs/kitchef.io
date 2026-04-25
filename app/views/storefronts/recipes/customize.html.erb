@@ -58,6 +58,7 @@
               data-recipe-slug="<%= @recipe.slug %>"
               data-recipe-name="<%= @recipe.name %>"
               data-base-price-cents="<%= @recipe.sale_price_cents.to_i %>"
+              data-lead-time-hours="<%= @recipe.lead_time_hours.to_i %>"
               data-recipe-photo="<%= url_for(@recipe.photos.first.variant(resize_to_limit: [400, 400])) if @recipe.photos.attached? %>"
               class="inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-6 py-3.5 text-[15px] font-semibold transition"
               style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">

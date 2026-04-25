@@ -86,6 +86,17 @@
             / <%= t("units.#{@recipe.yield_unit}", default: @recipe.yield_unit.to_s) %>
           </span>
         </div>
+        <% if @recipe.requires_advance_notice? %>
+          <div class="mt-3 flex items-start gap-2.5 rounded-[10px] border border-line bg-bg-2/60 px-3.5 py-2.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted shrink-0 mt-0.5" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+            </svg>
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[13px] text-ink leading-tight"><%= t("storefronts.recipe.lead_time.notice", label: @recipe.lead_time_label) %></span>
+              <span class="font-mono text-[11px] text-muted"><%= t("storefronts.recipe.lead_time.earliest", date: l(@recipe.earliest_available_at.to_date, format: :weekday_long)) %></span>
+            </div>
+          </div>
+        <% end %>
       </div>
 
       <%# Options, extras, removable components — below the image %>
@@ -113,6 +124,18 @@
           <p class="whitespace-pre-line text-[14px] leading-[1.7] text-ink-2">
             <%= @recipe.description %>
           </p>
+        </div>
+      <% end %>
+
+      <% if @recipe.requires_advance_notice? %>
+        <div class="mt-4 hidden lg:flex items-start gap-2.5 rounded-[10px] border border-line bg-bg-2/60 px-3.5 py-2.5">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted shrink-0 mt-0.5" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+          </svg>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-[13px] text-ink leading-tight"><%= t("storefronts.recipe.lead_time.notice", label: @recipe.lead_time_label) %></span>
+            <span class="font-mono text-[11px] text-muted"><%= t("storefronts.recipe.lead_time.earliest", date: l(@recipe.earliest_available_at.to_date, format: :weekday_long)) %></span>
+          </div>
         </div>
       <% end %>
 
@@ -150,11 +173,12 @@
         <button type="button"
                 data-action="click->storefront-cart#addWithOptions"
                 data-storefront-cart-payload-param="<%= {
-                  recipe_id:    @recipe.prefix_id,
-                  recipe_slug:  @recipe.slug,
-                  name:         @recipe.name,
-                  price_cents:  @recipe.sale_price_cents.to_i,
-                  photo:        (url_for(@recipe.photos.first&.variant(resize_to_limit: [ 400, 400 ])) if @recipe.photos.attached?)
+                  recipe_id:       @recipe.prefix_id,
+                  recipe_slug:     @recipe.slug,
+                  name:            @recipe.name,
+                  price_cents:     @recipe.sale_price_cents.to_i,
+                  lead_time_hours: @recipe.lead_time_hours.to_i,
+                  photo:           (url_for(@recipe.photos.first&.variant(resize_to_limit: [ 400, 400 ])) if @recipe.photos.attached?)
                 }.compact.to_json %>"
                 class="inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-6 py-3.5 text-[15px] font-semibold transition"
                 style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1); box-shadow: 0 2px 10px rgba(10, 90, 60, 0.18);">

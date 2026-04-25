@@ -34,11 +34,30 @@ class RecipesController < AuthenticatedController
 
       respond_to do |format|
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "recipe_cost_summary",
-            partial: "recipes/cost_summary",
-            locals: { recipe: recipe }
-          )
+          # Replace BOTH the cost summary AND the components rows. The
+          # rows replacement is load-bearing — without it, freshly-added
+          # rows in the DOM still have an empty `id` field and the next
+          # autosave creates a duplicate component in the DB. Re-rendering
+          # the rows server-side fills in the persisted IDs so subsequent
+          # saves UPDATE the same record instead of inserting again.
+          render turbo_stream: [
+            turbo_stream.replace(
+              "recipe_cost_summary",
+              partial: "recipes/cost_summary",
+              locals: { recipe: recipe }
+            ),
+            # Morph (not replace) the rows. Replace blows away the input
+            # the operator may be mid-typing in, killing focus and caret
+            # position. Morph diffs the incoming HTML against the live
+            # DOM and only patches what changed — focus on a quantity
+            # input survives the autosave round-trip.
+            turbo_stream.action(
+              :morph,
+              "recipe_components_rows",
+              partial: "recipes/components_rows",
+              locals: { recipe: recipe }
+            )
+          ]
         end
         format.html { redirect_to recipes_path, notice: t(".updated") }
       end
@@ -122,7 +141,7 @@ class RecipesController < AuthenticatedController
   def recipe_params
     params.require(:recipe).permit(
       :name, :sale_price, :category_id, :description, :is_published,
-      :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent,
+      :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent, :lead_time_hours,
       photos: [],
       components_attributes: [
         :id, :componentable_type, :componentable_id,
