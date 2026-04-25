@@ -2,7 +2,7 @@
 <% content_for :page_title, t("recipes.edit.title", name: recipe.name) %>
 <% content_for :page_subtitle, t("recipes.edit.subtitle") %>
 
-<div class="max-w-[720px] mx-auto flex flex-col gap-6">
+<div class="max-w-[860px] mx-auto flex flex-col gap-6">
   <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9">
     <div class="flex flex-col gap-2 mb-6">
       <%= render Ui::KickerComponent.new(text: t("recipes.edit.kicker")) %>

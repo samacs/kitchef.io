@@ -167,6 +167,10 @@
     <%= render Recipes::ComponentsEditorComponent.new(recipe: recipe, form: form) %>
   <% end %>
 
+  <% if recipe.persisted? %>
+    <%= render Recipes::OptionGroupsEditorComponent.new(recipe: recipe, form: form) %>
+  <% end %>
+
   <%# Mostrar en tu tienda — publishes the recipe to the public menu.
       Disabled until the operator has attached a photo, since a photoless
       menu card looks broken to customers. The hint text flips accordingly

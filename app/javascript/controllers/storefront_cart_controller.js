@@ -103,7 +103,9 @@ export default class extends Controller {
       return
     }
 
-    const existing = this.cart.items.find(i => i.recipe_id === payload.recipe_id)
+    const existing = this.cart.items.find(i =>
+      i.recipe_id === payload.recipe_id && !i.selected_options && !i.removed_components?.length
+    )
     if (existing) {
       existing.qty += 1
     } else {
@@ -121,10 +123,55 @@ export default class extends Controller {
     this.openDrawer()
   }
 
+  addWithOptions(event) {
+    event.preventDefault()
+    const raw = event.params.payload
+    if (!raw) return
+    let payload
+    try {
+      payload = typeof raw === "string" ? JSON.parse(raw) : raw
+    } catch {
+      return
+    }
+
+    const optionsCtrl = this.application.getControllerForElementAndIdentifier(
+      this.element.querySelector("[data-controller*='storefront-recipe-options']"),
+      "storefront-recipe-options"
+    )
+
+    let selectedOptions = null
+    let removedComponents = []
+    let deltaCents = 0
+
+    if (optionsCtrl) {
+      selectedOptions = optionsCtrl.selectedOptions()
+      removedComponents = optionsCtrl.removedComponents()
+      deltaCents = optionsCtrl.totalDeltaCents()
+    }
+
+    const hasCustomizations = (selectedOptions && Object.keys(selectedOptions).length > 0) ||
+                              removedComponents.length > 0
+
+    this.cart.items.push({
+      recipe_id: payload.recipe_id,
+      name: payload.name,
+      price_cents: payload.price_cents + deltaCents,
+      base_price_cents: payload.price_cents,
+      photo: payload.photo || null,
+      qty: 1,
+      notes: "",
+      selected_options: hasCustomizations ? selectedOptions : null,
+      removed_components: removedComponents.length > 0 ? removedComponents : null
+    })
+
+    this.save()
+    this.render()
+    this.openDrawer()
+  }
+
   increment(event) {
     event.preventDefault()
-    const id = event.currentTarget.dataset.recipeId
-    const item = this.cart.items.find(i => i.recipe_id === id)
+    const item = this._itemFromEvent(event)
     if (item) {
       item.qty += 1
       this.save()
@@ -134,8 +181,7 @@ export default class extends Controller {
 
   decrement(event) {
     event.preventDefault()
-    const id = event.currentTarget.dataset.recipeId
-    const item = this.cart.items.find(i => i.recipe_id === id)
+    const item = this._itemFromEvent(event)
     if (item && item.qty > 1) {
       item.qty -= 1
       this.save()
@@ -145,10 +191,24 @@ export default class extends Controller {
 
   remove(event) {
     event.preventDefault()
-    const id = event.currentTarget.dataset.recipeId
-    this.cart.items = this.cart.items.filter(i => i.recipe_id !== id)
+    const idx = parseInt(event.currentTarget.dataset.cartIdx, 10)
+    if (!isNaN(idx) && idx >= 0 && idx < this.cart.items.length) {
+      this.cart.items.splice(idx, 1)
+    } else {
+      const id = event.currentTarget.dataset.recipeId
+      this.cart.items = this.cart.items.filter(i => i.recipe_id !== id)
+    }
     this.save()
     this.render()
+  }
+
+  _itemFromEvent(event) {
+    const idx = parseInt(event.currentTarget.dataset.cartIdx, 10)
+    if (!isNaN(idx) && idx >= 0 && idx < this.cart.items.length) {
+      return this.cart.items[idx]
+    }
+    const id = event.currentTarget.dataset.recipeId
+    return this.cart.items.find(i => i.recipe_id === id)
   }
 
   openDrawer(event) {
@@ -290,15 +350,17 @@ export default class extends Controller {
 
   updatePayload() {
     if (!this.hasPayloadTarget) return
-    // Serialize items for the server. Order matters for a deterministic
-    // line-item order; the command re-reads prices from the DB so the
-    // price_cents in here is advisory only.
     this.payloadTarget.value = JSON.stringify({
-      items: this.cart.items.map(i => ({
-        recipe_id: i.recipe_id,
-        quantity:  i.qty,
-        notes:     i.notes || ""
-      }))
+      items: this.cart.items.map(i => {
+        const item = {
+          recipe_id: i.recipe_id,
+          quantity:  i.qty,
+          notes:     i.notes || ""
+        }
+        if (i.selected_options) item.selected_options = i.selected_options
+        if (i.removed_components?.length) item.removed_components = i.removed_components
+        return item
+      })
     })
   }
 
@@ -306,6 +368,22 @@ export default class extends Controller {
     const photo = item.photo
       ? `<img src="${this.escapeAttr(item.photo)}" class="h-[56px] w-[56px] rounded-[8px] object-cover" alt="">`
       : `<div class="h-[56px] w-[56px] rounded-[8px]" style="background: var(--brand-1-soft);"></div>`
+
+    let customLines = ""
+    if (item.selected_options) {
+      Object.values(item.selected_options).forEach(selections => {
+        const labels = Array.isArray(selections)
+          ? selections.map(s => this.escapeHtml(s.label || s.text || "")).filter(Boolean).join(", ")
+          : ""
+        if (labels) customLines += `<div class="text-[11px] text-muted truncate">${labels}</div>`
+      })
+    }
+    if (item.removed_components?.length) {
+      const removed = item.removed_components.map(c => `sin ${this.escapeHtml(c)}`).join(", ")
+      customLines += `<div class="text-[11px] text-muted italic truncate">${removed}</div>`
+    }
+
+    const idx = this.cart.items.indexOf(item)
     return `
       ${photo}
       <div class="min-w-0 flex-1">
@@ -313,13 +391,14 @@ export default class extends Controller {
           <div class="text-[14px] font-semibold text-ink truncate">${this.escapeHtml(item.name)}</div>
           <div class="shrink-0 font-serif text-[16px] text-ink">${this.formatMoney(item.price_cents * item.qty)}</div>
         </div>
+        ${customLines}
         <div class="mt-2 flex items-center justify-between">
           <div class="inline-flex items-center overflow-hidden rounded-full border border-line">
-            <button type="button" class="h-7 w-7 text-ink-2 hover:bg-bg" data-action="click->storefront-cart#decrement" data-recipe-id="${this.escapeAttr(item.recipe_id)}" aria-label="Menos">−</button>
+            <button type="button" class="h-7 w-7 text-ink-2 hover:bg-bg" data-action="click->storefront-cart#decrement" data-cart-idx="${idx}" data-recipe-id="${this.escapeAttr(item.recipe_id)}" aria-label="Menos">−</button>
             <span class="min-w-[26px] text-center font-mono text-[13px]">${item.qty}</span>
-            <button type="button" class="h-7 w-7 text-ink-2 hover:bg-bg" data-action="click->storefront-cart#increment" data-recipe-id="${this.escapeAttr(item.recipe_id)}" aria-label="Más">+</button>
+            <button type="button" class="h-7 w-7 text-ink-2 hover:bg-bg" data-action="click->storefront-cart#increment" data-cart-idx="${idx}" data-recipe-id="${this.escapeAttr(item.recipe_id)}" aria-label="Más">+</button>
           </div>
-          <button type="button" class="text-[11.5px] text-muted hover:text-err" data-action="click->storefront-cart#remove" data-recipe-id="${this.escapeAttr(item.recipe_id)}">Quitar</button>
+          <button type="button" class="text-[11.5px] text-muted hover:text-err" data-action="click->storefront-cart#remove" data-cart-idx="${idx}" data-recipe-id="${this.escapeAttr(item.recipe_id)}">Quitar</button>
         </div>
       </div>
     `

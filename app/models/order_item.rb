@@ -2,16 +2,19 @@
 #
 # Table name: order_items
 #
-#  id               :bigint           not null, primary key
-#  notes            :text
-#  position         :integer
-#  quantity         :decimal(10, 3)   default(1.0), not null
-#  unit_cost_cents  :bigint           default(0), not null
-#  unit_price_cents :bigint           default(0), not null
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  order_id         :bigint           not null
-#  recipe_id        :bigint           not null
+#  id                        :bigint           not null, primary key
+#  notes                     :text
+#  options_price_delta_cents :bigint           default(0), not null
+#  position                  :integer
+#  quantity                  :decimal(10, 3)   default(1.0), not null
+#  removed_components        :jsonb
+#  selected_options          :jsonb
+#  unit_cost_cents           :bigint           default(0), not null
+#  unit_price_cents          :bigint           default(0), not null
+#  created_at                :datetime         not null
+#  updated_at                :datetime         not null
+#  order_id                  :bigint           not null
+#  recipe_id                 :bigint           not null
 #
 # Indexes
 #
@@ -29,6 +32,7 @@ class OrderItem < ApplicationRecord
 
   monetize :unit_price_cents
   monetize :unit_cost_cents
+  monetize :options_price_delta_cents, allow_nil: false
 
   belongs_to :order
   belongs_to :recipe
@@ -41,6 +45,24 @@ class OrderItem < ApplicationRecord
 
   def line_total
     Money.new((unit_price_cents * quantity).to_i, "MXN")
+  end
+
+  def display_options
+    lines = []
+    (selected_options || {}).each do |_group_key, selection|
+      next if selection.blank?
+      Array(selection).each do |opt|
+        lines << (opt.is_a?(Hash) ? opt["label"] : opt.to_s)
+      end
+    end
+    (removed_components || []).each do |label|
+      lines << "sin #{label}"
+    end
+    lines.compact_blank
+  end
+
+  def has_customizations?
+    selected_options.present? || removed_components.present?
   end
 
   private

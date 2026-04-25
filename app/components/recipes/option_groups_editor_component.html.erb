@@ -1,0 +1,178 @@
+<fieldset class="flex flex-col gap-4 rounded-card border border-line bg-bg-2/40 p-5 sm:p-6"
+          data-controller="recipe-option-groups"
+          data-recipe-option-groups-next-index-value="<%= option_groups.size %>">
+  <legend class="sr-only"><%= t("recipes.options.headline") %></legend>
+
+  <div class="flex items-baseline justify-between gap-3">
+    <div class="flex flex-col gap-0.5">
+      <%= render Ui::KickerComponent.new(text: t("recipes.options.kicker")) %>
+      <h3 class="font-serif text-[20px] leading-[1.2] text-ink">
+        <%= t("recipes.options.headline") %>
+      </h3>
+    </div>
+  </div>
+
+  <div data-recipe-option-groups-target="groups" class="flex flex-col gap-4">
+    <% if option_groups.empty? %>
+      <p data-recipe-option-groups-target="empty"
+         class="text-[13px] text-muted italic py-2">
+        <%= t("recipes.options.empty") %>
+      </p>
+    <% end %>
+
+    <% option_groups.each_with_index do |group, gi| %>
+      <%= form.fields_for :option_groups, group, child_index: gi do |gf| %>
+        <%= render "recipes/option_group_fields", gf: gf, group: group, index: gi, kind_options: kind_options %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <button type="button"
+          data-action="click->recipe-option-groups#addGroup"
+          class="inline-flex items-center gap-2 self-start text-[13px] font-medium text-accent hover:text-accent-2 transition-colors px-1 py-1">
+    <%= helpers.icon(:plus, size: :sm) %>
+    <span><%= t("recipes.options.add_cta") %></span>
+  </button>
+
+  <%# Template for new option groups, cloned by Stimulus %>
+  <template data-recipe-option-groups-target="groupTemplate">
+    <div class="rounded-card-sm border border-line bg-surface p-4 flex flex-col gap-3"
+         data-recipe-option-groups-target="group">
+      <input type="hidden" name="recipe[option_groups_attributes][NEW_INDEX][account_id]" value="<%= recipe.account_id %>" />
+      <input type="hidden" name="recipe[option_groups_attributes][NEW_INDEX][_destroy]" value="0"
+             data-recipe-option-groups-target="destroyFlag" />
+
+      <div class="flex items-start gap-3 flex-wrap">
+        <div class="flex-1 min-w-[200px] flex flex-col gap-1.5">
+          <label class="text-[12px] text-muted font-medium">
+            <%= t("recipes.options.group_label") %>
+          </label>
+          <input type="text"
+                 name="recipe[option_groups_attributes][NEW_INDEX][label]"
+                 placeholder="<%= t("recipes.options.group_label_placeholder") %>"
+                 required
+                 class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+          <input type="text"
+                 name="recipe[option_groups_attributes][NEW_INDEX][sub]"
+                 placeholder="<%= t("recipes.options.group_sub_placeholder") %>"
+                 class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-1.5 text-[12.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+        </div>
+
+        <div class="w-[160px] flex flex-col gap-1.5">
+          <label class="text-[12px] text-muted font-medium">
+            <%= t("recipes.options.kind_label") %>
+          </label>
+          <select name="recipe[option_groups_attributes][NEW_INDEX][kind]"
+                  data-action="change->recipe-option-groups#kindChanged"
+                  class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+            <% kind_options.each do |label, value| %>
+              <option value="<%= value %>"><%= label %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <label class="flex items-center gap-2 pt-6">
+          <input type="checkbox"
+                 name="recipe[option_groups_attributes][NEW_INDEX][required]"
+                 value="1"
+                 class="w-4 h-4 accent-accent" />
+          <span class="text-[12.5px] text-ink"><%= t("recipes.options.required_label") %></span>
+        </label>
+      </div>
+
+      <div class="flex flex-col gap-1.5" data-recipe-option-groups-target="optionsContainer">
+        <div class="flex flex-col gap-2" data-recipe-option-groups-target="optionsList">
+        </div>
+        <button type="button"
+                data-action="click->recipe-option-groups#addOption"
+                class="inline-flex items-center gap-1.5 self-start text-[12px] font-medium text-accent hover:text-accent-2 transition-colors px-1 py-0.5">
+          <%= helpers.icon(:plus, size: :xs) %>
+          <span><%= t("recipes.options.add_option_cta") %></span>
+        </button>
+      </div>
+
+      <div class="flex justify-end">
+        <button type="button"
+                data-action="click->recipe-option-groups#removeGroup"
+                data-confirm="<%= t("recipes.options.remove_group_confirm") %>"
+                class="inline-flex items-center gap-1.5 text-[12px] text-muted hover:text-err transition-colors px-1 py-0.5">
+          <%= helpers.icon(:trash_2, size: :xs) %>
+        </button>
+      </div>
+    </div>
+  </template>
+
+  <%# Template for new option rows within a group %>
+  <template data-recipe-option-groups-target="optionTemplate">
+    <div class="flex flex-col gap-1 rounded-[10px] border border-line bg-bg-2/30 px-3 py-2.5"
+         data-recipe-option-groups-target="optionRow">
+      <input type="hidden" name="OPTION_PREFIX[_destroy]" value="0"
+             data-recipe-option-groups-target="optionDestroyFlag" />
+      <div class="flex items-center gap-2">
+        <input type="text"
+               name="OPTION_PREFIX[label]"
+               placeholder="<%= t("recipes.options.option_label_placeholder") %>"
+               required
+               class="flex-1 min-w-[140px] bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-1.5 text-[13px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+        <span class="relative flex items-center">
+          <span class="absolute left-2 top-1/2 -translate-y-1/2 text-muted font-mono text-[11px] pointer-events-none">$</span>
+          <input type="number"
+                 name="OPTION_PREFIX[price_delta]"
+                 step="0.01"
+                 placeholder="0.00"
+                 class="w-[100px] bg-surface text-ink border border-line hover:border-line-2 rounded-input pl-5 pr-2 py-1.5 text-[13px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+        </span>
+        <label class="flex items-center gap-1.5">
+          <input type="checkbox"
+                 name="OPTION_PREFIX[is_default]"
+                 value="1"
+                 class="w-3.5 h-3.5 accent-accent" />
+          <span class="text-[11px] text-muted"><%= t("recipes.options.default_label") %></span>
+        </label>
+        <button type="button"
+                data-action="click->recipe-option-groups#removeOption"
+                aria-label="<%= t("recipes.options.remove_option_aria") %>"
+                class="inline-flex items-center justify-center w-6 h-6 rounded-input text-muted hover:text-err transition-colors">
+          <%= helpers.icon(:x, size: :xs) %>
+        </button>
+      </div>
+      <input type="text"
+             name="OPTION_PREFIX[sub]"
+             placeholder="<%= t("recipes.options.option_sub_placeholder") %>"
+             class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-1 text-[12px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+    </div>
+  </template>
+
+  <%# Removable components section — only shown when recipe has ingredient components %>
+  <% if removable_components.any? %>
+    <div class="border-t border-line pt-4 mt-2">
+      <div class="flex flex-col gap-2">
+        <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted">
+          <%= t("recipes.options.removable_label") %>
+        </span>
+        <p class="text-[12px] text-muted -mt-1">
+          <%= t("recipes.options.removable_hint") %>
+        </p>
+        <div class="flex flex-col gap-1.5">
+          <% removable_components.each_with_index do |comp, ci| %>
+            <label class="flex items-center gap-2.5 px-2 py-1.5 rounded-input hover:bg-bg-2/60 transition-colors">
+              <% comp_index = recipe.components.index(comp) || ci %>
+              <input type="hidden"
+                     name="recipe[components_attributes][<%= comp_index %>][id]"
+                     value="<%= comp.id %>" />
+              <input type="hidden"
+                     name="recipe[components_attributes][<%= comp_index %>][is_removable]"
+                     value="0" />
+              <input type="checkbox"
+                     name="recipe[components_attributes][<%= comp_index %>][is_removable]"
+                     value="1"
+                     <%= "checked" if comp.is_removable? %>
+                     class="w-4 h-4 accent-accent" />
+              <span class="text-[13px] text-ink"><%= comp.componentable&.name %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</fieldset>

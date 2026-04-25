@@ -74,6 +74,15 @@ class Recipe < ApplicationRecord
         attrs["quantity"].blank?
     }
 
+  has_many :option_groups,
+    class_name: "RecipeOptionGroup",
+    dependent: :destroy,
+    inverse_of: :recipe
+
+  accepts_nested_attributes_for :option_groups,
+    allow_destroy: true,
+    reject_if: ->(attrs) { attrs["label"].blank? }
+
   # Reverse side — where is this recipe used as a component?
   # Destroy cascades so an Account.destroy can proceed; UI-level deletion
   # warns the operator about affected parent recipes.

@@ -1,0 +1,96 @@
+<div class="rounded-card-sm border border-line bg-surface p-4 flex flex-col gap-3"
+     data-recipe-option-groups-target="group">
+  <%= gf.hidden_field :id %>
+  <%= gf.hidden_field :account_id %>
+  <input type="hidden" name="recipe[option_groups_attributes][<%= index %>][_destroy]"
+         value="0" data-recipe-option-groups-target="destroyFlag" />
+
+  <div class="flex items-start gap-3 flex-wrap">
+    <div class="flex-1 min-w-[200px] flex flex-col gap-1.5">
+      <label class="text-[12px] text-muted font-medium">
+        <%= t("recipes.options.group_label") %>
+      </label>
+      <%= gf.text_field :label,
+            placeholder: t("recipes.options.group_label_placeholder"),
+            required: true,
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+      <%= gf.text_field :sub,
+            placeholder: t("recipes.options.group_sub_placeholder"),
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-1.5 text-[12.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </div>
+
+    <div class="w-[160px] flex flex-col gap-1.5">
+      <label class="text-[12px] text-muted font-medium">
+        <%= t("recipes.options.kind_label") %>
+      </label>
+      <%= gf.select :kind,
+            kind_options,
+            {},
+            data: { action: "change->recipe-option-groups#kindChanged" },
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </div>
+
+    <label class="flex items-center gap-2 pt-6">
+      <%= gf.check_box :required, class: "w-4 h-4 accent-accent" %>
+      <span class="text-[12.5px] text-ink"><%= t("recipes.options.required_label") %></span>
+    </label>
+  </div>
+
+  <div class="flex flex-col gap-1.5" data-recipe-option-groups-target="optionsContainer">
+    <div class="flex flex-col gap-2" data-recipe-option-groups-target="optionsList">
+      <% group.options.kept.order(:position, :id).each_with_index do |opt, oi| %>
+        <%= gf.fields_for :options, opt, child_index: oi do |of| %>
+          <div class="flex flex-col gap-1 rounded-[10px] border border-line bg-bg-2/30 px-3 py-2.5"
+               data-recipe-option-groups-target="optionRow">
+            <%= of.hidden_field :id %>
+            <input type="hidden"
+                   name="recipe[option_groups_attributes][<%= index %>][options_attributes][<%= oi %>][_destroy]"
+                   value="0" data-recipe-option-groups-target="optionDestroyFlag" />
+            <div class="flex items-center gap-2">
+              <%= of.text_field :label,
+                    placeholder: t("recipes.options.option_label_placeholder"),
+                    required: true,
+                    class: "flex-1 min-w-[140px] bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-1.5 text-[13px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+              <span class="relative flex items-center">
+                <span class="absolute left-2 top-1/2 -translate-y-1/2 text-muted font-mono text-[11px] pointer-events-none">$</span>
+                <input type="number"
+                       name="recipe[option_groups_attributes][<%= index %>][options_attributes][<%= oi %>][price_delta]"
+                       value="<%= opt.price_delta_cents.to_i.zero? ? nil : format('%.2f', opt.price_delta_cents / 100.0) %>"
+                       step="0.01"
+                       placeholder="0.00"
+                       class="w-[100px] bg-surface text-ink border border-line hover:border-line-2 rounded-input pl-5 pr-2 py-1.5 text-[13px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+              </span>
+              <label class="flex items-center gap-1.5">
+                <%= of.check_box :is_default, class: "w-3.5 h-3.5 accent-accent" %>
+                <span class="text-[11px] text-muted"><%= t("recipes.options.default_label") %></span>
+              </label>
+              <button type="button"
+                      data-action="click->recipe-option-groups#removeOption"
+                      aria-label="<%= t("recipes.options.remove_option_aria") %>"
+                      class="inline-flex items-center justify-center w-6 h-6 rounded-input text-muted hover:text-err transition-colors">
+                <%= icon(:x, size: :xs) %>
+              </button>
+            </div>
+            <%= of.text_field :sub,
+                  placeholder: t("recipes.options.option_sub_placeholder"),
+                  class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-1 text-[12px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+    <button type="button"
+            data-action="click->recipe-option-groups#addOption"
+            class="inline-flex items-center gap-1.5 self-start text-[12px] font-medium text-accent hover:text-accent-2 transition-colors px-1 py-0.5">
+      <%= icon(:plus, size: :xs) %>
+      <span><%= t("recipes.options.add_option_cta") %></span>
+    </button>
+  </div>
+
+  <div class="flex justify-end">
+    <button type="button"
+            data-action="click->recipe-option-groups#removeGroup"
+            class="inline-flex items-center gap-1.5 text-[12px] text-muted hover:text-err transition-colors px-1 py-0.5">
+      <%= icon(:trash_2, size: :xs) %>
+    </button>
+  </div>
+</div>

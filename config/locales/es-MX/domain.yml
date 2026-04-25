@@ -36,6 +36,11 @@ es-MX:
       drinks:   "Bebidas"
       bases:    "Bases y preparaciones"
       other:    "Otros"
+    option_group_kinds:
+      radio:    "Selección única"
+      check:    "Selección múltiple"
+      swatch:   "Muestra de color"
+      textarea: "Texto libre"
 
   order:
     state:

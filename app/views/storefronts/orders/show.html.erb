@@ -155,6 +155,16 @@
           <div>
             <div class="text-[14px] font-semibold text-ink"><%= item.recipe&.name || "Platillo" %></div>
             <div class="font-mono text-[11.5px] text-muted">× <%= item.quantity %></div>
+            <% if item.has_customizations? %>
+              <div class="mt-1 flex flex-wrap gap-1">
+                <% item.display_options.each do |line| %>
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-mono"
+                        style="background: color-mix(in oklab, var(--brand-1) 8%, var(--color-surface)); color: var(--brand-1);">
+                    <%= line %>
+                  </span>
+                <% end %>
+              </div>
+            <% end %>
             <% if item.notes.present? %>
               <div class="mt-1 text-[12px] text-ink-2 italic"><%= item.notes %></div>
             <% end %>

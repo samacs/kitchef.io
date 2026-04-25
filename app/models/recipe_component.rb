@@ -4,6 +4,7 @@
 #
 #  id                 :bigint           not null, primary key
 #  componentable_type :string           not null
+#  is_removable       :boolean          default(FALSE), not null
 #  notes              :text
 #  position           :integer
 #  quantity           :decimal(10, 3)   not null
@@ -36,6 +37,7 @@ class RecipeComponent < ApplicationRecord
   validate  :no_deep_cycle
   validate  :cross_account_components_rejected
   validate  :unit_compatible_with_componentable
+  validate  :removable_only_for_ingredients
 
   after_commit :enqueue_parent_cost_refresh, on: %i[create update destroy]
 
@@ -97,6 +99,13 @@ class RecipeComponent < ApplicationRecord
   # Components must live in the same account as the parent recipe. Block at
   # validation time rather than trusting the UI — it's cheap, and it keeps
   # cross-tenant leakage impossible via API misuse.
+  def removable_only_for_ingredients
+    return unless is_removable?
+    return if componentable_type == "Ingredient"
+
+    errors.add(:is_removable, :only_ingredients)
+  end
+
   def cross_account_components_rejected
     return unless recipe && componentable.respond_to?(:account_id)
     return if componentable.account_id == recipe.account_id

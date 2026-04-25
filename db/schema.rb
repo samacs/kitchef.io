@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_24_162904) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_24_162913) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -212,10 +212,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_162904) do
   create_table "order_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "notes"
+    t.bigint "options_price_delta_cents", default: 0, null: false
     t.bigint "order_id", null: false
     t.integer "position"
     t.decimal "quantity", precision: 10, scale: 3, default: "1.0", null: false
     t.bigint "recipe_id", null: false
+    t.jsonb "removed_components", default: []
+    t.jsonb "selected_options", default: {}
     t.bigint "unit_cost_cents", default: 0, null: false
     t.bigint "unit_price_cents", default: 0, null: false
     t.datetime "updated_at", null: false
@@ -327,6 +330,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_162904) do
     t.bigint "componentable_id", null: false
     t.string "componentable_type", null: false
     t.datetime "created_at", null: false
+    t.boolean "is_removable", default: false, null: false
     t.text "notes"
     t.integer "position"
     t.decimal "quantity", precision: 10, scale: 3, null: false
@@ -336,6 +340,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_162904) do
     t.index ["componentable_type", "componentable_id"], name: "index_recipe_components_on_componentable"
     t.index ["recipe_id", "position"], name: "index_recipe_components_on_recipe_id_and_position"
     t.index ["recipe_id"], name: "index_recipe_components_on_recipe_id"
+  end
+
+  create_table "recipe_option_groups", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
+    t.integer "kind", default: 0, null: false
+    t.string "label", null: false
+    t.integer "max_length"
+    t.integer "position"
+    t.bigint "recipe_id", null: false
+    t.boolean "required", default: false, null: false
+    t.string "sub"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_recipe_option_groups_on_account_id"
+    t.index ["discarded_at"], name: "index_recipe_option_groups_on_discarded_at"
+    t.index ["recipe_id", "position"], name: "index_recipe_option_groups_on_recipe_id_and_position"
+    t.index ["recipe_id"], name: "index_recipe_option_groups_on_recipe_id"
+  end
+
+  create_table "recipe_options", force: :cascade do |t|
+    t.string "color_hex"
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
+    t.boolean "is_default", default: false, null: false
+    t.string "label", null: false
+    t.integer "position"
+    t.bigint "price_delta_cents", default: 0, null: false
+    t.bigint "recipe_option_group_id", null: false
+    t.string "sub"
+    t.datetime "updated_at", null: false
+    t.index ["discarded_at"], name: "index_recipe_options_on_discarded_at"
+    t.index ["recipe_option_group_id", "position"], name: "index_recipe_options_on_recipe_option_group_id_and_position"
+    t.index ["recipe_option_group_id"], name: "index_recipe_options_on_recipe_option_group_id"
   end
 
   create_table "recipes", force: :cascade do |t|
@@ -492,6 +530,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_24_162904) do
   add_foreign_key "purchases", "accounts"
   add_foreign_key "purchases", "suppliers", on_delete: :nullify
   add_foreign_key "recipe_components", "recipes"
+  add_foreign_key "recipe_option_groups", "accounts"
+  add_foreign_key "recipe_option_groups", "recipes"
+  add_foreign_key "recipe_options", "recipe_option_groups"
   add_foreign_key "recipes", "accounts"
   add_foreign_key "recipes", "categories"
   add_foreign_key "schedules", "accounts"

@@ -9,7 +9,9 @@ module Storefronts
   #     outside the bucket she was already browsing)
   class RecipesController < BaseController
     def show
-      @recipe = @storefront.recipes.kept.published.friendly.find(params[:recipe_slug])
+      @recipe = @storefront.recipes.kept.published
+                  .includes(option_groups: :options, components: :componentable)
+                  .friendly.find(params[:recipe_slug])
       @related = related_recipes(@recipe)
     rescue ActiveRecord::RecordNotFound
       render "storefronts/not_found", status: :not_found

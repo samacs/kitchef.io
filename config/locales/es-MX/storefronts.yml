@@ -140,6 +140,16 @@ es-MX:
       add_to_cart: "Agregar al carrito"
       whatsapp_cta: "Preguntar a %{kitchen} por WhatsApp"
       whatsapp_message: "Hola %{kitchen}, me interesa pedir %{recipe} (%{price}). ¿Me cuentas más?"
+      order_kicker: "Tu pedido"
+      base_line: "1 × %{name}"
+      options:
+        required_hint: "Elige una opción para continuar"
+        removable_heading: "Ingredientes incluidos"
+        removable_hint: "Desmarca los que no quieras"
+        textarea_counter: "%{count}/%{max}"
+        price_delta_plus: "+%{amount}"
+        price_delta_minus: "-%{amount}"
+        estimated_total: "Total estimado"
       related:
         kicker: "Te puede gustar"
         headline_prefix: "Más de"

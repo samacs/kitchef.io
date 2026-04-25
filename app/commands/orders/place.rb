@@ -29,12 +29,17 @@ module Orders
         recipe = resolve_recipe(item_attrs[:recipe_id])
         next if recipe.nil?
 
+        delta_cents = compute_options_delta(item_attrs[:selected_options], recipe)
+
         order.items.build(
-          recipe:           recipe,
-          quantity:         (item_attrs[:quantity].presence || 1).to_d,
-          unit_price_cents: price_from(item_attrs, recipe),
-          unit_cost_cents:  recipe.cost_cents_cached.to_i + recipe.packaging_cents.to_i,
-          notes:            item_attrs[:notes].presence
+          recipe:                   recipe,
+          quantity:                 (item_attrs[:quantity].presence || 1).to_d,
+          unit_price_cents:         price_from(item_attrs, recipe) + delta_cents,
+          unit_cost_cents:          recipe.cost_cents_cached.to_i + recipe.packaging_cents.to_i,
+          notes:                    item_attrs[:notes].presence,
+          selected_options:         item_attrs[:selected_options].presence || {},
+          removed_components:       Array(item_attrs[:removed_components]),
+          options_price_delta_cents: delta_cents
         )
       end
 
@@ -73,6 +78,20 @@ module Orders
         submitted: item_attrs[:unit_price] || item_attrs[:unit_price_cents],
         fallback_cents: recipe.sale_price_cents.to_i
       )
+    end
+
+    def compute_options_delta(selected_options, recipe)
+      return 0 if selected_options.blank?
+
+      option_ids = selected_options.values.flat_map do |selections|
+        Array(selections).filter_map { |s| s[:id] || s["id"] }
+      end
+      return 0 if option_ids.empty?
+
+      RecipeOption.where(
+        id: option_ids,
+        recipe_option_group_id: recipe.option_groups.select(:id)
+      ).sum(:price_delta_cents)
     end
   end
 end

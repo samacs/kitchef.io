@@ -20,6 +20,8 @@
 <%= t(".items_label") %>:
 <% @order.items.each do |item| -%>
   · <%= item.recipe&.name %> × <%= item.quantity %> — <%= humanized_money_with_symbol(Money.new(item.unit_price_cents.to_i * item.quantity.to_d, "MXN")) %>
+<% if item.has_customizations? %>    <%= item.display_options.join(" · ") %>
+<% end -%>
 <% end -%>
 
 <%= t(".total_label") %>: <%= humanized_money_with_symbol(@order.total) %>

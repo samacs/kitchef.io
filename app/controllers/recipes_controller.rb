@@ -126,8 +126,34 @@ class RecipesController < AuthenticatedController
       photos: [],
       components_attributes: [
         :id, :componentable_type, :componentable_id,
-        :quantity, :unit, :notes, :position, :_destroy
+        :quantity, :unit, :notes, :position, :is_removable, :_destroy
+      ],
+      option_groups_attributes: [
+        :id, :account_id, :label, :sub, :kind, :required, :position, :max_length, :_destroy,
+        options_attributes: [
+          :id, :label, :sub, :price_delta, :is_default, :color_hex, :position, :_destroy
+        ]
       ]
-    )
+    ).then { |p| normalize_option_price_deltas(p) }
+  end
+
+  def normalize_option_price_deltas(permitted)
+    groups = permitted[:option_groups_attributes]
+    return permitted unless groups
+
+    groups.each_value do |group_attrs|
+      group_attrs[:account_id] ||= Current.account.id
+      opts = group_attrs[:options_attributes]
+      next unless opts
+
+      opts.each_value do |opt_attrs|
+        raw = opt_attrs.delete(:price_delta)
+        next if raw.blank?
+        normalized = raw.to_s.gsub(",", ".").to_d
+        opt_attrs[:price_delta_cents] = (normalized * 100).to_i
+      end
+    end
+
+    permitted
   end
 end
