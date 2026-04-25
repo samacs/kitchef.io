@@ -26,9 +26,9 @@ export default class extends Controller {
 
     const total = this.baseCentsValue + delta
 
-    if (this.hasTotalDisplayTarget) {
-      this.totalDisplayTarget.textContent = this.formatMoney(total)
-    }
+    this.totalDisplayTargets.forEach(el => {
+      el.textContent = this.formatMoney(total)
+    })
 
     if (this.hasModifiersListTarget) {
       this.renderModifiers(lines)

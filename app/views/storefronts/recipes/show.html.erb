@@ -5,7 +5,7 @@
 <% options_component = Storefronts::RecipeOptionsComponent.new(recipe: @recipe) %>
 <% has_options = options_component.render? %>
 
-<main class="mx-auto max-w-[1200px] px-5 py-8"
+<main class="mx-auto max-w-[1200px] px-5 pt-8 pb-28 lg:pb-8"
       data-controller="storefront-recipe-options"
       data-storefront-recipe-options-base-cents-value="<%= @recipe.sale_price_cents.to_i %>">
 
@@ -231,4 +231,35 @@
       </div>
     </section>
   <% end %>
+
+  <%# ── Mobile sticky bottom bar: live total + add-to-cart ── %>
+  <div class="fixed bottom-0 inset-x-0 z-[100] lg:hidden border-t border-line bg-bg/90 backdrop-blur-xl pb-[max(12px,env(safe-area-inset-bottom))] pt-3 px-5">
+    <div class="flex items-center justify-between gap-4 mx-auto max-w-[1200px]">
+      <div class="min-w-0">
+        <div class="font-mono text-[9px] uppercase tracking-[0.14em] text-muted leading-none mb-1">
+          <%= t("storefronts.recipe.options.estimated_total") %>
+        </div>
+        <span class="font-serif text-[24px] leading-none tracking-tight text-ink"
+              data-storefront-recipe-options-target="totalDisplay">
+          <%= humanized_money_with_symbol(@recipe.sale_price) %>
+        </span>
+      </div>
+      <button type="button"
+              data-action="click->storefront-cart#addWithOptions"
+              data-storefront-cart-payload-param="<%= {
+                recipe_id:    @recipe.prefix_id,
+                recipe_slug:  @recipe.slug,
+                name:         @recipe.name,
+                price_cents:  @recipe.sale_price_cents.to_i,
+                photo:        (url_for(@recipe.photos.first&.variant(resize_to_limit: [ 400, 400 ])) if @recipe.photos.attached?)
+              }.compact.to_json %>"
+              class="inline-flex shrink-0 items-center gap-2 rounded-[12px] px-5 py-3 text-[15px] font-semibold transition shadow-lg"
+              style="background: var(--brand-1); color: var(--brand-1-ink);">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <%= t("storefronts.recipe.add_to_cart") %>
+      </button>
+    </div>
+  </div>
 </main>
