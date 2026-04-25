@@ -66,7 +66,16 @@ class AccountsController < AuthenticatedController
         colonia city
         delivery_zones payment_notes pickup_reminder_hours
       ],
-      settings: %i[default_packaging_cents]
-    )
+      settings: %i[default_packaging default_packaging_cents]
+    ).then { |p| normalize_settings_packaging(p) }
+  end
+
+  def normalize_settings_packaging(permitted)
+    raw = permitted.dig(:settings, :default_packaging)
+    return permitted if raw.blank?
+    permitted[:settings].delete(:default_packaging)
+    normalized = raw.to_s.gsub(",", ".").to_d
+    permitted[:settings][:default_packaging_cents] = (normalized * 100).to_i
+    permitted
   end
 end

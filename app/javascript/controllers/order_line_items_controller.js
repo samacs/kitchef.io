@@ -14,7 +14,7 @@ import { Controller } from "@hotwired/stimulus"
 //     pure display, server is the source of truth.
 export default class extends Controller {
   static targets = [
-    "rows", "template", "row", "recipeSelect", "quantity", "price",
+    "rows", "template", "row", "quantity", "price",
     "lineTotal", "destroy", "total", "empty"
   ]
 
@@ -63,23 +63,20 @@ export default class extends Controller {
   }
 
   recipeChanged(event) {
-    const select = event.target
-    const row = select.closest("[data-order-line-items-target='row']")
+    const row = event.target.closest("[data-order-line-items-target='row']")
     if (!row) return
 
-    const opt = select.options[select.selectedIndex]
+    const recipeId = event.detail?.id
+    const recipe = this.recipeOptionsValue.find(r => String(r[1]) === String(recipeId))
+    const attrs = recipe?.[2] || {}
 
-    // Adjust the quantity input's step + min for the picked recipe's
-    // yield_unit (pieces/servings/g/ml → integer, kg/l → 0.1). The
-    // server helper ships the rule as data attributes so JS doesn't
-    // need to know which unit maps to which step.
     const qty = row.querySelector("input[name$='[quantity]']")
     if (qty) {
-      const step = opt?.dataset?.qtyStep
-      const min  = opt?.dataset?.qtyMin
+      const step = attrs["data-qty-step"]
+      const min  = attrs["data-qty-min"]
       if (step) qty.step = step
       if (min)  qty.min  = min
-      qty.inputMode = (step && step.includes(".")) ? "decimal" : "numeric"
+      qty.inputMode = (step && step.includes?.(".")) ? "decimal" : "numeric"
     }
 
     const priceInput = this.priceInput(row)
@@ -90,7 +87,7 @@ export default class extends Controller {
       return
     }
 
-    const cents = parseInt(opt?.dataset?.priceCents || "0", 10)
+    const cents = parseInt(attrs["data-price-cents"] || "0", 10)
     if (cents > 0) priceInput.value = (cents / 100).toFixed(2)
     this.recalc()
   }

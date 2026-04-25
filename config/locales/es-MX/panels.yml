@@ -931,6 +931,7 @@ es-MX:
         label: "Empaque por pedido"
         hint: "Lo que te cuesta el empaque estándar por pedido (bolsa, servilletas, etiqueta). Se suma al total de cada pedido nuevo."
         cents_hint: "En centavos (ej: 800 = $8.00)."
+        pesos_hint: "En pesos (ej: 8.00 = ocho pesos)."
   subscription:
     title: "Plan"
 

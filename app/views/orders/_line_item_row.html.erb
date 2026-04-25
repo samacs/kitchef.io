@@ -8,24 +8,18 @@
          value="<%= destroy_value %>"
          data-order-line-items-target="destroy" />
 
-  <label class="col-span-12 sm:col-span-6 flex flex-col gap-1.5">
-    <span class="text-[12px] text-muted font-medium">
-      <%= t("orders.form.pick_recipe_placeholder") %>
-    </span>
-    <select name="<%= field_name_prefix %>[recipe_id]"
-            data-order-line-items-target="recipeSelect"
-            data-action="change->order-line-items#recipeChanged"
-            class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-2 text-[13.5px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
-      <option value=""><%= t("orders.form.pick_recipe_placeholder") %></option>
-      <% recipe_options.each do |label, value, attrs| %>
-        <option value="<%= value %>"
-                data-price-cents="<%= attrs[:'data-price-cents'] %>"
-                <%= "selected" if recipe_id.to_i == value.to_i %>>
-          <%= label %>
-        </option>
-      <% end %>
-    </select>
-  </label>
+  <% row_index = field_name_prefix[/\[([^\]]+)\]\z/, 1] || "0" %>
+  <div class="col-span-12 sm:col-span-6"
+       data-action="combobox:selected->order-line-items#recipeChanged">
+    <%= render Ui::ComboboxComponent.new(
+          name: "#{field_name_prefix}[recipe_id]",
+          id: "order_items_#{row_index}_recipe",
+          label: t("orders.form.pick_recipe_placeholder"),
+          options: recipe_options.map { |label, value, _| [label, value] },
+          value: recipe_id,
+          placeholder: t("orders.form.pick_recipe_placeholder")
+        ) %>
+  </div>
 
   <% rule = quantity_rule_for(recipe_unit) %>
   <label class="col-span-4 sm:col-span-2 flex flex-col gap-1.5">
