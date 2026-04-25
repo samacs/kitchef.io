@@ -393,7 +393,7 @@ Recommended merge order: **1 → 3 → 2 → 5 → 4**. The first three slices a
 
 ---
 
-## Phase 10 — Rentabilidad real: costos fijos y utilidad neta (next)
+## Phase 10 — Rentabilidad real: costos fijos y utilidad neta (shipped)
 
 **Context.** Phase 9 made "gastos reales" honest at the variable-cost level — every kilo of harina, every kg de arrachera, every bolsa de empaque that runs through a proveedor is now in the ledger. But that's only half of what an operator actually spends. Rent, gas, platform commissions, Didi subscriptions — those are fixed (or semi-fixed) monthly costs that are just as real, and they're invisible on `/reports/finance` today. An operator reading "Margen bruto 62%" thinks she's doing better than she is.
 
@@ -415,40 +415,40 @@ Phase 10 closes the other half of the ledger: fixed-cost tracking, a real "utili
 
 #### Slice 1 — Categorías de costos fijos (S)
 
-- [ ] New `FixedCostCategory` model — per-account, `kind` enum (`rent` / `utilities` / `packaging` / `platform` / `other`), `name`, `position`, soft-deletable.
-- [ ] `Account#after_create :bootstrap_fixed_cost_categories` seeds five rows: Renta, Gas y servicios, Empaque, Plataformas (Didi/Rappi/Uber), Otros.
-- [ ] Inline-create picker via the existing `Ui::ComboboxComponent` — same pattern as Phase 9's category work.
+- [x] ~~New `FixedCostCategory` model — per-account, `kind` enum (`rent` / `utilities` / `packaging` / `platform` / `other`), `name`, `position`, soft-deletable.~~
+- [x] ~~`Account#after_create :bootstrap_fixed_cost_categories` seeds five rows: Renta, Gas y servicios, Empaque, Plataformas (Didi/Rappi/Uber), Otros.~~
+- [x] ~~Inline-create picker via the existing `Ui::ComboboxComponent` — same pattern as Phase 9's category work.~~
 
 #### Slice 2 — Registro de costos fijos (M)
 
-- [ ] New `FixedCost` model — `account_id`, `fixed_cost_category_id`, `amount_cents`, `recurrence` enum (`monthly` / `weekly` / `yearly` / `one_time`), `start_date`, `end_date` (nullable), `notes`, `cost_per_pedido_cents` (nullable, see Slice 4).
-- [ ] `/costos-fijos` index + drawer form CRUD. Mobile-first. Reuse the suppliers drawer pattern wholesale.
-- [ ] `FixedCosts::AllocationForWindow` service — given `(account, starting, ending)`, returns `{ total_cents:, by_category: { category_id → cents } }`. Monthly entries prorate as `amount × days_in_window / 30`; weekly as `amount × days / 7`; yearly as `amount × days / 365`; one-time entries that fall inside the window contribute their full amount.
-- [ ] Paper-trail on `FixedCost` so the operator can see when she raised/lowered a recurring cost.
-- [ ] Soft-delete stays on (`HasSoftDelete`) because a discarded cost shouldn't vanish from historical reports that already ran against it.
+- [x] ~~New `FixedCost` model — `account_id`, `fixed_cost_category_id`, `amount_cents`, `recurrence` enum (`monthly` / `weekly` / `yearly` / `one_time`), `start_date`, `end_date` (nullable), `notes`, `cost_per_pedido_cents` (nullable, see Slice 4).~~
+- [x] ~~`/costos-fijos` index + drawer form CRUD. Mobile-first. Reuse the suppliers drawer pattern wholesale.~~
+- [x] ~~`FixedCosts::AllocationForWindow` service — given `(account, starting, ending)`, returns `{ total_cents:, by_category: { category_id → cents } }`. Monthly entries prorate as `amount × days_in_window / 30`; weekly as `amount × days / 7`; yearly as `amount × days / 365`; one-time entries that fall inside the window contribute their full amount.~~
+- [x] ~~Paper-trail on `FixedCost` so the operator can see when she raised/lowered a recurring cost.~~
+- [x] ~~Soft-delete stays on (`HasSoftDelete`) because a discarded cost shouldn't vanish from historical reports that already ran against it.~~
 
 #### Slice 3 — Utilidad neta en /reports/finance (S)
 
-- [ ] Extend `Reports::Finance#call` — add `fixed_costs_cents` + `net_profit_cents` + `net_profit_pct` + `fixed_costs_by_category` fields on `PeriodStats`. One extra SQL round-trip for the period's fixed-cost allocation.
-- [ ] New KPI card: **Utilidad neta** = revenue − variable (real purchases) − fixed allocation. Shown alongside Margen bruto + Margen real. Hidden when no fixed costs exist; nudge card replaces it: *"Agrega tu renta y gastos fijos para ver tu utilidad real."*
-- [ ] New tile: **Costo fijo por pedido** = fixed allocation ÷ `order_count` in window (when `order_count > 0`). Copy: *"Qué tanto tienes que pagar por cada pedido solo por existir."*
-- [ ] Day-by-day breakdown adds a `fixed` column (muted when zero — most days will be).
-- [ ] CSV export adds `costo_fijo_mxn`, `utilidad_neta_mxn`, `pct_utilidad_neta` columns.
-- [ ] Dashboard weekly snapshot (`Dashboards::WeeklySnapshotComponent`) gets a third line "Utilidad neta" when at least one fixed cost exists for the account.
+- [x] ~~Extend `Reports::Finance#call` — add `fixed_costs_cents` + `net_profit_cents` + `net_profit_pct` + `fixed_costs_by_category` fields on `PeriodStats`. One extra SQL round-trip for the period's fixed-cost allocation.~~
+- [x] ~~New KPI card: **Utilidad neta** = revenue − variable (real purchases) − fixed allocation. Shown alongside Margen bruto + Margen real. Hidden when no fixed costs exist; nudge card replaces it: *"Agrega tu renta y gastos fijos para ver tu utilidad real."*~~
+- [x] ~~New tile: **Costo fijo por pedido** = fixed allocation ÷ `order_count` in window (when `order_count > 0`). Copy: *"Qué tanto tienes que pagar por cada pedido solo por existir."*~~
+- [x] ~~Day-by-day breakdown adds a `fixed` column (muted when zero — most days will be).~~
+- [x] ~~CSV export adds `costo_fijo_mxn`, `utilidad_neta_mxn`, `pct_utilidad_neta` columns.~~
+- [x] ~~Dashboard weekly snapshot (`Dashboards::WeeklySnapshotComponent`) gets a third line "Utilidad neta" when at least one fixed cost exists for the account.~~
 
 #### Slice 4 — Empaque por pedido (S)
 
-- [ ] New `Accounts::Settings.default_packaging_cents` — the per-pedido flat packaging fee the operator pays regardless of dish (bolsas, servilletas).
-- [ ] `/account/edit` gains a small "Empaque por pedido" input in the config section.
-- [ ] `Order#packaging_cents` column (bigint, default 0) — hydrated from the account default at `Orders::Place` + `Orders::Update`; manually overridable on the order drawer ("Empaque extra" input, muted when it matches the default).
-- [ ] `Reports::Finance` folds `SUM(orders.packaging_cents)` into the window's variable-cost total (treated as COGS, not fixed).
-- [ ] Kanban card footer shows the packaging sub-line under Total when nonzero.
+- [x] ~~New `Accounts::Settings.default_packaging_cents` — the per-pedido flat packaging fee the operator pays regardless of dish (bolsas, servilletas).~~
+- [x] ~~`/account/edit` gains a small "Empaque por pedido" input in the config section.~~
+- [x] ~~`Order#packaging_cents` column (bigint, default 0) — hydrated from the account default at `Orders::Place` + `Orders::Update`; manually overridable on the order drawer ("Empaque extra" input, muted when it matches the default).~~
+- [x] ~~`Reports::Finance` folds `SUM(orders.packaging_cents)` into the window's variable-cost total (treated as COGS, not fixed).~~
+- [x] ~~Kanban card footer shows the packaging sub-line under Total when nonzero.~~
 
 #### Slice 5 — Empaque por receta (XS)
 
-- [ ] `Recipe#packaging_cents` column — for dishes where packaging is structurally tied to the dish (pastel en caja grande vs. un tamal en hoja).
-- [ ] `OrderItem#unit_cost_cents` snapshots now include the recipe's packaging cost at order time, same as cost_cached behavior.
-- [ ] Order total = sum(items.unit_price × qty) + orders.packaging_cents + Σ(items.recipe.packaging_cents × qty). Recompute hook mirrors the existing total_cents cascade.
+- [x] ~~`Recipe#packaging_cents` column — for dishes where packaging is structurally tied to the dish (pastel en caja grande vs. un tamal en hoja).~~
+- [x] ~~`OrderItem#unit_cost_cents` snapshots now include the recipe's packaging cost at order time, same as cost_cached behavior.~~
+- [x] ~~Order total = sum(items.unit_price × qty) + orders.packaging_cents + Σ(items.recipe.packaging_cents × qty). Recompute hook mirrors the existing total_cents cascade.~~
 
 ### Out (explicit deferrals)
 
@@ -520,7 +520,7 @@ Phase 10 closes the other half of the ledger: fixed-cost tracking, a real "utili
 
 ---
 
-## Phase 11 — Personalización de platillos (planned)
+## Phase 11 — Personalización de platillos (next)
 
 **Context.** Today every pedido is a flat `{recipe, qty, unit_price}` — a customer who orders "Pastel de 3 leches" can't pick 10-vs-20 porciones, can't swap strawberry for peach filling, can't ask for the meringue in rosa, and can't type a dedicatoria. On a torta, she can't tell the operator "sin jitomate". On a hamburguesa, she can't pick the bread. All of that lives today in free-text `delivery_notes` the operator has to re-read by hand — a conversion killer and an operational tax at the same time.
 
@@ -631,10 +631,10 @@ See `~/.claude/plans/phase-12-pagos-spei-propina.md` for the full plan.
 4. ~~**Phase 7 (composable recipes)**~~ — shipped. Decomposition UI, cost tree, ingredient-impact panel, first-decomposition onboarding. `OrderItem#unit_cost_cents` now snapshots real composed cost at order time.
 5. ~~**Phase 8 (finance & menu performance)**~~ — shipped. `/reports/finance` (KPI triptych + 8-week trend + day-by-day + CSV), `/reports/menu` (estrellas / estables / revisa estos), dashboard weekly snapshot, empty-state handling. The full BCG matrix stays deferred until we've got ≥60 days of pedido history per operator.
 6. ~~**Phase 9 (catálogos, proveedores, compras)**~~ — shipped. Editable categorías, first-class proveedores with per-supplier price history, persistent purchase ledger feeding the shopping list + finance report's "gastos reales" + "margen real" badge. Plus the `Geocodable` concern, polymorphic `GeocodeJob` + `StaticMapJob`, cached static-map attachments, fixed-position flash region, Turbo live-search with debounce, and a batch of drawer/autosave reliability fixes that benefit every surface. The operator's lista de compras is now the operator's real expense record.
-7. **Phase 10 next (rentabilidad real — costos fijos y utilidad neta)** — the last piece to make `/reports/finance` tell the operator's actual take-home number. Fixed-cost tracking (renta, gas, plataformas, empaque), real Utilidad Neta alongside Margen bruto + Margen real, "Costo fijo por pedido" tile, and per-pedido packaging that moves into the variable bucket where it belongs. Narrower than Phase 9 — one model + one editor + two new cells on the report, ~1 focused work-week.
-8. **Phase 11 (personalización de platillos)** — storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients ("sin jitomate") + selectable ingredients ("elige el pan"). Recipe editor gains an "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. The ceiling on AOV per pedido; unlocks every hamburger/torta/ensalada operator waiting in the alpha pool. Availability gating on ingredient stock stays deferred until depletion ships.
+7. ~~**Phase 10 (rentabilidad real — costos fijos y utilidad neta)**~~ — shipped. Fixed-cost tracking (renta, gas, plataformas, empaque), real Utilidad Neta alongside Margen bruto + Margen real, "Costo fijo por pedido" tile, per-pedido + per-recipe packaging. `/reports/finance` now tells the operator her actual take-home number.
+8. **Phase 11 next (personalización de platillos)** — storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients ("sin jitomate") + selectable ingredients ("elige el pan"). Recipe editor gains an "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. The ceiling on AOV per pedido; unlocks every hamburger/torta/ensalada operator waiting in the alpha pool. Availability gating on ingredient stock stays deferred until depletion ships.
 9. **Phase 12 (instrucciones de pago + propina)** — display-only v1, no gateway integrations. Kitchen configures SPEI details + accepted methods at `/account/edit`; storefront checkout grows a Propina card + Método de pago card (Efectivo / SPEI / Tarjeta) with method-specific UI (cash-change input, CLABE + Copiar, placeholder for card). Kanban + confirmation email + WhatsApp render the method + propina so the operator + customer never lose the context. ~1 focused work-week. Mercado Pago / Stripe / reconciliation dashboard get their own sub-phases (12.5+) once 3+ operators ask.
 
-Phases 10 and 11 are roughly independent — 10 is operator-facing back-office (finishes the "real profitability" arc from Phase 9), 11 is customer-facing growth. Build whichever gets louder signal first; both estimate at ~1 work-week. Phase 12 can land any time after Phase 6 (storefront checkout structure) — it doesn't depend on 10 or 11.
+Phases 11 and 12 are roughly independent — 11 is customer-facing growth (AOV lever), 12 is payment UX (conversion lever). Build whichever gets louder signal first; both estimate at ~1 work-week. Phase 12 can land any time after Phase 6 (storefront checkout structure) — it doesn't depend on 11.
 
 Phase 13 is continuous; each ships a slice per quarter once the core loop is done.
