@@ -3,11 +3,20 @@
 <% content_for :page_subtitle, t("recipes.index.subtitle") %>
 
 <% content_for :page_action do %>
-  <%= link_to new_recipe_path,
-        class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
-    <%= icon(:plus, size: :xs) %>
-    <span><%= t("recipes.index.cta") %></span>
-  <% end %>
+  <div class="flex items-center gap-2">
+    <% if @archived_count.to_i.positive? %>
+      <%= link_to archived_recipes_path,
+            class: "inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3 py-[8px] rounded-button bg-bg-2 text-ink-2 border border-line hover:border-line-2 hover:text-ink transition-colors" do %>
+        <%= icon(:archive, size: :xs) %>
+        <span><%= t("recipes.index.archived_count", count: @archived_count) %></span>
+      <% end %>
+    <% end %>
+    <%= link_to new_recipe_path,
+          class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+      <%= icon(:plus, size: :xs) %>
+      <span><%= t("recipes.index.cta") %></span>
+    <% end %>
+  </div>
 <% end %>
 
 <%# Decomposition nudge — appears only for accounts still in simple mode

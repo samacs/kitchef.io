@@ -1,0 +1,68 @@
+<% content_for :title,         t("recipes.archived.title") %>
+<% content_for :page_title,    t("recipes.archived.title") %>
+<% content_for :page_subtitle, t("recipes.archived.subtitle") %>
+
+<% content_for :page_action do %>
+  <%= link_to recipes_path,
+        class: "inline-flex items-center gap-2 text-[13px] font-medium px-3.5 py-[8px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
+    <%= icon(:arrow_left, size: :xs) %>
+    <span><%= t("recipes.archived.back_cta") %></span>
+  <% end %>
+<% end %>
+
+<% if @archived_recipes.empty? %>
+  <%= render Recipes::EmptyStateComponent.new(
+        headline_key: "recipes.archived.empty_headline",
+        sub_key:      "recipes.archived.empty_sub",
+        cta_label_key: "recipes.archived.back_cta",
+        cta_href: recipes_path) %>
+<% else %>
+  <ol class="flex flex-col divide-y divide-line rounded-card-sm bg-surface border border-line">
+    <% @archived_recipes.each do |recipe| %>
+      <li class="flex items-center gap-4 px-4 py-3.5 sm:px-5">
+        <% if recipe.photos.attached? %>
+          <img src="<%= url_for(recipe.photos.first.variant(:thumb)) %>"
+               alt=""
+               class="h-12 w-12 rounded-[8px] object-cover shrink-0 opacity-60" />
+        <% else %>
+          <div class="h-12 w-12 rounded-[8px] bg-bg-2 shrink-0 inline-flex items-center justify-center text-muted">
+            <%= icon(:chef_hat, size: :xs) %>
+          </div>
+        <% end %>
+
+        <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-[14.5px] font-medium text-ink truncate">
+              <%= recipe.name %>
+            </span>
+            <% if recipe.internal? %>
+              <%= render Ui::BadgeComponent.new(
+                    label: t("recipes.internal_badge"),
+                    status: :default,
+                    dot: false) %>
+            <% end %>
+          </div>
+          <div class="flex items-center gap-3 text-[12px] text-muted font-mono">
+            <% if recipe.category&.name %>
+              <span><%= recipe.category.name %></span>
+              <span aria-hidden="true">·</span>
+            <% end %>
+            <span>
+              <%= t("recipes.archived.discarded_at",
+                    date: l(recipe.discarded_at.to_date, format: :default)) %>
+            </span>
+          </div>
+        </div>
+
+        <%= button_to restore_recipe_path(recipe),
+              method: :post,
+              data: { turbo_confirm: t("recipes.archived.restore_confirm") },
+              class: "shrink-0 inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-3 py-1.5 rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors",
+              form: { class: "inline" } do %>
+          <%= icon(:arrow_left, size: :xs) %>
+          <%= t("recipes.archived.restore_cta") %>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+<% end %>

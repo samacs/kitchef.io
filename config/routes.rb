@@ -137,8 +137,11 @@ Rails.application.routes.draw do
   resources :recipes do
     member do
       post :toggle_publish, path: "toggle-publish"
+      post :duplicate
+      post :restore
     end
     collection do
+      get  :archived
       post :publish_all,        path: "publish-all"
       post :rescale_for_margin, path: "rescale-for-margin"
     end

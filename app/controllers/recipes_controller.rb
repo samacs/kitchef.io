@@ -2,9 +2,51 @@ class RecipesController < AuthenticatedController
   expose :recipes, -> { Current.account.recipes.kept.includes(:category).order(category_id: :asc, position: :asc) }
   expose :recipe,  -> { find_or_build_recipe }
 
-  def index; end
+  def index
+    # Surface the archive count next to the index header so a freshly-
+    # discarded platillo is one click away from coming back.
+    @archived_count = Current.account.recipes.discarded.count
+  end
   def new;   end
   def edit;  end
+
+  # Archive — lists every soft-deleted recipe so the operator can restore
+  # one. Includes both saleable and internal recipes; sorted most-recently-
+  # discarded first so the latest mistake is easiest to spot.
+  def archived
+    @archived_recipes = Current.account.recipes.discarded
+      .includes(:category)
+      .order(discarded_at: :desc)
+  end
+
+  # POST /recipes/:id/restore — un-discards a soft-deleted recipe and
+  # leaves it as a draft (the model's discard column is the only state
+  # that flips). Lands the operator back on the index with a confirmation.
+  def restore
+    target = Current.account.recipes.discarded.find_by(id: Recipe.find_by_prefix_id(params[:id])&.id)
+    target ||= Current.account.recipes.discarded.friendly.find_by(slug: params[:id])
+    target ||= Current.account.recipes.discarded.find_by(id: params[:id]) if params[:id].to_i.positive?
+
+    if target
+      target.undiscard
+      redirect_to recipes_path, notice: t(".restored", name: target.name)
+    else
+      redirect_to archived_recipes_path, alert: t(".not_found")
+    end
+  end
+
+  # POST /recipes/:id/duplicate — clones the recipe (components + option
+  # groups) into a fresh draft and lands the operator on its edit page.
+  # The copy starts unpublished so she can rename + tweak before exposing.
+  def duplicate
+    result = Recipes::Duplicate.call(recipe: recipe)
+    if result.success?
+      redirect_to edit_recipe_path(result.object),
+        notice: t(".duplicated", name: result.object.name)
+    else
+      redirect_to recipes_path, alert: result.errors.full_messages.to_sentence
+    end
+  end
 
   # Read-only detail surface: name + photo + sale price + cost tree.
   # The `/recipes` index links recipe cards to `#edit`; the cost tree
