@@ -48,11 +48,16 @@ class OrderItem < ApplicationRecord
   # Belt-and-suspenders snapshot for any path that creates an item outside
   # of the Orders::Place command (e.g. console, console fix-ups). The
   # command sets prices/costs explicitly; only blank attributes get filled.
+  # Recipe-level packaging (e.g. the caja for a pastel) is baked into the
+  # cost snapshot so reports see it through the same surface they already
+  # read — `unit_cost_cents * quantity`.
   def snapshot_costs
     return if recipe.nil?
 
     self.unit_price_cents = recipe.sale_price_cents if unit_price_cents.to_i.zero?
-    self.unit_cost_cents  = recipe.cost_cents_cached.to_i if unit_cost_cents.to_i.zero?
+    if unit_cost_cents.to_i.zero?
+      self.unit_cost_cents = recipe.cost_cents_cached.to_i + recipe.packaging_cents.to_i
+    end
   end
 
   def recipe_is_saleable

@@ -26,6 +26,7 @@
 #  latitude                :decimal(10, 6)
 #  longitude               :decimal(10, 6)
 #  notes                   :text
+#  packaging_cents         :bigint           default(0), not null
 #  paid_at                 :datetime
 #  pickup_reminder_sent_at :datetime
 #  position                :integer
@@ -75,6 +76,7 @@ class Order < ApplicationRecord
   monetize :total_cents
   monetize :deposit_cents
   monetize :balance_cents
+  monetize :packaging_cents
 
   DELIVERY_TYPES = { delivery: 0, pickup: 1 }.freeze
   SOURCES        = {
@@ -177,7 +179,7 @@ class Order < ApplicationRecord
   before_save :recompute_totals
 
   validates :delivery_date, presence: true
-  validates :subtotal_cents, :total_cents, :deposit_cents, :balance_cents,
+  validates :subtotal_cents, :total_cents, :deposit_cents, :balance_cents, :packaging_cents,
     numericality: { greater_than_or_equal_to: 0 }
   validates :delivery_start_time, :delivery_end_time,
     numericality: { only_integer: true, in: 0..TimeOfDay::MAX },
@@ -329,7 +331,7 @@ class Order < ApplicationRecord
     end
     self.subtotal_cents = subtotal
     self.tax_cents      = 0
-    self.total_cents    = subtotal
+    self.total_cents    = subtotal + packaging_cents.to_i
     self.balance_cents  = [ total_cents - deposit_cents.to_i, 0 ].max
   end
 

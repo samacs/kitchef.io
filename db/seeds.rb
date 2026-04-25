@@ -121,7 +121,7 @@ cocina_elena = Account.create!(
   owner: elena,
   name:  "Cocina de Elena",
   time_zone: "America/Mexico_City",
-  settings: { use_composable_recipes: false, onboarding_completed: true },
+  settings: { use_composable_recipes: false, onboarding_completed: true, default_packaging_cents: 500 },
   branding: {
     palette: "bosque",
     secondary_palette: "terracota",
@@ -267,6 +267,11 @@ elena_recipes = [
 ]
 puts "  …creating recipes + attaching photos"
 elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key|
+  # Phase 10 — desserts carry their own packaging (caja de pastel). Give
+  # cakes a $35 baseline so the cost tree surfaces it on the recipe
+  # detail page and the OrderItem snapshots reflect it at order time.
+  recipe_packaging = name.match?(/pastel|flan/i) ? 3500 : 0
+
   recipe = cocina_elena.recipes.create!(
     name: name,
     sale_price_cents: cents,
@@ -275,7 +280,8 @@ elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key
     yield_unit: unit,
     category: recipe_category_for(cocina_elena, cat),
     is_published: true,
-    target_margin_percent: 60
+    target_margin_percent: 60,
+    packaging_cents: recipe_packaging
   )
   attach_seed_image(recipe, :photos,
     url: seed_photo_url(photo_key),
@@ -359,7 +365,8 @@ taqueria_mario = Account.create!(
   settings: {
     use_composable_recipes: true,
     composable_recipes_unlocked_at: 2.weeks.ago,
-    onboarding_completed: true
+    onboarding_completed: true,
+    default_packaging_cents: 800
   },
   branding: {
     palette: "terracota",
@@ -700,6 +707,61 @@ end
 end
 
 # ---------------------------------------------------------------------------
+# Phase 10 — fixed costs (renta, gas, plataformas)
+# ---------------------------------------------------------------------------
+puts "==> seeding fixed costs"
+
+def seed_fixed_cost!(account:, category_name:, amount_cents:, recurrence:, start_date:, end_date: nil, cost_per_pedido_cents: nil, notes: nil)
+  category = account.fixed_cost_categories.kept.find_by(name: category_name)
+  return unless category
+  account.fixed_costs.create!(
+    fixed_cost_category:   category,
+    amount_cents:          amount_cents,
+    recurrence:            recurrence,
+    start_date:            start_date,
+    end_date:              end_date,
+    cost_per_pedido_cents: cost_per_pedido_cents,
+    notes:                 notes
+  )
+end
+
+# Mario — full kit. He's the reference advanced operator, so he has
+# the renta and the platform commission already logged.
+seed_fixed_cost!(
+  account:       taqueria_mario,
+  category_name: "Renta",
+  amount_cents:  1_500_000,  # $15,000
+  recurrence:    :monthly,
+  start_date:    Date.new(2026, 4, 1),
+  notes:         "Local completo — contrato anual."
+)
+seed_fixed_cost!(
+  account:       taqueria_mario,
+  category_name: "Gas y servicios",
+  amount_cents:  200_000,    # $2,000
+  recurrence:    :monthly,
+  start_date:    Date.new(2026, 4, 1)
+)
+seed_fixed_cost!(
+  account:       taqueria_mario,
+  category_name: "Plataformas",
+  amount_cents:  50_000,     # $500
+  recurrence:    :weekly,
+  start_date:    Date.new(2026, 4, 1),
+  notes:         "Paquete Didi Food."
+)
+
+# Elena — moved mid-month, smaller operation. Single rent entry to
+# exercise mid-period start_date in the allocation math.
+seed_fixed_cost!(
+  account:       cocina_elena,
+  category_name: "Renta",
+  amount_cents:  800_000,    # $8,000
+  recurrence:    :monthly,
+  start_date:    Date.new(2026, 3, 15)
+)
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 puts "\n==> done"
@@ -711,4 +773,5 @@ puts "\n==> done"
   puts "    orders:      #{a.orders.count} (#{a.orders.group(:state).count})"
   puts "    suppliers:   #{a.suppliers.count}"
   puts "    purchases:   #{a.purchases.count}"
+  puts "    fixed costs: #{a.fixed_costs.count} (#{a.fixed_cost_categories.count} categories)"
 end

@@ -41,6 +41,9 @@ module Dashboards
     def prev_revenue  = Money.new(previous_stats.revenue_cents, "MXN")
     def margin_pct    = stats.gross_margin_pct
     def order_count   = stats.order_count
+    def net_profit    = Money.new(stats.net_profit_cents, "MXN")
+    def net_profit_pct = stats.net_profit_pct
+    def has_fixed_costs? = stats.has_fixed_costs?
 
     def delta_pct
       return nil if previous_stats.revenue_cents.zero?

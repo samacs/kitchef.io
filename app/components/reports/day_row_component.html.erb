@@ -1,5 +1,11 @@
 <%
-  grid_cols = show_expenses ? "grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]" : "grid-cols-[minmax(0,1fr)_auto_auto_auto]"
+  extra_columns = [ show_expenses, show_fixed_costs ].count(true)
+  grid_cols =
+    case extra_columns
+    when 0 then "grid-cols-[minmax(0,1fr)_auto_auto_auto]"
+    when 1 then "grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]"
+    else        "grid-cols-[minmax(0,1fr)_auto_auto_auto_auto_auto]"
+    end
   row_classes = [
     "grid items-baseline gap-4 py-3 px-4 rounded-card-sm",
     grid_cols,
@@ -37,6 +43,16 @@
     <% if has_expenses? %>
       <span class="font-mono text-[13px] text-warn tabular-nums whitespace-nowrap">
         −<%= helpers.humanized_money_with_symbol(expenses) %>
+      </span>
+    <% else %>
+      <span class="font-mono text-[13px] text-muted/60 tabular-nums">—</span>
+    <% end %>
+  <% end %>
+
+  <% if show_fixed_costs %>
+    <% if has_fixed? %>
+      <span class="font-mono text-[13px] text-muted tabular-nums whitespace-nowrap">
+        −<%= helpers.humanized_money_with_symbol(fixed) %>
       </span>
     <% else %>
       <span class="font-mono text-[13px] text-muted/60 tabular-nums">—</span>

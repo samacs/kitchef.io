@@ -63,6 +63,7 @@
       <%= render Ui::MenuItemComponent.new(
             label: t("user_menu.storefront"), icon: :external_link,
             href: helpers.storefront_path(slug: current_account.slug),
+            target: "_blank",
             trailing: "↗") %>
     <% end %>
 

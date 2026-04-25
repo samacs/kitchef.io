@@ -1,0 +1,131 @@
+<% amount_display = fixed_cost.amount_cents.to_i.zero? ? "" : format("%.2f", fixed_cost.amount_cents / 100.0) %>
+<% cost_per_pedido_display = fixed_cost.cost_per_pedido_cents.to_i.zero? ? "" : format("%.2f", fixed_cost.cost_per_pedido_cents / 100.0) %>
+
+<%= form_with model: fixed_cost,
+      url: fixed_cost.persisted? ? fixed_cost_path(fixed_cost) : fixed_costs_path,
+      class: "flex flex-col gap-5" do |form| %>
+
+  <% if fixed_cost.errors.any? %>
+    <div role="alert"
+         class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+      <span class="text-[12px] font-mono uppercase tracking-[0.14em]">
+        <%= t("onboarding.shared.errors_title") %>
+      </span>
+      <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+        <% fixed_cost.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= render Ui::ComboboxComponent.new(
+        name: "fixed_cost[fixed_cost_category_id]",
+        id: "fixed_cost_fixed_cost_category_id",
+        label: t("fixed_costs.form.category_label"),
+        options: FixedCostCategory.picker_options_for(account: Current.account),
+        value: fixed_cost.fixed_cost_category_id,
+        placeholder: t("fixed_costs.form.category_placeholder"),
+        hint: t("fixed_costs.form.category_hint"),
+        required: true,
+        create_path: fixed_cost_categories_path,
+        list_id: "combobox_fixed_cost_category_options") %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <label for="fixed_cost_amount" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("fixed_costs.form.amount_label") %>
+      </span>
+      <span class="relative flex items-center">
+        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[13px]">$</span>
+        <input type="text"
+               inputmode="decimal"
+               name="fixed_cost[amount]"
+               id="fixed_cost_amount"
+               value="<%= amount_display %>"
+               placeholder="15000.00"
+               class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input pl-7 pr-3 py-2.5 text-[14px] leading-[1.3] font-mono tabular-nums outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+      </span>
+      <span class="text-[12px] text-muted"><%= t("fixed_costs.form.amount_hint") %></span>
+    </label>
+
+    <label for="fixed_cost_recurrence" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("fixed_costs.form.recurrence_label") %>
+      </span>
+      <%= form.select :recurrence,
+            FixedCost::RECURRENCES.keys.map { |r| [ I18n.t("fixed_costs.recurrence.#{r}"), r ] },
+            {},
+            id: "fixed_cost_recurrence",
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+      <span class="text-[12px] text-muted"><%= t("fixed_costs.form.recurrence_hint") %></span>
+    </label>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <label for="fixed_cost_start_date" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("fixed_costs.form.start_date_label") %>
+      </span>
+      <%= form.date_field :start_date,
+            id: "fixed_cost_start_date",
+            required: true,
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </label>
+
+    <label for="fixed_cost_end_date" class="flex flex-col gap-2">
+      <span class="text-[13px] font-medium text-ink leading-none">
+        <%= t("fixed_costs.form.end_date_label") %>
+      </span>
+      <%= form.date_field :end_date,
+            id: "fixed_cost_end_date",
+            class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+      <span class="text-[12px] text-muted"><%= t("fixed_costs.form.end_date_hint") %></span>
+    </label>
+  </div>
+
+  <details class="flex flex-col gap-2" <%= "open" if fixed_cost.per_pedido? %>>
+    <summary class="cursor-pointer text-[13px] font-medium text-ink-2 hover:text-ink">
+      <%= t("fixed_costs.form.per_pedido_toggle") %>
+    </summary>
+    <div class="mt-3 flex flex-col gap-2">
+      <label for="fixed_cost_cost_per_pedido" class="flex flex-col gap-2">
+        <span class="text-[13px] font-medium text-ink leading-none">
+          <%= t("fixed_costs.form.cost_per_pedido_label") %>
+        </span>
+        <span class="relative flex items-center">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[13px]">$</span>
+          <input type="text"
+                 inputmode="decimal"
+                 name="fixed_cost[cost_per_pedido]"
+                 id="fixed_cost_cost_per_pedido"
+                 value="<%= cost_per_pedido_display %>"
+                 placeholder="25.00"
+                 class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input pl-7 pr-3 py-2.5 text-[14px] leading-[1.3] font-mono tabular-nums outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+        </span>
+        <span class="text-[12px] text-muted"><%= t("fixed_costs.form.cost_per_pedido_hint") %></span>
+      </label>
+    </div>
+  </details>
+
+  <label for="fixed_cost_notes" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("fixed_costs.form.notes_label") %>
+    </span>
+    <%= form.text_area :notes,
+          id: "fixed_cost_notes",
+          rows: 2,
+          placeholder: t("fixed_costs.form.notes_placeholder"),
+          class: "w-full bg-surface text-ink placeholder:text-muted border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 resize-y" %>
+  </label>
+
+  <div class="flex items-center justify-between gap-3 pt-2">
+    <%= link_to t("fixed_costs.form.cancel"),
+          fixed_costs_path,
+          data: { action: "click->right-drawer#close" },
+          class: "inline-flex items-center justify-center gap-2 text-[13px] font-medium px-4 py-[10px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" %>
+
+    <%= form.submit(fixed_cost.persisted? ? t("fixed_costs.form.submit_update") : t("fixed_costs.form.submit_create"),
+          class: "inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta") %>
+  </div>
+<% end %>

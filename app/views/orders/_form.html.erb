@@ -275,6 +275,31 @@
     </div>
   </div>
 
+  <%# ---- Packaging per pedido ----------------------------------------- %>
+  <% default_packaging_cents = Current.account.settings.default_packaging_cents.to_i %>
+  <% packaging_display = order.packaging_cents.to_i.zero? ? "" : format("%.2f", order.packaging_cents / 100.0) %>
+  <label for="order_packaging" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("orders.form.packaging.label") %>
+    </span>
+    <span class="relative flex items-center">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[13px]">$</span>
+      <input type="text"
+             inputmode="decimal"
+             name="order[packaging]"
+             id="order_packaging"
+             value="<%= packaging_display %>"
+             placeholder="0.00"
+             class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input pl-7 pr-3 py-2.5 text-[14px] leading-[1.3] font-mono tabular-nums outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+    </span>
+    <span class="text-[12px] text-muted">
+      <%= t("orders.form.packaging.hint") %>
+      <% if default_packaging_cents.positive? %>
+        · <%= t("orders.form.packaging.default_hint", amount: humanized_money_with_symbol(Money.new(default_packaging_cents, "MXN"))) %>
+      <% end %>
+    </span>
+  </label>
+
   <label for="order_notes" class="flex flex-col gap-2">
     <span class="text-[13px] font-medium text-ink leading-none">
       <%= t("orders.form.notes_label") %>

@@ -1,0 +1,12 @@
+<%= link_to href,
+      class: "flex flex-col gap-2 p-5 rounded-card bg-surface border border-dashed border-line hover:border-accent/50 shadow-card transition group" do %>
+  <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-muted">
+    <%= t("reports.finance.net_profit.empty.label") %>
+  </span>
+  <p class="text-[13.5px] text-ink-2 leading-[1.55]">
+    <%= t("reports.finance.net_profit.empty.sub") %>
+  </p>
+  <span class="font-mono text-[12px] font-medium text-accent group-hover:underline">
+    <%= t("reports.finance.net_profit.empty.cta") %> →
+  </span>
+<% end %>

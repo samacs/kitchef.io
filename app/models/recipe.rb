@@ -9,6 +9,7 @@
 #  is_published          :boolean          default(FALSE), not null
 #  is_saleable           :boolean          default(TRUE), not null
 #  name                  :string           not null
+#  packaging_cents       :bigint           default(0), not null
 #  position              :integer
 #  sale_price_cents      :bigint           default(0), not null
 #  slug                  :string           not null
@@ -45,6 +46,7 @@ class Recipe < ApplicationRecord
   positioned on: [ :account, :category_id ]
   monetize :sale_price_cents
   monetize :cost_cents_cached, as: :cost_cached, allow_nil: true
+  monetize :packaging_cents
 
   YIELD_UNITS = %w[piece g kg ml l serving].freeze
 
@@ -91,6 +93,7 @@ class Recipe < ApplicationRecord
   validates :yield_quantity, numericality: { greater_than: 0 }
   validates :yield_unit, presence: true, inclusion: { in: YIELD_UNITS }
   validates :target_margin_percent, numericality: { in: 0..100 }
+  validates :packaging_cents, numericality: { greater_than_or_equal_to: 0 }
   validates :sale_price_cents,
     numericality: { greater_than_or_equal_to: 0 },
     presence: true,

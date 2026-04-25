@@ -55,7 +55,7 @@ module Orders
             recipe:           recipe,
             quantity:         (attrs[:quantity].presence || 1).to_d,
             unit_price_cents: price_cents(attrs, recipe.sale_price_cents),
-            unit_cost_cents:  recipe.cost_cents_cached.to_i,
+            unit_cost_cents:  recipe.cost_cents_cached.to_i + recipe.packaging_cents.to_i,
             notes:            attrs[:notes].presence
           )
         end

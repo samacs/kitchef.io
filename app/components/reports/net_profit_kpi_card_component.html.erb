@@ -1,0 +1,25 @@
+<article class="flex flex-col gap-2 p-5 rounded-card bg-accent-soft/40 border border-accent/30 shadow-card">
+  <span class="font-mono text-[11.5px] font-medium tracking-[0.18em] uppercase text-accent-2">
+    <%= t("reports.finance.net_profit.label") %>
+  </span>
+  <span class="font-serif text-[28px] leading-[1.05] text-ink tracking-tight">
+    <%= helpers.humanized_money_with_symbol(amount) %>
+  </span>
+  <div class="flex items-center gap-3 flex-wrap">
+    <% if pct %>
+      <%
+        pct_class = case pct_tone
+                    when :up   then "text-accent"
+                    when :down then "text-err"
+                    else "text-muted"
+                    end
+      %>
+      <span class="font-mono text-[12px] font-medium <%= pct_class %>">
+        <%= t("reports.finance.net_profit.pct_suffix", pct: pct) %>
+      </span>
+    <% end %>
+    <span class="font-mono text-[11.5px] text-muted">
+      <%= t("reports.finance.net_profit.sub", amount: helpers.humanized_money_with_symbol(fixed_costs)) %>
+    </span>
+  </div>
+</article>

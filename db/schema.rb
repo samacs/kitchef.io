@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_23_214600) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_24_162904) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,39 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_214600) do
     t.index ["discarded_at"], name: "index_clients_on_discarded_at"
   end
 
+  create_table "fixed_cost_categories", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
+    t.integer "kind", default: 99, null: false
+    t.string "name", null: false
+    t.integer "position"
+    t.datetime "updated_at", null: false
+    t.index "account_id, lower((name)::text)", name: "uniq_fixed_cost_categories_account_name", unique: true, where: "(discarded_at IS NULL)"
+    t.index ["account_id", "kind", "position"], name: "idx_on_account_id_kind_position_20bc8955b1"
+    t.index ["account_id"], name: "index_fixed_cost_categories_on_account_id"
+    t.index ["discarded_at"], name: "index_fixed_cost_categories_on_discarded_at"
+  end
+
+  create_table "fixed_costs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "amount_cents", default: 0, null: false
+    t.bigint "cost_per_pedido_cents"
+    t.datetime "created_at", null: false
+    t.string "currency", default: "MXN", null: false
+    t.datetime "discarded_at"
+    t.date "end_date"
+    t.bigint "fixed_cost_category_id", null: false
+    t.text "notes"
+    t.integer "recurrence", default: 0, null: false
+    t.date "start_date", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "start_date"], name: "index_fixed_costs_on_account_id_and_start_date"
+    t.index ["account_id"], name: "index_fixed_costs_on_account_id"
+    t.index ["discarded_at"], name: "index_fixed_costs_on_discarded_at"
+    t.index ["fixed_cost_category_id"], name: "index_fixed_costs_on_fixed_cost_category_id"
+  end
+
   create_table "friendly_id_slugs", force: :cascade do |t|
     t.datetime "created_at"
     t.string "scope"
@@ -218,6 +251,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_214600) do
     t.decimal "latitude", precision: 10, scale: 6
     t.decimal "longitude", precision: 10, scale: 6
     t.text "notes"
+    t.bigint "packaging_cents", default: 0, null: false
     t.datetime "paid_at"
     t.datetime "pickup_reminder_sent_at"
     t.integer "position"
@@ -314,6 +348,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_214600) do
     t.boolean "is_published", default: false, null: false
     t.boolean "is_saleable", default: true, null: false
     t.string "name", null: false
+    t.bigint "packaging_cents", default: 0, null: false
     t.integer "position"
     t.bigint "sale_price_cents", default: 0, null: false
     t.string "slug", null: false
@@ -442,6 +477,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_214600) do
   add_foreign_key "availabilities", "schedules"
   add_foreign_key "categories", "accounts"
   add_foreign_key "clients", "accounts"
+  add_foreign_key "fixed_cost_categories", "accounts"
+  add_foreign_key "fixed_costs", "accounts"
+  add_foreign_key "fixed_costs", "fixed_cost_categories"
   add_foreign_key "ingredients", "accounts"
   add_foreign_key "ingredients", "categories"
   add_foreign_key "order_items", "orders"
