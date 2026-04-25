@@ -54,3 +54,5 @@
 #   mkcert -key-file ssl/lvh.me.key -cert-file ssl/lvh.me.pem lvh.me "*.lvh.me" localhost 127.0.0.1
 /ssl/*
 !/ssl/.keep
+
+.claude/*

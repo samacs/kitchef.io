@@ -2,9 +2,51 @@ class RecipesController < AuthenticatedController
   expose :recipes, -> { Current.account.recipes.kept.includes(:category).order(category_id: :asc, position: :asc) }
   expose :recipe,  -> { find_or_build_recipe }
 
-  def index; end
+  def index
+    # Surface the archive count next to the index header so a freshly-
+    # discarded platillo is one click away from coming back.
+    @archived_count = Current.account.recipes.discarded.count
+  end
   def new;   end
   def edit;  end
+
+  # Archive — lists every soft-deleted recipe so the operator can restore
+  # one. Includes both saleable and internal recipes; sorted most-recently-
+  # discarded first so the latest mistake is easiest to spot.
+  def archived
+    @archived_recipes = Current.account.recipes.discarded
+      .includes(:category)
+      .order(discarded_at: :desc)
+  end
+
+  # POST /recipes/:id/restore — un-discards a soft-deleted recipe and
+  # leaves it as a draft (the model's discard column is the only state
+  # that flips). Lands the operator back on the index with a confirmation.
+  def restore
+    target = Current.account.recipes.discarded.find_by(id: Recipe.find_by_prefix_id(params[:id])&.id)
+    target ||= Current.account.recipes.discarded.friendly.find_by(slug: params[:id])
+    target ||= Current.account.recipes.discarded.find_by(id: params[:id]) if params[:id].to_i.positive?
+
+    if target
+      target.undiscard
+      redirect_to recipes_path, notice: t(".restored", name: target.name)
+    else
+      redirect_to archived_recipes_path, alert: t(".not_found")
+    end
+  end
+
+  # POST /recipes/:id/duplicate — clones the recipe (components + option
+  # groups) into a fresh draft and lands the operator on its edit page.
+  # The copy starts unpublished so she can rename + tweak before exposing.
+  def duplicate
+    result = Recipes::Duplicate.call(recipe: recipe)
+    if result.success?
+      redirect_to edit_recipe_path(result.object),
+        notice: t(".duplicated", name: result.object.name)
+    else
+      redirect_to recipes_path, alert: result.errors.full_messages.to_sentence
+    end
+  end
 
   # Read-only detail surface: name + photo + sale price + cost tree.
   # The `/recipes` index links recipe cards to `#edit`; the cost tree
@@ -34,11 +76,30 @@ class RecipesController < AuthenticatedController
 
       respond_to do |format|
         format.turbo_stream do
-          render turbo_stream: turbo_stream.replace(
-            "recipe_cost_summary",
-            partial: "recipes/cost_summary",
-            locals: { recipe: recipe }
-          )
+          # Replace BOTH the cost summary AND the components rows. The
+          # rows replacement is load-bearing — without it, freshly-added
+          # rows in the DOM still have an empty `id` field and the next
+          # autosave creates a duplicate component in the DB. Re-rendering
+          # the rows server-side fills in the persisted IDs so subsequent
+          # saves UPDATE the same record instead of inserting again.
+          render turbo_stream: [
+            turbo_stream.replace(
+              "recipe_cost_summary",
+              partial: "recipes/cost_summary",
+              locals: { recipe: recipe }
+            ),
+            # Morph (not replace) the rows. Replace blows away the input
+            # the operator may be mid-typing in, killing focus and caret
+            # position. Morph diffs the incoming HTML against the live
+            # DOM and only patches what changed — focus on a quantity
+            # input survives the autosave round-trip.
+            turbo_stream.action(
+              :morph,
+              "recipe_components_rows",
+              partial: "recipes/components_rows",
+              locals: { recipe: recipe }
+            )
+          ]
         end
         format.html { redirect_to recipes_path, notice: t(".updated") }
       end
@@ -122,12 +183,38 @@ class RecipesController < AuthenticatedController
   def recipe_params
     params.require(:recipe).permit(
       :name, :sale_price, :category_id, :description, :is_published,
-      :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent,
+      :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent, :lead_time_hours,
       photos: [],
       components_attributes: [
         :id, :componentable_type, :componentable_id,
-        :quantity, :unit, :notes, :position, :_destroy
+        :quantity, :unit, :notes, :position, :is_removable, :_destroy
+      ],
+      option_groups_attributes: [
+        :id, :account_id, :label, :sub, :kind, :required, :position, :max_length, :_destroy,
+        options_attributes: [
+          :id, :label, :sub, :price_delta, :is_default, :color_hex, :position, :_destroy
+        ]
       ]
-    )
+    ).then { |p| normalize_option_price_deltas(p) }
+  end
+
+  def normalize_option_price_deltas(permitted)
+    groups = permitted[:option_groups_attributes]
+    return permitted unless groups
+
+    groups.each_value do |group_attrs|
+      group_attrs[:account_id] ||= Current.account.id
+      opts = group_attrs[:options_attributes]
+      next unless opts
+
+      opts.each_value do |opt_attrs|
+        raw = opt_attrs.delete(:price_delta)
+        next if raw.blank?
+        normalized = raw.to_s.gsub(",", ".").to_d
+        opt_attrs[:price_delta_cents] = (normalized * 100).to_i
+      end
+    end
+
+    permitted
   end
 end

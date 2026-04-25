@@ -25,7 +25,20 @@ module Recipes
     }.freeze
 
     def call
-      attrs = SIMPLE_DEFAULTS.merge(params.to_h)
+      submitted = params.to_h.symbolize_keys
+      # Treat blank strings as missing so the `||=` defaults below kick
+      # in. Without this, an empty `category_id=""` from a combobox that
+      # didn't capture a click bypasses the fallback and crashes the
+      # `belongs_to :category` validation.
+      %i[category_id yield_unit yield_quantity].each do |key|
+        submitted[key] = nil if submitted[key].is_a?(String) && submitted[key].strip.empty?
+      end
+
+      # SIMPLE_DEFAULTS only fills in keys the form didn't submit. Once
+      # the form ships yield_unit/yield_quantity (Phase 11+ decomposition
+      # work), submissions for prep recipes pass through unchanged.
+      attrs = SIMPLE_DEFAULTS.merge(submitted.compact)
+
       # Auto-publish when a photo is submitted AND the operator didn't
       # explicitly mark this as a draft via the form toggle.
       attrs[:is_published] = has_photo?(attrs) if attrs[:is_published].nil?

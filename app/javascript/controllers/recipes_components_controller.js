@@ -4,16 +4,20 @@ import { Controller } from "@hotwired/stimulus"
 //   • "+ agregar componente" — clones the <template> blueprint, fills
 //     hidden fields (componentable_type/id/unit), appends to the rows
 //     list, and dispatches a `change` so the form's autosave layer
-//     triggers a save + cost-summary refresh.
+//     triggers a save. After the autosave round-trips, the controller
+//     swaps in fresh server-rendered rows that carry the persisted IDs.
 //   • "×" on a row — sets `_destroy=1` and hides the row. Autosave then
-//     commits the destroy and the server swaps the cost summary.
+//     commits the destroy and the server returns rows with the row gone.
 //   • Unit-dropdown constraint — filters each row's unit options to
 //     units in the same measurement family as the componentable's
 //     canonical unit (see UnitConverter.FAMILIES).
+//   • Duplicate prevention — clicking the same ingredient/recipe in the
+//     picker increments the existing row's quantity instead of inserting
+//     a second row. Operators only ever want one row per ingredient.
 //
-// The server is the source of truth for the cost total and margin chip;
-// this controller never does math. It just mutates form state and lets
-// the autosave + server-side calculator do the work.
+// The server is the source of truth for the cost total, margin chip,
+// AND the rows list. This controller never does math. It mutates form
+// state and lets the server-side calculator + replace do the work.
 const FAMILIES = {
   g:       { family: "mass",   label: "g" },
   kg:      { family: "mass",   label: "kg" },
@@ -26,9 +30,17 @@ const FAMILIES = {
 export default class extends Controller {
   static targets = ["blueprint", "row", "destroyFlag"]
 
+  // ── Index allocation ─────────────────────────────────────────────────
+  // Server-rendered rows use indices 0..N from the loop. Client-side
+  // adds use a monotonically-increasing counter prefixed past the
+  // server space so they never collide. The counter persists across
+  // turbo-stream replaces because the controller's element doesn't
+  // disconnect when only the inner rows are swapped.
   connect() {
-    this.nextIndex = this.element.querySelectorAll("[data-recipes-components-target='row']").length + 100
+    this.nextIndex = 1_000_000 + Math.floor(Math.random() * 1_000_000)
   }
+
+  // ── Adding ───────────────────────────────────────────────────────────
 
   add(event) {
     event.preventDefault()
@@ -38,6 +50,25 @@ export default class extends Controller {
     const id   = btn.dataset.componentableId
     const name = btn.dataset.componentableName
     const unit = btn.dataset.componentableUnit
+
+    // Dedupe: if a row already exists for this componentable_type+id and
+    // is not flagged for destroy, increment its quantity rather than
+    // inserting a second row. Two rows for the same ingredient is almost
+    // never what the operator wants, and the cost engine would just sum
+    // them anyway.
+    const existing = this.#findActiveRowFor(type, id)
+    if (existing) {
+      const qtyInput = existing.querySelector("input[name$='[quantity]']")
+      if (qtyInput) {
+        const current = parseFloat(qtyInput.value) || 0
+        qtyInput.value = (current + 1).toString()
+        qtyInput.focus()
+        qtyInput.select()
+      }
+      this.#closePicker()
+      this.dispatchChange(qtyInput || existing)
+      return
+    }
 
     const fragment = this.blueprintTarget.content.cloneNode(true)
     const row = fragment.querySelector("[data-recipes-components-target='row']")
@@ -51,6 +82,11 @@ export default class extends Controller {
     row.querySelector("[data-field='componentable_id']").value   = id
     row.querySelector("[data-field='name']").textContent         = name
 
+    // Tag the row so the dedupe lookup catches it on subsequent picks
+    // even before the server round-trip.
+    row.dataset.componentableType = type
+    row.dataset.componentableId   = id
+
     const unitSelect = row.querySelector("[data-field='unit']")
     this.populateUnitSelect(unitSelect, unit)
 
@@ -61,12 +97,11 @@ export default class extends Controller {
     const list = this.element.querySelector("ol") || this.ensureList()
     list.appendChild(row)
 
-    // Close the picker after adding for a calmer UX.
-    const details = this.element.querySelector("details")
-    if (details) details.open = false
-
+    this.#closePicker()
     this.dispatchChange(list)
   }
+
+  // ── Removing ─────────────────────────────────────────────────────────
 
   remove(event) {
     event.preventDefault()
@@ -80,15 +115,35 @@ export default class extends Controller {
     this.dispatchChange(row)
   }
 
+  // ── Helpers ──────────────────────────────────────────────────────────
+
+  #findActiveRowFor(type, id) {
+    return this.rowTargets.find((row) => {
+      if (row.classList.contains("hidden")) return false
+      const flag = row.querySelector("[data-recipes-components-target='destroyFlag']")
+      if (flag && flag.value === "1") return false
+      return row.dataset.componentableType === type &&
+             row.dataset.componentableId   === String(id)
+    })
+  }
+
+  #closePicker() {
+    const details = this.element.querySelector("details")
+    if (details) details.open = false
+  }
+
   ensureList() {
     const existing = this.element.querySelector("ol")
     if (existing) return existing
 
     const ol = document.createElement("ol")
     ol.className = "flex flex-col divide-y divide-line rounded-card-sm bg-surface border border-line"
-    const emptyMsg = this.element.querySelector("p")
+    const emptyMsg = this.element.querySelector("#recipe_components_rows p")
     if (emptyMsg) emptyMsg.replaceWith(ol)
-    else this.element.insertBefore(ol, this.element.querySelector("details"))
+    else {
+      const wrapper = this.element.querySelector("#recipe_components_rows") || this.element
+      wrapper.appendChild(ol)
+    }
     return ol
   }
 

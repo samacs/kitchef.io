@@ -520,42 +520,56 @@ Phase 10 closes the other half of the ledger: fixed-cost tracking, a real "utili
 
 ---
 
-## Phase 11 — Personalización de platillos (next)
+## Phase 11 — Personalización de platillos (shipped)
 
-**Context.** Today every pedido is a flat `{recipe, qty, unit_price}` — a customer who orders "Pastel de 3 leches" can't pick 10-vs-20 porciones, can't swap strawberry for peach filling, can't ask for the meringue in rosa, and can't type a dedicatoria. On a torta, she can't tell the operator "sin jitomate". On a hamburguesa, she can't pick the bread. All of that lives today in free-text `delivery_notes` the operator has to re-read by hand — a conversion killer and an operational tax at the same time.
+**Context.** Pre-Phase-11 every pedido was a flat `{recipe, qty, unit_price}`. Phase 11 turned the storefront into a real product configurator: customers pick sizes, fillings, swatches, extras, dedicatorias, and even unflag ingredients on the recipes that allow it. Operators get a per-recipe **Opciones de personalización** editor and the kanban/runner cards render every selection inline so the cook reads the order at a glance.
 
-The original storefront design mock already specified a flexible customization schema for a pastel (sized filling + flavor radio + meringue color swatch + extras checkboxes + dedicatoria textarea + delivery date/time). Phase 11 builds the model that makes that schema real, plus extends it with **removable ingredients** ("quitar jitomate") and **selectable ingredients** ("elige tu pan") — two asks the original design didn't cover but that operators running tortas/hamburguesas/ensaladas hit immediately.
-
-**Why now (vs. later).** It's a conversion lever — operators with customization on their highest-AOV platillos (pasteles, tortas, meal-prep combos) see the same pedido lift Shopify operators see when they enable product options. It's also the unlock for future stock depletion work: ingredient availability only gates options if options exist at the ingredient level in the first place.
-
-**Why this is substantial.** Four surfaces: operator recipe editor rework, storefront dish detail, cart + checkout round-trip, kanban/runner card rendering. Plus a `RecipeComponent#is_removable` flag that feeds into the existing Phase 7 cost engine (removed ingredient = subtract its contribution from the snapshot). Availability gating on ingredient stock is explicitly OUT — that waits for the stock depletion phase.
+This phase also picked up a swath of decomposition-side polish that surfaced once operators started seriously using the cost tree (lead times, internal-recipe yield units, focus-preserving autosave, duplicate + archive flows).
 
 ### Scope
 
-- [ ] `RecipeOptionGroup` model per recipe — `kind` enum (`radio` / `check` / `swatch` / `textarea`), `label`, `sub`, `required`, `position`.
-- [ ] `RecipeOption` model per group — `label`, `sub`, `price_delta_cents`, `is_default`, `color_hex` (swatch), `position`. Radio groups enforce single default; check groups allow any default count.
-- [ ] `RecipeComponent#is_removable` boolean — when true, the storefront surfaces a "Quitar …" checkbox next to the component's ingredient name. Unticking subtracts that component's cost contribution from the order-item cost snapshot.
-- [ ] Operator recipe editor grows an **"Opciones de personalización"** section — add group, add options per group, set deltas + defaults. Plus per-component "se puede quitar" checkboxes in the existing components table.
-- [ ] Storefront `/:slug/platillos/:recipe_slug` renders every option group in the order declared, live-calculates total as the customer picks, disables the Add-to-Cart CTA until every `required: true` group has a selection.
-- [ ] Cart persists each line's `selected_options` (JSON) + `removed_components` (array of component ids) + the computed `options_price_delta_cents`.
-- [ ] `OrderItem` gains `selected_options` (jsonb) + `removed_components` (jsonb array) + `options_price_delta_cents` (bigint). All snapshotted at order time — edits to the recipe's option catalog later never rewrite history.
-- [ ] Kanban card + runner row render the selected options as muted chips under the item name ("20 porciones · Fresa · Velas"); removed components surface as a red-tinted "sin jitomate" tag so the cook sees it at a glance.
-- [ ] WhatsApp message templates include the option selections so the operator's confirmation flow stays readable.
+- [x] ~~`RecipeOptionGroup` model per recipe — `kind` enum (`radio` / `check` / `swatch` / `textarea`), `label`, `sub`, `required`, `position`.~~
+- [x] ~~`RecipeOption` model per group — `label`, `sub`, `price_delta_cents`, `is_default`, `color_hex` (swatch), `position`. Radio groups enforce single default; check groups allow any default count.~~
+- [x] ~~`RecipeComponent#is_removable` boolean — storefront surfaces a "Quitar …" checkbox; unticking subtracts that component's cost contribution from the `OrderItem` snapshot at order time.~~
+- [x] ~~Operator recipe editor's **"Opciones de personalización"** section — add group, add options per group, set deltas + defaults. Per-component "se puede quitar" checkboxes inline in the components table.~~
+- [x] ~~Storefront `/:slug/dishes/:recipe_slug` renders every group in declared order, live-calculates total as the customer picks, disables Add-to-Cart until every `required: true` group has a selection.~~
+- [x] ~~Cart persists each line's `selected_options`, `removed_components`, and the computed delta.~~
+- [x] ~~`OrderItem.selected_options` (jsonb) + `removed_components` (jsonb) + `options_price_delta_cents` (bigint), snapshotted at order time so later edits to the recipe's catalog never rewrite history.~~
+- [x] ~~Kanban + runner cards render selected options as muted chips ("20 porciones · Fresa · Velas") and removed components as red-tinted "sin jitomate" tags.~~
+- [x] ~~WhatsApp confirmation templates include every selection inline.~~
 
-### Out (explicit deferrals)
+### Bonus work shipped alongside Phase 11 (not in the original plan)
 
-- **Ingredient availability gating** — "this option is out of stock" UI + storefront hide-when-out behavior. Needs the stock depletion phase first. Phase 11 ships with every option always selectable.
-- **Conditional option logic** — "if Size=30 porciones then Extras max=3" or "si Relleno=mixto, agrega 10min al lead time". Too much DSL for v1.
-- **Option-level photos** — e.g. a swatch of the actual cake color. Color hex is enough; photos wait for demand.
-- **Per-customer saved combinations** — "pedir igual que la última vez" on the customer-facing side.
-- **Bulk cloning of option groups across recipes** — copy from Torta de Jamón into Torta de Pierna. Manual copy holds the line for v1; revisit if operators ask.
-- **Recipe variants as a first-class model** — the "Tamaño" options on a pastel could theoretically become separate Recipe rows with shared cost trees. Keeping them as Options is simpler and matches the design.
+- [x] ~~`Recipe#lead_time_hours` — operator declares "este pastel necesita 48h de anticipación". Storefront shows a clock chip on the menu card + a notice on the dish detail with "Disponible a partir del sábado 27". Cart + checkout snapshot it onto the OrderItem.~~
+- [x] ~~Recipe form exposes `yield_quantity` + `yield_unit` (g / kg / ml / l / piece / serving). Critical for prep recipes — without it, a *Caldo de pollo* default-yields "1 piece" and parent recipes can only consume it as pieza/porción, killing per-gram decomposition.~~
+- [x] ~~`YIELD_UNITS` reordered so mass/volume come first in the dropdown — operators reach for it specifically to escape the default `piece`.~~
+- [x] ~~Decomposition autosave round-trip preserves DOM identity. The `recipe_components_rows` partial is server-replaced via a custom `<turbo-stream action="morph">` registered on `window.Turbo.StreamActions`. Focus + caret survive the roundtrip; new components pick up their persisted IDs without spawning duplicates on subsequent saves.~~
+- [x] ~~Component picker dedupe — clicking the same ingredient/recipe twice increments the existing row's quantity instead of inserting a duplicate.~~
+- [x] ~~Stable client-side row indices — JS `add()` uses high random indices that never collide with the server-rendered 0..N range, so morph diffs cleanly.~~
+- [x] ~~Customization modal centering fix (full-screen `<dialog>` wrapping a `max-w-[480px]` content panel — `hidden open:flex` so the dialog only flexes when actually open).~~
+- [x] ~~Mobile sticky bottom bar on the dish detail page — total + Add-to-Cart visible without scroll. Multiple `totalDisplay` targets so sidebar + sticky bar update together.~~
+- [x] ~~Storefront link opens in a new tab from the operator dashboard — operators stop losing their place when they click "Ver mi tienda".~~
+- [x] ~~Combobox category picker for fixed-cost categories (consistent with Phase 9's pattern).~~
+- [x] ~~`POST /recipes/:id/duplicate` + `Recipes::Duplicate` command — clones a recipe (components + option groups) into a fresh draft. The "Duplicar platillo" card sits between the form and the danger zone on the edit page. Always lands as `is_published: false` so the operator reviews + tweaks before re-exposing. Use case: cloning *Masa para tamales verdes* into *Masa para tamales rojos* without re-entering ingredients.~~
+- [x] ~~`/recipes/archivados` + `restore` action — soft-deleted platillos no longer disappear forever. The recipes index header surfaces a "N archivados" pill when any exist; clicking opens the archive list with a Restaurar button per row that uses `discard.undiscard` to bring the platillo back as a draft.~~
+- [x] ~~`Recipes::Create` sanitizes blank category_id (`""` → `nil`) so the silent default-category fallback works as designed instead of failing the `belongs_to :category` validation.~~
 
-See `~/.claude/plans/phase-11-personalizacion-de-platillos.md` for the full plan.
+### Out (deferrals — picked up later)
+
+- **Ingredient availability gating.** "This option is out of stock" UI + storefront hide-when-out. Needs the stock depletion phase first.
+- **Conditional option logic.** "If Size=30 porciones then Extras max=3" or "si Relleno=mixto, agrega 10min al lead time". Too much DSL for v1.
+- **Option-level photos.** Color hex is enough for now; photos wait for demand.
+- **Per-customer saved combinations.** "Pedir igual que la última vez" on the customer side.
+- **Bulk cloning of option groups across recipes.** Manual copy holds the line; revisit if operators ask. (Recipe duplication shipped — option-group-only bulk copy is a strict subset.)
+- **Recipe variants as a first-class model.** Tamaño options on a pastel could theoretically become separate Recipes with shared cost trees. Keeping them as Options is simpler and matches the design.
+- **Multi-yield recipes** (one preparación that yields BOTH `pollo cocido` AND `caldo`). Real operator scenario — boiling chicken simultaneously produces meat + broth — but the cost-allocation model gets complex (split by mass ratio? declare a primary + byproduct?). Phase 11 ships the pragmatic alternative: two separate prep recipes that each consume a slice of the raw chicken, with overlap accepted at <10% accuracy cost. Revisit when an operator asks for the precise version.
+- **Production runs / batch yield tracking** ("hoy hice 1 batch de masa, 2 batches de salsa"). Originally Phase 7 deferred → Phase 9 deferred → still out. Ships as Phase 13.
+
+See `~/.claude/plans/phase-11-personalizacion-de-platillos.md` for the original plan.
 
 ---
 
-## Phase 12 — Instrucciones de pago + propina (planned)
+## Phase 12 — Instrucciones de pago + propina (next)
 
 **Context.** Today the storefront checkout captures name + phone + address + window + notes, then hands off to WhatsApp. The customer never sees how she's expected to pay — no "transfiere a esta CLABE", no "cobro en efectivo, ¿con cuánto pagas?", no "paga en línea con tarjeta". The operator then spends the next WhatsApp exchange re-typing her bank details, asking how much change to bring, or quoting a card fee off the top of her head. Manual, noisy, and the information is scattered.
 
@@ -565,34 +579,135 @@ Actual gateway integrations (Mercado Pago link generation, Stripe Checkout for a
 
 **Why now.** Every alpha operator has a bank account and accepts cash; none has a Mercado Pago merchant ID. Shipping "pick your method + here are the instructions" gives them 90% of the value with 10% of the integration surface. Shipping a Stripe integration first leaves the 80% of operators without a payment processor stuck on WhatsApp negotiations indefinitely.
 
-**Why this is small.** No gateway code, no webhooks, no reconciliation. One StoreModel extension (`Accounts::PaymentSettings`), four new `Order` fields (`payment_method`, `tip_cents`, `cash_payment_amount_cents`, `terms_accepted_at`), a new config card on `/account/edit`, and a new section on the storefront checkout. ~1 focused work-week.
+**Why this is small.** No gateway code, no webhooks, no reconciliation. One StoreModel extension on `Account#settings`, four new `Order` columns, a config card on `/account/edit`, a payment-method picker + propina card on storefront checkout, and a few message-template tweaks. ~1 focused work-week.
+
+### Goals
+
+1. The operator configures her accepted methods + bank details once, and they propagate everywhere the customer needs them (storefront, confirmation email, WhatsApp message).
+2. The customer picks a method at checkout and sees method-specific instructions inline — CLABE with a Copiar button for SPEI, change-amount input for cash, operator-defined fallback for tarjeta.
+3. The customer adds an optional propina (preset chips + Otro) that lands on the order so the operator's payout reflects it.
+4. The operator's order surfaces (kanban card, runner row, order detail) all render the method + propina + cash-change context without her re-typing it.
+5. Terms acceptance is captured per-order so it survives the customer's session.
 
 ### Scope
 
-- [ ] New `Accounts::PaymentSettings` StoreModel on `Account#settings` — `accepts_cash`, `accepts_transfer`, `accepts_card`, `transfer_holder`, `transfer_bank`, `transfer_clabe` (18-digit CLABE validation), `transfer_account_number` (optional), `card_instructions` (free text while we wait on Stripe/MP), `tip_presets_cents` (array of three presets, default `[0, 1500, 3000]`).
-- [ ] `/account/edit` gains a **"Pagos"** card below the existing config. Autosave-friendly. SPEI fields are grouped together and only surface when `accepts_transfer` is on.
-- [ ] `Order` columns: `payment_method` enum (`cash: 0, transfer: 1, card: 2`), `tip_cents` (bigint, default 0), `cash_payment_amount_cents` (bigint, nullable — how much the customer plans to hand over), `terms_accepted_at` (timestamp).
-- [ ] Storefront checkout grows a **"Método de pago"** card (only methods the kitchen accepts are shown, radio-select, method-specific reveal):
-  - **Efectivo** → numeric "Cantidad con la que pagarás" input so the operator can prepare change. Validates `≥ order total`.
-  - **Transferencia bancaria** → read-only panel with Titular + Banco + CLABE + Tarjeta number, each row with a Copiar button wired to Clipboard API. SPEI hint banner.
-  - **Tarjeta** → shows whatever `card_instructions` the operator typed (or a muted "Próximamente" placeholder if empty).
-- [ ] **Propina** card above Método de pago with three preset chips + "Otro" that reveals a numeric input. Writes to `Order#tip_cents`.
-- [ ] Terms acknowledgment line under the submit button — "Al enviar, aceptas nuestros [Términos y Condiciones](…)". Captures `terms_accepted_at` on submit (keep the existing `User#terms_accepted_at` pattern but on `Order` for storefront).
-- [ ] Kanban card renders a method chip (`💵 Efectivo · $200` / `🏦 SPEI` / `💳 Tarjeta`) + a propina chip when nonzero.
-- [ ] Order show page breaks out subtotal + tip + method — the cook reads "lleva cambio para $200" at a glance.
-- [ ] Customer confirmation email + WhatsApp message include the chosen method + tip + the SPEI details (for transfer) + change amount (for cash). So the customer has everything in her inbox if the storefront page closes.
+#### Slice 1 — Operator-side configuration (~1 day)
+
+- [ ] `Accounts::PaymentSettings` StoreModel on `Account#settings.payment` — fields:
+  - `accepts_cash` (bool, default true)
+  - `accepts_transfer` (bool, default true)
+  - `accepts_card` (bool, default false)
+  - `transfer_holder` (string, ≤ 80 chars)
+  - `transfer_bank` (string, ≤ 60 chars)
+  - `transfer_clabe` (string, 18-digit Mexican CLABE — regex validation `\A\d{18}\z`)
+  - `transfer_account_number` (string, optional, ≤ 20 chars — for ops who only share account #, not CLABE)
+  - `card_instructions` (text, ≤ 500 chars — free-form while we wait on Stripe/MP)
+  - `tip_presets_cents` (array of exactly three integers, defaults to `[0, 1500, 3000]`)
+- [ ] `/account/edit` gains a **"Pagos y propina"** card below "Tu cocina" config. Reuses the autosave pattern (`form-autosave` controller, `head :no_content` response). SPEI fields are grouped and only surface when `accepts_transfer` is on; same for `card_instructions` under `accepts_card`.
+- [ ] Reuse `Ui::TextFieldComponent` + `Ui::ToggleComponent` (consistent with the rest of `/account/edit`).
+- [ ] CLABE field shows a live-formatted hint ("18 dígitos · banco + cuenta · sin espacios"). Validation error renders the canonical "CLABE inválida — revisa que sean 18 dígitos sin espacios."
+
+#### Slice 2 — Order schema + checkout payment card (~2 days)
+
+- [ ] `db/migrate/.._add_payment_fields_to_orders.rb` — adds `payment_method` (smallint, nullable so historical orders survive), `tip_cents` (bigint, default 0), `cash_payment_amount_cents` (bigint, nullable), `terms_accepted_at` (datetime, nullable).
+- [ ] `Order#payment_method` enum: `{ cash: 0, transfer: 1, card: 2 }`. `monetize :tip_cents`, `monetize :cash_payment_amount_cents, allow_nil: true`. Validations:
+  - `cash_payment_amount_cents` must be `≥ subtotal_cents + tip_cents` when `payment_method == :cash`.
+  - `payment_method` must be one the storefront's `payment_settings` currently accepts (validated server-side in `Orders::Place` so a tampered form can't sneak through).
+- [ ] Storefront `/checkout/new` grows a **"Método de pago"** card (Spanish copy: "Cómo vas a pagar"). Only methods toggled on for the kitchen render. Radio-select with method-specific reveal:
+  - **Efectivo** → numeric `cash_payment_amount` input pre-filled with the round-up to the next 50 (`Math.ceil(total / 50) * 50`), helper text "Te preparo cambio para el monto que pongas aquí". Inline error if `< total`.
+  - **Transferencia bancaria** → read-only panel: Titular / Banco / CLABE (18 digits, monospace) / Cuenta (if filled). Each row has a small Copiar button (`navigator.clipboard.writeText`) that flips to "Copiado ✓" for 2s. Footer hint with the SPEI explainer copy ("Tu transferencia llega en minutos, sin comisión.").
+  - **Tarjeta** → renders the operator's `card_instructions` or a muted "Próximamente — paga en efectivo o por transferencia mientras tanto." placeholder.
+- [ ] **Propina** card above "Método de pago": three preset chips (`$0`, `$15`, `$30` from `tip_presets_cents`) + an "Otro monto" pill that reveals a numeric input. Selected chip is `aria-pressed="true"` + accent-styled. Writes to `Order#tip_cents` on submit; live updates the visible total.
+- [ ] Total reconciliation card at the bottom: Subtotal + Propina + Costo de envío (when applicable, deferred — see *Out*) → Total. The customer sees exactly what she's paying.
+- [ ] Terms acknowledgment line under the Submit button: "Al enviar, aceptas los [Términos y Condiciones](/legal/terms) y la [Política de Privacidad](/legal/privacy)." `terms_accepted_at` set server-side at order creation time.
+
+#### Slice 3 — Operator-side surfaces (~1 day)
+
+- [ ] Kanban card renders a method chip below the client name: `💵 Efectivo · $200 cambio`, `🏦 SPEI`, `💳 Tarjeta`. Propina chip appears as a separate accent-soft pill when `tip_cents > 0` (`+$30 propina`).
+- [ ] `/orders/:id` show page: a "Pago" card that surfaces method + change context + propina + total. The cook reads "Lleva cambio para $200" without scrolling.
+- [ ] `/production/today` runner row gets the same method icon (compact, no copy) so the runner sees at a glance whether to bring change.
+- [ ] Order detail page shows `terms_accepted_at` on the meta footer (small + muted, audit-only).
+
+#### Slice 4 — Confirmation flows (~½ day)
+
+- [ ] `OrderMailer#confirmation` template appends a "Cómo pagar" section with the method-specific copy. SPEI emails include the CLABE inline (no copy button possible in email — show as monospace). Cash emails include "Lleva $X — te preparo cambio para $Y." Card emails include the operator's `card_instructions`.
+- [ ] `WhatsappHelper#confirmation_message` similarly appends the method context. SPEI messages include CLABE as a code-fence (`\`CLABE: 012345678901234567\``) so the customer's phone keyboard makes it copy-friendly.
+- [ ] Confirmation page (`/checkout/:order_token`) renders the same payment-card markup as the email, so the customer can come back to it from her browser history.
 
 ### Out (explicit deferrals — picked up in Phase 12.5+ or later)
 
-- [ ] **Mercado Pago link generation.** The single highest-leverage gateway integration for Mexico. Merits its own mini-phase (12.5). Model: `PaymentLink` with `provider: :mercado_pago, external_id, status, amount_cents`; Mercado Pago Checkout Links API for anticipo collection; webhook controller for status updates.
-- [ ] **SPEI reference capture on `Payment`.** Operator logs an incoming transfer with reference + amount; reconciliation dashboard shows unreconciled transfers next to unpaid pedidos.
-- [ ] **Stripe Checkout for anticipos.** For operators with a registered business / tax ID. Card + OXXO + SPEI. Gets its own sub-phase when 3+ operators ask.
-- [ ] **Card-on-file.** Stored cards for repeat customers — big surface, regulatory overhead, waits for meaningful demand.
-- [ ] **Customer-facing "Pagar anticipo" button** on the order confirmation page. Currently the confirmation page only shows "Te contacto por WhatsApp"; once the gateway integrations land, this is where they plug in.
-- [ ] **Automatic reconciliation between gateway webhook + Payment + Order.** Currently `mark_paid!` is manual; automated reconciliation ships with the gateway sub-phases.
-- [ ] **Split payments / anticipo vs resto.** A customer pays 50% via Stripe on place, 50% in cash on delivery. Real operator need but waits for gateway integration.
+- **Mercado Pago link generation.** Highest-leverage gateway for Mexico — merits its own mini-phase (12.5). Model: `PaymentLink` (`provider: :mercado_pago`, `external_id`, `status`, `amount_cents`, `belongs_to :order`). Mercado Pago Checkout Links API for anticipo collection + webhook controller for status updates. ~3-4 days.
+- **SPEI reference capture on `Payment`.** Operator logs an incoming transfer with reference + amount; reconciliation dashboard shows unreconciled transfers next to unpaid pedidos. Lands with the broader payment-ledger work.
+- **Stripe Checkout for anticipos.** For operators with a registered business / tax ID. Card + OXXO + SPEI. Gets its own sub-phase (~12.6) when 3+ operators ask.
+- **Card-on-file.** Stored cards for repeat customers — big surface, regulatory overhead, waits for meaningful demand.
+- **"Pagar anticipo" button** on the customer order-confirmation page. Currently shows "Te contacto por WhatsApp"; once gateway integrations land, this is where they plug in.
+- **Automatic reconciliation** between gateway webhook + `Payment` + `Order`. Currently `mark_paid!` is manual; automation ships with the gateway sub-phases.
+- **Split payments / anticipo vs resto.** Customer pays 50% via Stripe on place, 50% in cash on delivery. Real operator need but waits for gateway integration.
+- **Per-method surcharge.** "Tarjeta cobra 3.6%, transferencia 0%, efectivo 0%". Add to `payment_settings` when an operator asks; otherwise the operator absorbs it into the menu price.
+- **Costo de envío line item.** The total card structure leaves room for it but the model addition (`Order#delivery_fee_cents`) is its own decision — paired with the delivery-zones revisit, not with payment UI.
 
-See `~/.claude/plans/phase-12-pagos-spei-propina.md` for the full plan.
+### Key decisions to lock before building
+
+1. **Where does `payment_settings` live — `Account#settings` (StoreModel) or its own table?** Stick with StoreModel. CLABE / bank-name / accepted-methods rarely change and are 1:1 with Account; a separate table is overkill until per-storefront variants exist.
+2. **CLABE format — strict 18-digit validation, or accept what the operator types and sanitize on save?** Strict validation, with format-as-you-type on the client side (insert spaces every 4 digits visually but store digits-only). A wrong CLABE silently fails customer transfers — prefer the strict gate.
+3. **Cash change input default — empty, or pre-filled with a round-up?** Pre-fill to next-50 (e.g. order total $187 → input prefilled to `$200`). The operator's most common scenario; customer can edit if she's paying exact.
+4. **Tip presets — fixed pesos or percentages?** Pesos. Percentages on a $200 pedido feel weird ("¿15% es $30?") and the third preset (`$30`) is already psychologically anchored as "una buena propina" in MX. Operator-overridable.
+5. **Where on the storefront does Pagos surface — checkout step OR a separate step before checkout?** Single-page checkout with the payment card inline below the delivery card. Stepped checkouts add abandon risk on mobile-on-4G; current flow is one-page.
+6. **Does `payment_method` participate in the `Order` AASM state machine?** No. State stays orthogonal (`placed → confirmed → in_production …`); method is a property the operator sees, not a workflow gate.
+7. **Should we render `accepts_card == false` and `card_instructions == ""` differently?** Yes — when `accepts_card` is on but `card_instructions` is empty, surface the "Próximamente" placeholder. When `accepts_card` is off, the radio option doesn't render at all. Two states, two affordances.
+
+### Files to create / modify
+
+```
+app/models/concerns/accounts/payment_settings.rb        # StoreModel
+db/migrate/..._add_payment_fields_to_orders.rb
+app/models/order.rb                                     # enum + validations + monetize
+app/views/accounts/_payment_settings_card.html.erb      # operator config card
+app/views/accounts/edit.html.erb                        # render the card
+app/views/storefronts/checkouts/_payment_method.html.erb  # method picker + reveals
+app/views/storefronts/checkouts/_tip.html.erb           # propina card
+app/views/storefronts/checkouts/new.html.erb            # render both cards
+app/javascript/controllers/checkout_payment_controller.js # method reveal + clipboard + tip presets
+app/commands/orders/place.rb                            # accept payment_method + tip + cash_payment + terms
+app/components/orders/payment_chip_component.rb         # method icon+label for kanban/runner
+app/components/orders/payment_chip_component.html.erb
+app/views/orders/_payment_card.html.erb                 # operator order detail
+app/mailers/order_mailer.rb                             # template tweaks
+app/views/order_mailer/confirmation.html.erb            # payment block
+app/helpers/whatsapp_helper.rb                          # confirmation_message append
+config/locales/es-MX/storefronts.yml                    # checkout copy
+config/locales/es-MX/panels.yml                         # operator config copy
+config/locales/es-MX/orders.yml                         # method labels (Efectivo / SPEI / Tarjeta)
+```
+
+### Verification (from clean DB + seed)
+
+1. As Elena, navigate to `/account/edit` → see the new "Pagos y propina" card. Toggle `accepts_transfer` on, fill CLABE + holder + bank. Autosave fires (`Guardado` chip).
+2. As a customer on `cocina-de-elena/checkout`, see the new "Cómo vas a pagar" card with **Efectivo** and **Transferencia** options (card option absent because `accepts_card` is off). Pick Transferencia → CLABE row appears with a Copiar button; clicking it changes label to "Copiado ✓" and the clipboard contains the digits-only CLABE.
+3. Pick Efectivo on a $187 order → cash input prefills to `200`. Try `100` → inline error "Mínimo $187". Type `220` → error clears, total card shows "Cambio: $33".
+4. Pick a `$15` propina chip → total updates to `$202`. Place order → `Order#tip_cents == 1500`, `payment_method == :cash`, `cash_payment_amount_cents == 22000`.
+5. As Elena on `/orders`, the new pedido's kanban card shows `💵 Efectivo · $220` + `+$15 propina` chips. Click into the order → "Lleva cambio para $33" surfaces in the Pago card.
+6. Email landed in `/letter_opener` shows the "Cómo pagar" block with the cash-change instruction.
+
+### Effort estimate
+
+| Slice | Effort | Notes |
+|---|---|---|
+| 1 — Operator config | S (1 day) | Pure StoreModel + autosave card |
+| 2 — Order schema + checkout UI | M (2 days) | Migration + model + checkout card + tip card + JS controller |
+| 3 — Operator surfaces | S (1 day) | Component + partial; touches kanban + runner + order show |
+| 4 — Confirmation flows | XS (½ day) | Mailer + WhatsApp helper tweaks |
+
+Total: ~4-5 focused days. Branch off `develop` after Phase 11 merges.
+
+### Open questions (low-stakes, decide during build)
+
+- **Tip on top of `subtotal_cents` or as part of it?** On top, separately. `total_cents` becomes `subtotal_cents + tip_cents` (ignoring the deferred `delivery_fee_cents`). Keeps reports honest — propina shouldn't inflate the operator's COGS-vs-revenue ratio.
+- **Should `terms_accepted_at` block order placement when nil?** Yes — Submit is disabled client-side until the implicit-checkbox-on-submit pattern fires. Server-side validation also rejects `nil`.
+- **Do we need a `Payment` row on order placement, or only on `mark_paid!`?** Keep current behavior — `Payment` is created when the operator marks paid. The new fields on `Order` capture *intent*; `Payment` captures *fact*. Until the gateway integration lands, the two stay separate.
+- **Spanish copy for "tip" — propina or torna?** Propina. Universal in MX, no regional split.
+
+See `~/.claude/plans/phase-12-pagos-spei-propina.md` for any pre-build whiteboard scratch.
 
 ---
 
@@ -632,9 +747,9 @@ See `~/.claude/plans/phase-12-pagos-spei-propina.md` for the full plan.
 5. ~~**Phase 8 (finance & menu performance)**~~ — shipped. `/reports/finance` (KPI triptych + 8-week trend + day-by-day + CSV), `/reports/menu` (estrellas / estables / revisa estos), dashboard weekly snapshot, empty-state handling. The full BCG matrix stays deferred until we've got ≥60 days of pedido history per operator.
 6. ~~**Phase 9 (catálogos, proveedores, compras)**~~ — shipped. Editable categorías, first-class proveedores with per-supplier price history, persistent purchase ledger feeding the shopping list + finance report's "gastos reales" + "margen real" badge. Plus the `Geocodable` concern, polymorphic `GeocodeJob` + `StaticMapJob`, cached static-map attachments, fixed-position flash region, Turbo live-search with debounce, and a batch of drawer/autosave reliability fixes that benefit every surface. The operator's lista de compras is now the operator's real expense record.
 7. ~~**Phase 10 (rentabilidad real — costos fijos y utilidad neta)**~~ — shipped. Fixed-cost tracking (renta, gas, plataformas, empaque), real Utilidad Neta alongside Margen bruto + Margen real, "Costo fijo por pedido" tile, per-pedido + per-recipe packaging. `/reports/finance` now tells the operator her actual take-home number.
-8. **Phase 11 next (personalización de platillos)** — storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients ("sin jitomate") + selectable ingredients ("elige el pan"). Recipe editor gains an "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. The ceiling on AOV per pedido; unlocks every hamburger/torta/ensalada operator waiting in the alpha pool. Availability gating on ingredient stock stays deferred until depletion ships.
-9. **Phase 12 (instrucciones de pago + propina)** — display-only v1, no gateway integrations. Kitchen configures SPEI details + accepted methods at `/account/edit`; storefront checkout grows a Propina card + Método de pago card (Efectivo / SPEI / Tarjeta) with method-specific UI (cash-change input, CLABE + Copiar, placeholder for card). Kanban + confirmation email + WhatsApp render the method + propina so the operator + customer never lose the context. ~1 focused work-week. Mercado Pago / Stripe / reconciliation dashboard get their own sub-phases (12.5+) once 3+ operators ask.
+8. ~~**Phase 11 (personalización de platillos)**~~ — shipped. Storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients + selectable ingredients. Recipe editor's "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. Bonus: lead-time-hours on recipes, yield_unit/yield_quantity in the recipe form (essential for prep recipes), morph-based autosave preserving focus, picker dedupe, recipe duplication + soft-delete archive flow. Availability gating on ingredient stock stays deferred until depletion ships.
+9. **Phase 12 next (instrucciones de pago + propina)** — display-only v1, no gateway integrations. Kitchen configures SPEI details + accepted methods at `/account/edit`; storefront checkout grows a Propina card + Método de pago card (Efectivo / SPEI / Tarjeta) with method-specific UI (cash-change input, CLABE + Copiar, placeholder for card). Kanban + confirmation email + WhatsApp render the method + propina so the operator + customer never lose the context. ~1 focused work-week. Mercado Pago / Stripe / reconciliation dashboard get their own sub-phases (12.5+) once 3+ operators ask.
 
-Phases 11 and 12 are roughly independent — 11 is customer-facing growth (AOV lever), 12 is payment UX (conversion lever). Build whichever gets louder signal first; both estimate at ~1 work-week. Phase 12 can land any time after Phase 6 (storefront checkout structure) — it doesn't depend on 11.
+Phase 12 doesn't depend on 11 — it could have shipped first. Building it now because 11 closed the customer-facing growth lever and the next conversion lever is "how do I actually pay you?".
 
 Phase 13 is continuous; each ships a slice per quarter once the core loop is done.

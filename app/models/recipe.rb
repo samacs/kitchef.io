@@ -8,6 +8,7 @@
 #  discarded_at          :datetime
 #  is_published          :boolean          default(FALSE), not null
 #  is_saleable           :boolean          default(TRUE), not null
+#  lead_time_hours       :integer          default(0), not null
 #  name                  :string           not null
 #  packaging_cents       :bigint           default(0), not null
 #  position              :integer
@@ -48,7 +49,11 @@ class Recipe < ApplicationRecord
   monetize :cost_cents_cached, as: :cost_cached, allow_nil: true
   monetize :packaging_cents
 
-  YIELD_UNITS = %w[piece g kg ml l serving].freeze
+  # Order matters — surfaces in the form's `<select>` in this order.
+  # Mass/volume come ahead of count units because internal/prep recipes
+  # (caldo, masa, salsa) almost always need them, and operators reach
+  # for the dropdown specifically to escape the default `piece`.
+  YIELD_UNITS = %w[g kg ml l piece serving].freeze
 
   belongs_to :category
 
@@ -74,6 +79,15 @@ class Recipe < ApplicationRecord
         attrs["quantity"].blank?
     }
 
+  has_many :option_groups,
+    class_name: "RecipeOptionGroup",
+    dependent: :destroy,
+    inverse_of: :recipe
+
+  accepts_nested_attributes_for :option_groups,
+    allow_destroy: true,
+    reject_if: ->(attrs) { attrs["label"].blank? }
+
   # Reverse side — where is this recipe used as a component?
   # Destroy cascades so an Account.destroy can proceed; UI-level deletion
   # warns the operator about affected parent recipes.
@@ -94,6 +108,7 @@ class Recipe < ApplicationRecord
   validates :yield_unit, presence: true, inclusion: { in: YIELD_UNITS }
   validates :target_margin_percent, numericality: { in: 0..100 }
   validates :packaging_cents, numericality: { greater_than_or_equal_to: 0 }
+  validates :lead_time_hours, numericality: { greater_than_or_equal_to: 0, only_integer: true }
   validates :sale_price_cents,
     numericality: { greater_than_or_equal_to: 0 },
     presence: true,
@@ -123,6 +138,32 @@ class Recipe < ApplicationRecord
 
   def internal?
     !is_saleable?
+  end
+
+  def customizable?
+    option_groups.any? { |g| g.discarded_at.nil? } ||
+      components.any? { |c| c.componentable_type == "Ingredient" && c.is_removable? }
+  end
+
+  def requires_advance_notice?
+    lead_time_hours.to_i > 0
+  end
+
+  def lead_time_label
+    hours = lead_time_hours.to_i
+    return nil if hours.zero?
+
+    if hours >= 24 && hours % 24 == 0
+      days = hours / 24
+      I18n.t("recipes.lead_time.days", count: days)
+    else
+      I18n.t("recipes.lead_time.hours", count: hours)
+    end
+  end
+
+  def earliest_available_at
+    return Time.current unless requires_advance_notice?
+    Time.current + lead_time_hours.hours
   end
 
   def display_photo

@@ -10,7 +10,7 @@ class StorefrontsController < Storefronts::BaseController
     @ordering_hours = Storefronts::OrderingHours.for(@storefront)
     @recipes_by_category = @storefront
       .recipes.kept.published
-      .includes(:category)
+      .includes(:category, :option_groups, components: :componentable)
       .order(category_id: :asc, position: :asc)
       .group_by(&:category)
     @viewing_own_storefront = Current.user.present? && Current.user.owned_account&.id == @storefront.id

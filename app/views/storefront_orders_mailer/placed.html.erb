@@ -68,6 +68,11 @@
             <td style="padding:8px 0;border-bottom:1px solid #E6E1D8;">
               <div style="font-size:14px;font-weight:600;color:#0E1714;"><%= item.recipe&.name %></div>
               <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:#6B7670;">× <%= item.quantity %></div>
+              <% if item.has_customizations? %>
+                <div style="margin-top:4px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;color:#6B7670;">
+                  <%= item.display_options.join(" · ") %>
+                </div>
+              <% end %>
             </td>
             <td align="right" style="padding:8px 0;border-bottom:1px solid #E6E1D8;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#0E1714;">
               <%= humanized_money_with_symbol(Money.new(item.unit_price_cents.to_i * item.quantity.to_d, "MXN")) %>

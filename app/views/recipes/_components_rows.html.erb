@@ -1,0 +1,69 @@
+<%# Re-renderable rows section for the decomposition editor. Wrapped in a
+    stable DOM id so RecipesController#update can swap it back after autosave
+    completes — otherwise newly-added rows have no `id` field and every
+    subsequent autosave creates a duplicate component in the DB. %>
+<div id="recipe_components_rows" class="flex flex-col gap-3">
+  <% components = recipe.components.includes(:componentable).order(:position, :id) %>
+
+  <% if components.empty? %>
+    <p class="text-[13px] text-muted italic py-2">
+      <%= t("recipes.components.empty") %>
+    </p>
+  <% else %>
+    <ol class="flex flex-col divide-y divide-line rounded-card-sm bg-surface border border-line">
+      <% components.each_with_index do |component, index| %>
+        <% prefix = "recipe[components_attributes][#{index}]" %>
+        <li class="flex items-center gap-3 px-3 py-3 sm:px-4"
+            data-recipes-components-target="row"
+            data-componentable-type="<%= component.componentable_type %>"
+            data-componentable-id="<%= component.componentable_id %>">
+          <input type="hidden" name="<%= prefix %>[id]" value="<%= component.id %>" />
+          <input type="hidden" name="<%= prefix %>[componentable_type]" value="<%= component.componentable_type %>" />
+          <input type="hidden" name="<%= prefix %>[componentable_id]" value="<%= component.componentable_id %>" />
+          <input type="hidden" name="<%= prefix %>[_destroy]" value="0"
+                 data-recipes-components-target="destroyFlag" />
+
+          <input type="number"
+                 name="<%= prefix %>[quantity]"
+                 value="<%= component.quantity.to_s.sub(/\.0+\z/, "") %>"
+                 step="0.01" min="0"
+                 aria-label="<%= t("recipes.components.quantity_label") %>"
+                 class="w-20 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] font-mono text-right tabular-nums focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
+
+          <select name="<%= prefix %>[unit]"
+                  aria-label="<%= t("recipes.components.unit_label") %>"
+                  class="w-24 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none">
+            <% Recipes::UnitConverter.compatible_units_for(component.componentable_canonical_unit || component.unit).each do |u| %>
+              <option value="<%= u %>" <%= "selected" if u == component.unit %>>
+                <%= I18n.t("units.#{u}", default: u) %>
+              </option>
+            <% end %>
+          </select>
+
+          <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+            <span class="text-[13.5px] text-ink truncate">
+              <%= component.componentable&.name %>
+            </span>
+            <% if component.componentable.is_a?(Recipe) && !component.componentable.is_saleable? %>
+              <span class="text-[11px] text-muted">
+                <%= t("recipes.components.internal_tag") %>
+              </span>
+            <% end %>
+          </div>
+
+          <span class="font-mono text-[13px] text-ink-2 tabular-nums whitespace-nowrap">
+            <%= line_cost_label_for(component) %>
+          </span>
+
+          <button type="button"
+                  data-action="click->recipes-components#remove"
+                  aria-label="<%= t("recipes.components.remove_aria") %>"
+                  title="<%= t("recipes.components.remove_aria") %>"
+                  class="inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-err hover:bg-err/5 transition-colors">
+            <%= icon(:x, size: :sm) %>
+          </button>
+        </li>
+      <% end %>
+    </ol>
+  <% end %>
+</div>

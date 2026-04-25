@@ -13,57 +13,7 @@
     <%= helpers.render(partial: "recipes/cost_summary", locals: { recipe: recipe }) %>
   </div>
 
-  <% if components.empty? %>
-    <p class="text-[13px] text-muted italic py-2">
-      <%= t("recipes.components.empty") %>
-    </p>
-  <% else %>
-    <ol class="flex flex-col divide-y divide-line rounded-card-sm bg-surface border border-line">
-      <% components.each_with_index do |component, index| %>
-        <li class="flex items-center gap-3 px-3 py-3 sm:px-4"
-            data-recipes-components-target="row">
-          <%= form.fields_for :components, component, child_index: index do |cf| %>
-            <%= cf.hidden_field :id %>
-            <%= cf.hidden_field :componentable_type %>
-            <%= cf.hidden_field :componentable_id %>
-            <input type="hidden" name="recipe[components_attributes][<%= index %>][_destroy]"
-                   value="0" data-recipes-components-target="destroyFlag" />
-
-            <%= cf.number_field :quantity,
-                  step: "0.01",
-                  min: 0,
-                  aria: { label: t("recipes.components.quantity_label") },
-                  class: "w-20 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] font-mono text-right tabular-nums focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" %>
-
-            <%= cf.select :unit,
-                  compatible_units(component).map { |u| [ I18n.t("units.#{u}", default: u), u ] },
-                  {},
-                  aria: { label: t("recipes.components.unit_label") },
-                  class: "w-24 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" %>
-          <% end %>
-
-          <div class="flex-1 min-w-0 flex flex-col gap-0.5">
-            <span class="text-[13.5px] text-ink truncate"><%= component_name(component) %></span>
-            <% if component_type_label(component) %>
-              <span class="text-[11px] text-muted"><%= component_type_label(component) %></span>
-            <% end %>
-          </div>
-
-          <span class="font-mono text-[13px] text-ink-2 tabular-nums whitespace-nowrap">
-            <%= line_cost_label(component) %>
-          </span>
-
-          <button type="button"
-                  data-action="click->recipes-components#remove"
-                  aria-label="<%= t("recipes.components.remove_aria") %>"
-                  title="<%= t("recipes.components.remove_aria") %>"
-                  class="inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-err hover:bg-err/5 transition-colors">
-            <%= helpers.icon(:x, size: :sm) %>
-          </button>
-        </li>
-      <% end %>
-    </ol>
-  <% end %>
+  <%= helpers.render(partial: "recipes/components_rows", locals: { recipe: recipe }) %>
 
   <details class="group rounded-card-sm border border-line bg-surface">
     <summary class="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer select-none list-none">

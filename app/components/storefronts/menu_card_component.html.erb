@@ -28,6 +28,14 @@
         <div class="font-serif text-[20px] leading-[1.1] text-ink"><%= price_display %></div>
       </div>
     </div>
+    <% if requires_advance_notice? %>
+      <div class="flex items-center gap-1.5 -mt-0.5">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-muted shrink-0" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+        </svg>
+        <span class="font-mono text-[11px] text-muted leading-tight"><%= lead_time_badge %></span>
+      </div>
+    <% end %>
     <% if description.present? %>
       <div data-controller="reveal"
            data-reveal-collapsed-class="line-clamp-3"
@@ -60,16 +68,30 @@
             class: "inline-flex items-center justify-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 py-2.5 text-[13px] font-medium text-ink-2 no-underline transition hover:border-line-2" do %>
         <%= t("storefronts.menu.view") %>
       <% end %>
-      <button type="button"
-              class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[14px] font-semibold transition"
-              style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);"
-              data-action="click->storefront-cart#add"
-              data-storefront-cart-payload-param="<%= payload %>">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 5v14M5 12h14"/>
-        </svg>
-        <%= t("storefronts.menu.add") %>
-      </button>
+      <% if customizable? %>
+        <button type="button"
+                class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[14px] font-semibold transition"
+                style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);"
+                data-controller="storefront-customize-trigger"
+                data-action="click->storefront-customize-trigger#open"
+                data-recipe-slug="<%= recipe.slug %>">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <%= t("storefronts.menu.add") %>
+        </button>
+      <% else %>
+        <button type="button"
+                class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[14px] font-semibold transition"
+                style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);"
+                data-action="click->storefront-cart#add"
+                data-storefront-cart-payload-param="<%= payload %>">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <%= t("storefronts.menu.add") %>
+        </button>
+      <% end %>
     </div>
   </div>
 </article>

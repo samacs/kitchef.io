@@ -19,12 +19,27 @@ module Storefronts
       helpers.humanized_money_with_symbol(sale_price)
     end
 
+    def customizable?
+      recipe.customizable?
+    end
+
+    def requires_advance_notice?
+      recipe.requires_advance_notice?
+    end
+
+    def lead_time_badge
+      return unless requires_advance_notice?
+      I18n.t("storefronts.recipe.lead_time.badge", label: recipe.lead_time_label)
+    end
+
     def payload
       {
-        recipe_id: recipe.prefix_id,
-        name:      recipe.name,
-        price_cents: recipe.sale_price_cents.to_i,
-        photo:     (helpers.url_for(photo_variant) if photo_variant)
+        recipe_id:       recipe.prefix_id,
+        recipe_slug:     recipe.slug,
+        name:            recipe.name,
+        price_cents:     recipe.sale_price_cents.to_i,
+        lead_time_hours: recipe.lead_time_hours.to_i,
+        photo:           (helpers.url_for(photo_variant) if photo_variant)
       }.compact.to_json
     end
   end

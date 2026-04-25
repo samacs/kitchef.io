@@ -191,6 +191,8 @@ elena_ingredients = [
   [ "Cilantro",                    "kg",   8500, :produce,  "Mercado de Medellín" ],
   [ "Tomate rojo",                 "kg",   3800, :produce,  "Mercado de Medellín" ],
   [ "Tomate verde",                "kg",   3500, :produce,  "Mercado de Medellín" ],
+  # Frutas
+  [ "Fresa",                       "kg",   8500, :produce,  "Mercado de Medellín" ],
   # Especias
   [ "Canela en polvo",             "kg",  55000, :spices,   "Mercado de San Juan" ],
   [ "Comino molido",               "kg",  38000, :spices,   "Mercado de San Juan" ]
@@ -272,6 +274,8 @@ elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key
   # detail page and the OrderItem snapshots reflect it at order time.
   recipe_packaging = name.match?(/pastel|flan/i) ? 3500 : 0
 
+  recipe_lead_time = name.match?(/pastel/i) ? 48 : (name.match?(/flan/i) ? 24 : 0)
+
   recipe = cocina_elena.recipes.create!(
     name: name,
     sale_price_cents: cents,
@@ -281,7 +285,8 @@ elena_recipe_list = elena_recipes.map do |name, cents, cat, qty, unit, photo_key
     category: recipe_category_for(cocina_elena, cat),
     is_published: true,
     target_margin_percent: 60,
-    packaging_cents: recipe_packaging
+    packaging_cents: recipe_packaging,
+    lead_time_hours: recipe_lead_time
   )
   attach_seed_image(recipe, :photos,
     url: seed_photo_url(photo_key),
@@ -424,7 +429,10 @@ mario_ingredients = {
   "Cebolla blanca"               => [ "kg",   2800, :produce, "Central de Abastos" ],
   "Cilantro"                     => [ "kg",   8500, :produce, "Central de Abastos" ],
   "Piña"                         => [ "kg",   3200, :produce, "Central de Abastos" ],
-  "Ajo"                          => [ "kg",  14000, :produce, "Central de Abastos" ]
+  "Ajo"                          => [ "kg",  14000, :produce, "Central de Abastos" ],
+  "Tortilla de harina"           => [ "piece", 150, :pantry,  "Abarrotes Providencia" ],
+  "Aguacate"                     => [ "kg",  6500, :produce, "Central de Abastos" ],
+  "Limón"                        => [ "kg",  3800, :produce, "Central de Abastos" ]
 }
 mario_ing = {}
 mario_ingredients.each do |name, (unit, cents, cat, supplier)|
@@ -762,6 +770,283 @@ seed_fixed_cost!(
 )
 
 # ---------------------------------------------------------------------------
+# Phase 11 — recipe option groups (personalización de platillos)
+# ---------------------------------------------------------------------------
+puts "==> seeding recipe option groups"
+
+# Clean stale groups from previous runs / manual testing
+RecipeOptionGroup.destroy_all
+
+# ── Elena: Pastel de tres leches ──────────────────────────────────────────
+# Matches the "Lupita repostería" design reference — size radio with
+# negative/positive deltas, flavor radio, meringue color swatch, extras
+# with subs and prices, and a dedication textarea.
+pastel = cocina_elena.recipes.kept.saleable.find_by(name: "Pastel de tres leches")
+if pastel
+  # Tamaño — base price is 20-portion ($520). Smaller is cheaper, larger more.
+  size_g = pastel.option_groups.create!(
+    account: cocina_elena, label: "Tamaño", kind: :radio, required: true, position: 0
+  )
+  size_g.options.create!(label: "10 porciones", sub: "ideal individual",     price_delta_cents: -18000, position: 0)
+  size_g.options.create!(label: "20 porciones", sub: "cumpleaños pequeño",   price_delta_cents: 0,      position: 1, is_default: true)
+  size_g.options.create!(label: "30 porciones", sub: "fiesta",              price_delta_cents: 28000,  position: 2)
+
+  # Relleno
+  relleno_g = pastel.option_groups.create!(
+    account: cocina_elena, label: "Relleno", kind: :radio, required: true, position: 1
+  )
+  relleno_g.options.create!(label: "Fresa natural",             price_delta_cents: 0,    position: 0, is_default: true)
+  relleno_g.options.create!(label: "Durazno en almíbar",        price_delta_cents: 0,    position: 1)
+  relleno_g.options.create!(label: "Piña caramelizada",         price_delta_cents: 0,    position: 2)
+  relleno_g.options.create!(label: "Mixto (fresa + durazno)",   price_delta_cents: 4000, position: 3)
+
+  # Color del merengue — swatch with group subtitle
+  color_g = pastel.option_groups.create!(
+    account: cocina_elena, label: "Color del merengue", sub: "Personalización gratuita",
+    kind: :swatch, required: false, position: 2
+  )
+  color_g.options.create!(label: "Blanco",      color_hex: "#F9F5ED", position: 0, is_default: true, price_delta_cents: 0)
+  color_g.options.create!(label: "Rosa pastel", color_hex: "#F5B8C0", position: 1, price_delta_cents: 0)
+  color_g.options.create!(label: "Durazno",     color_hex: "#F6BE8B", position: 2, price_delta_cents: 0)
+  color_g.options.create!(label: "Menta",       color_hex: "#B8DCC4", position: 3, price_delta_cents: 0)
+  color_g.options.create!(label: "Azul cielo",  color_hex: "#B8CEE4", position: 4, price_delta_cents: 0)
+  color_g.options.create!(label: "Amarillo",    color_hex: "#F4DB8D", position: 5, price_delta_cents: 0)
+  color_g.options.create!(label: "Lavanda",     color_hex: "#CFC2E4", position: 6, price_delta_cents: 0)
+
+  # Extras — each with subtitle and price
+  extras_g = pastel.option_groups.create!(
+    account: cocina_elena, label: "Extras", kind: :check, required: false, position: 3
+  )
+  extras_g.options.create!(label: "Velas de número",     sub: "paq. 1–99",           price_delta_cents: 3500,  position: 0)
+  extras_g.options.create!(label: "Adorno floral",       sub: "flores comestibles",  price_delta_cents: 12000, position: 1)
+  extras_g.options.create!(label: "Caja de regalo",      sub: "kraft con moño",      price_delta_cents: 6500,  position: 2)
+  extras_g.options.create!(label: "Letrero en acrílico", sub: "hasta 20 letras",     price_delta_cents: 9000,  position: 3)
+
+  # Dedicatoria — textarea
+  pastel.option_groups.create!(
+    account: cocina_elena, label: "Dedicatoria sobre el pastel",
+    sub: "Hasta 30 letras · en fondant.",
+    kind: :textarea, required: false, position: 4, max_length: 30
+  )
+
+  # Mark fresa as removable component (if decomposed)
+  pastel.components.where(componentable_type: "Ingredient").each do |comp|
+    name = comp.componentable&.name.to_s.downcase
+    comp.update!(is_removable: true) if name.include?("fresa")
+  end
+
+  puts "  Elena: Pastel → #{pastel.option_groups.count} groups"
+end
+
+# ── Elena: Enchiladas suizas ──────────────────────────────────────────────
+# Salsa choice, toppings, extras with prices, removable ingredients
+enchiladas = cocina_elena.recipes.kept.saleable.find_by(name: "Enchiladas suizas")
+if enchiladas
+  salsa_g = enchiladas.option_groups.create!(
+    account: cocina_elena, label: "Tipo de salsa", kind: :radio, required: true, position: 0
+  )
+  salsa_g.options.create!(label: "Salsa verde suiza",    price_delta_cents: 0,    position: 0, is_default: true)
+  salsa_g.options.create!(label: "Salsa roja",           price_delta_cents: 0,    position: 1)
+  salsa_g.options.create!(label: "Salsa de chipotle",    sub: "picante medio", price_delta_cents: 1500, position: 2)
+
+  extras_g = enchiladas.option_groups.create!(
+    account: cocina_elena, label: "Extras", kind: :check, required: false, position: 1
+  )
+  extras_g.options.create!(label: "Crema extra",           sub: "porción doble",    price_delta_cents: 1500, position: 0)
+  extras_g.options.create!(label: "Queso gratinado",       sub: "Oaxaca y manchego", price_delta_cents: 2500, position: 1)
+  extras_g.options.create!(label: "Aguacate",              sub: "medio aguacate",   price_delta_cents: 3000, position: 2)
+  extras_g.options.create!(label: "Arroz rojo",            sub: "porción extra",    price_delta_cents: 1500, position: 3)
+
+  enchiladas.option_groups.create!(
+    account: cocina_elena, label: "Notas para la cocinera",
+    sub: "Alergias, nivel de picante, etc.",
+    kind: :textarea, required: false, position: 2, max_length: 200
+  )
+
+  enchiladas.components.where(componentable_type: "Ingredient").each do |comp|
+    name = comp.componentable&.name.to_s.downcase
+    comp.update!(is_removable: true) if name.include?("cebolla") || name.include?("crema") || name.include?("cilantro")
+  end
+  puts "  Elena: Enchiladas → #{enchiladas.option_groups.count} groups"
+end
+
+# ── Elena: Pozole rojo ────────────────────────────────────────────────────
+# Size radio + garnish extras + spice level
+pozole = cocina_elena.recipes.kept.saleable.find_by(name: "Pozole rojo")
+if pozole
+  size_g = pozole.option_groups.create!(
+    account: cocina_elena, label: "Tamaño", kind: :radio, required: true, position: 0
+  )
+  size_g.options.create!(label: "Porción individual", sub: "~500ml",  price_delta_cents: 0,     position: 0, is_default: true)
+  size_g.options.create!(label: "Para 2–3 personas",  sub: "1 litro", price_delta_cents: 10000, position: 1)
+
+  spice_g = pozole.option_groups.create!(
+    account: cocina_elena, label: "Nivel de picante", kind: :radio, required: false, position: 1
+  )
+  spice_g.options.create!(label: "Sin picante",  price_delta_cents: 0, position: 0)
+  spice_g.options.create!(label: "Medio",        price_delta_cents: 0, position: 1, is_default: true)
+  spice_g.options.create!(label: "Picosito",     price_delta_cents: 0, position: 2)
+
+  garnish_g = pozole.option_groups.create!(
+    account: cocina_elena, label: "Guarniciones extra", kind: :check, required: false, position: 2
+  )
+  garnish_g.options.create!(label: "Tostadas extra",  sub: "6 piezas",      price_delta_cents: 1500, position: 0)
+  garnish_g.options.create!(label: "Aguacate",        sub: "medio aguacate", price_delta_cents: 2500, position: 1)
+  garnish_g.options.create!(label: "Chicharrón",      sub: "porción extra",  price_delta_cents: 2000, position: 2)
+
+  puts "  Elena: Pozole → #{pozole.option_groups.count} groups"
+end
+
+# ── Mario: Taco al pastor ────────────────────────────────────────────────
+# Tortilla choice (maíz vs harina), salsa, extras with descriptions,
+# and removable ingredients (cilantro, cebolla, piña).
+taco_pastor = taqueria_mario.recipes.kept.saleable.find_by(name: "Taco al pastor")
+if taco_pastor
+  tortilla_g = taco_pastor.option_groups.create!(
+    account: taqueria_mario, label: "Tortilla", kind: :radio, required: true, position: 0
+  )
+  tortilla_g.options.create!(label: "Maíz",           sub: "nixtamalizada, hecha a mano", price_delta_cents: 0, position: 0, is_default: true)
+  tortilla_g.options.create!(label: "Harina",          sub: "suave y esponjosa",          price_delta_cents: 300, position: 1)
+
+  salsa_g = taco_pastor.option_groups.create!(
+    account: taqueria_mario, label: "Salsa", kind: :radio, required: false, position: 1
+  )
+  salsa_g.options.create!(label: "Verde",       sub: "tomatillo + serrano",    price_delta_cents: 0,   position: 0, is_default: true)
+  salsa_g.options.create!(label: "Roja",        sub: "chile de árbol tatemado", price_delta_cents: 0,   position: 1)
+  salsa_g.options.create!(label: "Habanero",    sub: "muy picante 🌶️",        price_delta_cents: 500, position: 2)
+  salsa_g.options.create!(label: "Sin salsa",                                   price_delta_cents: 0,   position: 3)
+
+  extras_g = taco_pastor.option_groups.create!(
+    account: taqueria_mario, label: "Extras", kind: :check, required: false, position: 2
+  )
+  extras_g.options.create!(label: "Queso Oaxaca",   sub: "fundido sobre el taco",  price_delta_cents: 1500, position: 0)
+  extras_g.options.create!(label: "Piña extra",     sub: "doble porción caramelizada", price_delta_cents: 800,  position: 1)
+  extras_g.options.create!(label: "Guacamole",      sub: "hecho al momento",       price_delta_cents: 2000, position: 2)
+  extras_g.options.create!(label: "Limón extra",    sub: "2 mitades",              price_delta_cents: 0,    position: 3)
+
+  taco_pastor.components.where(componentable_type: "Ingredient").each do |comp|
+    name = comp.componentable&.name.to_s.downcase
+    comp.update!(is_removable: true) if name.include?("cebolla") || name.include?("cilantro") || name.include?("piña")
+  end
+  puts "  Mario: Taco al pastor → #{taco_pastor.option_groups.count} groups"
+end
+
+# ── Mario: Taco de asada ─────────────────────────────────────────────────
+# Same tortilla/salsa pattern as pastor, different extras
+taco_asada = taqueria_mario.recipes.kept.saleable.find_by(name: "Taco de asada")
+if taco_asada
+  tortilla_g = taco_asada.option_groups.create!(
+    account: taqueria_mario, label: "Tortilla", kind: :radio, required: true, position: 0
+  )
+  tortilla_g.options.create!(label: "Maíz",   sub: "nixtamalizada", price_delta_cents: 0,   position: 0, is_default: true)
+  tortilla_g.options.create!(label: "Harina", sub: "estilo norteño", price_delta_cents: 300, position: 1)
+
+  salsa_g = taco_asada.option_groups.create!(
+    account: taqueria_mario, label: "Salsa", kind: :radio, required: false, position: 1
+  )
+  salsa_g.options.create!(label: "Roja",        price_delta_cents: 0,   position: 0, is_default: true)
+  salsa_g.options.create!(label: "Verde",       price_delta_cents: 0,   position: 1)
+  salsa_g.options.create!(label: "Guacamole",   sub: "en lugar de salsa", price_delta_cents: 1500, position: 2)
+  salsa_g.options.create!(label: "Sin salsa",   price_delta_cents: 0,   position: 3)
+
+  extras_g = taco_asada.option_groups.create!(
+    account: taqueria_mario, label: "Extras", kind: :check, required: false, position: 2
+  )
+  extras_g.options.create!(label: "Queso Oaxaca", sub: "fundido",         price_delta_cents: 1500, position: 0)
+  extras_g.options.create!(label: "Nopales",      sub: "asados a la plancha", price_delta_cents: 1000, position: 1)
+  extras_g.options.create!(label: "Cebollitas",   sub: "cambray asadas",  price_delta_cents: 800,  position: 2)
+
+  taco_asada.components.where(componentable_type: "Ingredient").each do |comp|
+    name = comp.componentable&.name.to_s.downcase
+    comp.update!(is_removable: true) if name.include?("cebolla") || name.include?("cilantro")
+  end
+  puts "  Mario: Taco de asada → #{taco_asada.option_groups.count} groups"
+end
+
+# ── Mario: Quesadilla ────────────────────────────────────────────────────
+# Cheese type swatch + protein add-on + extras
+quesadilla = taqueria_mario.recipes.kept.saleable.find_by(name: "Quesadilla")
+if quesadilla
+  cheese_g = quesadilla.option_groups.create!(
+    account: taqueria_mario, label: "Tipo de queso", sub: "Todos derriten perfecto",
+    kind: :swatch, required: true, position: 0
+  )
+  cheese_g.options.create!(label: "Oaxaca",    color_hex: "#FFF8E7", price_delta_cents: 0,    position: 0, is_default: true)
+  cheese_g.options.create!(label: "Manchego",  color_hex: "#F5DEB3", price_delta_cents: 1000, position: 1)
+  cheese_g.options.create!(label: "Chihuahua", color_hex: "#FAEBD7", price_delta_cents: 800,  position: 2)
+  cheese_g.options.create!(label: "Mixto",     color_hex: "#F0E4C8", price_delta_cents: 500,  position: 3, sub: "Oaxaca + manchego")
+
+  protein_g = quesadilla.option_groups.create!(
+    account: taqueria_mario, label: "Proteína", sub: "Agrega proteína a tu quesadilla",
+    kind: :radio, required: false, position: 1
+  )
+  protein_g.options.create!(label: "Sin proteína",  price_delta_cents: 0,    position: 0, is_default: true)
+  protein_g.options.create!(label: "Pastor",        sub: "marinada 24h",  price_delta_cents: 2500, position: 1)
+  protein_g.options.create!(label: "Arrachera",     sub: "corte premium", price_delta_cents: 3500, position: 2)
+  protein_g.options.create!(label: "Pollo",         sub: "a la plancha",  price_delta_cents: 2000, position: 3)
+
+  extras_g = quesadilla.option_groups.create!(
+    account: taqueria_mario, label: "Acompañar con", kind: :check, required: false, position: 2
+  )
+  extras_g.options.create!(label: "Guacamole",       sub: "porción individual",   price_delta_cents: 2000, position: 0)
+  extras_g.options.create!(label: "Frijoles refritos", sub: "con queso encima",    price_delta_cents: 1200, position: 1)
+  extras_g.options.create!(label: "Rajas con crema",  sub: "chile poblano",       price_delta_cents: 1500, position: 2)
+
+  puts "  Mario: Quesadilla → #{quesadilla.option_groups.count} groups"
+end
+
+# ── Mario: Gringa al pastor ───────────────────────────────────────────────
+# Gringas always use flour tortilla — no tortilla choice needed. Extras
+# and removable piña showcase a different customization pattern.
+gringa = taqueria_mario.recipes.kept.saleable.find_by(name: "Gringa al pastor")
+if gringa
+  extras_g = gringa.option_groups.create!(
+    account: taqueria_mario, label: "Extras", kind: :check, required: false, position: 0
+  )
+  extras_g.options.create!(label: "Doble queso",    sub: "extra Oaxaca fundido", price_delta_cents: 2000, position: 0)
+  extras_g.options.create!(label: "Guacamole",      sub: "hecho al momento",    price_delta_cents: 2000, position: 1)
+  extras_g.options.create!(label: "Champiñones",    sub: "salteados con ajo",   price_delta_cents: 1500, position: 2)
+
+  gringa.option_groups.create!(
+    account: taqueria_mario, label: "Notas",
+    sub: "Instrucciones especiales para tu gringa.",
+    kind: :textarea, required: false, position: 1, max_length: 150
+  )
+
+  gringa.components.where(componentable_type: "Ingredient").each do |comp|
+    name = comp.componentable&.name.to_s.downcase
+    comp.update!(is_removable: true) if name.include?("piña")
+  end
+  puts "  Mario: Gringa → #{gringa.option_groups.count} groups"
+end
+
+# ── Mario: Sope con frijol ───────────────────────────────────────────────
+# Toppings radio + extras
+sope = taqueria_mario.recipes.kept.saleable.find_by(name: "Sope con frijol")
+if sope
+  topping_g = sope.option_groups.create!(
+    account: taqueria_mario, label: "Topping de proteína", kind: :radio, required: false, position: 0
+  )
+  topping_g.options.create!(label: "Solo frijol",     sub: "clásico",              price_delta_cents: 0,    position: 0, is_default: true)
+  topping_g.options.create!(label: "Con pollo",        sub: "deshebrado",           price_delta_cents: 1800, position: 1)
+  topping_g.options.create!(label: "Con pastor",       sub: "marinada al trompo",   price_delta_cents: 2000, position: 2)
+  topping_g.options.create!(label: "Con arrachera",    sub: "corte fino",           price_delta_cents: 3000, position: 3)
+
+  extras_g = sope.option_groups.create!(
+    account: taqueria_mario, label: "Extras", kind: :check, required: false, position: 1
+  )
+  extras_g.options.create!(label: "Crema",       sub: "porción extra",         price_delta_cents: 500,  position: 0)
+  extras_g.options.create!(label: "Queso fresco", sub: "desmoronado",          price_delta_cents: 800,  position: 1)
+  extras_g.options.create!(label: "Aguacate",    sub: "rebanada",              price_delta_cents: 1500, position: 2)
+
+  sope.components.where(componentable_type: "Ingredient").each do |comp|
+    name = comp.componentable&.name.to_s.downcase
+    comp.update!(is_removable: true) if name.include?("queso")
+  end
+  puts "  Mario: Sope → #{sope.option_groups.count} groups"
+end
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 puts "\n==> done"
@@ -774,4 +1059,5 @@ puts "\n==> done"
   puts "    suppliers:   #{a.suppliers.count}"
   puts "    purchases:   #{a.purchases.count}"
   puts "    fixed costs: #{a.fixed_costs.count} (#{a.fixed_cost_categories.count} categories)"
+  puts "    option groups: #{RecipeOptionGroup.where(account: a).count}"
 end

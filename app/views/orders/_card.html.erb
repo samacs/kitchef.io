@@ -48,14 +48,30 @@
 
   <ul class="flex flex-col gap-1">
     <% order.items.each do |item| %>
-      <li class="flex items-baseline justify-between gap-2 text-[13px]">
-        <span class="text-ink-2 truncate">
-          <span class="font-mono text-muted mr-1"><%= item.quantity.to_s.sub(/\.0+\z/, "") %>×</span>
-          <%= item.recipe&.name %>
-        </span>
-        <span class="font-mono text-[12.5px] text-muted shrink-0">
-          <%= humanized_money_with_symbol(item.line_total) %>
-        </span>
+      <li class="flex flex-col gap-0.5">
+        <div class="flex items-baseline justify-between gap-2 text-[13px]">
+          <span class="text-ink-2 truncate">
+            <span class="font-mono text-muted mr-1"><%= item.quantity.to_s.sub(/\.0+\z/, "") %>×</span>
+            <%= item.recipe&.name %>
+          </span>
+          <span class="font-mono text-[12.5px] text-muted shrink-0">
+            <%= humanized_money_with_symbol(item.line_total) %>
+          </span>
+        </div>
+        <% if item.has_customizations? %>
+          <div class="flex flex-wrap gap-1 pl-6">
+            <% item.display_options.first(3).each do |line| %>
+              <span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-bg-2 text-[10px] text-muted font-mono">
+                <%= line %>
+              </span>
+            <% end %>
+            <% if item.display_options.size > 3 %>
+              <span class="text-[10px] text-muted font-mono">
+                <%= t("orders.card.options_overflow", count: item.display_options.size - 3) %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
       </li>
     <% end %>
   </ul>

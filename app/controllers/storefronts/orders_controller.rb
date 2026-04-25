@@ -148,14 +148,14 @@ module Storefronts
 
       decoded = JSON.parse(raw)
       Array(decoded["items"]).each_with_index.map do |item, idx|
-        [
-          idx.to_s,
-          {
-            recipe_id: item["recipe_id"].to_s,
-            quantity:  (item["quantity"].presence || 1),
-            notes:     item["notes"].to_s
-          }
-        ]
+        attrs = {
+          recipe_id: item["recipe_id"].to_s,
+          quantity:  (item["quantity"].presence || 1),
+          notes:     item["notes"].to_s
+        }
+        attrs[:selected_options]    = item["selected_options"]    if item["selected_options"].present?
+        attrs[:removed_components]  = item["removed_components"]  if item["removed_components"].present?
+        [ idx.to_s, attrs ]
       end.to_h
     rescue JSON::ParserError
       []

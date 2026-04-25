@@ -5,15 +5,13 @@ module Recipes
   # recipes (filtered through Recipes::DependencyGraph to hide anything
   # that would cycle).
   #
-  # Rendered via nested attributes on the Recipe form; autosave picks
-  # up row edits automatically.
+  # Row markup itself lives in the `recipes/_components_rows` partial so
+  # RecipesController#update can swap it back in via turbo-stream after
+  # autosave — that's how new rows pick up their persisted IDs and stop
+  # duplicating on subsequent saves.
   class ComponentsEditorComponent < ApplicationComponent
     option :recipe
     option :form
-
-    def components
-      recipe.components.includes(:componentable).order(:position, :id)
-    end
 
     def pickable_ingredients
       recipe.account.ingredients.kept.includes(:category).order(:category_id, :name)
@@ -28,59 +26,6 @@ module Recipes
       recipe.account.recipes
         .merge(Recipe.usable_as_component_for(recipe))
         .order(:name)
-    end
-
-    def cost_label
-      if recipe.cost_cents_cached.present?
-        helpers.humanized_money_with_symbol(recipe.cost_cached)
-      else
-        "—"
-      end
-    end
-
-    def line_cost_label(component)
-      cost_cents = line_cost_cents(component)
-      return "—" if cost_cents.nil?
-
-      helpers.humanized_money_with_symbol(Money.new(cost_cents, "MXN"))
-    end
-
-    def component_name(component)
-      component.componentable&.name.to_s
-    end
-
-    def component_type_label(component)
-      return nil unless component.componentable.is_a?(Recipe)
-
-      component.componentable.is_saleable? ? nil : I18n.t("recipes.components.internal_tag")
-    end
-
-    def compatible_units(component)
-      canonical = component.componentable_canonical_unit
-      return [ component.unit ] unless canonical
-
-      Recipes::UnitConverter.compatible_units_for(canonical)
-    end
-
-    private
-
-    def line_cost_cents(component)
-      ing_or_rec = component.componentable
-      return nil if ing_or_rec.nil?
-
-      case ing_or_rec
-      when Ingredient
-        qty = Recipes::UnitConverter.convert(quantity: component.quantity, from: component.unit, to: ing_or_rec.unit)
-        (qty * BigDecimal(ing_or_rec.unit_cost_cents.to_s)).to_i
-      when Recipe
-        child_cost = ing_or_rec.cost_cents_cached.to_i
-        return nil if child_cost.zero? || ing_or_rec.yield_quantity.to_d.zero?
-
-        qty = Recipes::UnitConverter.convert(quantity: component.quantity, from: component.unit, to: ing_or_rec.yield_unit)
-        (qty / BigDecimal(ing_or_rec.yield_quantity.to_s) * BigDecimal(child_cost.to_s)).to_i
-      end
-    rescue Recipes::UnitConverter::IncompatibleUnits
-      nil
     end
   end
 end

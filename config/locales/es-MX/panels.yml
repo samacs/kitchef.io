@@ -245,6 +245,8 @@ es-MX:
         error: "No se pudo guardar"
     card:
       packaging_suffix: "+%{amount} empaque"
+      options_overflow: "+%{count} más"
+      removed_prefix: "sin %{name}"
     danger_zone:
       title: "¿Te equivocaste de pedido?"
       sub: "Puedes eliminar este pedido y dejará de aparecer en tu kanban. Lo conservamos en el historial."
@@ -391,6 +393,10 @@ es-MX:
       internal_section: "Bases y preparaciones"
       internal_section_lede: "Recetas que no se venden solas. Úsalas como componentes de tus platillos finales."
       uncategorized: "Sin categoría"
+      archived_link: "Ver archivados"
+      archived_count:
+        one: "1 archivado"
+        other: "%{count} archivados"
     new:
       title: "Agregar platillo"
       subtitle: "Foto, nombre y precio bastan"
@@ -407,6 +413,11 @@ es-MX:
       sale_price_label: "Precio al cliente"
       sale_price_placeholder: "0.00"
       sale_price_hint: "En pesos mexicanos. Es lo que cobras a tus clientas por una porción."
+      duplicate_cta: "Duplicar platillo"
+      duplicate_hint: "Crea una copia con los mismos ingredientes y opciones. Útil cuando vas a hacer una variante."
+      yield_quantity_label: "Rendimiento"
+      yield_unit_label: "Unidad"
+      yield_hint: "Cuánto produce una tanda. Para preparaciones internas (caldos, masas, salsas) usa gramos o mililitros para que otras recetas puedan tomar porciones exactas."
       category_label: "Categoría"
       category_placeholder: "Busca o crea una categoría"
       description_label: "Descripción (opcional)"
@@ -425,6 +436,10 @@ es-MX:
       publish_hint_needs_photo: "Sube una foto primero — sin ella, tu menú se ve incompleto."
       saleable_label: "Esta receta se vende"
       saleable_hint: "Aparece en tu menú y puede ser parte de un pedido. Si la usas sólo como base de otras recetas, desmárcala."
+      lead_time_label: "Anticipación"
+      lead_time_placeholder: "0"
+      lead_time_hint: "¿Cuántas horas necesitas para preparar este platillo? 24 = un día, 48 = dos días. Déjalo en 0 si lo preparas el mismo día."
+      lead_time_unit: "horas"
       submit_create: "Agregar platillo"
       submit_update: "Guardar cambios"
       cancel: "Cancelar"
@@ -437,6 +452,21 @@ es-MX:
       updated: "Cambios guardados."
     destroy:
       discarded: "Platillo eliminado."
+    duplicate:
+      copy_suffix: "(copia)"
+      duplicated: "Duplicaste %{name}. Edita el nombre y guárdalo cuando esté listo."
+    restore:
+      restored: "Restauraste %{name}. Ahora aparece como borrador en tu recetario."
+      not_found: "No encontramos ese platillo. Tal vez ya lo restauraste."
+    archived:
+      title: "Archivados"
+      subtitle: "Platillos que eliminaste. Restáuralos en cualquier momento."
+      empty_headline: "Tu archivo está vacío"
+      empty_sub: "Cuando elimines un platillo, lo encontrarás aquí para restaurarlo si cambias de opinión."
+      back_cta: "Volver al recetario"
+      restore_cta: "Restaurar"
+      restore_confirm: "¿Restaurar este platillo? Volverá como borrador a tu recetario."
+      discarded_at: "Eliminada %{date}"
     toggle_publish:
       published: "%{name} ya está en tu menú público."
       unpublished: "%{name} ya no aparece en tu menú."
@@ -451,6 +481,29 @@ es-MX:
         zero: "Nada que ajustar — tus precios ya mantienen el margen objetivo."
         one: "Ajustamos el precio de 1 receta para mantener tu margen objetivo."
         other: "Ajustamos los precios de %{count} recetas para mantener tu margen objetivo."
+    options:
+      kicker: "Personalización"
+      headline: "Opciones de personalización"
+      empty: "Agrega opciones para que tus clientas personalicen este platillo."
+      add_cta: "Agregar grupo de opciones"
+      group_label: "Nombre del grupo"
+      group_label_placeholder: "Ej: Tamaño, Relleno, Extras"
+      group_sub_placeholder: "Descripción breve (opcional)"
+      kind_label: "Tipo"
+      required_label: "Obligatorio"
+      max_length_label: "Máximo de caracteres"
+      option_label: "Opción"
+      option_label_placeholder: "Ej: 10 porciones"
+      option_sub_placeholder: "Descripción (opcional)"
+      price_delta_label: "Ajuste de precio"
+      price_delta_hint: "En pesos. Usa negativo para descuento."
+      default_label: "Predeterminado"
+      color_hex_label: "Color"
+      add_option_cta: "Agregar opción"
+      remove_group_confirm: "¿Eliminar este grupo y todas sus opciones?"
+      remove_option_aria: "Quitar opción"
+      removable_label: "Se puede quitar"
+      removable_hint: "Tu clienta podrá desmarcar este ingrediente al personalizar el platillo."
     danger_zone:
       title: "¿Ya no lo cocinas?"
       sub: "Puedes eliminar este platillo y dejará de aparecer en tu menú. Lo conservamos en el historial por si cambias de opinión."
@@ -931,6 +984,7 @@ es-MX:
         label: "Empaque por pedido"
         hint: "Lo que te cuesta el empaque estándar por pedido (bolsa, servilletas, etiqueta). Se suma al total de cada pedido nuevo."
         cents_hint: "En centavos (ej: 800 = $8.00)."
+        pesos_hint: "En pesos (ej: 8.00 = ocho pesos)."
   subscription:
     title: "Plan"
 

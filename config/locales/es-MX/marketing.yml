@@ -42,8 +42,95 @@ es-MX:
 
     home:
       title: "Kitchef — el sistema operativo de tu cocina"
-      headline_html: 'El sistema operativo de tu <em class="italic text-accent">cocina</em>.'
-      lede: "Pedidos, recetas, márgenes y clientes en un solo lugar. Diseñado para cocineras mexicanas que quieren crecer sin cuadernos ni WhatsApp."
+      headline_html: 'El sistema operativo de tu <em class="italic text-accent">cocina.</em>'
+      lede: "Pedidos, cobros, producción y costos en un solo lugar. Diseñado para cocineras independientes en México — sin comisión por venta, en pesos, en español."
+      cta_primary: "Empezar gratis →"
+      cta_secondary: "Ver cómo funciona"
+      trust:
+        no_card: "Sin tarjeta"
+        cancel_anytime: "Cancela cuando quieras"
+        no_commission: "0% comisión"
+      integrations: "Funciona con lo que ya usas"
+      features:
+        kicker: "Una herramienta, cuatro oficios"
+        headline_html: 'Lo que antes te tomaba <em class="italic text-accent">horas</em>, ahora son minutos.'
+        lede: "Cada parte de tu cocina — pedidos, dinero, producción y números — tiene su propio espacio. Todo se conecta, pero cada cosa tiene su lugar."
+        orders:
+          kicker: "Pedidos"
+          headline_html: 'Una libreta única, sin <em class="italic text-accent">post-its.</em>'
+          body: "Cada pedido tiene cliente, platillo, entrega y anticipo. Los mensajes de WhatsApp se convierten en pedidos con un toque."
+          badge: "28 activos"
+        payments:
+          kicker: "Cobros"
+          headline_html: '0% de <em class="italic text-accent">comisión</em>. Siempre.'
+          body: "Aceptas pagos por los medios que tus clientes ya usan. Nada se queda en el camino."
+        production:
+          kicker: "Producción"
+          headline_html: 'Tu semana, <em class="italic text-accent">visible.</em>'
+          body: "Cada platillo tiene su tiempo de preparación. El calendario te dice qué empezar cuándo y a qué hora sales a entregar."
+        margins:
+          kicker: "Números"
+          headline_html: 'Márgenes <em class="italic text-accent">claros</em>, sin Excel.'
+          body: "Cada receta con sus costos. El margen se calcula solo y sabes cuál platillo te deja más."
+      showcase:
+        kicker: "El panel"
+        headline_html: 'Todo tu negocio en <em class="italic text-accent">una pantalla.</em>'
+        body: "Cada mañana, Elena abre Kitchef y sabe en diez segundos cómo va el día. Ventas, margen, pedidos, entregas. Nada más."
+        checks:
+          - "Comparación semana a semana"
+          - "Alertas cuando algo está atrasado"
+          - "Exporta a Excel o PDF con un clic"
+      pricing:
+        kicker: "Precios claros · en pesos"
+        headline_html: 'Una tarifa fija. <em class="italic text-accent">Todo lo que ganas es tuyo.</em>'
+        lede: "No cobramos comisión por venta. Pagas una mensualidad según tu tamaño de negocio — eso es todo."
+        free:
+          name: "Gratis"
+          desc: "Para cocineras que están empezando y quieren organizar su cocina."
+          price: "$0"
+          per: "/mes · para siempre"
+          cta: "Empezar gratis"
+          features:
+            - "Hasta 20 pedidos al mes"
+            - "Menú público con tu marca"
+            - "Directorio de clientes"
+            - "Pedidos por WhatsApp"
+            - "Recetas con foto y precio"
+        pro:
+          name: "Pro"
+          tag: "Recomendado"
+          desc: "Para cocinas establecidas que quieren crecer sin perder margen."
+          price: "$150"
+          per: "/mes · MXN"
+          cta: "Probar 14 días gratis"
+          features:
+            - "Pedidos ilimitados"
+            - "Recetas componibles y costeo automático"
+            - "Calendario de producción"
+            - "Lista de compras semanal"
+            - "Reportes de ingeniería de menú"
+            - "Personalización de platillos"
+            - "Horarios y entregas programadas"
+            - "Soporte prioritario por WhatsApp"
+      faq:
+        headline_html: 'Preguntas <em class="italic text-accent">honestas.</em>'
+        lede: "Si tu duda no está aquí, escríbenos por WhatsApp. Respondemos en español y en menos de una hora hábil."
+        items:
+          - q: "¿De verdad no cobran comisión?"
+            a: "Ni un peso. Pagas tu mensualidad y lo que ganas es tuyo. No procesamos pagos; tus clientes te pagan por los medios que tú decidas."
+          - q: "¿Necesito RFC o permisos?"
+            a: "No. Kitchef funciona igual sin RFC y para negocios ya constituidos."
+          - q: "¿Puedo probarlo antes de pagar?"
+            a: "El plan Gratis es gratis para siempre. Si quieres Pro, tienes 14 días de prueba sin tarjeta ni compromiso."
+          - q: "¿Y si después quiero exportar mis datos?"
+            a: "Descargas todo en Excel o PDF cuando quieras. Son tus datos. No te atamos."
+          - q: "¿Hay descuento si pago anual?"
+            a: "Sí. Dos meses gratis al pagar anual. Se ajusta automáticamente al activar la suscripción."
+      final_cta:
+        headline_html: 'Tu cocina merece un <em class="italic text-accent-2">sistema</em>, no un cuaderno.'
+        body: "Empieza gratis, sin tarjeta ni compromiso. Si no te sirve, exportas tus datos y listo."
+        primary: "Empezar gratis →"
+        secondary: "Ver precios"
 
     pricing:
       title: "Precios"

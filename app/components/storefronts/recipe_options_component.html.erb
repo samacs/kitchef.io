@@ -1,0 +1,138 @@
+<div class="flex flex-col gap-5">
+
+  <% option_groups.each do |group| %>
+    <fieldset class="flex flex-col gap-2.5 border-t border-line pt-4">
+      <div class="mb-1">
+        <legend class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= group.label %>
+          <% if group.required? %>
+            <span class="text-err">*</span>
+          <% end %>
+        </legend>
+        <% if group.sub.present? %>
+          <p class="text-[12px] text-muted"><%= group.sub %></p>
+        <% end %>
+      </div>
+
+      <% if group.radio? %>
+        <div class="flex flex-col gap-1.5">
+          <% options_for(group).each do |opt| %>
+            <label class="flex items-center gap-3 rounded-[10px] border border-line px-3.5 py-2.5 cursor-pointer transition-colors hover:border-line-2 has-[:checked]:border-[var(--brand-1)] has-[:checked]:bg-[color-mix(in_oklab,var(--brand-1)_6%,var(--color-surface))]">
+              <input type="radio"
+                     name="options[<%= group.id %>]"
+                     value="<%= opt.id %>"
+                     data-label="<%= opt.label %>"
+                     data-delta="<%= opt.price_delta_cents.to_i %>"
+                     data-action="change->storefront-recipe-options#recalc"
+                     data-storefront-recipe-options-target="optionInput"
+                     <%= "checked" if opt.is_default? %>
+                     <%= "required" if group.required? %>
+                     class="w-4 h-4 accent-[var(--brand-1)]" />
+              <div class="flex-1 min-w-0">
+                <span class="text-[14px] text-ink"><%= opt.label %></span>
+                <% if opt.sub.present? %>
+                  <div class="text-[11.5px] text-muted"><%= opt.sub %></div>
+                <% end %>
+              </div>
+              <% if (delta = format_delta(opt.price_delta_cents)) %>
+                <span class="font-mono text-[12px] text-muted shrink-0"><%= delta %></span>
+              <% end %>
+            </label>
+          <% end %>
+        </div>
+
+      <% elsif group.check? %>
+        <div class="flex flex-col gap-1.5">
+          <% options_for(group).each do |opt| %>
+            <label class="flex items-center gap-3 rounded-[10px] border border-line px-3.5 py-2.5 cursor-pointer transition-colors hover:border-line-2 has-[:checked]:border-[var(--brand-1)] has-[:checked]:bg-[color-mix(in_oklab,var(--brand-1)_6%,var(--color-surface))]">
+              <input type="checkbox"
+                     name="options[<%= group.id %>][]"
+                     value="<%= opt.id %>"
+                     data-label="<%= opt.label %>"
+                     data-delta="<%= opt.price_delta_cents.to_i %>"
+                     data-action="change->storefront-recipe-options#recalc"
+                     data-storefront-recipe-options-target="optionInput"
+                     <%= "checked" if opt.is_default? %>
+                     class="w-4 h-4 accent-[var(--brand-1)]" />
+              <div class="flex-1 min-w-0">
+                <span class="text-[14px] text-ink"><%= opt.label %></span>
+                <% if opt.sub.present? %>
+                  <div class="text-[11.5px] text-muted"><%= opt.sub %></div>
+                <% end %>
+              </div>
+              <% if (delta = format_delta(opt.price_delta_cents)) %>
+                <span class="font-mono text-[12px] text-muted shrink-0"><%= delta %></span>
+              <% end %>
+            </label>
+          <% end %>
+        </div>
+
+      <% elsif group.swatch? %>
+        <div class="flex flex-wrap gap-3">
+          <% options_for(group).each do |opt| %>
+            <label class="group relative flex flex-col items-center gap-1.5 cursor-pointer">
+              <input type="radio"
+                     name="options[<%= group.id %>]"
+                     value="<%= opt.id %>"
+                     data-label="<%= opt.label %>"
+                     data-delta="<%= opt.price_delta_cents.to_i %>"
+                     data-action="change->storefront-recipe-options#recalc"
+                     data-storefront-recipe-options-target="optionInput"
+                     <%= "checked" if opt.is_default? %>
+                     <%= "required" if group.required? %>
+                     class="sr-only peer" />
+              <span class="w-10 h-10 rounded-full border-2 border-line peer-checked:border-[var(--brand-1)] peer-checked:ring-2 peer-checked:ring-[var(--brand-1)]/20 transition-all flex items-center justify-center"
+                    style="background: <%= opt.color_hex.presence || 'var(--color-bg-2)' %>;">
+                <svg class="hidden peer-checked:group-[]:block w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand-1);">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              </span>
+              <span class="text-[10px] text-muted text-center max-w-[60px] leading-[1.2]"><%= opt.label %></span>
+            </label>
+          <% end %>
+        </div>
+
+      <% elsif group.textarea? %>
+        <% if group.sub.blank? %>
+          <%# sub already rendered above in group header %>
+        <% end %>
+        <textarea name="options[<%= group.id %>]"
+                  placeholder="<%= group.sub.presence || group.label %>"
+                  maxlength="<%= group.max_length || 500 %>"
+                  data-action="input->storefront-recipe-options#countChars"
+                  data-storefront-recipe-options-target="textareaInput"
+                  data-max="<%= group.max_length || 500 %>"
+                  rows="2"
+                  class="w-full bg-surface text-ink border border-line rounded-[10px] px-3.5 py-2.5 text-[14px] leading-[1.5] outline-none focus:border-[var(--brand-1)] focus:ring-2 focus:ring-[var(--brand-1)]/20 resize-y"></textarea>
+        <span class="text-[11px] text-muted font-mono"
+              data-storefront-recipe-options-target="charCounter">
+          0/<%= group.max_length || 500 %>
+        </span>
+      <% end %>
+    </fieldset>
+  <% end %>
+
+  <% if removable_components.any? %>
+    <fieldset class="flex flex-col gap-2 border-t border-line pt-4">
+      <div class="mb-1">
+        <legend class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("storefronts.recipe.options.removable_heading") %>
+        </legend>
+        <p class="text-[12px] text-muted"><%= t("storefronts.recipe.options.removable_hint") %></p>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <% removable_components.each do |comp| %>
+          <label class="flex items-center gap-3 rounded-[10px] border border-line px-3.5 py-2.5 cursor-pointer transition-colors hover:border-line-2">
+            <input type="checkbox"
+                   name="removed_components[]"
+                   value="<%= comp.componentable&.name %>"
+                   data-storefront-recipe-options-target="removableInput"
+                   class="w-4 h-4 accent-[var(--brand-1)]" />
+            <span class="flex-1 text-[14px] text-ink"><%= comp.componentable&.name %></span>
+          </label>
+        <% end %>
+      </div>
+    </fieldset>
+  <% end %>
+
+</div>
