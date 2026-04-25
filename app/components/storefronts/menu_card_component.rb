@@ -19,12 +19,17 @@ module Storefronts
       helpers.humanized_money_with_symbol(sale_price)
     end
 
+    def customizable?
+      recipe.customizable?
+    end
+
     def payload
       {
-        recipe_id: recipe.prefix_id,
-        name:      recipe.name,
-        price_cents: recipe.sale_price_cents.to_i,
-        photo:     (helpers.url_for(photo_variant) if photo_variant)
+        recipe_id:    recipe.prefix_id,
+        recipe_slug:  recipe.slug,
+        name:         recipe.name,
+        price_cents:  recipe.sale_price_cents.to_i,
+        photo:        (helpers.url_for(photo_variant) if photo_variant)
       }.compact.to_json
     end
   end

@@ -150,10 +150,11 @@
         <button type="button"
                 data-action="click->storefront-cart#addWithOptions"
                 data-storefront-cart-payload-param="<%= {
-                  recipe_id:   @recipe.prefix_id,
-                  name:        @recipe.name,
-                  price_cents: @recipe.sale_price_cents.to_i,
-                  photo:       (url_for(@recipe.photos.first&.variant(resize_to_limit: [ 400, 400 ])) if @recipe.photos.attached?)
+                  recipe_id:    @recipe.prefix_id,
+                  recipe_slug:  @recipe.slug,
+                  name:         @recipe.name,
+                  price_cents:  @recipe.sale_price_cents.to_i,
+                  photo:        (url_for(@recipe.photos.first&.variant(resize_to_limit: [ 400, 400 ])) if @recipe.photos.attached?)
                 }.compact.to_json %>"
                 class="inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-6 py-3.5 text-[15px] font-semibold transition"
                 style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1); box-shadow: 0 2px 10px rgba(10, 90, 60, 0.18);">

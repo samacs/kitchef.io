@@ -111,6 +111,7 @@ export default class extends Controller {
     } else {
       this.cart.items.push({
         recipe_id: payload.recipe_id,
+        recipe_slug: payload.recipe_slug || null,
         name: payload.name,
         price_cents: payload.price_cents,
         photo: payload.photo || null,
@@ -154,6 +155,7 @@ export default class extends Controller {
 
     this.cart.items.push({
       recipe_id: payload.recipe_id,
+      recipe_slug: payload.recipe_slug || null,
       name: payload.name,
       price_cents: payload.price_cents + deltaCents,
       base_price_cents: payload.price_cents,
@@ -398,7 +400,10 @@ export default class extends Controller {
             <span class="min-w-[26px] text-center font-mono text-[13px]">${item.qty}</span>
             <button type="button" class="h-7 w-7 text-ink-2 hover:bg-bg" data-action="click->storefront-cart#increment" data-cart-idx="${idx}" data-recipe-id="${this.escapeAttr(item.recipe_id)}" aria-label="Más">+</button>
           </div>
-          <button type="button" class="text-[11.5px] text-muted hover:text-err" data-action="click->storefront-cart#remove" data-cart-idx="${idx}" data-recipe-id="${this.escapeAttr(item.recipe_id)}">Quitar</button>
+          <div class="flex items-center gap-3">
+            ${item.recipe_slug && (item.selected_options || item.removed_components?.length) ? `<button type="button" class="text-[11.5px] font-medium hover:underline" style="color: var(--brand-1);" data-controller="storefront-customize-trigger" data-action="click->storefront-customize-trigger#edit" data-recipe-slug="${this.escapeAttr(item.recipe_slug)}" data-cart-idx="${idx}">Editar</button>` : ""}
+            <button type="button" class="text-[11.5px] text-muted hover:text-err" data-action="click->storefront-cart#remove" data-cart-idx="${idx}" data-recipe-id="${this.escapeAttr(item.recipe_id)}">Quitar</button>
+          </div>
         </div>
       </div>
     `

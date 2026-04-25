@@ -134,6 +134,11 @@ class Recipe < ApplicationRecord
     !is_saleable?
   end
 
+  def customizable?
+    option_groups.any? { |g| g.discarded_at.nil? } ||
+      components.any? { |c| c.componentable_type == "Ingredient" && c.is_removable? }
+  end
+
   def display_photo
     photos.first&.variant(:card)
   end

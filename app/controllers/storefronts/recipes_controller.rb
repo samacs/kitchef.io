@@ -17,6 +17,15 @@ module Storefronts
       render "storefronts/not_found", status: :not_found
     end
 
+    def customize
+      @recipe = @storefront.recipes.kept.published
+                  .includes(option_groups: :options, components: :componentable)
+                  .friendly.find(params[:recipe_slug])
+      render layout: false
+    rescue ActiveRecord::RecordNotFound
+      head :not_found
+    end
+
     private
 
     # Up to 6 other published recipes, prioritizing OTHER categories so

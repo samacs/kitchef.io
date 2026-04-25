@@ -1,0 +1,73 @@
+<% options_component = Storefronts::RecipeOptionsComponent.new(recipe: @recipe) %>
+<% photo = @recipe.photos.first&.variant(resize_to_fill: [400, 260]) %>
+
+<turbo-frame id="customize-modal-content">
+  <div data-controller="storefront-recipe-options"
+       data-storefront-recipe-options-base-cents-value="<%= @recipe.sale_price_cents.to_i %>">
+
+    <%# Compact header: photo strip + name + base price %>
+    <div class="flex items-center gap-4 border-b border-line pb-4 mb-4">
+      <div class="h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[12px] border border-line"
+           style="background: var(--color-bg-2);">
+        <% if photo %>
+          <%= image_tag photo, class: "h-full w-full object-cover", alt: @recipe.name %>
+        <% else %>
+          <div class="flex h-full w-full items-center justify-center font-serif italic text-[28px]"
+               style="color: var(--brand-1);">
+            <%= @recipe.name.first.upcase %>
+          </div>
+        <% end %>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="font-mono text-[10px] uppercase tracking-[0.14em] text-muted">
+          <%= @recipe.category&.name %>
+        </div>
+        <h2 class="font-serif text-[22px] leading-[1.1] tracking-tight text-ink truncate">
+          <%= @recipe.name %>
+        </h2>
+        <div class="mt-1 font-serif text-[18px] text-ink">
+          <%= humanized_money_with_symbol(@recipe.sale_price) %>
+          <span class="font-mono text-[11px] text-muted">
+            / <%= t("units.#{@recipe.yield_unit}", default: @recipe.yield_unit.to_s) %>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <%# Options %>
+    <div class="max-h-[50vh] overflow-y-auto kc-scroll -mx-1 px-1">
+      <%= render options_component %>
+    </div>
+
+    <%# Price summary + CTA %>
+    <div class="mt-4 border-t border-line pt-4">
+      <div class="flex items-baseline justify-between mb-4"
+           data-storefront-recipe-options-target="totalRow">
+        <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("storefronts.recipe.options.estimated_total") %>
+        </span>
+        <span class="font-serif text-[24px] tracking-tight text-ink"
+              data-storefront-recipe-options-target="totalDisplay">
+          <%= humanized_money_with_symbol(@recipe.sale_price) %>
+        </span>
+      </div>
+
+      <button type="button"
+              data-action="click->storefront-customize-modal#confirm"
+              data-recipe-id="<%= @recipe.prefix_id %>"
+              data-recipe-slug="<%= @recipe.slug %>"
+              data-recipe-name="<%= @recipe.name %>"
+              data-base-price-cents="<%= @recipe.sale_price_cents.to_i %>"
+              data-recipe-photo="<%= url_for(@recipe.photos.first.variant(resize_to_limit: [400, 400])) if @recipe.photos.attached? %>"
+              class="inline-flex w-full items-center justify-center gap-2 rounded-[12px] px-6 py-3.5 text-[15px] font-semibold transition"
+              style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        <span data-storefront-customize-modal-target="confirmLabel">
+          <%= t("storefronts.recipe.add_to_cart") %>
+        </span>
+      </button>
+    </div>
+  </div>
+</turbo-frame>

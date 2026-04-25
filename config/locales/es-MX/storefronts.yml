@@ -142,6 +142,8 @@ es-MX:
       whatsapp_message: "Hola %{kitchen}, me interesa pedir %{recipe} (%{price}). ¿Me cuentas más?"
       order_kicker: "Tu pedido"
       base_line: "1 × %{name}"
+      update_cart: "Actualizar"
+      edit_item: "Editar"
       options:
         required_hint: "Elige una opción para continuar"
         removable_heading: "Ingredientes incluidos"

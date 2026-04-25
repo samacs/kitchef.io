@@ -246,7 +246,8 @@ Rails.application.routes.draw do
     # Dish detail — one recipe per URL. The `recipe_slug` resolves via
     # FriendlyId scoped to the account, so two kitchens can each have a
     # "pozole-rojo" without collision.
-    get "/dishes/:recipe_slug", to: "storefronts/recipes#show", as: :recipe
+    get "/dishes/:recipe_slug",           to: "storefronts/recipes#show",      as: :recipe
+    get "/dishes/:recipe_slug/customize", to: "storefronts/recipes#customize", as: :recipe_customize
     resources :orders, only: %i[new create show],
       controller: "storefronts/orders" do
       member do
