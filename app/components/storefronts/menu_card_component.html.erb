@@ -1,5 +1,5 @@
 <% detail_href = helpers.storefront_recipe_path(slug: recipe.account.slug, recipe_slug: recipe.slug) %>
-<article class="flex flex-col overflow-hidden rounded-[14px] border border-line bg-surface transition-shadow hover:shadow-lift">
+<article class="flex flex-col overflow-hidden rounded-[14px] border <%= card_emphasis_classes.presence || "border-line" %> bg-surface transition-shadow hover:shadow-lift">
   <%# Image + title both deep-link to the dish detail page. The whole
       top half of the card behaves like a native product tile — tap the
       photo or the name, get the details; tap Agregar, add to cart. %>

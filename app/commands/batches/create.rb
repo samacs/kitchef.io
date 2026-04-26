@@ -1,27 +1,31 @@
-module Production
-  # Creates a ProductionRun from the operator's "I cooked X today" form
-  # and immediately deducts the ingredients via DepleteIngredients.
-  # Goes from `planned → in_progress` in the same call — the operator
-  # is filling out the form because she's actively cooking, not
-  # planning. Future "schedule for tomorrow" UX would skip the AASM
-  # `start!` and leave the run in `planned`.
-  class StartRun < ApplicationCommand
+module Batches
+  # Creates a Batch from the operator's "cociné X hoy" form and
+  # immediately deducts the ingredients via DepleteIngredients. Goes
+  # from `planned → in_progress` in the same call — the operator is
+  # filling out the form because she's actively cooking, not planning.
+  # Future "schedule for tomorrow" UX would skip the AASM `start!` and
+  # leave the batch in `planned`.
+  class Create < ApplicationCommand
     option :account
     option :params
 
     def call
       attrs = normalized_params
 
-      run = account.production_runs.new(attrs)
-      run.actual_quantity = attrs[:planned_quantity] if attrs[:planned_quantity].present?
+      batch = account.batches.new(attrs)
+      batch.actual_quantity = attrs[:planned_quantity] if attrs[:planned_quantity].present?
 
       ActiveRecord::Base.transaction do
-        run.save!
-        Production::DepleteIngredients.call(run: run)
-        run.start!
+        batch.save!
+        Batches::DepleteIngredients.call(batch: batch)
+        batch.start!
+        # Sweep oversold orders that this fresh batch can now fulfill
+        # so the kanban "sin stock" chip clears without the operator
+        # touching anything.
+        Batches::FulfillOversoldOrders.call(batch: batch)
       end
 
-      success(run)
+      success(batch)
     rescue ActiveRecord::RecordInvalid => e
       Result.new(success: false, object: e.record, errors: e.record.errors)
     end
@@ -30,7 +34,7 @@ module Production
 
     def normalized_params
       attrs = params.to_h.deep_symbolize_keys
-      window_days = account.inventory_settings.default_run_window_days.to_i
+      window_days = account.inventory_settings.default_batch_window_days.to_i
 
       cooked_on = parse_date(attrs[:cooked_on]) || Date.current
       attrs[:cooked_on]       = cooked_on

@@ -24,7 +24,7 @@ class AccountsController < AuthenticatedController
         format.turbo_stream { head :no_content }
         format.html do
           if first_inventory_opt_in
-            redirect_to production_onboarding_path
+            redirect_to batches_onboarding_path
           else
             redirect_to edit_account_path, notice: t("account.saved")
           end
@@ -75,7 +75,7 @@ class AccountsController < AuthenticatedController
         ] + [ tip_presets_pct: [] ] },
         { inventory_settings: %i[
           enabled oversell_policy
-          low_stock_threshold_pct default_run_window_days
+          low_stock_threshold_pct default_batch_window_days
         ] }
       ]
     ).then { |p| normalize_settings_packaging(p) }
@@ -117,7 +117,7 @@ class AccountsController < AuthenticatedController
       inv[:enabled] = ActiveModel::Type::Boolean.new.cast(inv[:enabled])
     end
 
-    %i[low_stock_threshold_pct default_run_window_days].each do |key|
+    %i[low_stock_threshold_pct default_batch_window_days].each do |key|
       inv[key] = inv[key].to_i if inv.key?(key) && inv[key].present?
     end
 

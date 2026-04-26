@@ -1,3 +1,32 @@
+# == Schema Information
+#
+# Table name: stock_movements
+#
+#  id                          :bigint           not null, primary key
+#  note                        :text
+#  quantity                    :decimal(14, 3)   not null
+#  source                      :string           not null
+#  source_type                 :string
+#  unit                        :string           not null
+#  unit_cost_cents_at_movement :bigint
+#  created_at                  :datetime         not null
+#  updated_at                  :datetime         not null
+#  account_id                  :bigint           not null
+#  ingredient_id               :bigint           not null
+#  source_id                   :bigint
+#
+# Indexes
+#
+#  idx_stock_movements_account_ingredient_time  (account_id,ingredient_id,created_at)
+#  idx_stock_movements_source                   (source_type,source_id)
+#  index_stock_movements_on_account_id          (account_id)
+#  index_stock_movements_on_ingredient_id       (ingredient_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (ingredient_id => ingredients.id)
+#
 class StockMovement < ApplicationRecord
   include AccountScoped
   include HasPrefixedId.new(prefix: "mov")

@@ -1,6 +1,6 @@
-class ProductionRun < ApplicationRecord
+class Batch < ApplicationRecord
   include AccountScoped
-  include HasPrefixedId.new(prefix: "prn")
+  include HasPrefixedId.new(prefix: "btc")
   include HasSoftDelete
 
   include AASM
@@ -11,13 +11,13 @@ class ProductionRun < ApplicationRecord
   belongs_to :recipe
 
   has_many :consumptions,
-    class_name: "RunConsumption",
+    class_name: "BatchConsumption",
     dependent: :destroy,
-    inverse_of: :production_run
+    inverse_of: :batch
   has_many :order_items,
-    foreign_key: :consumed_run_id,
+    foreign_key: :consumed_batch_id,
     dependent: :nullify,
-    inverse_of: :consumed_run
+    inverse_of: :consumed_batch
 
   validates :cooked_on, :available_from, :available_until, presence: true
   validates :planned_quantity, numericality: { greater_than: 0 }
@@ -34,7 +34,7 @@ class ProductionRun < ApplicationRecord
   }
 
   # AASM lifecycle. Mirrors Order's English-key approach; Spanish labels
-  # for state badges live under `production.runs.state.*` in panels.yml.
+  # for state badges live under `batches.state.*` in panels.yml.
   aasm column: :state, whiny_transitions: false do
     state :planned, initial: true
     state :in_progress
@@ -67,9 +67,9 @@ class ProductionRun < ApplicationRecord
     order_items.sum(:consumed_quantity).to_d
   end
 
-  # True when this run can fulfill an order on `date`. Cancelled runs
-  # never qualify; future runs (cooked_on > date) qualify too as long
-  # as their available window covers `date`.
+  # True when this batch can fulfill an order on `date`. Cancelled
+  # batches never qualify; future batches (cooked_on > date) qualify
+  # too as long as their available window covers `date`.
   def available_for?(date)
     return false if canceled?
     available_from <= date && available_until >= date

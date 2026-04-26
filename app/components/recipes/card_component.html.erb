@@ -1,4 +1,4 @@
-<div class="group relative flex flex-col bg-surface border border-line rounded-card overflow-hidden shadow-card hover:border-line-2 hover:shadow-panel transition">
+<div class="group relative flex flex-col <%= stock_alert_classes %> border rounded-card overflow-hidden shadow-card hover:border-line-2 hover:shadow-panel transition">
   <%= link_to helpers.edit_recipe_path(recipe), class: "flex flex-col flex-1 no-underline" do %>
     <div class="relative aspect-[4/3] bg-bg-2 overflow-hidden">
       <% if photo_url %>
@@ -48,6 +48,11 @@
               status: :default,
               dot: false) %>
       </div>
+      <% if stock_alert_message %>
+        <p class="text-[11.5px] leading-[1.4] <%= stock_alert == :block ? "text-err" : "text-warn" %>">
+          <%= stock_alert_message %>
+        </p>
+      <% end %>
     </div>
   <% end %>
 

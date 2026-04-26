@@ -40,7 +40,7 @@ module Storefronts
     end
 
     def available_units
-      @available_units ||= Orders::RunPicker.available_units(
+      @available_units ||= Orders::BatchPicker.available_units(
         account:  account,
         recipe:   recipe,
         on_date:  on_date

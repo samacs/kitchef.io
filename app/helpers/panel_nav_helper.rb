@@ -21,14 +21,14 @@ module PanelNavHelper
       PanelNavItem.new(:production,     t("panel.nav.production"),     :chef_hat,       production_path,              nil)
     ]
 
-    # Phase 13 — "Tandas" appears in the sidebar only when the operator
+    # Phase 13 — "Lotes" appears in the sidebar only when the operator
     # has flipped on the inventory toggle in /account/edit. Off-accounts
     # see the same sidebar they had in Phase 12. Sourced from
     # `Current.account` so the helper works from both controller and
     # ViewComponent render contexts without an explicit pass-through.
     if Current.account&.inventory_enabled?
-      kitchen_items << PanelNavItem.new(:production_runs, t("panel.nav.production_runs"),
-                                         :package, production_runs_path, nil)
+      kitchen_items << PanelNavItem.new(:batches, t("panel.nav.batches"),
+                                         :package, batches_path, nil)
     end
 
     [

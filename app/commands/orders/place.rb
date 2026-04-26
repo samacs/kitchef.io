@@ -32,7 +32,7 @@ module Orders
         delta_cents = compute_options_delta(item_attrs[:selected_options], recipe)
         quantity    = (item_attrs[:quantity].presence || 1).to_d
 
-        consumed_run, oversold = pick_run_for(recipe, quantity, order)
+        consumed_batch, oversold = pick_batch_for(recipe, quantity, order)
 
         order.items.build(
           recipe:                   recipe,
@@ -43,8 +43,8 @@ module Orders
           selected_options:         item_attrs[:selected_options].presence || {},
           removed_components:       Array(item_attrs[:removed_components]),
           options_price_delta_cents: delta_cents,
-          consumed_run:             consumed_run,
-          consumed_quantity:        consumed_run.present? ? quantity : 0,
+          consumed_batch:           consumed_batch,
+          consumed_quantity:        consumed_batch.present? ? quantity : 0,
           oversold:                 oversold
         )
       end
@@ -92,23 +92,24 @@ module Orders
       )
     end
 
-    # Phase 13 — when inventory is enabled, find the oldest active run
-    # for this recipe + delivery_date that has enough remaining units.
-    # Returns [run, oversold]; both nil/false when inventory is off
-    # (the order item proceeds with the legacy untracked behavior).
-    def pick_run_for(recipe, quantity, order)
+    # Phase 13 — when inventory is enabled, find the oldest active
+    # batch for this recipe + delivery_date that has enough remaining
+    # units. Returns [batch, oversold]; both nil/false when inventory
+    # is off (the order item proceeds with the legacy untracked
+    # behavior).
+    def pick_batch_for(recipe, quantity, order)
       return [ nil, false ] unless account.inventory_enabled?
       return [ nil, false ] if order.delivery_date.blank?
 
-      run = Orders::RunPicker.call(
+      batch = Orders::BatchPicker.call(
         account:       account,
         recipe:        recipe,
         delivery_date: order.delivery_date,
         quantity:      quantity
       )
 
-      if run
-        [ run, false ]
+      if batch
+        [ batch, false ]
       else
         [ nil, true ]
       end

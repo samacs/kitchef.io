@@ -31,11 +31,11 @@ module Accounts
     # tighten this; operators with daily mercado runs will loosen it.
     attribute :low_stock_threshold_pct, :integer, default: 20
 
-    # Default availability window for a brand-new production run. A
-    # value of 1 means "available today + tomorrow" — the typical home-
-    # cook batch lifespan. Operators with shorter shelf life (helado,
-    # mariscos) drop this to 0; bakery operators bump it to 2-3.
-    attribute :default_run_window_days, :integer, default: 1
+    # Default availability window for a brand-new batch. A value of 1
+    # means "available today + tomorrow" — the typical home-cook batch
+    # lifespan. Operators with shorter shelf life (helado, mariscos)
+    # drop this to 0; bakery operators bump it to 2-3.
+    attribute :default_batch_window_days, :integer, default: 1
 
     # Stamps the moment the operator first flipped `enabled` on. Drives
     # the "show onboarding once" gate in Production::OnboardingController
@@ -47,7 +47,7 @@ module Accounts
     validates :low_stock_threshold_pct,
       numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 100 },
       allow_nil: true
-    validates :default_run_window_days,
+    validates :default_batch_window_days,
       numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 14 },
       allow_nil: true
 

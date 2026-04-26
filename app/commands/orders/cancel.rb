@@ -31,13 +31,13 @@ module Orders
     end
 
     # Phase 13 — when an order is canceled, release the units it had
-    # claimed against any production run so they're available for the
-    # next customer. Inventory ledger gets a matching restock entry per
+    # claimed against any batch so they're available for the next
+    # customer. Inventory ledger gets a matching restock entry per
     # consumed item.
     def release_consumption(order)
       return unless order.account.inventory_enabled?
-      order.items.where.not(consumed_run_id: nil).each do |item|
-        item.update_columns(consumed_run_id: nil, consumed_quantity: 0)
+      order.items.where.not(consumed_batch_id: nil).each do |item|
+        item.update_columns(consumed_batch_id: nil, consumed_quantity: 0)
       end
     end
 

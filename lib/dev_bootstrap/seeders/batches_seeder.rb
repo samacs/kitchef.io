@@ -1,12 +1,12 @@
 module DevBootstrap
   module Seeders
-    # Phase 13 — for the two advanced kitchens, flip the inventory toggle
-    # on, seed today/yesterday/tomorrow production runs across their
+    # Phase 13 — for the two advanced kitchens, flip the inventory
+    # toggle on, seed yesterday/today/tomorrow batches across their
     # saleable recipes, and stamp `last_purchase_quantity` on every
     # ingredient so the low-stock badge has a baseline to compare
     # against. The other six kitchens stay inventory-off so the demo
     # shows both modes side-by-side.
-    class ProductionRunsSeeder < Seeder
+    class BatchesSeeder < Seeder
       def initialize(kitchen_defs, accounts)
         @kitchen_defs = kitchen_defs
         @accounts = accounts
@@ -20,7 +20,8 @@ module DevBootstrap
 
           enable_inventory!(account)
           stamp_baseline_purchase_quantities!(account)
-          seed_runs!(account)
+          seed_batches!(account)
+          seed_oversold_demo_order!(account)
         end
       end
 
@@ -52,8 +53,8 @@ module DevBootstrap
             from:     last_item.unit,
             to:       ing.unit
           )
-          # Bump current stock so the runs we create below have something
-          # to deplete from. Multiplied by 4 to give the demo some slack.
+          # Bump current stock so the batches we create below have
+          # something to deplete from. Multiplied by 4 for demo slack.
           new_stock = qty_in_canonical * 4
           ing.update_columns(
             stock_quantity:         new_stock,
@@ -63,30 +64,58 @@ module DevBootstrap
         end
       end
 
-      def seed_runs!(account)
+      def seed_batches!(account)
         recipes = account.recipes.kept.saleable.limit(4)
         return if recipes.empty?
 
-        log "  production runs for #{account.name}"
+        log "  batches for #{account.name}"
 
-        # Yesterday — completed
         recipes.first(2).each do |recipe|
-          create_run!(account, recipe, Date.current - 1, planned: 8, complete: true)
+          create_batch!(account, recipe, Date.current - 1, planned: 8, complete: true)
         end
-
-        # Today — in progress
         recipes.each do |recipe|
-          create_run!(account, recipe, Date.current, planned: 6, complete: false)
+          create_batch!(account, recipe, Date.current, planned: 6, complete: false)
         end
-
-        # Tomorrow — planned
         recipes.first(2).each do |recipe|
-          create_run!(account, recipe, Date.current + 1, planned: 4, complete: false)
+          create_batch!(account, recipe, Date.current + 1, planned: 4, complete: false)
         end
       end
 
-      def create_run!(account, recipe, on_date, planned:, complete:)
-        result = Production::StartRun.call(
+      # Place a demo order whose quantity exceeds today's available
+      # batches so the kanban surfaces the "sin stock" educational
+      # chip + the "Anotar un lote" CTA out of the box. Without this
+      # the operator only sees the chip if she happens to oversell
+      # while exercising the demo. Picks the recipe least covered by
+      # today's batches to maximize the visual.
+      def seed_oversold_demo_order!(account)
+        client  = account.clients.kept.first
+        recipes = account.recipes.kept.saleable.to_a
+        return if client.nil? || recipes.empty?
+
+        # Pick a recipe that has NO batch for today, or whose batches
+        # we can blow past with a generous quantity. Falls back to the
+        # first recipe so the demo always has something.
+        target = recipes.find do |r|
+          Orders::BatchPicker.available_units(account: account, recipe: r, on_date: Date.current).to_i.zero?
+        end || recipes.last
+        quantity = [ Orders::BatchPicker.available_units(account: account, recipe: target, on_date: Date.current).to_i + 5, 5 ].max
+
+        Orders::Place.call(
+          account: account,
+          params: {
+            client_id:        client.id,
+            delivery_date:    Date.current.to_s,
+            delivery_type:    0,
+            delivery_address: "Av. Demo 100",
+            colonia:          "Centro",
+            city:             "Hermosillo",
+            items:            [ { recipe_id: target.id, quantity: quantity } ]
+          }
+        )
+      end
+
+      def create_batch!(account, recipe, on_date, planned:, complete:)
+        result = Batches::Create.call(
           account: account,
           params: {
             recipe_id:        recipe.id,
@@ -98,8 +127,8 @@ module DevBootstrap
         )
         return unless result.success?
 
-        run = result.object
-        Production::CompleteRun.call(run: run) if complete && run.aasm.may_fire_event?(:complete)
+        batch = result.object
+        Batches::Complete.call(batch: batch) if complete && batch.aasm.may_fire_event?(:complete)
       end
     end
   end

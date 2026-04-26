@@ -97,7 +97,7 @@ class Ingredient < ApplicationRecord
   #
   # `source` must be one of StockMovement::SOURCES. `source_record` is
   # optional but strongly recommended — it lets the audit trail
-  # deep-link back to the originating Purchase / ProductionRun / Order.
+  # deep-link back to the originating Purchase / Batch / Order.
   def restock!(quantity:, unit:, source:, source_record: nil, note: nil, unit_cost_cents: nil)
     apply_movement!(
       delta:          BigDecimal(quantity.to_s),

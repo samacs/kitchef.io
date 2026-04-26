@@ -15,20 +15,20 @@
 #  unit_price_cents          :bigint           default(0), not null
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
-#  consumed_run_id           :bigint
+#  consumed_batch_id         :bigint
 #  order_id                  :bigint           not null
 #  recipe_id                 :bigint           not null
 #
 # Indexes
 #
-#  index_order_items_on_consumed_run_id        (consumed_run_id)
+#  index_order_items_on_consumed_batch_id      (consumed_batch_id)
 #  index_order_items_on_order_id               (order_id)
 #  index_order_items_on_order_id_and_position  (order_id,position)
 #  index_order_items_on_recipe_id              (recipe_id)
 #
 # Foreign Keys
 #
-#  fk_rails_...  (consumed_run_id => production_runs.id) ON DELETE => nullify
+#  fk_rails_...  (consumed_batch_id => batches.id) ON DELETE => nullify
 #  fk_rails_...  (order_id => orders.id)
 #  fk_rails_...  (recipe_id => recipes.id)
 #
@@ -41,7 +41,7 @@ class OrderItem < ApplicationRecord
 
   belongs_to :order
   belongs_to :recipe
-  belongs_to :consumed_run, class_name: "ProductionRun", optional: true,
+  belongs_to :consumed_batch, class_name: "Batch", optional: true,
     inverse_of: :order_items
 
   before_validation :snapshot_costs, on: :create
@@ -51,7 +51,7 @@ class OrderItem < ApplicationRecord
   end
 
   def has_consumption?
-    consumed_run_id.present? && consumed_quantity.to_d.positive?
+    consumed_batch_id.present? && consumed_quantity.to_d.positive?
   end
 
   validates :quantity, numericality: { greater_than: 0 }

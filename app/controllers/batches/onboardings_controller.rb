@@ -1,4 +1,4 @@
-module Production
+module Batches
   # One-screen primer that fires the first time the operator flips the
   # inventory toggle on. Skipped for accounts that already have it on
   # (we don't want a returning operator to land here every time she

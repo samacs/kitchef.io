@@ -76,7 +76,7 @@ class Account < ApplicationRecord
     webhooks
 
     about account accounts admin-panel api-docs apis auth
-    billing
+    batch batches billing
     careers cart categories category changelog checkout clients company contact cookies
     dashboard demo docs docs-api documentation
     enterprise explore expenses expense
@@ -142,7 +142,7 @@ class Account < ApplicationRecord
   has_many :purchases,              dependent: :destroy   # PurchaseItem FK → ingredients (cascade)
   has_many :clients,                dependent: :destroy
   has_many :suppliers,              dependent: :destroy   # SupplierIngredient FK → ingredients (cascade)
-  has_many :production_runs,        dependent: :destroy   # FK → recipes (must run BEFORE recipes)
+  has_many :batches,                dependent: :destroy   # FK → recipes (must run BEFORE recipes)
   has_many :stock_movements,        dependent: :destroy   # FK → ingredients (must run BEFORE ingredients)
   has_many :recipes,                dependent: :destroy
   has_many :ingredients,            dependent: :destroy

@@ -33,13 +33,24 @@ module Storefronts
     end
 
     # Phase 13 — when the kitchen has inventory enabled AND the
-    # oversell policy is :block AND no run has stock for today, the
+    # oversell policy is :block AND no batch has stock for today, the
     # add-to-cart button is disabled. Off-accounts never hit this path.
     def stock_blocked?
       return false unless recipe.account.inventory_enabled?
       return false unless recipe.account.inventory_settings.block_oversells?
 
       Storefronts::MenuStockBadgeComponent.new(recipe: recipe).available_units <= 0
+    end
+
+    # Subtle border emphasis when the dish is sold out — red ring under
+    # :block policy (truly unavailable), neutral under :warn (customer
+    # can still order, badge already says "Por encargo"). Returns ""
+    # for everything that's available or for inventory-off accounts.
+    def card_emphasis_classes
+      return "" unless recipe.account.inventory_enabled?
+      available = Storefronts::MenuStockBadgeComponent.new(recipe: recipe).available_units
+      return "" if available.to_i.positive?
+      recipe.account.inventory_settings.block_oversells? ? "border-err/30 ring-1 ring-err/15" : ""
     end
 
     def payload

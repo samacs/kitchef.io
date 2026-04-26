@@ -73,9 +73,17 @@
           </div>
         <% end %>
         <% if item.oversold? %>
-          <span class="self-start inline-flex items-center gap-1 rounded-full border border-warn/40 bg-[color-mix(in_oklab,var(--color-warn)_10%,var(--color-surface))] px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-warn">
-            <%= t("orders.card.oversold_chip") %>
-          </span>
+          <div class="self-start flex flex-col gap-1 mt-1">
+            <span class="inline-flex items-center gap-1 rounded-full border border-warn/40 bg-[color-mix(in_oklab,var(--color-warn)_10%,var(--color-surface))] px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.08em] text-warn">
+              <%= t("orders.card.oversold_chip") %>
+            </span>
+            <p class="text-[11.5px] text-warn leading-[1.4]">
+              <%= t("orders.card.oversold_explainer", qty: item.quantity.to_i, recipe: item.recipe&.name) %>
+              <%= link_to t("orders.card.oversold_cta"),
+                    new_batch_path(batch: { recipe_id: item.recipe&.id }),
+                    class: "underline font-medium hover:no-underline" %>
+            </p>
+          </div>
         <% end %>
       </li>
     <% end %>

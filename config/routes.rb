@@ -185,12 +185,17 @@ Rails.application.routes.draw do
     to: "production#bulk_start_production",
     as: :production_bulk_start_production
 
-  # Phase 13 — production runs (tandas) + inventory onboarding. Gated by
+  # Phase 13 — batches (lotes) + inventory onboarding. Gated by
   # `account.inventory_enabled?` at the controller layer; the routes
-  # exist regardless so flipping the toggle is instant.
-  get "/production/onboarding",  to: "production/onboardings#show",  as: :production_onboarding
-  resources :production_runs, path: "production/tandas",
-    path_names: { new: "nueva", edit: "editar" } do
+  # exist regardless so flipping the toggle is instant. Mounted at
+  # /batches (top-level, decoupled from /production which is the
+  # daily-orders focus view from Phase 5).
+  get "/batches/onboarding",  to: "batches/onboardings#show",  as: :batches_onboarding
+  # Live ingredient-impact preview for the new-batch form. Stimulus
+  # debounces form changes and updates this frame's src so the
+  # operator sees what she'll consume in real time.
+  get "/batches/impact",      to: "batches#impact",             as: :batches_impact
+  resources :batches do
     member do
       post :cancel
       post :complete
