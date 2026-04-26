@@ -33,13 +33,14 @@ module Ui
     option :placement,  default: -> { :bottom_end }
     option :offset,     default: -> { 8 }
     option :menu_width, default: -> { "w-[240px]" }
-    option :menu_class, default: -> { "" }
-    option :id,         optional: true
+    option :menu_class,    default: -> { "" }
+    option :wrapper_class, default: -> { "relative inline-flex" }
+    option :id,            optional: true
 
     def call
       content_tag(
         :div,
-        class: "relative inline-flex",
+        class: wrapper_class,
         data: {
           controller: "dropdown",
           dropdown_placement_value: placement.to_s,

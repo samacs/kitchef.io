@@ -195,7 +195,20 @@ class RecipesController < AuthenticatedController
           :id, :label, :sub, :price_delta, :is_default, :color_hex, :position, :_destroy
         ]
       ]
-    ).then { |p| normalize_option_price_deltas(p) }
+    ).then { |p| normalize_sale_price(p) }
+     .then { |p| normalize_option_price_deltas(p) }
+  end
+
+  # money-rails adds a numericality validator on the `sale_price` virtual
+  # attribute that fires even for internal (non-saleable) recipes. When
+  # the autosave form serialises ALL fields, the sale_price field of an
+  # internal recipe arrives as "" — which money-rails rejects as
+  # `not_a_number`. Normalise blank to nil so the validator skips it.
+  def normalize_sale_price(permitted)
+    if permitted[:sale_price].present? == false
+      permitted.delete(:sale_price)
+    end
+    permitted
   end
 
   def normalize_option_price_deltas(permitted)

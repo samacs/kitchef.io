@@ -33,19 +33,34 @@ export default class extends Controller {
 
   connect() {
     this.cart = this.load()
+    this.tipCents = 0
     this.render()
     window.addEventListener("storage", this.onStorageChange)
-    // Any page can dispatch `storefront-cart:clear` to wipe the cart
-    // (used by the confirmation page — once the order is placed, the
-    // customer shouldn't see her just-paid items lingering in the
-    // header badge). Dispatched on `document` so the sender doesn't
-    // need to know where the controller is mounted.
     document.addEventListener("storefront-cart:clear", this.onClearRequested)
+    document.addEventListener("tip-picker:changed", this.onTipChanged)
+    // Late-mounted controllers (tip-picker, payment-method-picker) ping us
+    // on connect so they get the current totals without waiting for the
+    // next cart mutation. Without this they sit at $0 until the customer
+    // adds another item.
+    document.addEventListener("storefront-cart:request-totals", this.broadcastTotalsListener)
   }
 
   disconnect() {
     window.removeEventListener("storage", this.onStorageChange)
     document.removeEventListener("storefront-cart:clear", this.onClearRequested)
+    document.removeEventListener("tip-picker:changed", this.onTipChanged)
+    document.removeEventListener("storefront-cart:request-totals", this.broadcastTotalsListener)
+  }
+
+  broadcastTotalsListener = () => this.broadcastTotals()
+
+  onTipChanged = (event) => {
+    const cents = parseInt(event.detail?.tipCents ?? 0, 10)
+    if (Number.isNaN(cents) || cents === this.tipCents) return
+    this.tipCents = cents
+    this.updateCheckoutSummary()
+    this.updatePayload()
+    this.broadcastTotals()
   }
 
   // ── Key ─────────────────────────────────────────────────────────────
@@ -254,6 +269,15 @@ export default class extends Controller {
     this.updateCheckoutSummary()
     this.updatePayload()
     this.updateSubmit()
+    this.broadcastTotals()
+  }
+
+  broadcastTotals() {
+    const subtotal = this.totalCents()
+    const tip = this.tipCents || 0
+    document.dispatchEvent(new CustomEvent("storefront-cart:totals", {
+      detail: { subtotalCents: subtotal, tipCents: tip, totalCents: subtotal + tip }
+    }))
   }
 
   // Checkout form submit button — disabled whenever the cart is empty
@@ -331,25 +355,80 @@ export default class extends Controller {
     this.cart.items.forEach(item => {
       const row = document.createElement("div")
       row.dataset.cartRow = "true"
-      row.className = "flex items-center justify-between border-b border-line py-3 last:border-b-0"
+      row.className = "border-b border-line py-3 last:border-b-0"
+
+      const customLines = this.summaryCustomLines(item)
+      const notes = item.notes
+        ? `<div class="mt-1 text-[11.5px] text-ink-2 italic">"${this.escapeHtml(item.notes)}"</div>`
+        : ""
+
       row.innerHTML = `
-        <div class="min-w-0">
-          <div class="text-[14px] font-semibold text-ink truncate">${this.escapeHtml(item.name)}</div>
-          <div class="font-mono text-[11.5px] text-muted">× ${item.qty}</div>
+        <div class="flex items-baseline justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-baseline gap-2">
+              <span class="font-mono text-[12px] text-muted shrink-0">${item.qty}×</span>
+              <span class="text-[14px] font-medium text-ink truncate">${this.escapeHtml(item.name)}</span>
+            </div>
+            ${customLines}
+            ${notes}
+          </div>
+          <div class="font-mono text-[13px] text-ink tabular-nums shrink-0">${this.formatMoney(item.price_cents * item.qty)}</div>
         </div>
-        <div class="font-mono text-[13px] text-ink">${this.formatMoney(item.price_cents * item.qty)}</div>
       `
       this.summaryTarget.appendChild(row)
     })
 
+    const subtotalCents = this.totalCents()
+    const tipCents      = this.tipCents || 0
+    const totalCents    = subtotalCents + tipCents
+
+    const breakdown = document.createElement("div")
+    breakdown.dataset.cartRow = "true"
+    breakdown.className = "mt-4 flex flex-col gap-1.5 border-t border-line pt-3 text-[13px]"
+
+    const subtotalRow = `
+      <div class="flex justify-between">
+        <span class="text-ink-2">Productos</span>
+        <span class="font-mono text-ink tabular-nums">${this.formatMoney(subtotalCents)}</span>
+      </div>
+    `
+    const tipRow = tipCents > 0 ? `
+      <div class="flex justify-between">
+        <span class="text-ink-2">Propina</span>
+        <span class="font-mono text-ink tabular-nums">${this.formatMoney(tipCents)}</span>
+      </div>
+    ` : ""
+
+    breakdown.innerHTML = subtotalRow + tipRow
+    this.summaryTarget.appendChild(breakdown)
+
     const total = document.createElement("div")
     total.dataset.cartRow = "true"
-    total.className = "mt-4 flex items-baseline justify-between border-t border-line pt-4"
+    total.className = "mt-3 flex items-baseline justify-between border-t border-line pt-3"
     total.innerHTML = `
       <span class="text-[14px] font-semibold text-ink">Total</span>
-      <span class="font-serif text-[24px] tracking-tight text-ink">${this.formatMoney(this.totalCents())}</span>
+      <span class="font-serif text-[24px] tracking-tight text-ink tabular-nums">${this.formatMoney(totalCents)}</span>
     `
     this.summaryTarget.appendChild(total)
+  }
+
+  summaryCustomLines(item) {
+    let html = ""
+    if (item.selected_options) {
+      Object.values(item.selected_options).forEach(selections => {
+        const labels = Array.isArray(selections)
+          ? selections.map(s => this.escapeHtml(s.label || s.text || "")).filter(Boolean).join(" · ")
+          : ""
+        if (labels) {
+          html += `<div class="mt-1 ml-6 text-[11.5px] text-ink-2">${labels}</div>`
+        }
+      })
+    }
+    if (item.removed_components?.length) {
+      const removed = item.removed_components.map(c => `sin ${this.escapeHtml(c)}`).join(" · ")
+      html += `<div class="mt-0.5 ml-6 text-[11.5px] text-muted italic">${removed}</div>`
+    }
+    return html
   }
 
   updatePayload() {

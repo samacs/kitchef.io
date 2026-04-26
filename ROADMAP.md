@@ -569,7 +569,7 @@ See `~/.claude/plans/phase-11-personalizacion-de-platillos.md` for the original 
 
 ---
 
-## Phase 12 — Instrucciones de pago + propina (next)
+## Phase 12 — Instrucciones de pago + propina (shipped)
 
 **Context.** Today the storefront checkout captures name + phone + address + window + notes, then hands off to WhatsApp. The customer never sees how she's expected to pay — no "transfiere a esta CLABE", no "cobro en efectivo, ¿con cuánto pagas?", no "paga en línea con tarjeta". The operator then spends the next WhatsApp exchange re-typing her bank details, asking how much change to bring, or quoting a card fee off the top of her head. Manual, noisy, and the information is scattered.
 
@@ -711,7 +711,15 @@ See `~/.claude/plans/phase-12-pagos-spei-propina.md` for any pre-build whiteboar
 
 ---
 
-## Phase 13 — Growth, retention, polish
+## Phase 13 — Producción, batches e inventario (next)
+
+Feature-flag-gated stock tracking. Default OFF — the operator's first three weeks should not require thinking about inventory. When she turns it on from `/account/edit` → "Funciones avanzadas", a "Producción" tab unlocks: she logs production runs (a batch of N units of a recipe cooked on a specific date), orders draw down from those runs, the menu surfaces "agotado / quedan 3" badges, and ingredient stock decrements via the recipe composition tree. Powered by a clean unit-conversion table so 200g pulls from a 5kg bag without per-recipe math.
+
+See `~/.claude/plans/phase-13-production-runs-inventory.md` for the full plan.
+
+---
+
+## Phase 14 — Growth, retention, polish
 
 - [ ] QR code generator for printed flyers (`rqrcode`)
 - [ ] Daily operator digest email (`DailyOperatorDigestJob` — scaffold exists, needs content)
@@ -748,8 +756,9 @@ See `~/.claude/plans/phase-12-pagos-spei-propina.md` for any pre-build whiteboar
 6. ~~**Phase 9 (catálogos, proveedores, compras)**~~ — shipped. Editable categorías, first-class proveedores with per-supplier price history, persistent purchase ledger feeding the shopping list + finance report's "gastos reales" + "margen real" badge. Plus the `Geocodable` concern, polymorphic `GeocodeJob` + `StaticMapJob`, cached static-map attachments, fixed-position flash region, Turbo live-search with debounce, and a batch of drawer/autosave reliability fixes that benefit every surface. The operator's lista de compras is now the operator's real expense record.
 7. ~~**Phase 10 (rentabilidad real — costos fijos y utilidad neta)**~~ — shipped. Fixed-cost tracking (renta, gas, plataformas, empaque), real Utilidad Neta alongside Margen bruto + Margen real, "Costo fijo por pedido" tile, per-pedido + per-recipe packaging. `/reports/finance` now tells the operator her actual take-home number.
 8. ~~**Phase 11 (personalización de platillos)**~~ — shipped. Storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients + selectable ingredients. Recipe editor's "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. Bonus: lead-time-hours on recipes, yield_unit/yield_quantity in the recipe form (essential for prep recipes), morph-based autosave preserving focus, picker dedupe, recipe duplication + soft-delete archive flow. Availability gating on ingredient stock stays deferred until depletion ships.
-9. **Phase 12 next (instrucciones de pago + propina)** — display-only v1, no gateway integrations. Kitchen configures SPEI details + accepted methods at `/account/edit`; storefront checkout grows a Propina card + Método de pago card (Efectivo / SPEI / Tarjeta) with method-specific UI (cash-change input, CLABE + Copiar, placeholder for card). Kanban + confirmation email + WhatsApp render the method + propina so the operator + customer never lose the context. ~1 focused work-week. Mercado Pago / Stripe / reconciliation dashboard get their own sub-phases (12.5+) once 3+ operators ask.
+9. ~~**Phase 12 (instrucciones de pago + propina)**~~ — shipped. Display-only payment configuration: kitchen sets SPEI details + accepted methods at `/account/edit`; storefront checkout grew a Propina card (percentage-based, 10/15/20% calculated against subtotal in real time, tip-toggle to opt out entirely) + Método de pago card (Efectivo / SPEI / Tarjeta) with method-specific reveals (cash-change calculation, CLABE + Copiar buttons, free-text card instructions). Bonus shipped alongside: kitchen pickup address with bidirectional Google Maps + new Places API autocomplete (suggestions render below input, never overwrite it; marker drag reverse-geocodes), public storefront pickup address card + static map, gender-neutral copy across all locales, and a structured `rails dev:bootstrap` task replacing monolithic seeds (8 realistic Hermosillo kitchens, real addresses, 30-day order history, decomposed recipes, purchases, fixed costs, local image cache in `tmp/recipes/`). Mercado Pago / Stripe / reconciliation dashboard remain deferred for 12.5+ once gateway demand lands.
+10. **Phase 13 next (production runs + inventory + unit conversion)** — feature-flag-gated production batches. Operators turn on "Inventario" from settings to unlock real stock tracking; otherwise the system stays at Phase-12 simplicity. Production runs (a batch of N units of a recipe cooked at a specific time) consume ingredients; orders draw down from runs; menu shows real availability; ingredient stock decrements on consumption. Powered by a unit conversion table (kg ↔ g, l ↔ ml, piece counts) so a recipe that needs "200g of harina" can pull from a "5kg bag" stock entry without per-recipe math. ~2 focused work-weeks.
 
-Phase 12 doesn't depend on 11 — it could have shipped first. Building it now because 11 closed the customer-facing growth lever and the next conversion lever is "how do I actually pay you?".
+Phase 13 is the natural next step after the catalog work in Phase 9 + the composable recipes in Phase 7 — those laid the data foundation; this turns the inventory column from a price list into a live stock ledger.
 
-Phase 13 is continuous; each ships a slice per quarter once the core loop is done.
+Phase 14 (growth, retention, polish) is continuous; each ships a slice per quarter once the core loop is done.

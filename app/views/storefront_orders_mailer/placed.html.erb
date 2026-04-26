@@ -79,6 +79,24 @@
             </td>
           </tr>
         <% end %>
+        <% if @order.tip_cents.to_i.positive? %>
+          <tr>
+            <td style="padding:8px 0 0 0;font-size:13px;color:#6B7670;">
+              <%= t(".subtotal_label") %>
+            </td>
+            <td align="right" style="padding:8px 0 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#6B7670;">
+              <%= humanized_money_with_symbol(@order.subtotal) %>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0 0 0;font-size:13px;color:#6B7670;">
+              <%= t(".tip_label") %>
+            </td>
+            <td align="right" style="padding:4px 0 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#6B7670;">
+              <%= humanized_money_with_symbol(@order.tip) %>
+            </td>
+          </tr>
+        <% end %>
         <tr>
           <td style="padding:14px 0 0 0;font-size:14px;font-weight:600;color:#0E1714;">
             <%= t(".total_label") %>
@@ -90,6 +108,38 @@
       </table>
     </td>
   </tr>
+
+  <% if @order.payment_method.present? %>
+    <tr>
+      <td style="padding:8px 28px 16px 28px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #E6E1D8;border-radius:12px;">
+          <tr>
+            <td style="padding:16px 18px;">
+              <div style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;letter-spacing:0.14em;text-transform:uppercase;color:#6B7670;">
+                <%= t(".payment_method_label") %>
+              </div>
+              <div style="margin-top:4px;font-size:14px;font-weight:600;color:#0E1714;">
+                <%= t(".payment_methods.#{@order.payment_method}") %>
+              </div>
+              <% if @order.payment_cash? && @order.cash_payment_amount_cents.to_i.positive? %>
+                <div style="margin-top:4px;font-size:13px;color:#2F3A35;">
+                  <%= t(".cash_pays_with", amount: humanized_money_with_symbol(@order.cash_payment_amount)) %>
+                </div>
+              <% end %>
+              <% if @order.payment_transfer? && @account.payment_settings.transfer_clabe.present? %>
+                <div style="margin-top:8px;font-size:13px;color:#2F3A35;">
+                  <% ps = @account.payment_settings %>
+                  <% if ps.transfer_holder.present? %><strong><%= ps.transfer_holder %></strong><br><% end %>
+                  <% if ps.transfer_bank.present? %><%= ps.transfer_bank %><br><% end %>
+                  <span style="font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:14px;"><%= ps.transfer_clabe %></span>
+                </div>
+              <% end %>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  <% end %>
 
   <tr>
     <td style="padding:12px 28px 6px 28px;">

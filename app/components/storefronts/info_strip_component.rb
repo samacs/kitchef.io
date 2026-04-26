@@ -28,5 +28,13 @@ module Storefronts
     def any_zones?
       delivery_zones_list.any?
     end
+
+    def payment_settings
+      storefront.payment_settings
+    end
+
+    def any_payment_method?
+      payment_settings.any_method_enabled?
+    end
   end
 end

@@ -176,6 +176,27 @@
       <% end %>
     </div>
 
+    <% if @order.tip_cents.to_i.positive? || @order.packaging_cents.to_i.positive? %>
+      <div class="mt-4 flex flex-col gap-1 border-t border-line pt-3 text-[13px]">
+        <div class="flex justify-between">
+          <span class="text-ink-2"><%= t("storefronts.confirmation.subtotal_label") %></span>
+          <span class="font-mono text-ink"><%= humanized_money_with_symbol(@order.subtotal) %></span>
+        </div>
+        <% if @order.packaging_cents.to_i.positive? %>
+          <div class="flex justify-between">
+            <span class="text-ink-2"><%= t("storefronts.confirmation.packaging_label") %></span>
+            <span class="font-mono text-ink"><%= humanized_money_with_symbol(@order.packaging) %></span>
+          </div>
+        <% end %>
+        <% if @order.tip_cents.to_i.positive? %>
+          <div class="flex justify-between">
+            <span class="text-ink-2"><%= t("storefronts.confirmation.tip_label") %></span>
+            <span class="font-mono text-ink"><%= humanized_money_with_symbol(@order.tip) %></span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
     <div class="mt-4 flex items-baseline justify-between gap-4 border-t border-line pt-4 flex-wrap">
       <div class="flex items-center gap-2 flex-wrap">
         <span class="text-[14px] font-semibold text-ink"><%= t("storefronts.cart.total") %></span>
@@ -203,6 +224,65 @@
       <span class="font-serif text-[24px] tracking-tight text-ink"><%= humanized_money_with_symbol(@order.total) %></span>
     </div>
   </section>
+
+  <%# Pickup address — only for pickup orders. The customer needs to
+      know where to drive. Always shown regardless of the public opt-in
+      because the order already binds the customer to this kitchen. %>
+  <% if @order.delivery_type_pickup? %>
+    <div class="mb-6">
+      <%= render Storefronts::PickupAddressComponent.new(account: @storefront) %>
+    </div>
+  <% end %>
+
+  <% if @order.payment_method.present? %>
+    <section class="mb-6 rounded-[16px] border border-line bg-surface p-6">
+      <div class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted mb-2">
+        <%= t("storefronts.confirmation.payment_method_label") %>
+      </div>
+      <div class="text-[14px] text-ink font-medium">
+        <%= t("storefronts.checkout.payment.#{@order.payment_method}_label") %>
+      </div>
+      <% if @order.payment_cash? && @order.cash_payment_amount_cents.to_i.positive? %>
+        <p class="mt-1 text-[13px] text-ink-2">
+          <%= t("storefronts.confirmation.cash_pays_with", amount: humanized_money_with_symbol(@order.cash_payment_amount)) %>
+        </p>
+      <% end %>
+      <% if @order.payment_transfer? %>
+        <% ps = @storefront.payment_settings %>
+        <% if ps.transfer_clabe.present? %>
+          <div class="mt-3 rounded-[10px] border border-line bg-bg/60 p-4 flex flex-col gap-2">
+            <% if ps.transfer_holder.present? %>
+              <div>
+                <div class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("storefronts.checkout.payment.transfer_holder") %></div>
+                <div class="text-[14px] text-ink"><%= ps.transfer_holder %></div>
+              </div>
+            <% end %>
+            <% if ps.transfer_bank.present? %>
+              <div>
+                <div class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("storefronts.checkout.payment.transfer_bank") %></div>
+                <div class="text-[14px] text-ink"><%= ps.transfer_bank %></div>
+              </div>
+            <% end %>
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="text-[11px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("storefronts.checkout.payment.transfer_clabe") %></div>
+                <div class="text-[14px] text-ink font-mono tabular-nums"><%= ps.transfer_clabe %></div>
+              </div>
+              <button type="button"
+                      data-controller="copy-to-clipboard"
+                      data-copy-to-clipboard-value-value="<%= ps.transfer_clabe %>"
+                      data-copy-to-clipboard-success-label-value="<%= t("storefronts.checkout.payment.copied") %>"
+                      data-action="click->copy-to-clipboard#copy"
+                      data-copy-to-clipboard-target="button"
+                      class="inline-flex items-center gap-1 rounded-[7px] border border-line bg-surface px-2.5 py-1 text-[12px] font-medium text-ink-2 hover:border-line-2">
+                <span><%= t("storefronts.checkout.payment.copy_cta") %></span>
+              </button>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
 
   <% if @storefront.public_profile.payment_notes.present? %>
     <section class="mb-6 rounded-[14px] px-5 py-4"

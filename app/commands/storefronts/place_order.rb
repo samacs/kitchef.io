@@ -47,9 +47,17 @@ module Storefronts
       end
 
       order_payload = order_params.to_h.deep_symbolize_keys.merge(
-        client_id: client.id,
-        source:    :storefront
+        client_id:         client.id,
+        source:            :storefront,
+        terms_accepted_at: Time.current
       )
+
+      pm = order_payload[:payment_method]
+      if pm.present? && !storefront.payment_settings.accepts_method?(pm)
+        order = storefront.orders.new(order_payload)
+        order.errors.add(:payment_method, :not_accepted)
+        return Result.new(success: false, object: order, errors: order.errors)
+      end
 
       result = Orders::Place.call(account: storefront, params: order_payload)
       notify_operator(result.object) if result.success?

@@ -46,6 +46,14 @@ module Accounts
     # `PickupReminderJob`. Operator-configurable, clamped 0..24.
     attribute :pickup_reminder_hours, :integer, default: DEFAULT_PICKUP_REMINDER_HOURS
 
+    # Public-facing pickup address opt-in. Off by default — many
+    # operators run from home and won't want the street published.
+    # Flips on in /account/edit when the operator enters and confirms
+    # her pickup address. The street_address column itself lives on
+    # `Account` (it's a geocodable, indexed first-class field), this
+    # flag only controls whether the storefront renders it.
+    attribute :show_pickup_address, :boolean, default: false
+
     validates :description, length: { maximum: DESCRIPTION_MAX }
     validates :tagline,     length: { maximum: 80 }
     validates :pickup_reminder_hours,

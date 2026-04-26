@@ -406,3 +406,18 @@ When creating seeds, fixtures, or placeholder content:
 6. **Recipe#cost_cents_cached** needs an explicit `as: :cost_cached` in `monetize` — non-standard suffix.
 7. **Account has_many declaration order is load-bearing.** Orders must declare before recipes/ingredients because `OrderItem` FK-references `Recipe`.
 8. **`has_person_name` requires the columns to be `first_name` / `last_name`.** Can't override. That's why `Client` uses those names (TRD originally said `name_first` / `name_last`).
+
+## Design Context
+
+**Brand personality:** Calm. Confident. Artisanal. Quiet confidence — no flash, no startup energy. The cocinera is the hero, not the platform.
+
+**Checkout emotional goal:** Delight + anticipation. "I can already smell the tamales." Tips feel generous not obligatory, payment reveals feel informative not bureaucratic.
+
+**Design principles:**
+1. Respect the cocinera — she's a CEO. Never condescend.
+2. One accent, held back — deep green `#0A5A3C` only for CTAs and active states.
+3. Typography carries the hierarchy — Instrument Serif for importance, Inter for function, JetBrains Mono for money.
+4. Mexican-native, not translated — tú forms, pesos, colonias, platillos.
+5. Quiet confidence over visual noise — no gradients, no emoji-as-UI, 150ms transitions.
+
+Full design context lives in `.impeccable.md` at the project root.

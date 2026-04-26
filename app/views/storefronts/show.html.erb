@@ -62,4 +62,10 @@
   </section>
 
   <%= render Storefronts::InfoStripComponent.new(storefront: @storefront, ordering_hours: @ordering_hours) %>
+
+  <% if @storefront.show_pickup_address? %>
+    <section class="mx-auto mt-[18px] max-w-[1200px] px-5 mb-16">
+      <%= render Storefronts::PickupAddressComponent.new(account: @storefront, variant: :hero) %>
+    </section>
+  <% end %>
 </main>

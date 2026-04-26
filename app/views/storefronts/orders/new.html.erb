@@ -181,6 +181,258 @@
       </div>
     </details>
 
+    <%# ── Propina ──────────────────────────────────────────────────
+        Conditional on the kitchen opting in. When `accepts_tips` is
+        false the propina card disappears entirely; submit posts
+        tip_cents=0 by default (Order#tip_cents column default). %>
+    <% if @storefront.payment_settings.accepts_tips %>
+    <% tip_presets = @storefront.payment_settings.tip_presets_pct %>
+    <section class="mb-8 rounded-[16px] border border-line bg-surface p-6"
+             data-controller="tip-picker">
+      <div class="flex items-center gap-2.5 mb-4">
+        <span class="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] shrink-0"
+              style="background: var(--brand-1-soft); color: var(--brand-1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </span>
+        <div>
+          <h2 class="font-serif text-[22px] leading-[1.1] text-ink"><%= t("storefronts.checkout.tip.heading") %></h2>
+          <p class="text-[13px] text-ink-2"><%= t("storefronts.checkout.tip.lede") %></p>
+        </div>
+      </div>
+
+      <input type="hidden" name="order[tip_cents]" value="0" data-tip-picker-target="hiddenField">
+
+      <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <% tip_presets.each do |pct| %>
+          <button type="button"
+                  data-tip-picker-target="preset"
+                  data-pct="<%= pct %>"
+                  data-action="tip-picker#selectPreset"
+                  data-active="false"
+                  class="group flex flex-col items-center gap-0.5 rounded-[10px] border px-4 py-3 transition-colors cursor-pointer
+                         data-[active=true]:border-[color:var(--brand-1)] data-[active=true]:bg-[color:var(--brand-1-soft)]
+                         data-[active=false]:border-line data-[active=false]:bg-surface data-[active=false]:hover:border-line-2">
+            <span class="text-[15px] font-semibold data-[active=true]:text-[color:var(--brand-1)] data-[active=false]:text-ink"
+                  data-active="false"><%= pct %>%</span>
+            <span class="font-mono text-[12px] tabular-nums data-[active=true]:text-[color:var(--brand-1)] data-[active=false]:text-muted"
+                  data-tip-picker-target="presetAmount" data-pct="<%= pct %>" data-active="false"></span>
+          </button>
+        <% end %>
+
+        <button type="button"
+                data-tip-picker-target="preset"
+                data-pct="0"
+                data-action="tip-picker#selectPreset"
+                data-active="true"
+                class="flex flex-col items-center justify-center rounded-[10px] border px-4 py-3 transition-colors cursor-pointer
+                       data-[active=true]:border-[color:var(--brand-1)] data-[active=true]:bg-[color:var(--brand-1-soft)]
+                       data-[active=false]:border-line data-[active=false]:bg-surface data-[active=false]:hover:border-line-2">
+          <span class="text-[14px] font-medium data-[active=true]:text-[color:var(--brand-1)] data-[active=false]:text-ink-2"
+                data-active="true"><%= t("storefronts.checkout.tip.no_tip") %></span>
+        </button>
+
+        <button type="button"
+                data-tip-picker-custom-chip
+                data-action="tip-picker#selectCustom"
+                data-active="false"
+                class="flex flex-col items-center justify-center rounded-[10px] border px-4 py-3 transition-colors cursor-pointer
+                       data-[active=true]:border-[color:var(--brand-1)] data-[active=true]:bg-[color:var(--brand-1-soft)]
+                       data-[active=false]:border-line data-[active=false]:bg-surface data-[active=false]:hover:border-line-2">
+          <span class="text-[14px] font-medium data-[active=true]:text-[color:var(--brand-1)] data-[active=false]:text-ink-2"
+                data-active="false"><%= t("storefronts.checkout.tip.custom") %></span>
+        </button>
+      </div>
+
+      <div class="mt-3 hidden" data-tip-picker-target="customWrap">
+        <label class="block text-[12px] font-medium text-muted mb-1"><%= t("storefronts.checkout.tip.custom_label") %></label>
+        <span class="relative flex items-center max-w-[200px]">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[13px]">$</span>
+          <input type="text" inputmode="decimal"
+                 data-tip-picker-target="customInput"
+                 data-action="input->tip-picker#updateCustom"
+                 placeholder="0.00"
+                 class="kc-sf-input w-full rounded-[7px] border border-line bg-surface pl-7 pr-3 py-2 text-[14px] text-ink font-mono tabular-nums">
+        </span>
+      </div>
+    </section>
+    <% end %>
+
+    <%# ── Método de pago ───────────────────────────────────────── %>
+    <% ps = @storefront.payment_settings %>
+    <% if ps.any_method_enabled? %>
+      <section class="mb-8 rounded-[16px] border border-line bg-surface p-6"
+               data-controller="payment-method-picker">
+        <div class="flex items-center gap-2.5 mb-5">
+          <span class="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] shrink-0"
+                style="background: var(--brand-1-soft); color: var(--brand-1);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+          </span>
+          <div>
+            <h2 class="font-serif text-[22px] leading-[1.1] text-ink"><%= t("storefronts.checkout.payment.heading") %></h2>
+            <p class="text-[13px] text-ink-2"><%= t("storefronts.checkout.payment.lede") %></p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <% if ps.accepts_cash %>
+            <label class="kc-sf-choice flex cursor-pointer items-start gap-3 rounded-[10px] border border-line bg-surface p-3 transition-colors hover:border-line-2 has-[:checked]:border-[color:var(--brand-1)] has-[:checked]:bg-[color:var(--brand-1-soft)]">
+              <input type="radio" name="order[payment_method]" value="cash"
+                     data-payment-method-picker-target="radio"
+                     data-action="change->payment-method-picker#select"
+                     class="mt-1 kc-sf-radio" style="accent-color: var(--brand-1);">
+              <span class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-[8px] border border-line bg-bg/60 shrink-0"
+                    style="color: var(--brand-1);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-ink"><%= t("storefronts.checkout.payment.cash_label") %></span>
+                <span class="block text-[12px] text-muted leading-[1.4]"><%= t("storefronts.checkout.payment.cash_hint") %></span>
+              </span>
+            </label>
+            <div class="hidden ml-[44px] mb-1 rounded-[10px] border border-line bg-bg/60 p-4" data-payment-method-picker-target="detail" data-method="cash">
+              <label class="block text-[12px] font-medium text-muted mb-1"><%= t("storefronts.checkout.payment.cash_amount_label") %></label>
+              <span class="relative flex items-center max-w-[200px]">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[13px]">$</span>
+                <input type="text" inputmode="decimal" name="order[cash_payment_amount_cents]"
+                       data-payment-method-picker-target="cashAmountInput"
+                       data-action="input->payment-method-picker#updateCashAmount"
+                       placeholder="0.00"
+                       class="kc-sf-input w-full rounded-[7px] border border-line bg-surface pl-7 pr-3 py-2 text-[14px] text-ink font-mono tabular-nums">
+              </span>
+              <p class="mt-1.5 text-[11px] text-muted"><%= t("storefronts.checkout.payment.cash_amount_hint") %></p>
+              <div class="hidden mt-2 text-[12.5px] font-medium" data-change-wrap>
+                <span class="data-[kind=change]:text-[color:var(--brand-1)] data-[kind=short]:text-err"
+                      data-kind="change"
+                      data-change-prefix-change="<%= t("storefronts.checkout.payment.cash_change_prefix") %>"
+                      data-change-prefix-short="<%= t("storefronts.checkout.payment.cash_short_prefix") %>"
+                      data-payment-method-picker-target="changeDisplay"></span>
+              </div>
+            </div>
+          <% end %>
+
+          <% if ps.accepts_transfer %>
+            <label class="kc-sf-choice flex cursor-pointer items-start gap-3 rounded-[10px] border border-line bg-surface p-3 transition-colors hover:border-line-2 has-[:checked]:border-[color:var(--brand-1)] has-[:checked]:bg-[color:var(--brand-1-soft)]">
+              <input type="radio" name="order[payment_method]" value="transfer"
+                     data-payment-method-picker-target="radio"
+                     data-action="change->payment-method-picker#select"
+                     class="mt-1 kc-sf-radio" style="accent-color: var(--brand-1);">
+              <span class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-[8px] border border-line bg-bg/60 shrink-0"
+                    style="color: var(--brand-1);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+                </svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-ink"><%= t("storefronts.checkout.payment.transfer_label") %></span>
+                <span class="block text-[12px] text-muted leading-[1.4]"><%= t("storefronts.checkout.payment.transfer_hint") %></span>
+              </span>
+            </label>
+            <div class="hidden ml-[44px] mb-1" data-payment-method-picker-target="detail" data-method="transfer">
+              <div class="rounded-[10px] border border-line bg-bg/60 p-4 flex flex-col gap-3">
+                <% if ps.transfer_holder.present? || ps.transfer_bank.present? %>
+                  <div class="grid gap-3 sm:grid-cols-2">
+                    <% if ps.transfer_holder.present? %>
+                      <div>
+                        <div class="text-[10.5px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("storefronts.checkout.payment.transfer_holder") %></div>
+                        <div class="mt-0.5 text-[14px] font-medium text-ink"><%= ps.transfer_holder %></div>
+                      </div>
+                    <% end %>
+                    <% if ps.transfer_bank.present? %>
+                      <div>
+                        <div class="text-[10.5px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("storefronts.checkout.payment.transfer_bank") %></div>
+                        <div class="mt-0.5 text-[14px] font-medium text-ink"><%= ps.transfer_bank %></div>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+                <% if ps.transfer_clabe.present? %>
+                  <div class="flex items-center justify-between gap-2 rounded-[8px] border border-line bg-surface px-3 py-2.5">
+                    <div class="min-w-0">
+                      <div class="text-[10.5px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("storefronts.checkout.payment.transfer_clabe") %></div>
+                      <div class="mt-0.5 text-[15px] text-ink font-mono tabular-nums tracking-wide"><%= ps.transfer_clabe %></div>
+                    </div>
+                    <button type="button"
+                            data-controller="copy-to-clipboard"
+                            data-copy-to-clipboard-value-value="<%= ps.transfer_clabe %>"
+                            data-copy-to-clipboard-success-label-value="<%= t("storefronts.checkout.payment.copied") %>"
+                            data-action="click->copy-to-clipboard#copy"
+                            data-copy-to-clipboard-target="button"
+                            class="inline-flex items-center gap-1.5 rounded-[7px] px-3 py-1.5 text-[12px] font-semibold transition-colors cursor-pointer shrink-0"
+                            style="background: var(--brand-1); color: var(--brand-1-ink);">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      <span><%= t("storefronts.checkout.payment.copy_cta") %></span>
+                    </button>
+                  </div>
+                <% end %>
+                <% if ps.transfer_account_number.present? %>
+                  <div class="flex items-center justify-between gap-2 rounded-[8px] border border-line bg-surface px-3 py-2.5">
+                    <div class="min-w-0">
+                      <div class="text-[10.5px] font-mono uppercase tracking-[0.14em] text-muted"><%= t("storefronts.checkout.payment.transfer_card") %></div>
+                      <div class="mt-0.5 text-[15px] text-ink font-mono tabular-nums tracking-wide"><%= ps.transfer_account_number %></div>
+                    </div>
+                    <button type="button"
+                            data-controller="copy-to-clipboard"
+                            data-copy-to-clipboard-value-value="<%= ps.transfer_account_number %>"
+                            data-copy-to-clipboard-success-label-value="<%= t("storefronts.checkout.payment.copied") %>"
+                            data-action="click->copy-to-clipboard#copy"
+                            data-copy-to-clipboard-target="button"
+                            class="inline-flex items-center gap-1.5 rounded-[7px] px-3 py-1.5 text-[12px] font-semibold transition-colors cursor-pointer shrink-0"
+                            style="background: var(--brand-1); color: var(--brand-1-ink);">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                      </svg>
+                      <span><%= t("storefronts.checkout.payment.copy_cta") %></span>
+                    </button>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <% if ps.accepts_card %>
+            <label class="kc-sf-choice flex cursor-pointer items-start gap-3 rounded-[10px] border border-line bg-surface p-3 transition-colors hover:border-line-2 has-[:checked]:border-[color:var(--brand-1)] has-[:checked]:bg-[color:var(--brand-1-soft)]">
+              <input type="radio" name="order[payment_method]" value="card"
+                     data-payment-method-picker-target="radio"
+                     data-action="change->payment-method-picker#select"
+                     class="mt-1 kc-sf-radio" style="accent-color: var(--brand-1);">
+              <span class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-[8px] border border-line bg-bg/60 shrink-0"
+                    style="color: var(--brand-1);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+              </span>
+              <span class="flex-1 min-w-0">
+                <span class="block text-[14px] font-semibold text-ink"><%= t("storefronts.checkout.payment.card_label") %></span>
+                <span class="block text-[12px] text-muted leading-[1.4]"><%= t("storefronts.checkout.payment.card_hint") %></span>
+              </span>
+            </label>
+            <div class="hidden ml-[44px] mb-1 rounded-[10px] border border-line bg-bg/60 p-4" data-payment-method-picker-target="detail" data-method="card">
+              <% if ps.card_instructions.present? %>
+                <p class="text-[13px] text-ink-2 leading-[1.5]"><%= ps.card_instructions %></p>
+              <% else %>
+                <p class="text-[13px] text-muted italic"><%= t("storefronts.checkout.payment.card_placeholder") %></p>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% else %>
+      <div class="mb-8 flex items-center gap-2.5 rounded-[12px] border border-line bg-bg/60 px-4 py-3">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="text-muted shrink-0" aria-hidden="true">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span class="text-[13px] text-muted"><%= t("storefronts.checkout.payment.no_methods_banner") %></span>
+      </div>
+    <% end %>
+
     <section class="mb-8 rounded-[16px] border border-line bg-surface p-6">
       <h2 class="mb-4 font-serif text-[22px] text-ink"><%= t("storefronts.checkout.summary_section") %></h2>
       <div data-storefront-cart-target="summary">

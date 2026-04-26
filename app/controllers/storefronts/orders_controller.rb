@@ -13,6 +13,7 @@ module Storefronts
     def create
       payload = order_params.to_h.merge(items_attributes: items_from_cart_payload)
       payload = apply_delivery_window(payload)
+      payload = normalize_cash_amount(payload)
 
       result = Storefronts::PlaceOrder.call(
         storefront:      @storefront,
@@ -170,8 +171,19 @@ module Storefronts
         :city,
         :delivery_notes,
         :notes,
+        :payment_method,
+        :tip_cents,
+        :cash_payment_amount_cents,
         items_attributes: [ :recipe_id, :quantity, :notes ]
       )
+    end
+
+    def normalize_cash_amount(attrs)
+      raw = attrs[:cash_payment_amount_cents]
+      if raw.present? && !raw.to_s.match?(/\A\d+\z/)
+        attrs[:cash_payment_amount_cents] = (raw.to_s.gsub(",", ".").to_d * 100).to_i
+      end
+      attrs
     end
 
     # Decode the picker's window id into the canonical attributes Order

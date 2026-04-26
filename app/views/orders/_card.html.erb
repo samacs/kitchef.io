@@ -101,6 +101,16 @@
           <%= t("orders.card.packaging_suffix", amount: humanized_money_with_symbol(order.packaging)) %>
         </span>
       <% end %>
+      <% if order.payment_method.present? %>
+        <span class="inline-flex items-center gap-1 rounded-full bg-bg-2 px-2 py-0.5 font-mono text-[10px] text-muted">
+          <%= t("orders.card.payment_method.#{order.payment_method}") %><% if order.payment_cash? && order.cash_payment_amount_cents.to_i.positive? %> · <%= humanized_money_with_symbol(order.cash_payment_amount) %><% end %>
+        </span>
+      <% end %>
+      <% if order.tip_cents.to_i.positive? %>
+        <span class="inline-flex items-center rounded-full bg-bg-2 px-2 py-0.5 font-mono text-[10px] text-muted">
+          +<%= humanized_money_with_symbol(order.tip) %> <%= t("orders.card.tip_suffix") %>
+        </span>
+      <% end %>
       <% if order.paid? %>
         <span class="inline-flex items-center gap-1 text-accent"
               aria-label="<%= t("orders.payment_status.paid_aria") %>"

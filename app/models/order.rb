@@ -2,45 +2,49 @@
 #
 # Table name: orders
 #
-#  id                      :bigint           not null, primary key
-#  balance_cents           :bigint           default(0), not null
-#  cancel_reason_code      :string
-#  cancel_reason_note      :text
-#  canceled_at             :datetime
-#  city                    :string
-#  colonia                 :string
-#  confirmed_at            :datetime
-#  delivered_at            :datetime
-#  delivery_address        :string
-#  delivery_date           :date             not null
-#  delivery_end_time       :integer
-#  delivery_mode           :integer          default("scheduled"), not null
-#  delivery_notes          :text
-#  delivery_start_time     :integer
-#  delivery_type           :integer          default("delivery"), not null
-#  deposit_cents           :bigint           default(0), not null
-#  discarded_at            :datetime
-#  en_route_started_at     :datetime
-#  geocoded_at             :datetime
-#  geocoding_failed_at     :datetime
-#  latitude                :decimal(10, 6)
-#  longitude               :decimal(10, 6)
-#  notes                   :text
-#  packaging_cents         :bigint           default(0), not null
-#  paid_at                 :datetime
-#  pickup_reminder_sent_at :datetime
-#  position                :integer
-#  production_started_at   :datetime
-#  ready_at                :datetime
-#  source                  :integer          default("storefront"), not null
-#  state                   :string           default("placed"), not null
-#  subtotal_cents          :bigint           default(0), not null
-#  tax_cents               :bigint           default(0), not null
-#  total_cents             :bigint           default(0), not null
-#  created_at              :datetime         not null
-#  updated_at              :datetime         not null
-#  account_id              :bigint           not null
-#  client_id               :bigint
+#  id                        :bigint           not null, primary key
+#  balance_cents             :bigint           default(0), not null
+#  cancel_reason_code        :string
+#  cancel_reason_note        :text
+#  canceled_at               :datetime
+#  cash_payment_amount_cents :bigint
+#  city                      :string
+#  colonia                   :string
+#  confirmed_at              :datetime
+#  delivered_at              :datetime
+#  delivery_address          :string
+#  delivery_date             :date             not null
+#  delivery_end_time         :integer
+#  delivery_mode             :integer          default("scheduled"), not null
+#  delivery_notes            :text
+#  delivery_start_time       :integer
+#  delivery_type             :integer          default("delivery"), not null
+#  deposit_cents             :bigint           default(0), not null
+#  discarded_at              :datetime
+#  en_route_started_at       :datetime
+#  geocoded_at               :datetime
+#  geocoding_failed_at       :datetime
+#  latitude                  :decimal(10, 6)
+#  longitude                 :decimal(10, 6)
+#  notes                     :text
+#  packaging_cents           :bigint           default(0), not null
+#  paid_at                   :datetime
+#  payment_method            :integer
+#  pickup_reminder_sent_at   :datetime
+#  position                  :integer
+#  production_started_at     :datetime
+#  ready_at                  :datetime
+#  source                    :integer          default("storefront"), not null
+#  state                     :string           default("placed"), not null
+#  subtotal_cents            :bigint           default(0), not null
+#  tax_cents                 :bigint           default(0), not null
+#  terms_accepted_at         :datetime
+#  tip_cents                 :bigint           default(0), not null
+#  total_cents               :bigint           default(0), not null
+#  created_at                :datetime         not null
+#  updated_at                :datetime         not null
+#  account_id                :bigint           not null
+#  client_id                 :bigint
 #
 # Indexes
 #
@@ -77,6 +81,10 @@ class Order < ApplicationRecord
   monetize :deposit_cents
   monetize :balance_cents
   monetize :packaging_cents
+  monetize :tip_cents
+  monetize :cash_payment_amount_cents, allow_nil: true
+
+  PAYMENT_METHODS = { cash: 0, transfer: 1, card: 2 }.freeze
 
   DELIVERY_TYPES = { delivery: 0, pickup: 1 }.freeze
   SOURCES        = {
@@ -114,9 +122,10 @@ class Order < ApplicationRecord
   # it never becomes a state here.
   TERMINAL_STATES = %w[delivered canceled].freeze
 
-  enum :delivery_type, DELIVERY_TYPES, prefix: true
-  enum :source,        SOURCES,        prefix: true
-  enum :delivery_mode, DELIVERY_MODES, prefix: :dispatch
+  enum :payment_method, PAYMENT_METHODS, prefix: :payment
+  enum :delivery_type,  DELIVERY_TYPES,  prefix: true
+  enum :source,         SOURCES,         prefix: true
+  enum :delivery_mode,  DELIVERY_MODES,  prefix: :dispatch
 
   # Virtual attribute — the storefront delivery picker posts a single
   # `delivery_window_id` field encoding date + time range + kind. The
@@ -179,7 +188,7 @@ class Order < ApplicationRecord
   before_save :recompute_totals
 
   validates :delivery_date, presence: true
-  validates :subtotal_cents, :total_cents, :deposit_cents, :balance_cents, :packaging_cents,
+  validates :subtotal_cents, :total_cents, :deposit_cents, :balance_cents, :packaging_cents, :tip_cents,
     numericality: { greater_than_or_equal_to: 0 }
   validates :delivery_start_time, :delivery_end_time,
     numericality: { only_integer: true, in: 0..TimeOfDay::MAX },
@@ -331,7 +340,7 @@ class Order < ApplicationRecord
     end
     self.subtotal_cents = subtotal
     self.tax_cents      = 0
-    self.total_cents    = subtotal + packaging_cents.to_i
+    self.total_cents    = subtotal + packaging_cents.to_i + tip_cents.to_i
     self.balance_cents  = [ total_cents - deposit_cents.to_i, 0 ].max
   end
 

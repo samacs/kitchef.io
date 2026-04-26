@@ -1,4 +1,8 @@
-<%= render Ui::DropdownComponent.new(placement: placement, menu_width: "w-[280px]", menu_class: "p-2") do |d| %>
+<%= render Ui::DropdownComponent.new(
+     placement: placement,
+     menu_width: "w-[280px]",
+     menu_class: "p-2",
+     wrapper_class: variant == :card ? "relative flex" : "relative inline-flex") do |d| %>
   <% d.with_trigger do %>
     <% if variant == :card %>
       <%# Sidebar identity card — full-width, name + plan, opens upward. %>
