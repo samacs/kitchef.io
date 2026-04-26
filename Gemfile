@@ -102,6 +102,7 @@ group :development, :test do
   gem "bundler-audit", require: false
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
   gem "dotenv-rails", "~> 3.2"
+  gem "database_cleaner-active_record", "~> 2.2"
   gem "factory_bot_rails", "~> 6.5"
   gem "faker", "~> 3.8"
   gem "pry", "~> 0.16.0"

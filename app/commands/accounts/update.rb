@@ -23,7 +23,7 @@ module Accounts
       profile_attrs  = attrs.delete(:public_profile) || {}
       settings_attrs = attrs.delete(:settings) || {}
 
-      account.assign_attributes(attrs.slice(:name))
+      account.assign_attributes(attrs.slice(:name, :street_address, :latitude, :longitude))
 
       # Merge into the existing StoreModel instance instead of replacing
       # it so fields not in the form submission (partial updates from
@@ -37,7 +37,13 @@ module Accounts
       account.public_profile = profile
 
       settings = account.settings
+      payment_attrs = settings_attrs.delete(:payment_settings)
       settings.assign_attributes(settings_attrs.compact)
+      if payment_attrs.present?
+        ps = settings.payment_settings
+        ps.assign_attributes(payment_attrs.to_h.compact)
+        settings.payment_settings = ps
+      end
       account.settings = settings
 
       account.logo.attach(logo) if logo.present?

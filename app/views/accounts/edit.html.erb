@@ -295,6 +295,279 @@
           </div>
       </section>
 
+      <%# Recolección — kitchen pickup address + interactive map %>
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6"
+               data-controller="kitchen-address-map"
+               data-kitchen-address-map-api-key-value="<%= ENV["GOOGLE_API_KEY"].to_s %>"
+               data-kitchen-address-map-initial-lat-value="<%= @account.latitude || 0 %>"
+               data-kitchen-address-map-initial-lon-value="<%= @account.longitude || 0 %>">
+        <div>
+          <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <%= t("account.sections.pickup_kicker") %>
+          </div>
+          <h2 class="mt-1 font-serif text-[22px] leading-tight text-ink">
+            <%= t("account.sections.pickup_title") %>
+          </h2>
+          <p class="mt-1 text-[13px] text-ink-2"><%= t("account.sections.pickup_lede") %></p>
+        </div>
+
+        <%# Show-publicly toggle, in the same canonical pattern as the
+            Pagos checkboxes below (mt-[3px] w-4 h-4 accent-accent + label/hint). %>
+        <%= f.fields_for :public_profile, @account.public_profile do |p| %>
+          <div class="rounded-card-sm border border-line bg-bg-2/60">
+            <label class="flex items-start gap-3 p-4 cursor-pointer">
+              <input type="hidden" name="account[public_profile][show_pickup_address]" value="0">
+              <%= p.check_box :show_pickup_address,
+                    {
+                      checked: @account.public_profile.show_pickup_address,
+                      class: "mt-[3px] w-4 h-4 accent-accent"
+                    },
+                    "1", "0" %>
+              <div class="flex-1 flex flex-col gap-1">
+                <span class="text-[14px] font-medium text-ink"><%= t("account.pickup.show_publicly_label") %></span>
+                <span class="text-[12px] text-muted"><%= t("account.pickup.show_publicly_hint") %></span>
+              </div>
+            </label>
+          </div>
+        <% end %>
+
+        <%# Address input + suggestions popover %>
+        <div class="flex flex-col gap-2 relative">
+          <label class="block text-[12px] font-medium text-muted" for="kitchen_street_address">
+            <%= t("account.pickup.address_label") %>
+          </label>
+          <%= f.text_field :street_address,
+                id: "kitchen_street_address",
+                placeholder: t("account.pickup.address_placeholder"),
+                autocomplete: "off",
+                data: {
+                  kitchen_address_map_target: "input",
+                  action: "input->kitchen-address-map#search focus->kitchen-address-map#search blur->kitchen-address-map#hideSuggestionsSoon"
+                },
+                class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+          <p class="text-[11.5px] text-muted"><%= t("account.pickup.address_hint") %></p>
+
+          <%# Suggestions render below the input. The controller toggles
+              `hidden` on this container — never inserts content into the
+              input itself, so the operator stays in control of what she
+              typed. %>
+          <div data-kitchen-address-map-target="suggestions"
+               class="hidden absolute left-0 right-0 top-full mt-1 z-20 rounded-input border border-line bg-surface shadow-lift overflow-hidden"></div>
+
+          <%= f.hidden_field :latitude,
+                value: @account.latitude,
+                data: { kitchen_address_map_target: "lat" } %>
+          <%= f.hidden_field :longitude,
+                value: @account.longitude,
+                data: { kitchen_address_map_target: "lon" } %>
+        </div>
+
+        <%# Map — full-width inside the card %>
+        <div class="rounded-card-sm overflow-hidden border border-line bg-bg-2 relative">
+          <div data-kitchen-address-map-target="map" class="w-full h-[280px]"></div>
+
+          <%# Fallback shown when GOOGLE_API_KEY is unset (local dev w/o
+              key, prod misconfig). The form still works — the operator
+              just doesn't get the visual map. Kept inside the same card
+              border so the layout doesn't shift. %>
+          <div data-kitchen-address-map-target="fallback"
+               class="hidden absolute inset-0 flex items-center justify-center text-center px-6 text-[13px] text-muted">
+            <%= t("account.pickup.map_unavailable") %>
+          </div>
+        </div>
+
+        <%# Open in Google Maps deep-link — only visible when coords exist. %>
+        <a data-kitchen-address-map-target="directionsLink"
+           href="#"
+           target="_blank" rel="noopener"
+           class="<%= "hidden" unless @account.geocoded? %> self-start inline-flex items-center gap-1.5 rounded-button border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 hover:border-line-2 no-underline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <%= t("account.pickup.open_in_google_maps") %>
+        </a>
+
+        <%# Geocoding error banner — shown when the server-side fallback
+            tried to resolve the address and Google returned ZERO_RESULTS
+            or a quota error. Operator can re-type to retry; cooldown is
+            1 hour by default to avoid burning quota on a typo. %>
+        <% if @account.geocoding_failed? %>
+          <div class="rounded-card-sm border border-warn/30 bg-[color-mix(in_oklab,var(--color-warn)_8%,var(--color-surface))] p-3 flex items-start gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-warn shrink-0 mt-0.5" aria-hidden="true">
+              <path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            </svg>
+            <div class="text-[12.5px] text-ink-2 leading-[1.45]">
+              <strong class="text-warn"><%= t("account.pickup.geocoding_failed_title") %></strong>
+              <span class="block mt-0.5"><%= t("account.pickup.geocoding_failed_hint") %></span>
+            </div>
+          </div>
+        <% end %>
+      </section>
+
+      <%# Pagos — accepted methods, SPEI details, tip presets %>
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6"
+               data-controller="payment-settings">
+        <div>
+          <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <%= t("account.sections.payment_kicker") %>
+          </div>
+          <h2 class="mt-1 font-serif text-[22px] leading-tight text-ink">
+            <%= t("account.sections.payment_title") %>
+          </h2>
+          <p class="mt-1 text-[13px] text-ink-2"><%= t("account.sections.payment_lede") %></p>
+        </div>
+
+        <% ps = @account.payment_settings %>
+
+        <div class="flex flex-col gap-3">
+          <%# ── Efectivo ─────────────────────────────────────────── %>
+          <div class="rounded-card-sm border border-line bg-bg-2/60">
+            <label class="flex items-start gap-3 p-4 cursor-pointer">
+              <input type="hidden" name="account[settings][payment_settings][accepts_cash]" value="0">
+              <input type="checkbox" name="account[settings][payment_settings][accepts_cash]" value="1"
+                     <%= "checked" if ps.accepts_cash %>
+                     class="mt-[3px] w-4 h-4 accent-accent">
+              <div class="flex-1 flex flex-col gap-1">
+                <span class="text-[14px] font-medium text-ink"><%= t("account.payment.accepts_cash") %></span>
+                <span class="text-[12px] text-muted"><%= t("account.payment.accepts_cash_hint") %></span>
+              </div>
+            </label>
+          </div>
+
+          <%# ── Transferencia ─────────────────────────────────────── %>
+          <div class="rounded-card-sm border border-line bg-bg-2/60"
+               data-payment-settings-target="transferGroup">
+            <label class="flex items-start gap-3 p-4 cursor-pointer">
+              <input type="hidden" name="account[settings][payment_settings][accepts_transfer]" value="0">
+              <input type="checkbox" name="account[settings][payment_settings][accepts_transfer]" value="1"
+                     <%= "checked" if ps.accepts_transfer %>
+                     data-action="change->payment-settings#toggleTransfer"
+                     data-payment-settings-target="transferToggle"
+                     class="mt-[3px] w-4 h-4 accent-accent">
+              <div class="flex-1 flex flex-col gap-1">
+                <span class="text-[14px] font-medium text-ink"><%= t("account.payment.accepts_transfer") %></span>
+                <span class="text-[12px] text-muted"><%= t("account.payment.accepts_transfer_hint") %></span>
+              </div>
+            </label>
+
+            <div data-payment-settings-target="transferFields" class="<%= "hidden" unless ps.accepts_transfer %> px-4 pb-4 flex flex-col gap-3">
+              <div class="border-t border-line pt-4 flex flex-col gap-3">
+                <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+                  <%= t("account.payment.transfer_section") %>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label class="block text-[12px] font-medium text-muted mb-1"><%= t("account.payment.transfer_holder") %></label>
+                    <input type="text" name="account[settings][payment_settings][transfer_holder]" value="<%= ps.transfer_holder %>"
+                           placeholder="<%= t("account.payment.transfer_holder_placeholder") %>"
+                           class="w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink">
+                  </div>
+                  <div>
+                    <label class="block text-[12px] font-medium text-muted mb-1"><%= t("account.payment.transfer_bank") %></label>
+                    <input type="text" name="account[settings][payment_settings][transfer_bank]" value="<%= ps.transfer_bank %>"
+                           placeholder="<%= t("account.payment.transfer_bank_placeholder") %>"
+                           class="w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[12px] font-medium text-muted mb-1"><%= t("account.payment.transfer_clabe") %></label>
+                  <input type="text" name="account[settings][payment_settings][transfer_clabe]" value="<%= ps.transfer_clabe %>"
+                         inputmode="numeric" maxlength="18" pattern="\d{18}"
+                         placeholder="012345678901234567"
+                         class="w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono tabular-nums">
+                  <p class="mt-1 text-[11.5px] text-muted"><%= t("account.payment.clabe_hint") %></p>
+                </div>
+                <div>
+                  <label class="block text-[12px] font-medium text-muted mb-1"><%= t("account.payment.transfer_account_number") %></label>
+                  <input type="text" name="account[settings][payment_settings][transfer_account_number]" value="<%= ps.transfer_account_number %>"
+                         inputmode="numeric"
+                         placeholder="<%= t("account.payment.account_number_placeholder") %>"
+                         class="w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono tabular-nums">
+                  <p class="mt-1 text-[11.5px] text-muted"><%= t("account.payment.account_number_hint") %></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <%# ── Tarjeta ───────────────────────────────────────────── %>
+          <div class="rounded-card-sm border border-line bg-bg-2/60"
+               data-payment-settings-target="cardGroup">
+            <label class="flex items-start gap-3 p-4 cursor-pointer">
+              <input type="hidden" name="account[settings][payment_settings][accepts_card]" value="0">
+              <input type="checkbox" name="account[settings][payment_settings][accepts_card]" value="1"
+                     <%= "checked" if ps.accepts_card %>
+                     data-action="change->payment-settings#toggleCard"
+                     data-payment-settings-target="cardToggle"
+                     class="mt-[3px] w-4 h-4 accent-accent">
+              <div class="flex-1 flex flex-col gap-1">
+                <span class="text-[14px] font-medium text-ink"><%= t("account.payment.accepts_card") %></span>
+                <span class="text-[12px] text-muted"><%= t("account.payment.accepts_card_hint") %></span>
+              </div>
+            </label>
+
+            <div data-payment-settings-target="cardFields" class="<%= "hidden" unless ps.accepts_card %> px-4 pb-4">
+              <div class="border-t border-line pt-4 flex flex-col gap-3">
+                <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+                  <%= t("account.payment.card_section") %>
+                </div>
+                <div>
+                  <label class="block text-[12px] font-medium text-muted mb-1"><%= t("account.payment.card_instructions_label") %></label>
+                  <textarea name="account[settings][payment_settings][card_instructions]" rows="2"
+                            placeholder="<%= t("account.payment.card_instructions_placeholder") %>"
+                            class="w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink"><%= ps.card_instructions %></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <%# ── Propina ─────────────────────────────────────────────
+            Toggle to opt out of collecting tips entirely. When OFF,
+            the storefront checkout hides the propina card and the
+            preset percentages stay persisted (re-enabling restores
+            them) so the operator doesn't lose her configuration. %>
+        <div class="rounded-card-sm border border-line bg-bg-2/60"
+             data-controller="tips-toggle">
+          <label class="flex items-start gap-3 p-4 cursor-pointer">
+            <input type="hidden" name="account[settings][payment_settings][accepts_tips]" value="0">
+            <input type="checkbox"
+                   name="account[settings][payment_settings][accepts_tips]"
+                   value="1"
+                   <%= "checked" if ps.accepts_tips %>
+                   data-action="change->tips-toggle#toggle"
+                   data-tips-toggle-target="checkbox"
+                   class="mt-[3px] w-4 h-4 accent-accent">
+            <div class="flex-1 flex flex-col gap-1">
+              <span class="text-[14px] font-medium text-ink"><%= t("account.payment.accepts_tips") %></span>
+              <span class="text-[12px] text-muted"><%= t("account.payment.accepts_tips_hint") %></span>
+            </div>
+          </label>
+
+          <div data-tips-toggle-target="presets"
+               class="<%= "hidden" unless ps.accepts_tips %> px-4 pb-4">
+            <div class="border-t border-line pt-4">
+              <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted mb-2">
+                <%= t("account.payment.tip_presets_label") %>
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <% ps.tip_presets_pct.each do |pct| %>
+                  <div>
+                    <span class="relative flex items-center">
+                      <input type="number" inputmode="numeric" min="1" max="100"
+                             name="account[settings][payment_settings][tip_presets_pct][]"
+                             value="<%= pct %>"
+                             class="w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 pr-8 py-2 text-[14px] leading-[1.3] font-mono tabular-nums outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+                      <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[13px]">%</span>
+                    </span>
+                  </div>
+                <% end %>
+              </div>
+              <p class="mt-2 text-[11.5px] text-muted"><%= t("account.payment.tip_presets_hint") %></p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div class="flex items-center justify-start">
         <a href="<%= storefront_path(slug: @account.slug) %>" target="_blank" rel="noopener"
            class="inline-flex items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 hover:border-line-2 no-underline">

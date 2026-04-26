@@ -72,7 +72,7 @@ es-MX:
     storefront_order_placed:
       title: "Pedido nuevo de %{client} · %{total}"
       body: "Para entregar el %{date}. Confírmalo para empezar a cocinar."
-      anonymous_client: "clienta"
+      anonymous_client: "cliente"
     badge:
       aria_count:
         one: "1 notificación sin leer"

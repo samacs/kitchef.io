@@ -43,7 +43,7 @@ es-MX:
     home:
       title: "Kitchef — el sistema operativo de tu cocina"
       headline_html: 'El sistema operativo de tu <em class="italic text-accent">cocina.</em>'
-      lede: "Pedidos, cobros, producción y costos en un solo lugar. Diseñado para cocineras independientes en México — sin comisión por venta, en pesos, en español."
+      lede: "Pedidos, cobros, producción y costos en un solo lugar. Diseñado para cocinas independientes en México — sin comisión por venta, en pesos, en español."
       cta_primary: "Empezar gratis →"
       cta_secondary: "Ver cómo funciona"
       trust:
@@ -86,7 +86,7 @@ es-MX:
         lede: "No cobramos comisión por venta. Pagas una mensualidad según tu tamaño de negocio — eso es todo."
         free:
           name: "Gratis"
-          desc: "Para cocineras que están empezando y quieren organizar su cocina."
+          desc: "Para cocinas que están empezando y quieren organizar su cocina."
           price: "$0"
           per: "/mes · para siempre"
           cta: "Empezar gratis"
@@ -157,7 +157,7 @@ es-MX:
           - heading: "3. Nuestra relación"
             body: "Kitchef no cobra comisión por tus ventas. El plan Gratis no tiene costo. El plan Pro se cobra por mes y puedes cancelar cuando quieras — tus datos siempre son tuyos."
           - heading: "4. Propiedad del contenido"
-            body: "Las fotos, descripciones y recetas que subas siguen siendo tuyas. Nos das permiso para mostrarlas en tu menú público y en comunicaciones a tus clientas."
+            body: "Las fotos, descripciones y recetas que subas siguen siendo tuyas. Nos das permiso para mostrarlas en tu menú público y en comunicaciones a tus clientes."
           - heading: "5. Cancelación"
             body: "Puedes cerrar tu cuenta desde Ajustes en cualquier momento. Al cerrarla, exportas tus pedidos, recetas y clientes para llevarlos contigo."
       privacy:

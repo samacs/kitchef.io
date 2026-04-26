@@ -2,7 +2,7 @@ es-MX:
   sessions:
     new:
       kicker: "Entrar"
-      title_html: 'Bienvenida de <em>vuelta</em>.'
+      title_html: 'De <em>vuelta</em>.'
       lede: "Entra y sigue administrando los pedidos, la producción y las finanzas de tu cocina."
       email_label: "Correo"
       email_placeholder: "tucocina@correo.com"
@@ -38,7 +38,7 @@ es-MX:
       seo_title: "Empieza gratis — Kitchef"
       errors_title: "Revisa estos datos"
     create:
-      notice: "¡Bienvenida! Ahora vamos a darle forma a tu cocina."
+      notice: "¡Todo listo! Ahora vamos a darle forma a tu cocina."
 
   passwords:
     invalid_token: "Este enlace ya expiró o no es válido. Pide otro."
@@ -90,7 +90,15 @@ es-MX:
       asap_label: "Lo antes posible"
       where_label: "Entrega"
       items_label: "Tu pedido"
+      subtotal_label: "Productos"
+      tip_label: "Propina"
       total_label: "Total"
+      payment_method_label: "Método de pago"
+      payment_methods:
+        cash: "Efectivo"
+        transfer: "Transferencia bancaria"
+        card: "Tarjeta"
+      cash_pays_with: "Pagas con %{amount} en efectivo"
       whatsapp_cta: "Escribir a %{kitchen_name} por WhatsApp"
       whatsapp_message: "Hola %{kitchen_name}, vengo con mi pedido %{prefix_id}. Aquí lo puedes ver en tu panel: %{link}"
       review_lede: "Toca el botón para revisar tu dirección, agregar notas de entrega y confirmar tu pedido."

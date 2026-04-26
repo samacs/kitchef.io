@@ -2,27 +2,33 @@
 #
 # Table name: accounts
 #
-#  id               :bigint           not null, primary key
-#  branding         :jsonb            not null
-#  default_currency :string           default("MXN"), not null
-#  discarded_at     :datetime
-#  iva_enabled      :boolean          default(FALSE), not null
-#  iva_rate_percent :decimal(5, 2)    default(16.0), not null
-#  name             :string           not null
-#  public_profile   :jsonb            not null
-#  settings         :jsonb            not null
-#  slug             :string           not null
-#  time_zone        :string           default("America/Mexico_City"), not null
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  owner_id         :bigint           not null
+#  id                  :bigint           not null, primary key
+#  branding            :jsonb            not null
+#  default_currency    :string           default("MXN"), not null
+#  discarded_at        :datetime
+#  geocoded_at         :datetime
+#  geocoding_failed_at :datetime
+#  iva_enabled         :boolean          default(FALSE), not null
+#  iva_rate_percent    :decimal(5, 2)    default(16.0), not null
+#  latitude            :decimal(10, 6)
+#  longitude           :decimal(10, 6)
+#  name                :string           not null
+#  public_profile      :jsonb            not null
+#  settings            :jsonb            not null
+#  slug                :string           not null
+#  street_address      :string
+#  time_zone           :string           default("America/Mexico_City"), not null
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  owner_id            :bigint           not null
 #
 # Indexes
 #
-#  index_accounts_on_discarded_at  (discarded_at)
-#  index_accounts_on_owner_id      (owner_id)
-#  index_accounts_on_settings      (settings) USING gin
-#  index_accounts_on_slug          (slug) UNIQUE
+#  index_accounts_on_discarded_at            (discarded_at)
+#  index_accounts_on_latitude_and_longitude  (latitude,longitude)
+#  index_accounts_on_owner_id                (owner_id)
+#  index_accounts_on_settings                (settings) USING gin
+#  index_accounts_on_slug                    (slug) UNIQUE
 #
 # Foreign Keys
 #
@@ -178,6 +184,14 @@ class Account < ApplicationRecord
     attachable.variant :hero, resize_to_fill: [ 1600, 800 ]
   end
 
+  # Cached static map for the operator's pickup address. Same variant
+  # shape as the Geocodable concern uses on Order/Supplier so the
+  # MapsHelper renders identically without special-casing Account.
+  has_one_attached :static_map do |attachable|
+    attachable.variant :thumb, resize_to_limit: [ 400, 160 ]
+    attachable.variant :card,  resize_to_limit: [ 640, 260 ]
+  end
+
   attribute :settings,       Accounts::Settings.to_type
   attribute :public_profile, Accounts::PublicProfile.to_type
   attribute :branding,       Accounts::Branding.to_type
@@ -204,6 +218,96 @@ class Account < ApplicationRecord
   def composable_recipes?
     settings.use_composable_recipes
   end
+
+  def payment_settings
+    settings.payment_settings
+  end
+
+  # ── Pickup address + geocoding ───────────────────────────────────────
+  #
+  # The Geocodable concern is intentionally NOT included here because
+  # Account has a bidirectional flow that the concern doesn't model:
+  # the back-office form's interactive Google Map can pre-populate
+  # `latitude` and `longitude` in the same save as `street_address`
+  # (operator picks an autocomplete suggestion or drags the marker).
+  # The concern's after_commit callback would clear those JS-provided
+  # coords and re-geocode server-side, costing a round-trip and risking
+  # a less-precise pin than the one the operator just confirmed.
+  #
+  # Server-side geocoding via GeocodeJob is still the fallback when the
+  # operator submits a street_address without coords (no JS, dev with
+  # no Google API key, browser without geolocation). StaticMapJob fires
+  # whenever coords land, so the MapsHelper #static_map_image_tag works
+  # uniformly across Account / Order / Supplier.
+
+  GEOCODING_RETRY_COOLDOWN = 1.hour
+
+  after_commit :sync_account_geocoding, on: [ :create, :update ]
+
+  def geocoded?
+    latitude.present? && longitude.present?
+  end
+
+  def needs_geocoding?
+    street_address.present? && !geocoded?
+  end
+
+  def geocoding_on_cooldown?
+    return false if geocoding_failed_at.blank?
+    geocoding_failed_at > GEOCODING_RETRY_COOLDOWN.ago
+  end
+
+  def geocoding_failed?
+    geocoding_failed_at.present? && !geocoded?
+  end
+
+  # MapsHelper / GeocodeJob / StaticMapJob all call `geocoding_address`.
+  # Compose from the canonical street + the public_profile's colonia +
+  # city so a partial match (street only, or street + colonia) still
+  # gives Geocoder enough signal.
+  def geocoding_address
+    parts = [
+      street_address,
+      public_profile.colonia,
+      public_profile.city
+    ].compact_blank
+    return nil if parts.empty?
+    (parts + [ "México" ]).join(", ")
+  end
+
+  def show_pickup_address?
+    public_profile.show_pickup_address && street_address.present?
+  end
+
+  private
+
+  def sync_account_geocoding
+    if (saved_change_to_latitude? || saved_change_to_longitude?) && geocoded?
+      static_map.purge_later if static_map.attached?
+      StaticMapJob.perform_later(self)
+      return
+    end
+
+    return unless saved_change_to_street_address?
+
+    if street_address.blank?
+      update_columns(
+        latitude:            nil,
+        longitude:           nil,
+        geocoded_at:         nil,
+        geocoding_failed_at: nil
+      )
+      static_map.purge_later if static_map.attached?
+      return
+    end
+
+    return unless needs_geocoding?
+    return if geocoding_on_cooldown?
+
+    GeocodeJob.perform_later(self)
+  end
+
+  public
 
   # Canonical slug computation shared by the JSON endpoint, the live
   # preview in the onboarding form, and FriendlyID's default

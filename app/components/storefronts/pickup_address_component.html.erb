@@ -1,0 +1,49 @@
+<section class="rounded-[16px] border border-line bg-surface overflow-hidden">
+  <div class="p-6 flex flex-col gap-3">
+    <div class="flex items-center gap-2.5">
+      <span class="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] shrink-0"
+            style="background: var(--brand-1-soft); color: var(--brand-1);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </span>
+      <div>
+        <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("storefronts.pickup_address.kicker") %>
+        </div>
+        <h3 class="font-serif text-[22px] leading-[1.1] text-ink">
+          <%= t("storefronts.pickup_address.heading") %>
+        </h3>
+      </div>
+    </div>
+
+    <div class="text-[14px] leading-[1.55] text-ink-2">
+      <% address_lines.each do |line| %>
+        <div><%= line %></div>
+      <% end %>
+    </div>
+
+    <% if directions_url.present? %>
+      <a href="<%= directions_url %>"
+         target="_blank" rel="noopener"
+         class="self-start inline-flex items-center gap-1.5 rounded-[9px] px-4 py-2 text-[13px] font-semibold no-underline transition-colors"
+         style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+        </svg>
+        <%= t("storefronts.pickup_address.open_in_maps") %>
+      </a>
+    <% end %>
+  </div>
+
+  <% if static_map_src.present? %>
+    <a href="<%= directions_url %>" target="_blank" rel="noopener"
+       class="block border-t border-line"
+       title="<%= t("storefronts.pickup_address.open_in_maps") %>">
+      <img src="<%= static_map_src %>"
+           alt="<%= t("storefronts.pickup_address.map_alt", kitchen: account.name) %>"
+           class="w-full h-[220px] object-cover"
+           loading="lazy">
+    </a>
+  <% end %>
+</section>

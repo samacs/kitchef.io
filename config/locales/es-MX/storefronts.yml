@@ -33,6 +33,10 @@ es-MX:
       delivery_lede: "Entregamos en estas colonias de %{city}. Fuera de zona: envío por paquetería."
       delivery_empty: "Agrega tus zonas de entrega en Ajustes para que tus clientes sepan a dónde llegas."
       call_us: "Llámanos"
+      payment_kicker: "Aceptamos"
+      payment_cash: "Efectivo"
+      payment_transfer: "Transferencia"
+      payment_card: "Tarjeta"
 
     # --- Full menu page ----------------------------------------------
     menu:
@@ -44,7 +48,7 @@ es-MX:
       reveal_more: "Ver más"
       reveal_less: "Ver menos"
       empty_title: "Todavía no hay platillos publicados"
-      empty_body: "La cocinera está armando su menú. Vuelve pronto."
+      empty_body: "La cocina está armando su menú. Vuelve pronto."
       # Only shown when the operator visits her own storefront and has
       # unpublished drafts — quiet in-page nudge to finish publishing.
       operator_hint:
@@ -87,7 +91,7 @@ es-MX:
       fulfillment_section: "¿Cómo te lo hacemos llegar?"
       customer_section: "Tus datos"
       customize_section: "Personalizar tu pedido (opcional)"
-      customize_hint: "Notas para la cocinera: alergias, picor, cambios."
+      customize_hint: "Notas para la cocina: alergias, picor, cambios."
       customize_notes: "Notas del pedido"
       customize_placeholder: "Ej: sin cilantro, salsa aparte, no tan picante…"
       summary_section: "Resumen"
@@ -130,6 +134,33 @@ es-MX:
       email_hint: "Te enviamos un enlace de confirmación a este correo. Al tocarlo confirmas tu pedido."
       back_to_menu: "Seguir viendo el menú"
       submit: "Hacer pedido"
+      tip:
+        heading: "Propina"
+        lede: "Si quieres agregar una propina a tu pedido, escoge un monto."
+        no_tip: "Sin propina"
+        custom: "Otro"
+        custom_label: "Monto de propina"
+      payment:
+        heading: "Método de pago"
+        lede: "Escoge con cuál te gustaría pagar."
+        cash_label: "Efectivo"
+        cash_hint: "Pagas al recibir tu pedido."
+        cash_amount_label: "Cantidad con la que pagarás"
+        cash_amount_hint: "Para que la cocina prepare el cambio."
+        cash_change_prefix: "Te darán de cambio:"
+        cash_short_prefix: "Faltan:"
+        transfer_label: "Transferencia bancaria"
+        transfer_hint: "SPEI o transferencia a la CLABE de la cocina."
+        transfer_holder: "Titular"
+        transfer_bank: "Banco"
+        transfer_clabe: "CLABE"
+        transfer_card: "Número de tarjeta"
+        copy_cta: "Copiar"
+        copied: "Copiado"
+        card_label: "Tarjeta"
+        card_hint: "Pago con tarjeta de crédito o débito."
+        card_placeholder: "La cocina te enviará un link de pago por WhatsApp."
+        no_methods_banner: "La cocina coordinará el pago contigo por WhatsApp."
 
     # --- Dish detail page -------------------------------------------
     recipe:
@@ -180,7 +211,7 @@ es-MX:
         paid: "Pagado"
         paid_aria: "Pago confirmado"
         pending: "Pago pendiente"
-        pending_aria: "Pago pendiente con la cocinera"
+        pending_aria: "Pago pendiente con la cocina"
       lede: "%{kitchen} recibió tu pedido. Te enviamos un correo con el enlace para confirmarlo."
       inbox:
         kicker: "Revisa tu correo"
@@ -199,6 +230,11 @@ es-MX:
       asap_sub: "La cocina lo manda cuando esté listo."
       where_label: "Cómo"
       items_section: "Tu pedido"
+      subtotal_label: "Productos"
+      packaging_label: "Empaque"
+      tip_label: "Propina"
+      payment_method_label: "Método de pago"
+      cash_pays_with: "Pagas con %{amount} en efectivo"
       payment_note_label: "Sobre el pago"
       whatsapp_cta: "Escribir a %{kitchen} por WhatsApp"
       whatsapp_message: "Hola %{kitchen}, vengo con mi pedido %{id}. Aquí lo puedes ver en tu panel: %{link}"
@@ -207,7 +243,7 @@ es-MX:
         kicker: "Último paso"
         headline: "Revisa y confirma"
         lede: "Confirma los datos de entrega para que la cocina arranque. Si algo está mal, corrígelo aquí antes de confirmar."
-        notes_label: "Notas para la cocinera (opcional)"
+        notes_label: "Notas para la cocina (opcional)"
         notes_placeholder: "Instrucciones para la entrega, alergias, preferencias…"
         confirm_cta: "Confirmar mi pedido"
 
@@ -221,8 +257,15 @@ es-MX:
         en_route:      "En camino"
         delivered:     "Entregado"
 
+    # --- Pickup address card ----------------------------------------
+    pickup_address:
+      kicker: "Recolección"
+      heading: "Dónde recoger tu pedido"
+      open_in_maps: "Abrir en Google Maps"
+      map_alt: "Mapa de la cocina de %{kitchen}"
+
     # --- Not-found (branded 404 inside the storefront layout) ------
     not_found:
       title: "Esta cocina no existe"
-      lede: "Revisa el enlace o busca a la cocinera en Instagram."
+      lede: "Revisa el enlace o busca a la cocina en Instagram."
       cta: "Volver a Kitchef"

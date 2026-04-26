@@ -36,6 +36,11 @@ module Accounts
     # Override per-pedido in the order drawer.
     attribute :default_packaging_cents, :integer, default: 0
 
+    attribute :payment_settings, Accounts::PaymentSettings.to_type,
+      default: -> { Accounts::PaymentSettings.new }
+
+    validates :payment_settings, store_model: true
+
     validates :digest_time,
       format: { with: /\A([01]\d|2[0-3]):[0-5]\d\z/ },
       allow_nil: true

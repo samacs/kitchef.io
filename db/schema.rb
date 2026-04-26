@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_25_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,16 +19,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_120000) do
     t.datetime "created_at", null: false
     t.string "default_currency", default: "MXN", null: false
     t.datetime "discarded_at"
+    t.datetime "geocoded_at"
+    t.datetime "geocoding_failed_at"
     t.boolean "iva_enabled", default: false, null: false
     t.decimal "iva_rate_percent", precision: 5, scale: 2, default: "16.0", null: false
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
     t.string "name", null: false
     t.bigint "owner_id", null: false
     t.jsonb "public_profile", default: {}, null: false
     t.jsonb "settings", default: {}, null: false
     t.string "slug", null: false
+    t.string "street_address"
     t.string "time_zone", default: "America/Mexico_City", null: false
     t.datetime "updated_at", null: false
     t.index ["discarded_at"], name: "index_accounts_on_discarded_at"
+    t.index ["latitude", "longitude"], name: "index_accounts_on_latitude_and_longitude"
     t.index ["owner_id"], name: "index_accounts_on_owner_id"
     t.index ["settings"], name: "index_accounts_on_settings", using: :gin
     t.index ["slug"], name: "index_accounts_on_slug", unique: true
@@ -233,6 +239,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_120000) do
     t.string "cancel_reason_code"
     t.text "cancel_reason_note"
     t.datetime "canceled_at"
+    t.bigint "cash_payment_amount_cents"
     t.string "city"
     t.bigint "client_id"
     t.string "colonia"
@@ -256,6 +263,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_120000) do
     t.text "notes"
     t.bigint "packaging_cents", default: 0, null: false
     t.datetime "paid_at"
+    t.integer "payment_method"
     t.datetime "pickup_reminder_sent_at"
     t.integer "position"
     t.datetime "production_started_at"
@@ -264,6 +272,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_120000) do
     t.string "state", default: "placed", null: false
     t.bigint "subtotal_cents", default: 0, null: false
     t.bigint "tax_cents", default: 0, null: false
+    t.datetime "terms_accepted_at"
+    t.bigint "tip_cents", default: 0, null: false
     t.bigint "total_cents", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "delivery_date", "delivery_mode"], name: "idx_orders_account_date_delivery_mode"

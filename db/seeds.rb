@@ -121,7 +121,24 @@ cocina_elena = Account.create!(
   owner: elena,
   name:  "Cocina de Elena",
   time_zone: "America/Mexico_City",
-  settings: { use_composable_recipes: false, onboarding_completed: true, default_packaging_cents: 500 },
+  street_address: "Avenida Tamaulipas 130",
+  latitude:  19.412345,
+  longitude: -99.171234,
+  geocoded_at: Time.current,
+  settings: {
+    use_composable_recipes: false, onboarding_completed: true, default_packaging_cents: 500,
+    payment_settings: {
+      accepts_cash: false,
+      accepts_transfer: true,
+      accepts_card: false,
+      transfer_holder: "Elena Ramírez López",
+      transfer_bank: "BBVA Bancomer",
+      transfer_clabe: "012345678901234567",
+      transfer_account_number: "4152313100001234",
+      accepts_tips: true,
+      tip_presets_pct: [ 10, 15, 20 ]
+    }
+  },
   branding: {
     palette: "bosque",
     secondary_palette: "terracota",
@@ -135,6 +152,7 @@ cocina_elena = Account.create!(
     instagram: "cocinadeelena",
     colonia: "Condesa",
     city: "Ciudad de México",
+    show_pickup_address: true,
     fulfillment_types: "pickup,delivery",
     delivery_zones: "Condesa, Roma Norte, Roma Sur, Del Valle, Narvarte",
     payment_notes: "Te contacto por WhatsApp para confirmar el pago (efectivo o transferencia).",
@@ -320,15 +338,20 @@ state_transitions = {
 
 15.times do |i|
   client = elena_clients.sample
+  payment = i % 3 == 0 ? :transfer : nil
+  tip     = i % 4 == 0 ? [ 1500, 3000 ].sample : 0
   order  = cocina_elena.orders.create!(
-    client:        client,
-    delivery_date: Date.current + (i - 5).days,
-    delivery_type: i.even? ? :delivery : :pickup,
-    source:        %i[storefront manual whatsapp].sample,
-    colonia:       client.colonia,
-    city:          client.city,
-    delivery_address: (i.even? ? "Calle de prueba #{rand(1..500)}" : nil),
-    notes:         ("Sin cilantro, porfa." if i % 4 == 0)
+    client:            client,
+    delivery_date:     Date.current + (i - 5).days,
+    delivery_type:     i.even? ? :delivery : :pickup,
+    source:            %i[storefront manual whatsapp].sample,
+    colonia:           client.colonia,
+    city:              client.city,
+    delivery_address:  (i.even? ? "Calle de prueba #{rand(1..500)}" : nil),
+    notes:             ("Sin cilantro, porfa." if i % 4 == 0),
+    payment_method:    payment,
+    tip_cents:         tip,
+    terms_accepted_at: (Time.current if payment.present?)
   )
   rand(1..3).times do
     recipe = elena_recipe_list.sample
@@ -367,11 +390,25 @@ taqueria_mario = Account.create!(
   owner: mario,
   name:  "Taquería Don Mario",
   time_zone: "America/Mexico_City",
+  street_address: "Avenida Pablo Neruda 2360",
+  latitude:  20.696112,
+  longitude: -103.398456,
+  geocoded_at: Time.current,
   settings: {
     use_composable_recipes: true,
     composable_recipes_unlocked_at: 2.weeks.ago,
     onboarding_completed: true,
-    default_packaging_cents: 800
+    default_packaging_cents: 800,
+    payment_settings: {
+      accepts_cash: true,
+      accepts_transfer: true,
+      accepts_card: false,
+      transfer_holder: "Mario Hernández Sánchez",
+      transfer_bank: "Banorte",
+      transfer_clabe: "072345678901234567",
+      accepts_tips: false,
+      tip_presets_pct: [ 10, 15, 20 ]
+    }
   },
   branding: {
     palette: "terracota",
@@ -386,6 +423,7 @@ taqueria_mario = Account.create!(
     instagram: "taqueriadonmario",
     colonia: "Providencia",
     city: "Guadalajara",
+    show_pickup_address: true,
     fulfillment_types: "pickup,delivery",
     delivery_zones: "Providencia, Chapalita, Santa Teresita, Arcos Vallarta, Jardines del Bosque",
     payment_notes: "Anticipo del 50% para asegurar tu pedido. Te mando link de transferencia por WhatsApp.",
@@ -683,15 +721,21 @@ mario_clients = Array.new(15) do |i|
 end
 
 25.times do |i|
-  client = mario_clients.sample
+  client  = mario_clients.sample
+  payment = %i[cash transfer].sample if i % 2 == 0
+  tip     = i % 3 == 0 ? [ 2000, 5000 ].sample : 0
+  cash_amount = payment == :cash ? nil : nil
   order  = taqueria_mario.orders.create!(
-    client:        client,
-    delivery_date: Date.current + (i - 8).days,
-    delivery_type: i.even? ? :delivery : :pickup,
-    source:        %i[storefront manual whatsapp instagram].sample,
-    colonia:       client.colonia,
-    city:          client.city,
-    delivery_address: (i.even? ? "Av. demo #{rand(1..800)}" : nil)
+    client:            client,
+    delivery_date:     Date.current + (i - 8).days,
+    delivery_type:     i.even? ? :delivery : :pickup,
+    source:            %i[storefront manual whatsapp instagram].sample,
+    colonia:           client.colonia,
+    city:              client.city,
+    delivery_address:  (i.even? ? "Av. demo #{rand(1..800)}" : nil),
+    payment_method:    payment,
+    tip_cents:         tip,
+    terms_accepted_at: (Time.current if payment.present?)
   )
   rand(2..5).times do
     recipe = mario_saleable.sample
