@@ -265,7 +265,7 @@ GEM
     interval_set (0.2.3)
       treemap-fork (~> 1.0, >= 1.0.4.2)
     io-console (0.8.2)
-    irb (1.17.0)
+    irb (1.18.0)
       pp (>= 0.6.0)
       prism (>= 1.3.0)
       rdoc (>= 4.0.0)
@@ -327,7 +327,7 @@ GEM
     mini_magick (5.3.1)
       logger
     mini_mime (1.1.5)
-    minitest (6.0.4)
+    minitest (6.0.5)
       drb (~> 2.0)
       prism (~> 1.5)
     monetize (2.0.0)
@@ -438,7 +438,7 @@ GEM
     positioning (0.4.8)
       activerecord (>= 6.1)
       activesupport (>= 6.1)
-    posthog-rails (3.6.4)
+    posthog-rails (3.6.5)
       posthog-ruby (~> 3.6)
       railties (>= 5.2.0)
     posthog-ruby (3.6.4)
@@ -937,7 +937,7 @@ CHECKSUMS
   importmap-rails (2.2.3) sha256=7101be2a4dc97cf1558fb8f573a718404c5f6bcfe94f304bf1f39e444feeb16a
   interval_set (0.2.3) sha256=41a7f1a8501ed86ddc15cb5ad2035622b7067ac7558da9982d68ceeea49d3b61
   io-console (0.8.2) sha256=d6e3ae7a7cc7574f4b8893b4fca2162e57a825b223a177b7afa236c5ef9814cc
-  irb (1.17.0) sha256=168c4ddb93d8a361a045c41d92b2952c7a118fa73f23fe14e55609eb7a863aae
+  irb (1.18.0) sha256=de9454a0703a54704b9811a5ef31a60c86949fbf4013fcf244fabc7c775248e3
   jaro_winkler (1.7.0) sha256=8daa05a5cd05bf7d27c1c65caa8ab0d47c05419d80210feaa17126db24044ada
   jmespath (1.6.2) sha256=238d774a58723d6c090494c8879b5e9918c19485f7e840f2c1c7532cf84ebcb1
   json (2.19.4) sha256=670a7d333fb3b18ca5b29cb255eb7bef099e40d88c02c80bd42a3f30fe5239ac
@@ -961,7 +961,7 @@ CHECKSUMS
   method_source (1.1.0) sha256=181301c9c45b731b4769bc81e8860e72f9161ad7d66dd99103c9ab84f560f5c5
   mini_magick (5.3.1) sha256=29395dfd76badcabb6403ee5aff6f681e867074f8f28ce08d78661e9e4a351c4
   mini_mime (1.1.5) sha256=8681b7e2e4215f2a159f9400b5816d85e9d8c6c6b491e96a12797e798f8bccef
-  minitest (6.0.4) sha256=df1304664589d40f46089247fdc451f866b0ce0d7cae1457a15fc1eb7d48dca1
+  minitest (6.0.5) sha256=f007d7246bf4feea549502842cd7c6aba8851cdc9c90ba06de9c476c0d01155c
   monetize (2.0.0) sha256=152980cadff9fd11a95817d56e3d7d69b07998c4506f15d971edf05851f82aba
   money (7.0.2) sha256=615c27c1fd1d190dceda5c5f4dd5af5f4d20f790ff3b62ea2fe2d96eb22e2c60
   money-rails (3.0.0) sha256=f4bd1c8e1c98d221e7bf452eeb52e240f41224e43da2a477a5659a87c0c95bae
@@ -1011,7 +1011,7 @@ CHECKSUMS
   phony (3.0.5) sha256=b8cff01e7856a7ea21f75e1c4bc9a57c39716e3d49f6b527975d0c55f65d369c
   phony_rails (0.15.0) sha256=30b395499f7975daf8554e2b7c19885c039dba6281ffa93715ec01506f1951dc
   positioning (0.4.8) sha256=c758c061d4121fa6a1051a7fe04e75c5f59982e3dc9c6418e74441a0058ea16e
-  posthog-rails (3.6.4) sha256=e7d488dd15b55fbcb9c09d323f1bdce70db121974f96da5ca4d49edf503b2398
+  posthog-rails (3.6.5) sha256=d7c9d96a5d0e02f7b62b825325ddee6f52098cb3cddc044ccab261bdb9f37049
   posthog-ruby (3.6.4) sha256=f1ce912e84d656ddf696af3193707b0ade11fd2b5feab1d1267a6ae289149d82
   pp (0.6.3) sha256=2951d514450b93ccfeb1df7d021cae0da16e0a7f95ee1e2273719669d0ab9df6
   prefixed_ids (1.8.1) sha256=cc327f946a6fc6a610246aa957d6c3b170bfaa1170c8deb445fa466356a6adbb
