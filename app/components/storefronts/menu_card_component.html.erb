@@ -36,6 +36,9 @@
         <span class="font-mono text-[11px] text-muted leading-tight"><%= lead_time_badge %></span>
       </div>
     <% end %>
+    <%# Phase 13 — stock badge. Renders only when inventory is enabled
+        and there's something worth surfacing (low / last / out). %>
+    <%= render Storefronts::MenuStockBadgeComponent.new(recipe: recipe) %>
     <% if description.present? %>
       <div data-controller="reveal"
            data-reveal-collapsed-class="line-clamp-3"
@@ -68,7 +71,12 @@
             class: "inline-flex items-center justify-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 py-2.5 text-[13px] font-medium text-ink-2 no-underline transition hover:border-line-2" do %>
         <%= t("storefronts.menu.view") %>
       <% end %>
-      <% if customizable? %>
+      <% if stock_blocked? %>
+        <button type="button" disabled
+                class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[9px] border border-line bg-bg-2 px-4 py-2.5 text-[14px] font-medium text-muted cursor-not-allowed">
+          <%= t("storefronts.menu.stock.sold_out") %>
+        </button>
+      <% elsif customizable? %>
         <button type="button"
                 class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[14px] font-semibold transition"
                 style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);"

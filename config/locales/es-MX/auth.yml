@@ -130,6 +130,7 @@ es-MX:
       clients: "Clientes"
       schedule: "Horario"
       production: "Producción"
+      production_runs: "Tandas"
       reports_section: "Reportes"
       reports_menu: "Tu menú"
       reports_finance: "Finanzas"

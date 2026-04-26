@@ -30,21 +30,33 @@ module Orders
         next if recipe.nil?
 
         delta_cents = compute_options_delta(item_attrs[:selected_options], recipe)
+        quantity    = (item_attrs[:quantity].presence || 1).to_d
+
+        consumed_run, oversold = pick_run_for(recipe, quantity, order)
 
         order.items.build(
           recipe:                   recipe,
-          quantity:                 (item_attrs[:quantity].presence || 1).to_d,
+          quantity:                 quantity,
           unit_price_cents:         price_from(item_attrs, recipe) + delta_cents,
           unit_cost_cents:          recipe.cost_cents_cached.to_i + recipe.packaging_cents.to_i,
           notes:                    item_attrs[:notes].presence,
           selected_options:         item_attrs[:selected_options].presence || {},
           removed_components:       Array(item_attrs[:removed_components]),
-          options_price_delta_cents: delta_cents
+          options_price_delta_cents: delta_cents,
+          consumed_run:             consumed_run,
+          consumed_quantity:        consumed_run.present? ? quantity : 0,
+          oversold:                 oversold
         )
       end
 
       if order.items.empty?
         order.errors.add(:items, :blank)
+        return Result.new(success: false, object: order, errors: order.errors)
+      end
+
+      if account.inventory_enabled? && account.inventory_settings.block_oversells? &&
+         order.items.any?(&:oversold?)
+        order.errors.add(:items, :out_of_stock)
         return Result.new(success: false, object: order, errors: order.errors)
       end
 
@@ -78,6 +90,28 @@ module Orders
         submitted: item_attrs[:unit_price] || item_attrs[:unit_price_cents],
         fallback_cents: recipe.sale_price_cents.to_i
       )
+    end
+
+    # Phase 13 — when inventory is enabled, find the oldest active run
+    # for this recipe + delivery_date that has enough remaining units.
+    # Returns [run, oversold]; both nil/false when inventory is off
+    # (the order item proceeds with the legacy untracked behavior).
+    def pick_run_for(recipe, quantity, order)
+      return [ nil, false ] unless account.inventory_enabled?
+      return [ nil, false ] if order.delivery_date.blank?
+
+      run = Orders::RunPicker.call(
+        account:       account,
+        recipe:        recipe,
+        delivery_date: order.delivery_date,
+        quantity:      quantity
+      )
+
+      if run
+        [ run, false ]
+      else
+        [ nil, true ]
+      end
     end
 
     def compute_options_delta(selected_options, recipe)

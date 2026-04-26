@@ -55,6 +55,11 @@ es-MX:
         one: "Tienes 1 platillo en borrador. Publícalo para que tus clientes lo vean aquí."
         other: "Tienes %{count} platillos en borrador. Publícalos para que tus clientes los vean aquí."
       operator_cta: "Ir a mi recetario"
+      stock:
+        last_one: "Última pieza"
+        remaining: "Quedan %{count}"
+        sold_out: "Agotado"
+        special_order: "Por encargo"
 
     # --- Ordering hours chip -----------------------------------------
     ordering_hours:

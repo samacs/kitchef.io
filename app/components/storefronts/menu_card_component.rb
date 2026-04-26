@@ -32,6 +32,16 @@ module Storefronts
       I18n.t("storefronts.recipe.lead_time.badge", label: recipe.lead_time_label)
     end
 
+    # Phase 13 — when the kitchen has inventory enabled AND the
+    # oversell policy is :block AND no run has stock for today, the
+    # add-to-cart button is disabled. Off-accounts never hit this path.
+    def stock_blocked?
+      return false unless recipe.account.inventory_enabled?
+      return false unless recipe.account.inventory_settings.block_oversells?
+
+      Storefronts::MenuStockBadgeComponent.new(recipe: recipe).available_units <= 0
+    end
+
     def payload
       {
         recipe_id:       recipe.prefix_id,

@@ -2,20 +2,24 @@
 #
 # Table name: ingredients
 #
-#  id               :bigint           not null, primary key
-#  currency         :string           default("MXN"), not null
-#  discarded_at     :datetime
-#  name             :string           not null
-#  notes            :text
-#  position         :integer
-#  price_updated_at :datetime
-#  supplier_name    :string
-#  unit             :string           not null
-#  unit_cost_cents  :bigint           default(0), not null
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  account_id       :bigint           not null
-#  category_id      :bigint           not null
+#  id                     :bigint           not null, primary key
+#  currency               :string           default("MXN"), not null
+#  discarded_at           :datetime
+#  last_purchase_quantity :decimal(12, 3)
+#  low_stock_alert_at     :datetime
+#  name                   :string           not null
+#  notes                  :text
+#  position               :integer
+#  price_updated_at       :datetime
+#  stock_quantity         :decimal(12, 3)   default(0.0), not null
+#  stock_updated_at       :datetime
+#  supplier_name          :string
+#  unit                   :string           not null
+#  unit_cost_cents        :bigint           default(0), not null
+#  created_at             :datetime         not null
+#  updated_at             :datetime         not null
+#  account_id             :bigint           not null
+#  category_id            :bigint           not null
 #
 # Indexes
 #
@@ -61,6 +65,8 @@ class Ingredient < ApplicationRecord
     class_name: "SupplierIngredient"
   has_one :default_supplier, through: :default_supplier_ingredient, source: :supplier
 
+  has_many :stock_movements, dependent: :destroy
+
   validates :name, presence: true, length: { maximum: 80 }
   validates :unit, presence: true, inclusion: { in: UNITS }
   validates :unit_cost_cents, numericality: { greater_than_or_equal_to: 0 }
@@ -71,11 +77,84 @@ class Ingredient < ApplicationRecord
 
   scope :by_category, ->(category_id) { where(category_id: category_id) }
 
+  # Phase 13 — true when the on-hand quantity has dropped below the
+  # operator-configured percentage of her last purchase. Returns false
+  # for accounts with inventory disabled (the chip is hidden anyway)
+  # and for ingredients we've never seen a purchase quantity for.
+  def low_stock?
+    return false unless account.inventory_enabled?
+    return false if last_purchase_quantity.to_d.zero?
+
+    pct = account.inventory_settings.low_stock_threshold_pct.to_i
+    threshold = last_purchase_quantity.to_d * pct / 100
+    stock_quantity.to_d < threshold
+  end
+
+  # Add to on-hand stock. Quantity is converted into the ingredient's
+  # canonical unit before the column is updated, so a "5 kg" purchase
+  # of a kg-tracked ingredient lands as +5; a "500 g" purchase of the
+  # same ingredient lands as +0.5. Returns the resulting StockMovement.
+  #
+  # `source` must be one of StockMovement::SOURCES. `source_record` is
+  # optional but strongly recommended — it lets the audit trail
+  # deep-link back to the originating Purchase / ProductionRun / Order.
+  def restock!(quantity:, unit:, source:, source_record: nil, note: nil, unit_cost_cents: nil)
+    apply_movement!(
+      delta:          BigDecimal(quantity.to_s),
+      delta_unit:     unit.to_s,
+      source:         source.to_s,
+      source_record:  source_record,
+      note:           note,
+      unit_cost_cents: unit_cost_cents
+    )
+  end
+
+  # Subtract from on-hand stock. Negative balances are allowed (the
+  # operator may have miscounted the pantry — we'd rather log the
+  # discrepancy and let her reconcile than block her cooking).
+  def deplete!(quantity:, unit:, source:, source_record: nil, note: nil, unit_cost_cents: nil)
+    apply_movement!(
+      delta:          -BigDecimal(quantity.to_s),
+      delta_unit:     unit.to_s,
+      source:         source.to_s,
+      source_record:  source_record,
+      note:           note,
+      unit_cost_cents: unit_cost_cents
+    )
+  end
+
   def category_name
     category&.name
   end
 
   private
+
+  def apply_movement!(delta:, delta_unit:, source:, source_record:, note:, unit_cost_cents:)
+    canonical_delta = Recipes::UnitConverter.convert(
+      quantity: delta.abs,
+      from:     delta_unit,
+      to:       unit
+    )
+    canonical_delta = -canonical_delta if delta.negative?
+
+    movement = nil
+    transaction do
+      new_stock = stock_quantity.to_d + canonical_delta
+      update!(stock_quantity: new_stock, stock_updated_at: Time.current)
+      movement = stock_movements.create!(
+        account:                     account,
+        quantity:                    canonical_delta,
+        unit:                        unit,
+        source:                      source,
+        source_record:               source_record,
+        note:                        note,
+        unit_cost_cents_at_movement: unit_cost_cents || self.unit_cost_cents
+      )
+    end
+    movement
+  end
+
+  public
 
   def category_belongs_to_same_account
     return if category.blank? || account_id.blank?

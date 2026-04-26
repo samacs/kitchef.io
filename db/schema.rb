@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_26_120005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -176,10 +176,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
     t.datetime "created_at", null: false
     t.string "currency", default: "MXN", null: false
     t.datetime "discarded_at"
+    t.decimal "last_purchase_quantity", precision: 12, scale: 3
+    t.datetime "low_stock_alert_at"
     t.string "name", null: false
     t.text "notes"
     t.integer "position"
     t.datetime "price_updated_at"
+    t.decimal "stock_quantity", precision: 12, scale: 3, default: "0.0", null: false
+    t.datetime "stock_updated_at"
     t.string "supplier_name"
     t.string "unit", null: false
     t.bigint "unit_cost_cents", default: 0, null: false
@@ -216,10 +220,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
   end
 
   create_table "order_items", force: :cascade do |t|
+    t.decimal "consumed_quantity", precision: 12, scale: 3, default: "0.0", null: false
+    t.bigint "consumed_run_id"
     t.datetime "created_at", null: false
     t.text "notes"
     t.bigint "options_price_delta_cents", default: 0, null: false
     t.bigint "order_id", null: false
+    t.boolean "oversold", default: false, null: false
     t.integer "position"
     t.decimal "quantity", precision: 10, scale: 3, default: "1.0", null: false
     t.bigint "recipe_id", null: false
@@ -228,6 +235,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
     t.bigint "unit_cost_cents", default: 0, null: false
     t.bigint "unit_price_cents", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.index ["consumed_run_id"], name: "index_order_items_on_consumed_run_id"
     t.index ["order_id", "position"], name: "index_order_items_on_order_id_and_position"
     t.index ["order_id"], name: "index_order_items_on_order_id"
     t.index ["recipe_id"], name: "index_order_items_on_recipe_id"
@@ -301,6 +309,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
     t.datetime "updated_at", null: false
     t.index ["order_id", "received_at"], name: "index_payments_on_order_id_and_received_at"
     t.index ["order_id"], name: "index_payments_on_order_id"
+  end
+
+  create_table "production_runs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.decimal "actual_quantity", precision: 12, scale: 3, default: "0.0", null: false
+    t.date "available_from", null: false
+    t.date "available_until", null: false
+    t.datetime "canceled_at"
+    t.datetime "completed_at"
+    t.date "cooked_on", null: false
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
+    t.text "notes"
+    t.decimal "planned_quantity", precision: 12, scale: 3, default: "0.0", null: false
+    t.bigint "recipe_id", null: false
+    t.datetime "started_at"
+    t.string "state", default: "planned", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "available_from", "available_until"], name: "idx_production_runs_account_window"
+    t.index ["account_id", "cooked_on"], name: "index_production_runs_on_account_id_and_cooked_on"
+    t.index ["account_id", "recipe_id", "cooked_on"], name: "idx_on_account_id_recipe_id_cooked_on_e36ce27cb1"
+    t.index ["account_id"], name: "index_production_runs_on_account_id"
+    t.index ["discarded_at"], name: "index_production_runs_on_discarded_at"
+    t.index ["recipe_id"], name: "index_production_runs_on_recipe_id"
   end
 
   create_table "purchase_items", force: :cascade do |t|
@@ -413,6 +445,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
     t.index ["discarded_at"], name: "index_recipes_on_discarded_at"
   end
 
+  create_table "run_consumptions", force: :cascade do |t|
+    t.bigint "consumable_id", null: false
+    t.string "consumable_type", null: false
+    t.bigint "cost_cents_at_consumption", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.bigint "production_run_id", null: false
+    t.decimal "quantity_consumed", precision: 14, scale: 3, null: false
+    t.string "unit", null: false
+    t.datetime "updated_at", null: false
+    t.index ["consumable_type", "consumable_id"], name: "idx_run_consumptions_consumable"
+    t.index ["production_run_id"], name: "index_run_consumptions_on_production_run_id"
+  end
+
   create_table "schedules", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -431,6 +476,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
     t.string "user_agent"
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "stock_movements", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "ingredient_id", null: false
+    t.text "note"
+    t.decimal "quantity", precision: 14, scale: 3, null: false
+    t.string "source", null: false
+    t.bigint "source_id"
+    t.string "source_type"
+    t.string "unit", null: false
+    t.bigint "unit_cost_cents_at_movement"
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "ingredient_id", "created_at"], name: "idx_stock_movements_account_ingredient_time"
+    t.index ["account_id"], name: "index_stock_movements_on_account_id"
+    t.index ["ingredient_id"], name: "index_stock_movements_on_ingredient_id"
+    t.index ["source_type", "source_id"], name: "idx_stock_movements_source"
   end
 
   create_table "subscriptions", force: :cascade do |t|
@@ -532,10 +595,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
   add_foreign_key "ingredients", "accounts"
   add_foreign_key "ingredients", "categories"
   add_foreign_key "order_items", "orders"
+  add_foreign_key "order_items", "production_runs", column: "consumed_run_id", on_delete: :nullify
   add_foreign_key "order_items", "recipes"
   add_foreign_key "orders", "accounts"
   add_foreign_key "orders", "clients"
   add_foreign_key "payments", "orders"
+  add_foreign_key "production_runs", "accounts"
+  add_foreign_key "production_runs", "recipes"
   add_foreign_key "purchase_items", "ingredients", on_delete: :cascade
   add_foreign_key "purchase_items", "purchases", on_delete: :cascade
   add_foreign_key "purchases", "accounts"
@@ -546,8 +612,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_25_150000) do
   add_foreign_key "recipe_options", "recipe_option_groups"
   add_foreign_key "recipes", "accounts"
   add_foreign_key "recipes", "categories"
+  add_foreign_key "run_consumptions", "production_runs"
   add_foreign_key "schedules", "accounts"
   add_foreign_key "sessions", "users"
+  add_foreign_key "stock_movements", "accounts"
+  add_foreign_key "stock_movements", "ingredients"
   add_foreign_key "subscriptions", "accounts"
   add_foreign_key "supplier_ingredients", "ingredients", on_delete: :cascade
   add_foreign_key "supplier_ingredients", "suppliers", on_delete: :cascade

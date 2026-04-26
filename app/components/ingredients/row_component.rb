@@ -4,6 +4,7 @@ module Ingredients
   # recipes using it + quick edit/delete actions.
   class RowComponent < ApplicationComponent
     option :ingredient
+    option :show_stock, default: -> { false }
 
     def category_label
       ingredient.category&.name

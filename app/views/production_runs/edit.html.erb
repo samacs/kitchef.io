@@ -1,0 +1,7 @@
+<% content_for :title, t("production.runs.edit.title") %>
+<% content_for :page_title, t("production.runs.edit.page_title") %>
+<% content_for :page_subtitle, t("production.runs.edit.page_subtitle") %>
+
+<div class="max-w-[640px] flex flex-col gap-6">
+  <%= render "form", run: @run %>
+</div>

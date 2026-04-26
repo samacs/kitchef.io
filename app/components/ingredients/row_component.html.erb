@@ -12,6 +12,11 @@
   <td class="px-4 py-3 font-mono text-[13px] text-ink-2 whitespace-nowrap tabular-nums">
     <%= price_per_unit_label %>
   </td>
+  <% if show_stock %>
+    <td class="px-4 py-3 whitespace-nowrap">
+      <%= render Ingredients::StockCellComponent.new(ingredient: ingredient) %>
+    </td>
+  <% end %>
   <td class="px-4 py-3 text-[12px] text-muted whitespace-nowrap">
     <%= updated_at_label || "—" %>
   </td>

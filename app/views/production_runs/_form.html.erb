@@ -1,0 +1,75 @@
+<% recipes = Current.account.recipes.kept.saleable.order(:name) %>
+<% window_days = Current.account.inventory_settings.default_run_window_days.to_i %>
+
+<%= form_with model: run, url: run.persisted? ? production_run_path(run) : production_runs_path,
+              html: { class: "flex flex-col gap-5 bg-surface border border-line rounded-panel p-6" } do |f| %>
+  <% if run.errors.any? %>
+    <div class="rounded-card-sm border border-err/30 bg-[color-mix(in_oklab,var(--color-err)_8%,var(--color-surface))] p-3 text-[12.5px] text-err">
+      <ul class="list-disc list-inside">
+        <% run.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :recipe_id, t("production.runs.new.recipe_label"),
+          class: "block text-[12px] font-medium text-muted mb-1" %>
+    <%= f.select :recipe_id,
+          recipes.map { |r| [ r.name, r.id ] },
+          { prompt: t("production.runs.new.recipe_label"), selected: run.recipe_id },
+          class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+    <p class="mt-1 text-[11.5px] text-muted"><%= t("production.runs.new.recipe_hint") %></p>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= f.label :planned_quantity, t("production.runs.new.planned_quantity_label"),
+            class: "block text-[12px] font-medium text-muted mb-1" %>
+      <%= f.number_field :planned_quantity, step: 0.001, min: 0.001,
+            value: (run.planned_quantity.presence || 1),
+            class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono tabular-nums" %>
+      <p class="mt-1 text-[11.5px] text-muted"><%= t("production.runs.new.planned_quantity_hint") %></p>
+    </div>
+    <div>
+      <%= f.label :cooked_on, t("production.runs.new.cooked_on_label"),
+            class: "block text-[12px] font-medium text-muted mb-1" %>
+      <%= f.date_field :cooked_on,
+            value: (run.cooked_on || Date.current),
+            class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+    </div>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= f.label :available_from, t("production.runs.new.available_from_label"),
+            class: "block text-[12px] font-medium text-muted mb-1" %>
+      <%= f.date_field :available_from,
+            value: (run.available_from || Date.current),
+            class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+    </div>
+    <div>
+      <%= f.label :available_until, t("production.runs.new.available_until_label"),
+            class: "block text-[12px] font-medium text-muted mb-1" %>
+      <%= f.date_field :available_until,
+            value: (run.available_until || (Date.current + window_days.days)),
+            class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :notes, t("production.runs.new.notes_label"),
+          class: "block text-[12px] font-medium text-muted mb-1" %>
+    <%= f.text_area :notes, rows: 2,
+          placeholder: t("production.runs.new.notes_placeholder"),
+          class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+  </div>
+
+  <div class="flex items-center gap-2 pt-2">
+    <%= f.submit (run.persisted? ? t("production.runs.edit.submit") : t("production.runs.new.submit")),
+          class: "inline-flex items-center gap-2 text-[13.5px] font-semibold px-4 py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer" %>
+    <%= link_to t("production.runs.new.cancel"), production_runs_path,
+          class: "inline-flex items-center gap-2 text-[13.5px] font-medium px-4 py-[10px] rounded-button border border-line bg-surface text-ink-2 hover:border-line-2 no-underline" %>
+  </div>
+<% end %>

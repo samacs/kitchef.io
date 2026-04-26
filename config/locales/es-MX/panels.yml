@@ -248,6 +248,7 @@ es-MX:
       options_overflow: "+%{count} más"
       removed_prefix: "sin %{name}"
       tip_suffix: "propina"
+      oversold_chip: "⚠ sin stock"
       payment_method:
         cash: "Efectivo"
         transfer: "SPEI"
@@ -378,6 +379,9 @@ es-MX:
       subtitle: "Ficha y costo de este platillo"
       edit_cta: "Editar"
       sale_price: "Precio de venta"
+      stock_kicker: "Stock disponible"
+      stock_units_today: "unidades para hoy"
+      start_run_cta: "Empezar producción"
     card:
       publish_cta: "Publicar en mi tienda"
       unpublish_cta: "Ocultar de mi tienda"
@@ -802,8 +806,23 @@ es-MX:
       table:
         name: "Nombre"
         price: "Precio"
+        stock: "En existencia"
         updated: "Última actualización"
         used_by: "Usado en"
+    stock:
+      low: "bajo stock"
+      empty: "agotado"
+      tab: "Historial"
+      on_hand: "En existencia: %{qty} %{unit}"
+      empty_log: "Aún no hay movimientos para este ingrediente."
+      sources:
+        purchase: "Compra"
+        production_deplete: "Producción"
+        production_cancel: "Producción cancelada"
+        order_consume: "Pedido"
+        order_restock: "Pedido cancelado"
+        manual_adjust: "Ajuste manual"
+        initial: "Inventario inicial"
     new:
       title: "Agregar ingrediente"
       subtitle: "Dato básico + precio actual"
@@ -1030,6 +1049,25 @@ es-MX:
       map_unavailable: "El mapa interactivo no está disponible. Tu dirección se geocodifica al guardar."
       geocoding_failed_title: "No pudimos ubicar la dirección"
       geocoding_failed_hint: "Revisa que esté completa (calle, número, colonia, ciudad) y vuelve a guardar. También puedes arrastrar el alfiler para fijar manualmente la ubicación."
+    inventory:
+      kicker: "Funciones avanzadas"
+      title: "Inventario y producción"
+      lede: "Lleva el control de cuánto cocinas, cuánto te queda y qué ingredientes te están escaseando. Si tu cocina es de menos de 20 pedidos a la semana, probablemente no lo necesitas todavía."
+      toggle_label: "Activar inventario y tandas"
+      toggle_hint: "Cuando lo activas, aparece la sección de Tandas en el menú lateral, tus ingredientes muestran cuánto te queda y tu menú público marca lo que está agotado."
+      policies_section: "Reglas"
+      oversell_policy_label: "Cuando se acaba un platillo"
+      oversell_policies:
+        warn:
+          label: "Aceptar pedido y avisarte"
+          hint: "El pedido entra normal y aparece marcado en tu kanban con un aviso de “sin stock”."
+        block:
+          label: "Bloquear el pedido"
+          hint: "El platillo se marca como agotado y no se puede agregar al carrito."
+      low_stock_threshold_label: "Avísame cuando un ingrediente baje a"
+      low_stock_threshold_hint: "Porcentaje de tu última compra. Cuando bajas de aquí, lo marcamos en tu lista de ingredientes."
+      default_run_window_label: "Días que vive una tanda por defecto"
+      default_run_window_hint: "Cuántos días después de que cocinas una tanda sigue disponible para venta. 0 = sólo el mismo día."
   subscription:
     title: "Plan"
 
@@ -1118,6 +1156,98 @@ es-MX:
         marked_count:
           one: "%{count} item marcado"
           other: "%{count} items marcados"
+
+    onboarding:
+      title: "Inventario y tandas"
+      page_title: "Inventario y producción"
+      page_subtitle: "Configura cómo va a funcionar."
+      kicker: "Empezar"
+      lede: "Llevemos un control sencillo de cuánto cocinas, qué ingredientes te quedan y qué platillos están agotados. Lo activas y desactivas cuando quieras."
+      next_kicker: "Siguiente"
+      next_title: "Tu primera tanda"
+      first_run_cta: "Anotar tanda"
+      policies_cta: "Ajustar reglas"
+      steps:
+        cook:
+          title: "Cocinas"
+          body: "Anotas tus tandas: “hice 24 tamales hoy”. Te restamos los ingredientes según tu receta."
+        sell:
+          title: "Vendes"
+          body: "Cada pedido baja una unidad de la tanda más vieja disponible. Tu menú avisa cuando se acaba."
+        restock:
+          title: "Reabasteces"
+          body: "Cuando registras una compra, sumamos al inventario. Te avisamos cuando un ingrediente baja del umbral."
+
+    runs:
+      index:
+        title: "Tandas"
+        page_title: "Tandas"
+        page_subtitle: "Cuánto cocinaste, cuánto te queda y qué viene esta semana."
+        new_cta: "Agregar producción"
+        empty:
+          today_headline: "Nada cocinado para hoy"
+          today_sub: "Anota tu primera tanda del día y lleva el control automáticamente."
+          week_headline: "Sin producciones agendadas esta semana"
+          week_sub: "Cuando anotes lo que cocinaste o piensas cocinar, aparecerá aquí."
+        scope:
+          today: "Hoy"
+          week: "Esta semana"
+        units_remaining:
+          one: "Queda %{count}"
+          other: "Quedan %{count}"
+        units_planned:
+          one: "%{count} planeado"
+          other: "%{count} planeados"
+        sold_count:
+          zero: "0 vendidas"
+          one: "%{count} vendida"
+          other: "%{count} vendidas"
+      new:
+        title: "Anotar producción"
+        page_title: "Nueva tanda"
+        page_subtitle: "¿Qué cocinaste y cuánto?"
+        recipe_label: "Receta"
+        recipe_hint: "Sólo aparecen tus platillos vendibles."
+        planned_quantity_label: "Cantidad cocinada"
+        planned_quantity_hint: "Unidades que te salen de esta tanda."
+        cooked_on_label: "Día que cocinaste"
+        available_from_label: "Disponible desde"
+        available_until_label: "Disponible hasta"
+        notes_label: "Notas"
+        notes_placeholder: "Ej: salió un poco más subido de chile."
+        submit: "Guardar tanda"
+        cancel: "Cancelar"
+      edit:
+        title: "Editar tanda"
+        page_title: "Editar tanda"
+        page_subtitle: "Cambia las fechas o las notas."
+        submit: "Guardar cambios"
+      show:
+        title: "Detalle de tanda"
+        units_label: "Unidades"
+        consumption_label: "Ingredientes consumidos"
+        orders_label: "Pedidos sobre esta tanda"
+        cancel_cta: "Cancelar tanda"
+        cancel_confirm: "Esto restaura los ingredientes al inventario. ¿Seguimos?"
+        complete_cta: "Marcar como completada"
+        complete_label: "Cantidad real cocinada"
+      state:
+        planned: "Planeada"
+        in_progress: "En curso"
+        completed: "Completada"
+        canceled: "Cancelada"
+      create:
+        success: "Anotamos tu producción."
+      update:
+        success: "Listo, guardamos los cambios."
+      cancel:
+        success: "Cancelaste la producción y restauramos los ingredientes."
+        failure: "No se pudo cancelar."
+      complete:
+        success: "Marcaste la producción como completada."
+        failure: "No se pudo completar."
+      destroy:
+        success: "Eliminaste la producción."
 
   shopping_list:
     mark_bought:

@@ -1,0 +1,36 @@
+<%# Append-only audit log of ingredient stock changes (Phase 13 Slice 4).
+    Renders inside the existing /ingredients/:id/edit drawer when the
+    operator's account has inventory enabled. Read-only by design — any
+    correction is a NEW entry (a manual adjustment), not a row edit. %>
+<% movements = ingredient.stock_movements.recent.limit(30) %>
+
+<div class="flex flex-col gap-4">
+  <div class="flex items-baseline justify-between gap-3">
+    <h3 class="font-serif text-[18px] leading-tight text-ink"><%= t("ingredients.stock.tab") %></h3>
+    <span class="font-mono text-[11.5px] text-muted">
+      <%= t("ingredients.stock.on_hand", qty: format("%.3f", ingredient.stock_quantity.to_d).sub(/\.?0+$/, ""), unit: ingredient.unit) %>
+    </span>
+  </div>
+
+  <% if movements.empty? %>
+    <p class="text-[13px] text-muted"><%= t("ingredients.stock.empty_log") %></p>
+  <% else %>
+    <ul class="flex flex-col divide-y divide-line border border-line rounded-card-sm bg-bg-2/40">
+      <% movements.each do |movement| %>
+        <li class="flex items-center justify-between gap-3 px-3.5 py-2.5">
+          <div class="flex flex-col gap-0.5 min-w-0">
+            <span class="text-[12.5px] font-medium text-ink truncate">
+              <%= t("ingredients.stock.sources.#{movement.source}", default: movement.source.humanize) %>
+            </span>
+            <span class="text-[11px] text-muted">
+              <%= l(movement.created_at.to_date, format: :long) %>
+            </span>
+          </div>
+          <span class="font-mono text-[13px] tabular-nums <%= movement.restock? ? "text-accent" : "text-warn" %>">
+            <%= movement.restock? ? "+" : "" %><%= format("%.3f", movement.quantity.to_d).sub(/\.?0+$/, "") %> <%= movement.unit %>
+          </span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

@@ -29,12 +29,16 @@
           </span>
         </div>
 
+        <% show_stock = Current.account.inventory_enabled? %>
         <div class="bg-surface border border-line rounded-panel shadow-card overflow-x-auto kc-scroll">
           <table class="w-full min-w-[720px]">
             <thead class="bg-bg-2/40 border-b border-line">
               <tr>
                 <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("ingredients.index.table.name") %></th>
                 <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("ingredients.index.table.price") %></th>
+                <% if show_stock %>
+                  <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("ingredients.index.table.stock") %></th>
+                <% end %>
                 <th class="px-4 py-2.5 text-left text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("ingredients.index.table.updated") %></th>
                 <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"><%= t("ingredients.index.table.used_by") %></th>
                 <th class="px-4 py-2.5 text-right text-[11.5px] font-mono uppercase tracking-[0.14em] text-muted whitespace-nowrap"></th>
@@ -42,7 +46,7 @@
             </thead>
             <tbody>
               <% group.each do |item| %>
-                <%= render Ingredients::RowComponent.new(ingredient: item) %>
+                <%= render Ingredients::RowComponent.new(ingredient: item, show_stock: show_stock) %>
               <% end %>
             </tbody>
           </table>

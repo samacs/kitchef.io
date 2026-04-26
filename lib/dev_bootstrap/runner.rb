@@ -11,6 +11,7 @@ require_relative "seeders/clients_seeder"
 require_relative "seeders/orders_seeder"
 require_relative "seeders/purchases_seeder"
 require_relative "seeders/fixed_costs_seeder"
+require_relative "seeders/production_runs_seeder"
 
 module DevBootstrap
   class Runner
@@ -48,6 +49,9 @@ module DevBootstrap
 
       puts "\n--- Fixed costs ---"
       Seeders::FixedCostsSeeder.call(kitchen_defs, accounts)
+
+      puts "\n--- Production runs (advanced kitchens only) ---"
+      Seeders::ProductionRunsSeeder.call(kitchen_defs, accounts)
 
       elapsed = (Time.current - started).round(1)
       puts "\n=== done in #{elapsed}s ==="

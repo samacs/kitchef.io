@@ -11,6 +11,28 @@
 <% end %>
 
 <div class="max-w-[820px] mx-auto flex flex-col gap-6">
+  <%# Phase 13 — quick stock summary + "empezar producción" CTA. Only
+      visible when the operator has flipped on the inventory toggle. %>
+  <% if Current.account.inventory_enabled? && recipe.is_saleable? %>
+    <% available_today = Orders::RunPicker.available_units(account: Current.account, recipe: recipe, on_date: Date.current) %>
+    <section class="rounded-panel border border-line bg-surface p-5 flex items-center justify-between gap-4 flex-wrap">
+      <div class="flex flex-col gap-1">
+        <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+          <%= t("recipes.show.stock_kicker") %>
+        </span>
+        <div class="flex items-baseline gap-2">
+          <span class="font-mono text-[22px] tabular-nums text-ink"><%= available_today.to_i %></span>
+          <span class="text-[12.5px] text-ink-2"><%= t("recipes.show.stock_units_today") %></span>
+        </div>
+      </div>
+      <%= link_to new_production_run_path(production_run: { recipe_id: recipe.id }),
+            class: "inline-flex items-center gap-1.5 rounded-button bg-accent text-bg border border-accent px-3.5 py-2 text-[13px] font-semibold no-underline hover:bg-accent-2" do %>
+        <%= icon(:plus, size: :xs) %>
+        <%= t("recipes.show.start_run_cta") %>
+      <% end %>
+    </section>
+  <% end %>
+
   <section class="bg-surface border border-line rounded-panel shadow-card p-6 sm:p-8">
     <div class="flex flex-col sm:flex-row gap-6 items-start">
       <% if recipe.photos.attached? %>

@@ -1,0 +1,75 @@
+<% content_for :title, t("production.runs.index.title") %>
+<% content_for :page_title, t("production.runs.index.page_title") %>
+<% content_for :page_subtitle, t("production.runs.index.page_subtitle") %>
+
+<% content_for :page_action do %>
+  <%= link_to new_production_run_path,
+        class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta no-underline" do %>
+    <%= icon(:plus, size: :xs) %>
+    <span><%= t("production.runs.index.new_cta") %></span>
+  <% end %>
+<% end %>
+
+<div class="flex flex-col gap-6">
+  <%# ---- Scope tabs ------------------------------------------------ %>
+  <div class="inline-flex gap-1 self-start rounded-pill border border-line bg-bg-2 p-1">
+    <% %i[today week].each do |scope| %>
+      <%= link_to production_runs_path(scope: scope),
+            class: [
+              "px-3.5 py-1.5 rounded-pill font-mono text-[12px] uppercase tracking-[0.1em] no-underline",
+              (@scope == scope ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")
+            ].join(" ") do %>
+        <%= t("production.runs.index.scope.#{scope}") %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @runs.empty? %>
+    <section class="rounded-panel border border-line bg-surface p-8 text-center flex flex-col gap-3 items-center">
+      <h2 class="font-serif text-[20px] text-ink">
+        <%= t("production.runs.index.empty.#{@scope}_headline") %>
+      </h2>
+      <p class="text-[13px] text-ink-2 max-w-[420px] leading-[1.5]">
+        <%= t("production.runs.index.empty.#{@scope}_sub") %>
+      </p>
+      <%= link_to new_production_run_path,
+            class: "inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-[9px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors no-underline" do %>
+        <%= icon(:plus, size: :xs) %>
+        <span><%= t("production.runs.index.new_cta") %></span>
+      <% end %>
+    </section>
+  <% else %>
+    <section class="flex flex-col gap-3">
+      <% @runs.each do |run| %>
+        <article class="rounded-panel border border-line bg-surface p-4 sm:p-5 flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex flex-col gap-1.5 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-serif text-[18px] text-ink truncate"><%= run.recipe.name %></span>
+              <span class="inline-flex items-center rounded-pill border border-line bg-bg-2 px-2 py-px font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted">
+                <%= t("production.runs.state.#{run.state}") %>
+              </span>
+            </div>
+            <span class="font-mono text-[12px] text-muted">
+              <%= l(run.cooked_on, format: :long) %> ·
+              <%= t("production.runs.index.units_planned", count: run.planned_quantity.to_i) %>
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-right">
+              <% remaining = [ run.units_remaining.to_i, 0 ].max %>
+              <span class="font-mono text-[16px] font-semibold tabular-nums text-ink">
+                <%= t("production.runs.index.units_remaining", count: remaining) %>
+              </span>
+              <div class="font-mono text-[11px] text-muted">
+                <%= t("production.runs.index.sold_count", count: run.units_consumed.to_i) %>
+              </div>
+            </div>
+            <%= link_to t("production.runs.show.title"),
+                  production_run_path(run),
+                  class: "inline-flex items-center gap-1.5 rounded-button border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 no-underline hover:border-line-2" %>
+          </div>
+        </article>
+      <% end %>
+    </section>
+  <% end %>
+</div>

@@ -185,6 +185,18 @@ Rails.application.routes.draw do
     to: "production#bulk_start_production",
     as: :production_bulk_start_production
 
+  # Phase 13 — production runs (tandas) + inventory onboarding. Gated by
+  # `account.inventory_enabled?` at the controller layer; the routes
+  # exist regardless so flipping the toggle is instant.
+  get "/production/onboarding",  to: "production/onboardings#show",  as: :production_onboarding
+  resources :production_runs, path: "production/tandas",
+    path_names: { new: "nueva", edit: "editar" } do
+    member do
+      post :cancel
+      post :complete
+    end
+  end
+
   # Zero-auth runner view — one signed token per day, resolved server-side
   # back to an account + date. Any tamper or >24h staleness lands on the
   # branded "ruta expirada" page.

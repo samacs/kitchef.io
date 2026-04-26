@@ -37,12 +37,23 @@ module Accounts
       account.public_profile = profile
 
       settings = account.settings
-      payment_attrs = settings_attrs.delete(:payment_settings)
+      payment_attrs   = settings_attrs.delete(:payment_settings)
+      inventory_attrs = settings_attrs.delete(:inventory_settings)
       settings.assign_attributes(settings_attrs.compact)
       if payment_attrs.present?
         ps = settings.payment_settings
         ps.assign_attributes(payment_attrs.to_h.compact)
         settings.payment_settings = ps
+      end
+      if inventory_attrs.present?
+        inv = settings.inventory_settings
+        was_enabled = inv.enabled
+        inv.assign_attributes(inventory_attrs.to_h.compact)
+        # Stamp the moment the operator first turns this on so the
+        # onboarding primer can fire exactly once and support can tell
+        # first-week operators apart from veterans.
+        inv.enabled_at ||= Time.current if !was_enabled && inv.enabled
+        settings.inventory_settings = inv
       end
       account.settings = settings
 

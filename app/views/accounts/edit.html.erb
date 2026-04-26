@@ -404,6 +404,12 @@
         <% end %>
       </section>
 
+      <%# Funciones avanzadas — opt-in toggles (Phase 13: inventory).
+          Renders above Pagos so a first-time operator scrolling the
+          settings page sees the new feature once and chooses; she
+          doesn't have to hunt for it. %>
+      <%= render Accounts::InventorySettingsCardComponent.new(account: @account, form: f) %>
+
       <%# Pagos — accepted methods, SPEI details, tip presets %>
       <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6"
                data-controller="payment-settings">

@@ -28,6 +28,7 @@ module Purchases
       ActiveRecord::Base.transaction do
         purchase.save!
         apply_cascade(purchase) if purchase.supplier.present?
+        apply_inventory_restock(purchase) if account.inventory_enabled?
       end
 
       success(purchase)
@@ -82,6 +83,31 @@ module Purchases
     def promote_to_default?(item)
       # Auto-promote when the ingredient currently has no default.
       item.ingredient.supplier_ingredients.default.empty?
+    end
+
+    # Phase 13 — bump per-ingredient on-hand stock by each line of the
+    # purchase. Stamp `last_purchase_quantity` so the low-stock badge
+    # has a baseline to compare against. No-op when the operator hasn't
+    # opted into inventory.
+    def apply_inventory_restock(purchase)
+      purchase.items.reload.each do |item|
+        ingredient = item.ingredient
+        ingredient.restock!(
+          quantity:       item.quantity,
+          unit:           item.unit,
+          source:         "purchase",
+          source_record:  purchase,
+          unit_cost_cents: item.unit_cost_cents_in_ingredient_unit
+        )
+        ingredient.update_column(
+          :last_purchase_quantity,
+          Recipes::UnitConverter.convert(
+            quantity: item.quantity,
+            from:     item.unit,
+            to:       ingredient.unit
+          )
+        )
+      end
     end
   end
 end
