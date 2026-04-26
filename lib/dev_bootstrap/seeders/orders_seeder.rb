@@ -50,7 +50,7 @@ module DevBootstrap
 
         payment_method = if account.payment_settings.any_method_enabled?
                            account.payment_settings.enabled_methods.sample
-                         end
+        end
         tip = account.payment_settings.accepts_tips ? [ 0, 0, 1500, 2000, 3000 ].sample : 0
 
         order = account.orders.create!(

@@ -56,10 +56,10 @@ module DevBootstrap
 
       ext = File.extname(path).delete(".")
       content_type = case ext
-                     when "png"  then "image/png"
-                     when "webp" then "image/webp"
-                     else "image/jpeg"
-                     end
+      when "png"  then "image/png"
+      when "webp" then "image/webp"
+      else "image/jpeg"
+      end
 
       record.public_send(attachment_name).attach(
         io:           File.open(path, "rb"),
