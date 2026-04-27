@@ -132,7 +132,7 @@
     <div class="flex flex-wrap items-center justify-between gap-7">
       <div class="text-[12px] text-muted font-medium"><%= t("marketing.home.integrations") %></div>
       <div class="flex flex-wrap gap-9 items-center opacity-70">
-        <% %w[SPEI WhatsApp Stripe].each do |name| %>
+        <% %w[SPEI WhatsApp Efectivo].each do |name| %>
           <span class="flex items-center gap-1.5 font-semibold text-ink-2 text-[16px] tracking-tight">
             <span class="w-[18px] h-[18px] bg-ink-2 rounded-[5px] opacity-25"></span>
             <%= name %>
@@ -199,7 +199,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-2">
           <% [
             { name: "SPEI", sub: "Inmediato" },
-            { name: "Stripe", sub: "Tarjeta" },
+            { name: "Tarjeta", sub: "Por link" },
             { name: "Efectivo", sub: "Manual" },
           ].each do |rail| %>
             <div class="border border-line rounded-card-sm p-3 flex flex-col gap-1 bg-bg-2">

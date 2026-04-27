@@ -2,7 +2,7 @@
   <div class="mx-auto max-w-[1240px] px-7">
     <div class="flex items-center justify-between gap-4 py-[14px]">
       <%# ---- Logo ------------------------------------------------------ %>
-      <%= render Ui::LogoComponent.new(href: helpers.root_path) %>
+      <%= render Ui::LogoComponent.new(size: :lg, href: helpers.root_path) %>
 
       <%# ---- Desktop nav links --------------------------------------- %>
       <nav class="hidden md:flex items-center gap-1" aria-label="<%= t("marketing.nav.product") %>">

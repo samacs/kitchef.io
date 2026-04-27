@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kitchef">
+  <!-- Mark uses Tailwind tokens so the colors flip with .dark.
+       Fallbacks (the second arg of var()) keep the SVG correct
+       when opened standalone or in contexts without the tokens
+       defined (e.g. a print preview before CSS loads). -->
+  <rect width="64" height="64" rx="14" ry="14"
+        fill="var(--color-accent, #0A5A3C)"/>
+  <text x="32" y="46"
+        font-family="Instrument Serif, Times New Roman, Georgia, serif"
+        font-style="italic"
+        font-weight="400"
+        font-size="40"
+        text-anchor="middle"
+        fill="var(--color-bg, #F8F6F1)">k</text>
+</svg>

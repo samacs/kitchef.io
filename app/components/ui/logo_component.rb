@@ -1,11 +1,16 @@
 module Ui
-  # Wordmark used in the marketing nav, panel sidebar and auth layout.
-  # The `k` mark is the italic serif glyph on the accent square; the
-  # wordmark itself is sans bold.
+  # Wordmark used in the marketing nav, panel sidebar, auth and
+  # onboarding layouts, and any place we need a Kitchef brand mark.
   #
-  #   <%= render Ui::LogoComponent.new %>
-  #   <%= render Ui::LogoComponent.new(size: :sm, href: root_path) %>
-  #   <%= render Ui::LogoComponent.new(wordmark: false) %>  # mark only
+  # Inlines the SVG from `app/assets/images/logo.svg` (mark only) or
+  # `logo-horizontal.svg` (mark + wordmark) so the colors can flip
+  # with the `.dark` theme via CSS variables — `var(--color-accent)`,
+  # `var(--color-bg)`, `currentColor`. An <img> tag would lose that
+  # because the SVG'd render in its own document context.
+  #
+  #   <%= render Ui::LogoComponent.new %>                    # horizontal lockup
+  #   <%= render Ui::LogoComponent.new(size: :sm, href: "/") %>
+  #   <%= render Ui::LogoComponent.new(wordmark: false) %>   # mark only
   class LogoComponent < ApplicationComponent
     SIZES = %i[sm md lg].freeze
 
@@ -16,54 +21,48 @@ module Ui
 
     def call
       tag_name = href.present? ? :a : :span
-      attrs = { class: wrapper_classes }
+      attrs = { class: wrapper_classes, "aria-label": label || t("marketing.brand.name") }
       attrs[:href] = href if tag_name == :a
 
-      content_tag(tag_name, **attrs) do
-        [ mark_tag, (wordmark_tag if wordmark) ].compact.reduce(:+)
-      end
+      content_tag(tag_name, svg_markup.html_safe, **attrs)
     end
 
     private
 
     def wrapper_classes
-      [ "inline-flex items-center gap-2 text-ink", "font-bold tracking-[-0.02em] leading-none", text_size ].join(" ")
+      [
+        "inline-flex items-center text-ink no-underline",
+        wrapper_height
+      ].join(" ")
     end
 
-    def mark_tag
-      content_tag(
-        :span,
-        mark_glyph,
-        class: [
-          "inline-flex items-center justify-center shrink-0",
-          "bg-accent text-bg rounded-[7px]",
-          "font-serif italic font-normal leading-none",
-          mark_size
-        ].join(" "),
-        aria: { hidden: true }
-      )
+    # Pick the SVG file based on the wordmark flag and load it from
+    # disk. Cached at class level so we don't re-read on every render.
+    def svg_markup
+      key = wordmark ? :horizontal : :mark
+      self.class.svg_cache[key] ||= File.read(svg_path).strip
     end
 
-    def wordmark_tag
-      content_tag(:span, label || t("marketing.brand.name"))
+    def svg_path
+      filename = wordmark ? "logo-horizontal.svg" : "logo.svg"
+      Rails.root.join("app/assets/images", filename)
     end
 
-    def mark_glyph = t("marketing.brand.mark")
-
-    def text_size
+    # Set height via a Tailwind utility on the wrapper; the inlined
+    # SVG inherits the height because we strip its width/height attrs
+    # in the file (it only has viewBox, so it scales to fit). The
+    # wordmark variant scales 184×64 → ~75×26 at sm; the mark
+    # variant scales 64×64 → 26×26.
+    def wrapper_height
       case size
-      when :sm then "text-[15px]"
-      when :lg then "text-[22px]"
-      else "text-[17px]"
+      when :sm then "[&>svg]:h-[26px] [&>svg]:w-auto h-[26px]"
+      when :lg then "[&>svg]:h-[40px] [&>svg]:w-auto h-[40px]"
+      else "[&>svg]:h-[32px] [&>svg]:w-auto h-[32px]"
       end
     end
 
-    def mark_size
-      case size
-      when :sm then "w-[22px] h-[22px] text-[15px]"
-      when :lg then "w-[34px] h-[34px] text-[22px]"
-      else "w-[26px] h-[26px] text-[18px]"
-      end
+    def self.svg_cache
+      @svg_cache ||= {}
     end
   end
 end
