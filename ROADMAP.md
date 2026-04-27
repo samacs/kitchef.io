@@ -1023,7 +1023,51 @@ Total: ~7 focused days. Independent of every other phase — can ship in paralle
 
 ---
 
-## Phase 18 — Growth, retention, polish
+## Phase 18 — Recipe categories manager (next after Phase 14)
+
+**Context.** Today the operator gets six default recipe categories at signup (`Platos fuertes`, `Entradas`, `Postres`, `Bebidas`, `Bases y preparaciones`, `Otros`) seeded by `Account#bootstrap_default_categories`, plus inline-create from the recipe form's combobox. What's missing is a real management surface: rename, reorder, set the public-menu display order, and delete the empty ones. Right now an operator who outgrows "Otros" or wants `Tamales` to come first on her storefront has no way to do it without touching the database.
+
+**Reference.** The Agendario `app/views/categories/` UI (`~/Developer/agendario.mx`) — that codebase has the rename + reorder + delete-when-empty pattern done well. Steal the interaction model verbatim where it fits Kitchef's style.
+
+**Why this is bounded.** Ingredient categories stay out of scope (those are mostly internal — the operator doesn't need to curate them for public consumption). This is recipe categories only.
+
+### Goals
+
+1. The operator can rename a recipe category inline from `/recipes/categorias` (or wherever it lands) without leaving the page.
+2. Drag to reorder; the order propagates to the storefront menu (sections render in this exact order) AND to the recipe form's category picker.
+3. Delete is allowed only when the category has zero non-discarded recipes; we surface a clear "Move N recipes elsewhere first" guard.
+4. `bootstrap_default_categories` keeps the seeding behavior — but if an operator deletes one, we don't re-seed it. (Soft-delete preserves the row so historical pedidos still resolve their category name even after a delete.)
+
+### Scope
+
+- [ ] **`/recipes/categorias`** management page — list of recipe-kind categories (`Category.where(kind: :recipe)`), drag-handle on each row, inline-rename via Turbo Frame, "Borrar" link disabled when `recipes_count > 0` with a clear tooltip.
+- [ ] **Reorder** — uses Sortable.js (already pinned for Phase 14 multi-photos work) on the rows. Drop fires `PATCH /recipes/categorias/orden` with the new array of IDs; controller updates `position` columns transactionally.
+- [ ] **Inline rename** — Turbo-Frame swaps the row to an edit form on click; submit updates + replaces the frame. Same `Ui::ComboboxComponent`-style autosave pattern as the rest of the app.
+- [ ] **Delete guard** — model-level `before_destroy throw(:abort) if recipes.kept.any?` + view-layer disable. Soft-deletes via `HasSoftDelete` so historical references still resolve.
+- [ ] **Storefront menu ordering** — `Storefronts::ShowController` already groups by category; just sort by `categories.position` instead of the current `position || 999` fallback.
+- [ ] **Operator app form picker** — `Ui::ComboboxComponent` for the recipe form respects the same `categories.position` order.
+- [ ] **`Account::RESERVED_SLUGS`** — add `categorias` (already there per current list) so a kitchen can't claim it.
+
+### Out (explicit deferrals)
+
+- **Ingredient categories** — same data model (`Category.kind: ingredient`), but no operator-management UI in this phase. Inline-create from the ingredient form's combobox holds the line.
+- **Per-category color/icon** — operator picks from a curated palette to differentiate her sections. Nice but not blocking.
+- **Multi-locale category names** — operators run in es-MX only; defer.
+- **Category-level analytics ("which category sells most?")** — stays inside `/reports/menu`.
+
+### Effort estimate
+
+| Slice | Effort | Unlocks |
+|---|---|---|
+| 1 — Page + reorder | S (~1d) | Operator can rebrand sections + change menu order |
+| 2 — Inline rename + delete-when-empty | S (~½d) | Closes the loop — full CRUD without a database client |
+| 3 — Storefront + form ordering | XS (~½d) | Storefront menu finally honors the operator's preferred section order |
+
+Total: ~2 focused days. Lands after Phase 14's stack merges.
+
+---
+
+## Phase 19 — Growth, retention, polish
 
 - [ ] QR code generator for printed flyers (`rqrcode`)
 - [ ] Daily operator digest email (`DailyOperatorDigestJob` — scaffold exists, needs content)
