@@ -394,6 +394,13 @@ es-MX:
       stock_alert:
         warn: "Sin lotes para hoy — vendiendo sin stock."
         block: "Agotado en tu tienda. Anota un lote para volver a vender."
+      stock_summary:
+        available:
+          one: "Queda %{count} para vender"
+          other: "Quedan %{count} para vender"
+        producing:
+          one: "%{count} en producción"
+          other: "%{count} en producción"
     bulk_publish:
       title:
         one: "Tienes 1 platillo listo para publicar"

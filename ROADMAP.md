@@ -711,15 +711,145 @@ See `~/.claude/plans/phase-12-pagos-spei-propina.md` for any pre-build whiteboar
 
 ---
 
-## Phase 13 — Producción, batches e inventario (next)
+## Phase 13 — Producción, batches e inventario (shipped)
 
-Feature-flag-gated stock tracking. Default OFF — the operator's first three weeks should not require thinking about inventory. When she turns it on from `/account/edit` → "Funciones avanzadas", a "Producción" tab unlocks: she logs production runs (a batch of N units of a recipe cooked on a specific date), orders draw down from those runs, the menu surfaces "agotado / quedan 3" badges, and ingredient stock decrements via the recipe composition tree. Powered by a clean unit-conversion table so 200g pulls from a 5kg bag without per-recipe math.
+**Context.** Stock tracking, opt-in. The operator's first three weeks shouldn't require thinking about inventory; when she's ready, `/account/edit` → "Funciones avanzadas" flips `inventory_enabled` and the rest of the app lights up — `/batches` in the sidebar, "Quedan N" / "Agotado" chips on the storefront menu, real on-hand quantities on `/ingredients`, and a soft-vs-hard oversell policy that keeps Phase-12 ergonomics for ops who never want a hard block.
 
-See `~/.claude/plans/phase-13-production-runs-inventory.md` for the full plan.
+- [x] ~~`Accounts::InventorySettings` StoreModel on `Account#settings.inventory_settings` — `enabled` (default false), `block_oversells` (default false), `low_stock_threshold_pct` (default 20). `/account/edit` gains a "Funciones avanzadas → Inventario" card with autosave + `Aprende más` link.~~
+- [x] ~~`Batch` model — per-account, per-recipe, AASM lifecycle (`planned → in_progress → completed`, with `cancel` available from any non-completed state), `cooked_on` + `available_from` + `available_until` window, `planned_quantity` + `actual_quantity`, soft-delete, paper-trail. Validates that the recipe is saleable + belongs to the same account.~~
+- [x] ~~`BatchConsumption` join — append-only ledger of "this batch consumed N kg of ingredient X at cost Y" rows, written by `Batches::DepleteIngredients` at start time and reversed by `Batches::RestockIngredients` on cancel.~~
+- [x] ~~`StockMovement` append-only ledger on `Ingredient` — sources `purchase`, `production_deplete`, `production_cancel`, `order_consume`, `order_restock`, `manual_adjust`, `initial`. Polymorphic `source_record` so any movement can be traced to the model that caused it.~~
+- [x] ~~`Orders::BatchPicker` — picks the oldest active batch with enough remaining units for an order item; `available_units(account:, recipe:, on_date:)` convenience for badge rendering. Storefront re-validates at submit time so a stale tab can't oversell.~~
+- [x] ~~`Storefronts::MenuStockBadgeComponent` — out_of_stock / last_one / limited / abundant tiers with policy-aware copy ("Agotado" under block, "Sólo por encargo" under warn). Renders only when `inventory_enabled?`.~~
+- [x] ~~`Recipes::CardComponent` stock alert (operator side) — red border + "Agotado" copy under block policy, amber + "vendiendo sin stock" under warn, when no batches cover today. Backed by `BatchPicker.available_units`.~~
+- [x] ~~`Ingredients::StockCellComponent` + `/ingredients` "En existencia" column — formatted on-hand quantity, "bajo stock" chip when below threshold, "sin existencia" chip at zero.~~
+- [x] ~~`/batches` CRUD + `/batches/onboarding` primer + `/batches/impact` preview (shows which ingredients deplete + by how much before the operator commits a batch). Cards color-code by state (planeado / en curso / completado / cancelado) and surface "Quedan N · M vendidas".~~
+- [x] ~~`Batches::DepleteIngredients` / `Batches::RestockIngredients` / `Batches::ReleaseConsumption` / `Batches::FulfillOversoldOrders` services — production lifecycle automation, plus the order-side machinery that reassigns oversold pedidos to a freshly-cooked batch when the operator catches up.~~
+- [x] ~~`OrderItem#consumed_batch_id` + `consumed_quantity` — every line item snapshots which batch it pulled from; cancellation paths nullify and restock automatically.~~
+- [x] ~~`docs/manual/` operator manual rewritten alongside Phase 13 — 13 chapters covering bienvenida → plan, with `09-produccion.md` + `10-inventario-y-lotes.md` walking through the new flows. Compiled to `Kitchef-Manual.pdf`.~~
+
+### Phase 13 deferred (small but worth naming)
+
+- [ ] FIFO / weighted-average batch cost accounting — current model snapshots the ingredient's `unit_cost_cents` at depletion time; per-batch lot cost waits for demand.
+- [ ] Waitlist oversell policy — `block` and `warn` shipped; `waitlist` stays deferred until at least one operator asks.
+- [ ] Auto-suggest planned-quantity from past sales — operator types her own number for v1.
+- [ ] Bulk CSV import for ingredient stock — manual entry / accumulation from `/compras` is enough at the operator scale we serve.
+- [ ] Multi-location / sub-warehouse — one kitchen, one inventory.
 
 ---
 
-## Phase 14 — Growth, retention, polish
+## Phase 14 — KDS (Kitchen Display System) (next)
+
+**Context.** Phase 5 gave the operator a daily focus view on her phone; Phase 13 told her how many tamales she still has. The missing surface is the **kitchen wall**: a tablet (or a spare phone, or the laptop she keeps next to the comal) showing live tickets in cook order, big enough to read from across the room with greasy hands. Today she alternates between the kanban tab and her phone notification bell — that's a context switch every time a pedido lands, and a missed pedido every time her hands are full.
+
+A KDS — Kitchen Display System (and yes, a happy pun on "Kitchef") — is a read-mostly, single-page surface optimized for a wall-mounted screen. It's not a replacement for `/orders` (the kanban stays the truth for editing); it's a *projection* of the same data tuned for the cooking context: large type, station-grouped tickets, audible chime on new orders, one-tap "Listo / Servido", auto-scroll when the queue overflows.
+
+**Why now.** Two of the three alpha kitchens already have a tablet propped on the counter; both are running the kanban there and complaining the cards are too small. Building this *after* batches (Phase 13) is the right call — the KDS reads `Batch.units_remaining` to surface "Quedan 2 — anota un lote" warnings inline, so the cook sees stock pressure before she's elbow-deep in masa.
+
+**Why this is bounded.** No POS, no payment surface, no order-entry — the storefront and the operator drawer keep their roles. KDS is *display only* plus the two state transitions a cook actually uses on the line: `confirmed → in_production` (started cooking this ticket) and `in_production → ready` (it's plated). Everything else routes through the existing surfaces.
+
+### Goals
+
+1. **Wall-mounted single-screen surface.** Loads on a tablet/laptop, no login dance after the first pairing — uses the same `message_verifier` token model as `/r/:token` so the operator pastes the URL once.
+2. **Read at a meter away.** Type scale, contrast, and color coding tuned for "across the kitchen", not "in my hand". No drawers, no modals.
+3. **Cook order, not arrival order.** Tickets sort by delivery window (next out → on top), not by `placed_at`. A ticket due in 20 minutes outranks one that came in two hours ago for delivery tomorrow.
+4. **Inventory-aware.** Each ticket line shows the per-recipe `Batch.units_remaining` so the cook knows which line items are pulling from a batch with 1 unit left.
+5. **Quiet by default, loud when needed.** New ticket → a single subtle chime + visual flash; nothing else. The kitchen is loud already.
+6. **Two state buttons per ticket.** "Empezar" (`confirmed → in_production`) and "Listo" (`in_production → ready`). That's it. Cancellation, payment, customer comms stay on the kanban.
+
+### Scope
+
+#### Slice 1 — KDS shell + token pairing (S)
+
+- [ ] `/kds/:token` route — `KdsController#show`, no session auth, signed token via `Rails.application.message_verifier(:kds)`. Token encodes `account_id` + `paired_at`, no expiry (the operator can rotate).
+- [ ] `/account/edit` → "KDS" card: "Mostrar pantalla en cocina" toggle. When on, surfaces a paired URL + QR code (using `rqrcode` already in Gemfile via Phase 14 deferreds) + a "Generar nuevo enlace" button that rotates the token.
+- [ ] Add `kds` to `Account::RESERVED_SLUGS` + `bin/check_reserved_slugs`.
+
+#### Slice 2 — Ticket grid (M)
+
+- [ ] `Kds::TicketsQuery` — pulls `Order.where(state: [:confirmed, :in_production], delivery_date: today)` for the account, ordered by delivery window. Returns `TicketRow` structs with: order id, short id, client first name, delivery window, line items (recipe name + qty + batch remaining), notes/customizations, source chip.
+- [ ] `app/views/kds/show.html.erb` — single-page Tailwind layout. CSS grid: 2-up on tablet, 3-up on landscape laptop, 4-up on a desktop monitor. Each ticket card: short id + client name (Instrument Serif, large), delivery window pill (JetBrains Mono), line items list (Inter, larger than usual), notes block, two big buttons.
+- [ ] Color coding by urgency: emerald border for "in cook window", amber when < 20min to window close, red when overdue. Mirrors the existing kanban accent vocabulary so operators don't relearn.
+- [ ] Auto-refresh via `<turbo-stream-from>` subscribed to a new `[account, :kds]` channel — `Order.broadcasts_refreshes_to` already fires on the kanban channel; we add a parallel broadcast on the new one so KDS subscribers don't trample the kanban's morph cadence.
+
+#### Slice 3 — State transitions + chime (S)
+
+- [ ] `POST /kds/:token/orders/:id/start` and `/ready` — tokenized, idempotent, fire `Orders::Transition` with the appropriate AASM event. Re-renders the ticket row inline; on `ready` the ticket fades + drops off the grid.
+- [ ] Single-tap buttons sized for fingers in oven mitts (min 64px tap target, accent for primary).
+- [ ] New-ticket chime — short tone in `app/assets/audio/kds-chime.mp3` (~120ms), played by `kds_chime_controller.js` on every Turbo Stream insert. Mute toggle in the corner; persists in `localStorage`.
+- [ ] Visual flash on the new card (pulse the border for ~600ms) so a muted KDS still announces itself.
+
+#### Slice 4 — Inventory awareness (XS)
+
+- [ ] Each line item renders the matching `Batch.units_remaining` (when `inventory_enabled?`), with an amber chip when remaining < 3 and a red "Sin lote" badge when there's no covering batch and policy is `:warn`.
+- [ ] Footer strip: "Próximas 5 unidades de tamales verdes — quedan 2" — a lightweight pre-warning row when any saleable recipe with confirmed pedidos in the next 6h has zero or low remaining batches.
+
+#### Slice 5 — Production handoff (XS)
+
+- [ ] When a `ready` ticket has `delivery_type: :delivery` and a runner-token URL exists, the "Listo" button morphs to "Listo y notificar runner" — fires a turbo-stream that highlights the ticket on the runner view too.
+- [ ] On `pickup` orders, "Listo" triggers an optional WhatsApp pre-fill to the customer ("Tu pedido está listo, te espero a las HH:MM"), gated by an `Accounts::Settings.kds_pickup_notify` toggle (default off).
+
+### Out (explicit deferrals)
+
+- **Order entry on the KDS.** Customers / operators don't add pedidos here. The storefront and the operator drawer remain the two write surfaces.
+- **Per-station routing.** No "fríos vs. calientes" lanes — the home kitchens we serve are one cook, one comal. Revisit when an operator runs ≥2 stations.
+- **Bump-bar / barcode hardware.** Touch is plenty.
+- **Sound packs / customizable chimes.** One tone, one mute toggle. If three operators ask, revisit.
+- **Multi-screen mirroring (master + secondary).** A second tablet just opens the same `/kds/:token` URL — works today, no model needed.
+- **Order timing analytics ("avg time from confirmed → ready").** Belongs in `/reports`, not on the wall display. Phase 15+.
+
+### Key decisions to lock before building
+
+1. **Auth model — token URL or full session?** Token URL, mirroring `/r/:token` (Phase 5 runner view). The kitchen tablet shouldn't need an operator login; rotation is a one-tap reset.
+2. **Does KDS show pickup + delivery, or filter to one?** Both, color-coded. Operators cook for both customer types in the same flow; segregating them adds a control without adding clarity.
+3. **Cancellations — surface on the KDS?** Yes, but as a fade-out animation (300ms), not a banner. The cook needs to see the ticket disappear so she stops cooking; she doesn't need to know why.
+4. **Payment status — surface?** No on v1. Payment is the operator's concern; the cook works the ticket regardless.
+5. **Customizations / removed ingredients — render full or collapsed?** Full and prominent. "Sin cilantro" missed by the cook is a refund. No truncation.
+6. **Refresh model — ActionCable subscribe or 30s poll?** ActionCable subscribe, same as the kanban. The KDS tab is always-on; the wakeup cost on the wire is negligible vs. polling 24/7.
+7. **Sleep / screen burn protection?** A subtle 5-min idle dim (CSS opacity to 0.7); tapping anywhere wakes it. Tablets handle this themselves but the dim helps cheap displays.
+
+### Files to create / modify
+
+```
+app/controllers/kds_controller.rb
+app/views/kds/show.html.erb
+app/views/kds/_ticket.html.erb
+app/components/kds/ticket_card_component.{rb,html.erb}
+app/queries/kds/tickets_query.rb
+app/javascript/controllers/kds_chime_controller.js
+app/javascript/controllers/kds_idle_dim_controller.js
+app/services/kds/token.rb           # encode(account:) / decode(token)
+app/views/accounts/_kds_pairing_card.html.erb
+app/assets/audio/kds-chime.mp3
+config/locales/es-MX/kds.yml
+```
+
+### Verification (from clean DB + seed)
+
+1. Toggle "Mostrar pantalla en cocina" on `/account/edit` → URL + QR appear; rotate generates a new URL; old URL 404s.
+2. Open `/kds/:token` in a separate browser → empty state if no confirmed pedidos for today; otherwise the ticket grid renders.
+3. Place a storefront order → chime fires + new card flashes in within 2s of the kanban morph.
+4. "Empezar" on a ticket → state morphs to `in_production` everywhere (kanban + KDS + customer status page) without page reload.
+5. "Listo" → ticket fades out of the KDS, shows up in the kanban's `ready` column.
+6. With `inventory_enabled?` on, place a ticket whose recipe is at `Batch.units_remaining = 1` → red "Sin lote" / amber "Quedan 1" chip on the line item.
+7. Token rotation → old `/kds/:token` returns 404; new token loads cleanly.
+8. `bin/check_reserved_slugs` green; `rubocop` + `brakeman` clean.
+
+### Effort estimate
+
+| Slice | Effort | Unlocks |
+|---|---|---|
+| 1 — Shell + token pairing | S | Whole phase rides on this |
+| 2 — Ticket grid | M | The actual UX payoff |
+| 3 — State transitions + chime | S | Cook actually uses the screen |
+| 4 — Inventory awareness | XS | Quick win after Phase 13 lands |
+| 5 — Production handoff | XS | Tighter loop with runners + customers |
+
+Total: ~1 focused work-week.
+
+---
+
+## Phase 15 — Growth, retention, polish
 
 - [ ] QR code generator for printed flyers (`rqrcode`)
 - [ ] Daily operator digest email (`DailyOperatorDigestJob` — scaffold exists, needs content)
@@ -757,8 +887,9 @@ See `~/.claude/plans/phase-13-production-runs-inventory.md` for the full plan.
 7. ~~**Phase 10 (rentabilidad real — costos fijos y utilidad neta)**~~ — shipped. Fixed-cost tracking (renta, gas, plataformas, empaque), real Utilidad Neta alongside Margen bruto + Margen real, "Costo fijo por pedido" tile, per-pedido + per-recipe packaging. `/reports/finance` now tells the operator her actual take-home number.
 8. ~~**Phase 11 (personalización de platillos)**~~ — shipped. Storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients + selectable ingredients. Recipe editor's "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. Bonus: lead-time-hours on recipes, yield_unit/yield_quantity in the recipe form (essential for prep recipes), morph-based autosave preserving focus, picker dedupe, recipe duplication + soft-delete archive flow. Availability gating on ingredient stock stays deferred until depletion ships.
 9. ~~**Phase 12 (instrucciones de pago + propina)**~~ — shipped. Display-only payment configuration: kitchen sets SPEI details + accepted methods at `/account/edit`; storefront checkout grew a Propina card (percentage-based, 10/15/20% calculated against subtotal in real time, tip-toggle to opt out entirely) + Método de pago card (Efectivo / SPEI / Tarjeta) with method-specific reveals (cash-change calculation, CLABE + Copiar buttons, free-text card instructions). Bonus shipped alongside: kitchen pickup address with bidirectional Google Maps + new Places API autocomplete (suggestions render below input, never overwrite it; marker drag reverse-geocodes), public storefront pickup address card + static map, gender-neutral copy across all locales, and a structured `rails dev:bootstrap` task replacing monolithic seeds (8 realistic Hermosillo kitchens, real addresses, 30-day order history, decomposed recipes, purchases, fixed costs, local image cache in `tmp/recipes/`). Mercado Pago / Stripe / reconciliation dashboard remain deferred for 12.5+ once gateway demand lands.
-10. **Phase 13 next (production runs + inventory + unit conversion)** — feature-flag-gated production batches. Operators turn on "Inventario" from settings to unlock real stock tracking; otherwise the system stays at Phase-12 simplicity. Production runs (a batch of N units of a recipe cooked at a specific time) consume ingredients; orders draw down from runs; menu shows real availability; ingredient stock decrements on consumption. Powered by a unit conversion table (kg ↔ g, l ↔ ml, piece counts) so a recipe that needs "200g of harina" can pull from a "5kg bag" stock entry without per-recipe math. ~2 focused work-weeks.
+10. ~~**Phase 13 (producción, batches e inventario)**~~ — shipped. Opt-in stock tracking gated on `Account#inventory_enabled?`. New `Batch` model with planned/in_progress/completed/canceled lifecycle, `BatchConsumption` ledger feeding ingredient depletion + restock, `Orders::BatchPicker` powering "Quedan N" / "Agotado" chips on the storefront menu and operator card, `StockMovement` append-only ledger with seven sources, `Accounts::InventorySettings` (enabled / block_oversells / low_stock_threshold_pct), `/batches` CRUD + onboarding + impact preview, ingredient on-hand column, oversold pedido reassignment when fresh batches land. Manual rewritten alongside (`docs/manual/01..13`, compiled to `Kitchef-Manual.pdf`). FIFO cost accounting, waitlist policy, and CSV stock import stay deferred until demand lands.
+11. **Phase 14 next (KDS — Kitchen Display System)** — wall-mounted single-screen surface for the kitchen tablet. Tokenized auth (mirrors `/r/:token`), ticket grid sorted by delivery window, two-button cook flow (Empezar / Listo), subtle chime + visual flash on new tickets, inventory-aware line items showing `Batch.units_remaining`. Read-mostly: order entry stays on storefront + drawer, the kanban stays the truth for editing. ~1 focused work-week.
 
-Phase 13 is the natural next step after the catalog work in Phase 9 + the composable recipes in Phase 7 — those laid the data foundation; this turns the inventory column from a price list into a live stock ledger.
+Phase 14 is the natural next step after Phase 13 — batches gave us live stock counts; KDS surfaces them in the kitchen where decisions actually happen.
 
-Phase 14 (growth, retention, polish) is continuous; each ships a slice per quarter once the core loop is done.
+Phase 15 (growth, retention, polish) is continuous; each ships a slice per quarter once the core loop is done.
