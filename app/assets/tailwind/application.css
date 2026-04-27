@@ -589,6 +589,49 @@
     border-color: var(--color-accent-soft);
   }
 
+  /* Pricing toggle (Mensual / Anual) — active state highlights via the
+     accent token; inactive sits muted. State is driven by the
+     `pricing_toggle_controller` setting `data-active="true"`. */
+  .kc-pricing-toggle {
+    color: var(--color-ink-2);
+  }
+  .kc-pricing-toggle:hover {
+    color: var(--color-ink);
+  }
+  .kc-pricing-toggle[data-active="true"] {
+    background: var(--color-surface);
+    color: var(--color-ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Onboarding plan picker (Phase 14, Slice 4). Card states driven by
+     `plan_picker_controller` setting `data-selected="true"` on the
+     active card. The inner radio dot is a 20px circle that fills
+     accent-soft + ring on selection. */
+  .kc-plan-card {
+    border-color: var(--color-line);
+    background: var(--color-bg-2);
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+  .kc-plan-card:hover {
+    border-color: var(--color-line-2);
+  }
+  .kc-plan-card[data-selected="true"] {
+    border-color: var(--color-accent);
+    background: var(--color-accent-soft);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-accent) 15%, transparent);
+  }
+  .kc-plan-card-dot {
+    border-color: var(--color-line);
+    background: var(--color-surface);
+    transition: border-color 150ms ease, background-color 150ms ease;
+  }
+  .kc-plan-card[data-selected="true"] .kc-plan-card-dot {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    box-shadow: inset 0 0 0 3px var(--color-bg);
+  }
+
   .kc-cta-block {
     background: var(--color-ink);
     color: var(--color-bg);
@@ -688,5 +731,204 @@
   .kc-print-shopping-list h1,
   .kc-print-shopping-list h2 {
     page-break-after: avoid;
+  }
+}
+
+/* Phase 14, Slice 12 — multi-photo grid + carousel.
+   Form-side tile grid: 3 cols phone, 4 tablet, 6 desktop.
+   Tiles 4:3 to match the storefront card aspect. Drag-handle +
+   remove sit absolutely so a touch operator can grab either
+   without aiming. */
+@layer components {
+  .kc-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  @media (min-width: 640px) {
+    .kc-photo-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.625rem; }
+  }
+  @media (min-width: 1024px) {
+    .kc-photo-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  }
+
+  .kc-photo-tile {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-card-sm);
+    overflow: hidden;
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-line);
+    cursor: pointer;
+    transition: border-color 150ms ease, transform 150ms ease;
+  }
+  .kc-photo-tile[data-state="filled"]:hover {
+    border-color: var(--color-line-2);
+  }
+  .kc-photo-tile-img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+  }
+  .kc-photo-tile-handle {
+    position: absolute; top: 4px; left: 4px;
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklab, var(--color-ink) 60%, transparent);
+    color: var(--color-bg);
+    cursor: grab;
+    z-index: 1;
+  }
+  .kc-photo-tile-handle:active { cursor: grabbing; }
+  .kc-photo-tile-remove {
+    position: absolute; top: 4px; right: 4px;
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklab, var(--color-err) 70%, transparent);
+    color: var(--color-bg);
+    border: none;
+    cursor: pointer;
+    z-index: 1;
+  }
+  .kc-photo-tile-empty {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 6px;
+    color: var(--color-ink-2);
+    border: 2px dashed var(--color-line);
+    border-radius: inherit;
+    transition: border-color 150ms ease, background-color 150ms ease;
+    text-align: center;
+    padding: 4px;
+  }
+  .kc-photo-tile[data-state="empty"]:hover .kc-photo-tile-empty {
+    border-color: var(--color-accent);
+    background-color: color-mix(in oklab, var(--color-accent) 5%, var(--color-bg));
+  }
+  .kc-photo-tile-empty-glyph {
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+  .kc-photo-tile[data-state="locked"] {
+    cursor: default;
+  }
+  .kc-photo-tile-locked {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
+    color: var(--color-muted);
+    background: var(--color-bg-2);
+    border-radius: inherit;
+    text-align: center;
+    padding: 4px;
+  }
+  .kc-photo-tile[data-state="pending"] {
+    border-color: var(--color-accent);
+    box-shadow: inset 0 0 0 2px color-mix(in oklab, var(--color-accent) 30%, transparent);
+  }
+  .kc-photo-tile-ghost {
+    opacity: 0.4;
+    background: var(--color-accent-soft);
+  }
+
+  /* Storefront card carousel — height-stable: scroll-snap inside
+     the existing aspect-[4/3] card; dots float at the bottom edge
+     of the image so they never push the card taller. */
+  .kc-photo-carousel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  .kc-photo-carousel-track {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    width: 100%; height: 100%;
+  }
+  .kc-photo-carousel-track::-webkit-scrollbar { display: none; }
+  .kc-photo-carousel-slide {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    width: 100%; height: 100%;
+  }
+  .kc-photo-carousel-slide img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+  }
+  .kc-photo-carousel-arrow {
+    position: absolute; top: 50%;
+    transform: translateY(-50%);
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklab, var(--color-ink) 55%, transparent);
+    color: var(--color-bg);
+    border: none;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 150ms ease;
+    z-index: 2;
+  }
+  .kc-photo-carousel:hover .kc-photo-carousel-arrow,
+  .kc-photo-carousel:focus-within .kc-photo-carousel-arrow { opacity: 1; }
+  .kc-photo-carousel-arrow--prev { left: 8px; }
+  .kc-photo-carousel-arrow--next { right: 8px; }
+  .kc-photo-carousel-dots {
+    position: absolute; left: 0; right: 0; bottom: 8px;
+    display: flex; justify-content: center; gap: 4px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .kc-photo-carousel-dot {
+    width: 5px; height: 5px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in oklab, var(--color-bg) 70%, transparent);
+    transition: background 150ms ease, width 150ms ease;
+  }
+  .kc-photo-carousel-dot[data-active="true"] {
+    background: var(--color-bg);
+    width: 14px;
+  }
+
+  /* Dish-detail thumb strip — small clickable squares; the active
+     thumb gets an accent border so the operator's eye lands on what
+     the carousel is currently showing. */
+  .kc-photo-thumb {
+    width: 64px;
+    height: 48px;
+    border-radius: var(--radius-input);
+    overflow: hidden;
+    border: 2px solid transparent;
+    background: var(--color-bg-2);
+    cursor: pointer;
+    transition: border-color 150ms ease, opacity 150ms ease;
+    opacity: 0.7;
+    padding: 0;
+  }
+  .kc-photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .kc-photo-thumb:hover { opacity: 1; }
+  .kc-photo-thumb[data-active="true"] {
+    opacity: 1;
+    border-color: var(--color-accent);
   }
 }

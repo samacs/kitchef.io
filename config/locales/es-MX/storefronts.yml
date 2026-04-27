@@ -11,6 +11,13 @@ es-MX:
     footer:
       powered_by: "Hecha con"
 
+    # Phase 14, Slice 8 — vacation banner mounted at the layout
+    # level when Schedule#on_vacation? is true. Operators with a
+    # custom message override `default_body_html`.
+    vacation_banner:
+      heading: "Volvemos pronto"
+      default_body_html: "Estamos en pausa. Reanudamos pedidos el <strong>%{date}</strong>."
+
     # --- Hero + root page --------------------------------------------
     hero:
       view_menu_cta: "Ver menú"
@@ -168,8 +175,18 @@ es-MX:
         no_methods_banner: "La cocina coordinará el pago contigo por WhatsApp."
 
     # --- Dish detail page -------------------------------------------
+    # Phase 14, Slice 12 — multi-photo carousel on the storefront
+    # menu cards + dish detail gallery.
+    photo_carousel:
+      role: "carrusel de fotos"
+      slide_role: "foto"
+      slide_label: "Foto %{n} de %{total}"
+      prev: "Foto anterior"
+      next: "Foto siguiente"
+
     recipe:
       breadcrumb_aria: "Ruta de navegación"
+      gallery_aria: "Más fotos del platillo"
       back_to_menu: "Volver al menú"
       from_the_kitchen: "De la cocina"
       view_kitchen_cta: "Ver menú"

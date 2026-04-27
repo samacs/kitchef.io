@@ -105,11 +105,19 @@ es-MX:
 
   subscription:
     plans:
-      free: "Gratis"
-      pro:  "Pro"
+      free:        "Gratis"
+      pro:         "Pro"
+      pro_monthly: "Pro · Mensual"
+      pro_yearly:  "Pro · Anual"
+    sources:
+      free:   "Gratis"
+      stripe: "Pro · Pago"
+      comp:   "Pro · Cortesía"
     status:
       trialing:   "En prueba"
       active:     "Activa"
       past_due:   "Pago atrasado"
       canceled:   "Cancelada"
       incomplete: "Incompleta"
+      paused:     "Pausada"
+      ended:      "Terminada"

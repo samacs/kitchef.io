@@ -11,7 +11,6 @@ es-MX:
       product: "Producto"
       how_it_works: "Cómo funciona"
       pricing: "Precios"
-      stories: "Historias"
       sign_in: "Iniciar sesión"
       sign_up: "Empezar gratis"
       open_menu: "Abrir menú"
@@ -134,11 +133,221 @@ es-MX:
 
     pricing:
       title: "Precios"
-      lede: "Arranca gratis. Crece con Pro. Sin comisión sobre tus ventas, nunca."
+      kicker: "Precios claros · en pesos"
+      headline_html: 'Una tarifa fija. <em class="italic text-accent">Todo lo que ganas es tuyo.</em>'
+      lede: "Arranca gratis. Crece con Pro cuando estés lista. Sin comisión sobre tus ventas, nunca."
+      no_card:
+        title: "Sin tarjeta de crédito durante la prueba"
+        body: "Tienes 14 días para probar todo lo que Pro ofrece. Sólo te pedimos tarjeta cuando decidas seguir. Si no continúas, tu cocina sigue funcionando en Gratis — sin paywalls, sin perder tus datos."
+      trust_strip:
+        - kicker: "Sin comisión"
+          body:   "0% de tus ventas. Lo que cobras a tus clientes es tuyo."
+        - kicker: "Sin contratos"
+          body:   "Cancelas en un clic. Tus datos siempre son tuyos."
+        - kicker: "Pago seguro"
+          body:   "Procesado por Stripe. Recibes comprobante por correo."
+        - kicker: "En pesos"
+          body:   "Cobramos en MXN. Sin sorpresas por tipo de cambio."
+      faq:
+        headline_html: 'Preguntas <em class="italic text-accent">honestas.</em>'
+        lede: "Si tu duda no está aquí, escríbenos por WhatsApp."
+        items:
+          - q: "¿De verdad no cobran comisión por venta?"
+            a: "Ni un peso. Pagas tu mensualidad y todo lo que ganas es tuyo. Kitchef no procesa los pagos de tus clientes — tú decides cómo te pagan (efectivo, transferencia SPEI, tarjeta)."
+          - q: "¿Necesito tarjeta para probar Pro?"
+            a: "No. Te damos 14 días de Pro completos sin tarjeta de crédito. Cuando decidas continuar, ahí sí te pedimos tu método de pago. Si no continúas, tu cuenta sigue funcionando en Gratis con todos tus datos intactos."
+          - q: "¿Qué pasa cuando termina la prueba si no agrego tarjeta?"
+            a: "Tu cuenta vuelve automáticamente al plan Gratis. Conservas tu tienda, tus pedidos, tus clientes y tus recetas. Las funciones de Pro quedan en pausa hasta que decidas activarlas."
+          - q: "¿Hay descuento si pago anual?"
+            a: "Sí. Pagando anual son **2 meses gratis** comparado con la mensualidad — $1,990 MXN al año en lugar de $2,388. Se ajusta automáticamente al activar la suscripción."
+          - q: "¿Puedo cambiar entre mensual y anual después?"
+            a: "Sí. Puedes cambiar de plan cuando quieras desde tu panel. Si pasas de mensual a anual, te damos crédito por los días que pagaste de más; si vas de anual a mensual, el cambio entra en tu próxima renovación."
+          - q: "¿Cómo cancelo?"
+            a: "Desde Ajustes → Suscripción. Te damos opciones para pausar (vacaciones, embarazo, mudanza) o bajar a Gratis sin perder nada. Si quieres cancelar definitivamente, lo haces en un clic — y tienes acceso completo hasta el último día de tu ciclo."
+          - q: "¿Qué pasa con mis datos si bajo a Gratis o cancelo?"
+            a: "Tus datos siguen ahí. Si bajas a Gratis, tus recetas componibles, reportes y demás funciones Pro quedan en pausa pero los datos no se borran. Si cancelas, exportas todo en CSV antes de irte. Y si vuelves después, retomas donde te quedaste."
+          - q: "¿Emiten factura con CFDI?"
+            a: "Mientras automatizamos la facturación CFDI 4.0, emitimos tu factura manualmente. Te enviamos un comprobante de Stripe automáticamente con cada cobro, y si necesitas CFDI con tu RFC, escribe a no-reply@kitchef.mx con tus datos fiscales y te la emitimos cada mes."
+          - q: "¿Necesito RFC para usar Kitchef?"
+            a: "No. Kitchef funciona igual con o sin RFC. La factura CFDI sólo aplica si tu negocio ya está dado de alta y la necesitas para deducir."
+
+    pricing_cards:
+      toggle:
+        monthly: "Mensual"
+        yearly:  "Anual"
+        savings_chip: "−2 meses"
+      free:
+        name: "Gratis"
+        desc: "Para cocinas que están empezando."
+        billed: "Para siempre · sin tarjeta"
+        cta: "Empezar gratis"
+        features:
+          - "Hasta 40 pedidos al mes"
+          - "Tu tienda en kitchef.mx/tu-cocina"
+          - "Recetas con foto y precio"
+          - "Pedidos por WhatsApp + kanban"
+          - "Calendario de horarios y entregas"
+          - "Catálogo de proveedores y compras"
+          - "Pausa de operación (modo vacaciones)"
+      pro:
+        name: "Pro"
+        tag: "Recomendado"
+        desc: "Para cocinas establecidas que quieren crecer sin perder margen."
+        billed:
+          monthly: "$199 MXN/mes · cancela cuando quieras"
+          yearly:  "$1,990 MXN/año · 2 meses gratis · cancela cuando quieras"
+        savings_badge: "Ahorra %{pct}%"
+        cta: "Probar 14 días gratis"
+        no_card_note: "Sin tarjeta. Sin compromiso."
+        features:
+          - "Todo lo del plan Gratis"
+          - "Pedidos ilimitados"
+          - "Recetas componibles + costeo y margen automático"
+          - "Reportes de finanzas e ingeniería de menú"
+          - "Costos fijos + utilidad neta"
+          - "Personalización de platillos (tamaño, sabor, dedicatoria)"
+          - "Inventario + lotes de producción"
+          - "Dominio personalizado en tu tienda"
+          - "Sin marca Kitchef en tu storefront"
+          - "Soporte prioritario por WhatsApp"
+      compare_cta: "Ver comparación completa de funciones"
+
+    feature_comparison:
+      headline: "Compara funciones lado a lado"
+      lede: "Lo que incluye cada plan, sin asteriscos."
+      headers:
+        feature: "Función"
+        free: "Gratis"
+        pro: "Pro"
+      rows:
+        - section: "Operación diaria"
+        - label: "Pedidos al mes"
+          free:  "Hasta 40"
+          pro:   "Ilimitados"
+        - label: "Tu tienda en kitchef.mx/tu-cocina"
+          free:  true
+          pro:   true
+        - label: "Sin marca Kitchef en tu tienda"
+          free:  false
+          pro:   true
+        - label: "Dominio personalizado (tu-cocina.mx)"
+          free:  false
+          pro:   true
+        - label: "Kanban de pedidos + cancelaciones"
+          free:  true
+          pro:   true
+        - label: "Calendario, horarios y entregas programadas"
+          free:  true
+          pro:   true
+        - label: "Pausa de operación (modo vacaciones)"
+          free:  true
+          pro:   true
+
+        - section: "Crecer tu cocina"
+        - label: "Recetas con foto y precio"
+          free:  true
+          pro:   true
+        - label: "Recetas componibles (costo + margen automáticos)"
+          free:  false
+          pro:   true
+        - label: "Personalización de platillos (tamaño, sabor, dedicatoria)"
+          free:  false
+          pro:   true
+        - label: "Inventario y lotes de producción"
+          free:  false
+          pro:   true
+
+        - section: "Saber cómo te va"
+        - label: "Reporte de finanzas (ventas, gastos, margen)"
+          free:  false
+          pro:   true
+        - label: "Ingeniería de menú (estrellas, estables, revisar)"
+          free:  false
+          pro:   true
+        - label: "Costos fijos y utilidad neta"
+          free:  false
+          pro:   true
+
+        - section: "Catálogos y compras"
+        - label: "Directorio de clientes"
+          free:  true
+          pro:   true
+        - label: "Proveedores con historial de precios"
+          free:  true
+          pro:   true
+        - label: "Lista de compras semanal y registro de gastos"
+          free:  true
+          pro:   true
+
+        - section: "Soporte"
+        - label: "Centro de ayuda + comunidad"
+          free:  true
+          pro:   true
+        - label: "Soporte prioritario por WhatsApp"
+          free:  false
+          pro:   true
+
+    # Phase 14, Slice 9 — real Producto page (replaces the
+    # placeholder that pointed at /how-it-works).
+    product:
+      title: "El producto · Kitchef"
+      kicker: "Lo que recibes"
+      headline_html: 'Tu cocina, <em class="italic text-accent">en una sola pantalla.</em>'
+      lede: "Pedidos, recetas, costos, clientes y horarios en un solo lugar. Hecho para cocineras mexicanas independientes — no para gerentes de cadenas."
+      features:
+        - title: "Recetario con costos"
+          body: "Tus platillos con foto, precio y categoría. En Pro, descomponlos en ingredientes y vemos en vivo cuánto te cuesta cada uno."
+          icon: "book_open"
+        - title: "Pedidos en kanban"
+          body: "Cada pedido es una tarjeta que se mueve por estados (recibido → confirmado → en cocina → listo → entregado). Cancelaciones con motivo, duplicar canceladas, todo desde el celular."
+          icon: "list_checks"
+        - title: "Tu tienda pública"
+          body: "kitchef.mx/tu-cocina con tu marca, tu menú, tus horarios. Tus clientes piden ahí — directo, sin comisión, por WhatsApp."
+          icon: "shopping_bag"
+        - title: "Reportes que sí lees"
+          body: "Cuánto vendiste, cuánto te costó, cuánto te llevas a casa. Reporte semanal, ranking de tu menú, exportable a CSV."
+          icon: "trending_up"
+          badge: "Pro"
+        - title: "Inventario y lotes"
+          body: "Anota cuántos tamales cocinaste; el storefront muestra «Quedan 3» a tus clientes. El stock de ingredientes baja solo. Activable cuando estés lista."
+          icon: "package"
+          badge: "Pro"
+        - title: "Pantalla en cocina"
+          body: "Una vista grande para tu tablet en el comal — pedidos en orden de entrega, dos botones grandes para empezar y marcar listo. Llega pronto."
+          icon: "monitor"
+          badge: "Pronto"
+      not_goals:
+        headline: "Lo que NO hacemos (a propósito)"
+        body: "Kitchef no es un marketplace — no aparecemos como Uber Eats, no te enviamos clientes que no son tuyos. No procesamos pagos por ti — tus clientes te pagan por los medios que tú decidas. No hacemos delivery — eso lo coordinas tú o tu repartidor. Vendemos herramientas, no acceso a tu cliente."
+      cta:
+        headline: "¿Lista para tu primer pedido digital?"
+        body: "Empieza gratis, sin tarjeta. En 10 minutos tienes tu menú en línea y un kanban de pedidos esperando."
+        primary: "Empezar gratis"
+        secondary: "Ver precios"
 
     how_it_works:
-      title: "Cómo funciona"
-      lede: "De tu primera receta al cierre del mes, sin aprender a usar Excel."
+      title: "Cómo funciona · Kitchef"
+      kicker: "Tu primer pedido"
+      headline_html: 'En tres pasos, <em class="italic text-accent">de WhatsApp a un sistema.</em>'
+      lede: "Sin instalar nada, sin curso, sin contadora. Lo que ya haces a mano — pero ordenado y compartible."
+      steps:
+        - kicker: "Paso 1 · Configura"
+          title: "Crea tu cocina"
+          body: "Elige el nombre, el slug de tu storefront (kitchef.mx/tu-cocina), tu logo y tu portada. Escribimos juntas tu presentación. 5 minutos, sin tarjeta de crédito."
+          tip: "Tu storefront sigue activo aunque te tardes en cargar tu menú — después agregas platillos cuando estés lista."
+        - kicker: "Paso 2 · Carga tu menú"
+          title: "Agrega tus platillos"
+          body: "Foto, nombre, precio, categoría — uno por uno o en bloque. Cuando publicas, tu storefront se ve completo. Tus clientes hacen pedido directo desde ahí, sin descargar nada."
+          tip: "Si tu cocina ya tiene clientes recurrentes, comparte tu link kitchef.mx/tu-cocina por WhatsApp — los pedidos llegan a tu kanban."
+        - kicker: "Paso 3 · Recibe pedidos"
+          title: "Trabaja con un kanban"
+          body: "Cada pedido es una tarjeta que se mueve de columna en columna. Confirma con un toque, cocina, marca listo, entrega. Tu cliente recibe correo de confirmación + un link de WhatsApp para coordinar contigo."
+          tip: "Cuando lleves 40 pedidos al mes, te invitamos a Pro: pedidos ilimitados, costos automáticos y reportes de finanzas."
+      cta:
+        headline: "Suena bien — ¿lo intentamos?"
+        body: "Empieza gratis. Si no te sirve, exportas tus datos y listo."
+        primary: "Empezar gratis"
+        secondary: "Ver el producto completo"
 
     faq:
       title: "Preguntas frecuentes"

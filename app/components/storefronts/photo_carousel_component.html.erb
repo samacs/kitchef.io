@@ -1,0 +1,111 @@
+<%# Two render shapes: %>
+<%#   - Default (with_thumbs: false): the carousel IS the controller %>
+<%#     root and lives directly inside the caller's aspect-locked box. %>
+<%#   - Detail-page (with_thumbs: true): the controller scope wraps %>
+<%#     a carousel-in-a-box AND a thumb strip below; thumbs call %>
+<%#     `photo-carousel#goTo` to scroll the carousel. %>
+<% if with_thumbs %>
+  <div data-controller="photo-carousel"
+       class="flex flex-col gap-2"
+       role="region"
+       aria-roledescription="<%= t("storefronts.photo_carousel.role") %>"
+       aria-label="<%= alt_text %>">
+    <div class="kc-photo-carousel overflow-hidden rounded-[18px] border border-line bg-surface" style="aspect-ratio: 4 / 3;">
+      <div class="kc-photo-carousel-track"
+           data-photo-carousel-target="track"
+           data-action="scroll->photo-carousel#updateActive"
+           tabindex="0">
+        <% photos.each_with_index do |attachment, idx| %>
+          <div class="kc-photo-carousel-slide"
+               data-photo-carousel-target="slide"
+               role="group"
+               aria-roledescription="<%= t("storefronts.photo_carousel.slide_role") %>"
+               aria-label="<%= t("storefronts.photo_carousel.slide_label", n: idx + 1, total: photos.size) %>">
+            <img src="<%= helpers.url_for(attachment.variant(variant)) %>"
+                 alt="<%= idx.zero? ? alt_text : "" %>"
+                 loading="<%= idx.zero? ? "eager" : "lazy" %>" />
+          </div>
+        <% end %>
+      </div>
+      <button type="button"
+              class="kc-photo-carousel-arrow kc-photo-carousel-arrow--prev"
+              data-photo-carousel-target="prev"
+              data-action="click->photo-carousel#prev"
+              aria-label="<%= t("storefronts.photo_carousel.prev") %>">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button type="button"
+              class="kc-photo-carousel-arrow kc-photo-carousel-arrow--next"
+              data-photo-carousel-target="next"
+              data-action="click->photo-carousel#next"
+              aria-label="<%= t("storefronts.photo_carousel.next") %>">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+      <div class="kc-photo-carousel-dots" aria-hidden="true">
+        <% photos.each_with_index do |_, idx| %>
+          <span class="kc-photo-carousel-dot"
+                data-photo-carousel-target="dot"
+                data-active="<%= idx.zero? %>"></span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="flex gap-2 overflow-x-auto kc-scroll" role="list" aria-label="<%= t("storefronts.recipe.gallery_aria") %>">
+      <% photos.each_with_index do |attachment, idx| %>
+        <button type="button"
+                class="kc-photo-thumb shrink-0"
+                role="listitem"
+                data-photo-carousel-target="thumb"
+                data-photo-carousel-index-param="<%= idx %>"
+                data-action="click->photo-carousel#goTo"
+                aria-label="<%= t("storefronts.photo_carousel.slide_label", n: idx + 1, total: photos.size) %>">
+          <img src="<%= helpers.url_for(attachment.variant(:thumb)) %>" alt="" loading="lazy" />
+        </button>
+      <% end %>
+    </div>
+  </div>
+<% else %>
+  <div class="kc-photo-carousel"
+       data-controller="photo-carousel"
+       role="region"
+       aria-roledescription="<%= t("storefronts.photo_carousel.role") %>"
+       aria-label="<%= alt_text %>">
+    <div class="kc-photo-carousel-track"
+         data-photo-carousel-target="track"
+         data-action="scroll->photo-carousel#updateActive"
+         tabindex="0">
+      <% photos.each_with_index do |attachment, idx| %>
+        <div class="kc-photo-carousel-slide"
+             data-photo-carousel-target="slide"
+             role="group"
+             aria-roledescription="<%= t("storefronts.photo_carousel.slide_role") %>"
+             aria-label="<%= t("storefronts.photo_carousel.slide_label", n: idx + 1, total: photos.size) %>">
+          <img src="<%= helpers.url_for(attachment.variant(variant)) %>"
+               alt="<%= idx.zero? ? alt_text : "" %>"
+               loading="<%= idx.zero? ? "eager" : "lazy" %>" />
+        </div>
+      <% end %>
+    </div>
+    <button type="button"
+            class="kc-photo-carousel-arrow kc-photo-carousel-arrow--prev"
+            data-photo-carousel-target="prev"
+            data-action="click->photo-carousel#prev"
+            aria-label="<%= t("storefronts.photo_carousel.prev") %>">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button type="button"
+            class="kc-photo-carousel-arrow kc-photo-carousel-arrow--next"
+            data-photo-carousel-target="next"
+            data-action="click->photo-carousel#next"
+            aria-label="<%= t("storefronts.photo_carousel.next") %>">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+    <div class="kc-photo-carousel-dots" aria-hidden="true">
+      <% photos.each_with_index do |_, idx| %>
+        <span class="kc-photo-carousel-dot"
+              data-photo-carousel-target="dot"
+              data-active="<%= idx.zero? %>"></span>
+      <% end %>
+    </div>
+  </div>
+<% end %>

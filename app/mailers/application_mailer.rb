@@ -1,4 +1,6 @@
 class ApplicationMailer < ActionMailer::Base
+  include DemoGuard
+
   # Platform-wide From: address. Kitchef owns the `kitchef.mx` domain and its
   # SPF/DKIM/DMARC records, so every outbound mail leaves from here. Kitchen
   # owners don't need deliverable SMTP — when a customer wants to reach the

@@ -1,3 +1,26 @@
+# == Schema Information
+#
+# Table name: batch_consumptions
+#
+#  id                        :bigint           not null, primary key
+#  consumable_type           :string           not null
+#  cost_cents_at_consumption :bigint           default(0), not null
+#  quantity_consumed         :decimal(14, 3)   not null
+#  unit                      :string           not null
+#  created_at                :datetime         not null
+#  updated_at                :datetime         not null
+#  batch_id                  :bigint           not null
+#  consumable_id             :bigint           not null
+#
+# Indexes
+#
+#  idx_batch_consumptions_consumable     (consumable_type,consumable_id)
+#  index_batch_consumptions_on_batch_id  (batch_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (batch_id => batches.id)
+#
 class BatchConsumption < ApplicationRecord
   # Ledger row written when a Batch deducts an ingredient (or a
   # sub-recipe) from inventory. Snapshots `quantity_consumed` and

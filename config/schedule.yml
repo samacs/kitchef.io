@@ -8,3 +8,15 @@ pickup_reminder_scan:
   cron: "*/15 * * * *"
   class: "PickupReminderScanJob"
   queue: low
+
+clear_expired_vacations:
+  description: "Phase 14, Slice 8 — auto-clear Schedule#vacation_until for kitchens whose pause window has ended"
+  cron: "0 9 * * *"   # 03:00 America/Mexico_City (UTC−6 standard)
+  class: "Schedules::ClearExpiredVacationsJob"
+  queue: low
+
+demo_reset:
+  description: "Phase 14, Slice 11 — wipe noisy state from the shared public demo account"
+  cron: "30 9 * * *"   # 03:30 America/Mexico_City — after vacation sweep
+  class: "Demo::ResetJob"
+  queue: low

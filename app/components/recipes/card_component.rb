@@ -35,14 +35,8 @@ module Recipes
     # policy: :block ⇒ red (you can't sell it), :warn ⇒ amber (you'll
     # sell oversold).
     def stock_alert
-      return :none unless recipe.account.inventory_enabled?
-      return :none unless recipe.is_saleable?
-      available = Orders::BatchPicker.available_units(
-        account: recipe.account,
-        recipe:  recipe,
-        on_date: Date.current
-      )
-      return :none if available.to_i.positive?
+      return :none unless inventory_visible?
+      return :none if stock_summary.any?
       recipe.account.inventory_settings.block_oversells? ? :block : :warn
     end
 
@@ -57,6 +51,28 @@ module Recipes
     def stock_alert_message
       return nil if stock_alert == :none
       I18n.t("recipes.card.stock_alert.#{stock_alert}")
+    end
+
+    # Live availability projection for the operator, shown when the
+    # recipe has any batches covering today. Splits "completed → ready
+    # to sell" from "in progress → on the comal right now" so the
+    # operator can tell whether a unit count is fridge stock or work in
+    # flight. Returns nil when inventory is disabled, the recipe isn't
+    # saleable, or there's no covering batch (the alert message handles
+    # that case).
+    def stock_summary
+      @stock_summary ||= Recipes::StockSummary.call(
+        account: recipe.account,
+        recipe:  recipe
+      )
+    end
+
+    def stock_summary_visible?
+      inventory_visible? && stock_summary.any?
+    end
+
+    def inventory_visible?
+      recipe.account.inventory_enabled? && recipe.is_saleable?
     end
   end
 end

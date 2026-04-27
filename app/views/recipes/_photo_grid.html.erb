@@ -1,0 +1,115 @@
+<%
+  entitlements   = Entitlements.for(Current.account)
+  multi_allowed  = entitlements.allows?(:multi_photos)
+  active_slots   = multi_allowed ? Recipe::MAX_PHOTOS_PRO : 1
+  total_slots    = Recipe::MAX_PHOTOS_PRO
+  filled_count   = recipe.photo_count
+  remaining_open = [ active_slots - filled_count, 0 ].max
+%>
+
+<div class="flex flex-col gap-3"
+     data-controller="recipe-photos"
+     data-recipe-photos-max-value="<%= active_slots %>"
+     data-action="dragover->recipe-photos#preventDefault drop->recipe-photos#filesDropped">
+  <div class="flex items-baseline justify-between gap-3">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("recipes.form.photos.label") %>
+    </span>
+    <span class="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">
+      <% if multi_allowed %>
+        <%= t("recipes.form.photos.counter",
+               count: filled_count, max: active_slots) %>
+      <% else %>
+        <%= t("recipes.form.photos.counter_free", count: filled_count) %>
+      <% end %>
+    </span>
+  </div>
+
+  <ul class="kc-photo-grid"
+      role="list"
+      data-recipe-photos-target="canvas">
+    <% recipe.ordered_photos.each do |attachment| %>
+      <li class="kc-photo-tile"
+          data-recipe-photos-target="tile"
+          data-state="filled"
+          data-attachment-id="<%= attachment.id %>"
+          aria-label="<%= t("recipes.form.photos.tile_aria") %>">
+        <span class="kc-photo-tile-handle" data-recipe-photos-handle aria-hidden="true">
+          <%= icon(:grip_vertical, size: :xs) %>
+        </span>
+        <button type="button"
+                class="kc-photo-tile-remove"
+                data-action="click->recipe-photos#removeTile"
+                aria-label="<%= t("recipes.form.photos.remove_aria") %>">
+          <%= icon(:x, size: :xs) %>
+        </button>
+        <img src="<%= url_for(attachment.variant(:card)) %>"
+             alt=""
+             loading="lazy"
+             class="kc-photo-tile-img" />
+      </li>
+    <% end %>
+
+    <% if remaining_open.positive? %>
+      <li class="kc-photo-tile"
+          data-recipe-photos-target="tile"
+          data-state="empty"
+          data-action="click->recipe-photos#pickFile"
+          tabindex="0"
+          aria-label="<%= t("recipes.form.photos.add_aria") %>">
+        <div class="kc-photo-tile-empty">
+          <span class="kc-photo-tile-empty-glyph">
+            <%= icon(:image_plus, size: :md) %>
+          </span>
+          <span class="text-[12px] font-medium text-ink leading-tight">
+            <%= filled_count.zero? ? t("recipes.form.photos.add_first") : t("recipes.form.photos.add_more") %>
+          </span>
+        </div>
+      </li>
+    <% end %>
+
+    <% if !multi_allowed && filled_count + remaining_open < total_slots %>
+      <%# Locked Pro tiles — render the remaining slots as muted
+          placeholders so the operator sees what's coming with Pro. %>
+      <% (total_slots - filled_count - remaining_open).times do %>
+        <li class="kc-photo-tile"
+            data-recipe-photos-target="tile"
+            data-state="locked"
+            aria-label="<%= t("recipes.form.photos.locked_aria") %>">
+          <%= link_to subscription_path(highlight: :multi_photos),
+                class: "kc-photo-tile-locked no-underline",
+                data: { turbo_frame: "_top" } do %>
+            <%= icon(:lock, size: :sm) %>
+            <span class="text-[11px] font-medium leading-tight">
+              <%= t("recipes.form.photos.locked") %>
+            </span>
+          <% end %>
+        </li>
+      <% end %>
+    <% end %>
+  </ul>
+
+  <%# Native file picker — kept off-screen, driven by the controller. %>
+  <input type="file"
+         name="recipe[new_photos][]"
+         accept="image/jpeg,image/png,image/webp,image/heic"
+         multiple="<%= multi_allowed %>"
+         class="sr-only"
+         data-recipe-photos-target="fileInput"
+         data-action="change->recipe-photos#filesPicked" />
+
+  <%# Hidden state inputs the form submit picks up. %>
+  <input type="hidden"
+         name="recipe[photo_order]"
+         value=""
+         data-recipe-photos-target="orderInput" />
+  <input type="hidden"
+         name="recipe[remove_photo_ids]"
+         value=""
+         data-recipe-photos-target="removeIdsInput" />
+
+  <p class="text-[12px] text-muted leading-[1.4] <%= filled_count.positive? ? "hidden" : "" %>"
+     data-recipe-photos-target="emptyHint">
+    <%= t("recipes.form.photos.tip") %>
+  </p>
+</div>

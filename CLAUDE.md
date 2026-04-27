@@ -348,9 +348,9 @@ Images: max 5 MB, JPEG/PNG/WebP/HEIC, min 400×400. Variants: `thumb` (120×120)
 
 ## Billing
 
-Stripe in MXN. Two tiers: *Gratis* (free, 20 pedidos/month enforced internally) and *Pro* at $150 MXN/month. No commission on operator sales, ever.
+Stripe in MXN. Two tiers: *Gratis* (free, **40 pedidos/month** cap, enforced internally) and *Pro* at **$199 MXN/mes** or **$1,990 MXN/año** (2 meses gratis ≈ −16.7%). **14-day Pro trial, no card required**; trial-end auto-reverts to Free, never paywalls. No commission on operator sales, ever.
 
-Subscription plan keys in code: `free`, `pro`. Display via `t("subscription.plans.free") → "Gratis"`, `t("subscription.plans.pro") → "Pro"`.
+Subscription plan keys in code: `free`, `pro_monthly`, `pro_yearly`. Display via `t("subscription.plans.free") → "Gratis"`, `t("subscription.plans.pro_monthly") → "Pro · Mensual"`, `t("subscription.plans.pro_yearly") → "Pro · Anual"`. Stripe sandbox product: `prod_UPVu3WmAhMdJKm` (Kitchef Pro), prices `price_1TQgsp58g89ERoPrzw3U7GQ5` (mensual, 19900 MXN cents) + `price_1TQgsp58g89ERoPrPaVTz8A3` (anual, 199000 MXN cents). Save-flow coupon `ucUpunx9` (50% × 3 meses, repeating) for the cancel-flow's "muy caro" exit reason.
 
 ## Reserved slugs
 

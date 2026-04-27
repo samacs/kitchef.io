@@ -1,3 +1,38 @@
+# == Schema Information
+#
+# Table name: batches
+#
+#  id               :bigint           not null, primary key
+#  actual_quantity  :decimal(12, 3)   default(0.0), not null
+#  available_from   :date             not null
+#  available_until  :date             not null
+#  canceled_at      :datetime
+#  completed_at     :datetime
+#  cooked_on        :date             not null
+#  discarded_at     :datetime
+#  notes            :text
+#  planned_quantity :decimal(12, 3)   default(0.0), not null
+#  started_at       :datetime
+#  state            :string           default("planned"), not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  account_id       :bigint           not null
+#  recipe_id        :bigint           not null
+#
+# Indexes
+#
+#  idx_batches_account_window                               (account_id,available_from,available_until)
+#  index_batches_on_account_id                              (account_id)
+#  index_batches_on_account_id_and_cooked_on                (account_id,cooked_on)
+#  index_batches_on_account_id_and_recipe_id_and_cooked_on  (account_id,recipe_id,cooked_on)
+#  index_batches_on_discarded_at                            (discarded_at)
+#  index_batches_on_recipe_id                               (recipe_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (recipe_id => recipes.id)
+#
 class Batch < ApplicationRecord
   include AccountScoped
   include HasPrefixedId.new(prefix: "btc")

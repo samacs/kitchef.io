@@ -1,0 +1,197 @@
+import { Controller } from "@hotwired/stimulus"
+import Sortable from "sortablejs"
+
+// Recipe-form photo tiles. Three responsibilities:
+//
+//   1. UPLOAD via tap-to-pick or drag-drop onto the canvas. Adds a
+//      preview tile + a hidden file input the form submit picks up.
+//   2. REMOVE existing photos by appending the attachment id to a
+//      hidden `recipe[remove_photo_ids][]` array; the tile fades out
+//      so the operator sees the change immediately.
+//   3. REORDER via Sortable.js (touch + mouse). On drop, rewrite the
+//      hidden `recipe[photo_order]` array so the controller can
+//      apply the position column on save.
+//
+// Targets:
+//   - canvas       — the tile grid root (Sortable wraps this)
+//   - tile         — each photo or empty slot (Sortable items)
+//   - fileInput    — the native <input type="file"> we forward to
+//   - orderInput   — hidden text input that holds the JSON ordered list
+//   - removeIdsInput — hidden input array; cumulative as the operator
+//                      removes tiles
+//   - emptyHint    — the "Toma cerca de una ventana" tip; only renders
+//                    when no photos attached. Hidden as soon as the
+//                    operator adds her first
+//
+// Values:
+//   - max (Number) — Pro: 6, Free: 1. Beyond it, the empty slot
+//     renders the "Pro" lock placeholder; this controller still
+//     runs on Free pages (1 slot) for upload + replace.
+export default class extends Controller {
+  static targets = [
+    "canvas",
+    "tile",
+    "fileInput",
+    "orderInput",
+    "removeIdsInput",
+    "emptyHint"
+  ]
+
+  static values = {
+    max: { type: Number, default: 6 }
+  }
+
+  connect() {
+    this.removedIds = new Set()
+    this.#initSortable()
+    this.#refreshOrder()
+  }
+
+  disconnect() {
+    this.sortable?.destroy()
+  }
+
+  // ── Public actions ────────────────────────────────────────────────
+
+  // Tile click → forward to the hidden file input.
+  pickFile(event) {
+    if (event.target.closest("[data-recipe-photos-target='tile'][data-state='filled']")) return
+    if (event.target.closest("[data-recipe-photos-action]")) return
+    this.fileInputTarget?.click()
+  }
+
+  // Drop file on the canvas → forward to the file input.
+  filesDropped(event) {
+    event.preventDefault()
+    const files = event.dataTransfer?.files
+    if (!files || files.length === 0) return
+    this.#mergeFiles(files)
+  }
+
+  preventDefault(event) {
+    event.preventDefault()
+  }
+
+  // Native file input changed → render preview tiles + keep the
+  // input intact so the form submit carries the files.
+  filesPicked(event) {
+    const files = event.target.files
+    if (!files || files.length === 0) return
+    this.#mergeFiles(files)
+  }
+
+  // X button on a tile → mark for removal.
+  removeTile(event) {
+    event.preventDefault()
+    const tile = event.currentTarget.closest("[data-recipe-photos-target='tile']")
+    if (!tile) return
+
+    const attachmentId = tile.dataset.attachmentId
+    if (attachmentId) {
+      this.removedIds.add(attachmentId)
+      this.#paintRemovedIds()
+    }
+    tile.remove()
+    this.#refreshOrder()
+    this.#refreshEmptyHint()
+  }
+
+  // ── Internals ─────────────────────────────────────────────────────
+
+  #initSortable() {
+    if (!this.hasCanvasTarget) return
+    this.sortable = Sortable.create(this.canvasTarget, {
+      animation: 150,
+      delay: 200,                         // long-press on touch before drag starts
+      delayOnTouchOnly: true,
+      handle: "[data-recipe-photos-handle]",
+      filter: "[data-state='locked'],[data-state='empty']",
+      preventOnFilter: false,             // empty/locked tiles still tap to pick
+      ghostClass: "kc-photo-tile-ghost",
+      onEnd: () => this.#refreshOrder()
+    })
+  }
+
+  #mergeFiles(fileList) {
+    const dt = new DataTransfer()
+    Array.from(this.fileInputTarget.files || []).forEach(f => dt.items.add(f))
+    Array.from(fileList).forEach(f => dt.items.add(f))
+    this.fileInputTarget.files = dt.files
+    this.#renderPendingPreviews(this.fileInputTarget.files)
+    this.#refreshEmptyHint()
+  }
+
+  #renderPendingPreviews(fileList) {
+    // Remove previous "pending" tiles so re-picking doesn't duplicate.
+    this.canvasTarget
+        .querySelectorAll("[data-state='pending']")
+        .forEach(t => t.remove())
+
+    const empty = this.canvasTarget.querySelector("[data-state='empty']")
+
+    Array.from(fileList).forEach((file, idx) => {
+      const tile = this.#buildPendingTile(file, idx)
+      if (empty) {
+        this.canvasTarget.insertBefore(tile, empty)
+      } else {
+        this.canvasTarget.appendChild(tile)
+      }
+    })
+    this.#refreshOrder()
+  }
+
+  #buildPendingTile(file, idx) {
+    const url = URL.createObjectURL(file)
+    const tile = document.createElement("li")
+    tile.className = "kc-photo-tile"
+    tile.dataset.recipePhotosTarget = "tile"
+    tile.dataset.state = "pending"
+    tile.dataset.pendingIndex = String(idx)
+
+    tile.innerHTML = `
+      <span class="kc-photo-tile-handle" data-recipe-photos-handle>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9"  cy="6"  r="1"/><circle cx="15" cy="6"  r="1"/>
+          <circle cx="9"  cy="12" r="1"/><circle cx="15" cy="12" r="1"/>
+          <circle cx="9"  cy="18" r="1"/><circle cx="15" cy="18" r="1"/>
+        </svg>
+      </span>
+      <button type="button"
+              class="kc-photo-tile-remove"
+              data-action="click->recipe-photos#removeTile"
+              aria-label="Quitar foto">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <img src="${url}" alt="" loading="lazy" class="kc-photo-tile-img"/>
+    `
+    return tile
+  }
+
+  #refreshOrder() {
+    if (!this.hasOrderInputTarget) return
+    const order = this.tileTargets
+      .filter(t => t.dataset.state === "filled" || t.dataset.state === "pending")
+      .map(t => {
+        if (t.dataset.state === "pending") {
+          return { kind: "pending", index: Number(t.dataset.pendingIndex) }
+        }
+        return { kind: "existing", id: Number(t.dataset.attachmentId) }
+      })
+    this.orderInputTarget.value = JSON.stringify(order)
+  }
+
+  #paintRemovedIds() {
+    if (!this.hasRemoveIdsInputTarget) return
+    this.removeIdsInputTarget.value = Array.from(this.removedIds).join(",")
+  }
+
+  #refreshEmptyHint() {
+    if (!this.hasEmptyHintTarget) return
+    const filledCount = this.tileTargets.filter(t =>
+      t.dataset.state === "filled" || t.dataset.state === "pending"
+    ).length
+    this.emptyHintTarget.classList.toggle("hidden", filledCount > 0)
+  }
+}

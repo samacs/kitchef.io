@@ -29,6 +29,17 @@ class SchedulesController < AuthenticatedController
   private
 
   def schedule_params
-    params.require(:schedule).permit(:order_mode, :lead_time_hours)
+    permitted = params.require(:schedule).permit(
+      :order_mode, :lead_time_hours,
+      :vacation_until, :vacation_message
+    )
+
+    # "" (operator clicked "Reanudar mi cocina" → empty field) reads
+    # back as a real Date.parse error in dev. Normalize empty string
+    # to nil so clearing the pause is a one-click operation. Same for
+    # the message — empty string clears the override copy.
+    permitted[:vacation_until]   = nil if permitted.key?(:vacation_until)   && permitted[:vacation_until].blank?
+    permitted[:vacation_message] = nil if permitted.key?(:vacation_message) && permitted[:vacation_message].blank?
+    permitted
   end
 end

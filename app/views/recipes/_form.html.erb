@@ -145,59 +145,7 @@
     <span class="text-[12px] text-muted"><%= t("recipes.form.lead_time_hint") %></span>
   </label>
 
-  <div class="flex flex-col gap-2">
-    <span class="text-[13px] font-medium text-ink leading-none">
-      <%= t("recipes.form.photo_label") %>
-    </span>
-
-    <% if recipe.photos.attached? %>
-      <div class="flex items-center gap-4 p-4 rounded-card-sm bg-bg-2/60 border border-line">
-        <img src="<%= url_for(recipe.photos.first.variant(:thumb)) %>"
-             alt=""
-             class="w-16 h-16 rounded-[10px] object-cover shadow-card" />
-        <div class="flex-1 min-w-0 flex flex-col gap-1">
-          <span class="text-[13.5px] font-medium text-ink truncate">
-            <%= recipe.photos.first.filename.to_s %>
-          </span>
-          <span class="text-[12px] text-muted">
-            <%= number_to_human_size(recipe.photos.first.byte_size) %>
-          </span>
-        </div>
-      </div>
-    <% end %>
-
-    <label for="recipe_photos"
-           class="relative flex flex-col items-center justify-center gap-2 p-8 rounded-card border-2 border-dashed border-line hover:border-accent hover:bg-bg-2/60 transition cursor-pointer text-center overflow-hidden min-h-[220px]">
-      <img data-image-upload-target="preview"
-           src="<%= recipe.photos.attached? ? url_for(recipe.photos.first.variant(:card)) : "" %>"
-           alt=""
-           class="<%= recipe.photos.attached? ? "" : "hidden" %> absolute inset-0 w-full h-full object-cover" />
-
-      <div data-image-upload-target="placeholder"
-           class="<%= recipe.photos.attached? ? "hidden" : "" %> relative z-10 flex flex-col items-center gap-2">
-        <span class="w-12 h-12 inline-flex items-center justify-center rounded-full bg-accent-soft text-accent">
-          <%= icon(:image_plus, size: :md) %>
-        </span>
-        <span class="text-[14px] font-medium text-ink">
-          <%= t("recipes.form.photo_upload") %>
-        </span>
-        <span class="text-[12px] text-muted"><%= t("recipes.form.photo_hint") %></span>
-      </div>
-
-      <span class="<%= recipe.photos.attached? ? "" : "hidden" %> absolute bottom-3 left-1/2 -translate-x-1/2 z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill bg-ink/80 text-bg text-[12px] font-medium backdrop-blur-sm">
-        <%= icon(:image_plus, size: :xs) %>
-        <%= t("recipes.form.photo_replace") %>
-      </span>
-
-      <input id="recipe_photos"
-             type="file"
-             name="recipe[photos][]"
-             accept="image/jpeg,image/png,image/webp,image/heic"
-             class="sr-only"
-             data-image-upload-target="input"
-             data-action="change->image-upload#preview" />
-    </label>
-  </div>
+  <%= render "photo_grid", recipe: recipe %>
 
   <% if autosave && Current.account.composable_recipes? %>
     <%# Saleable / internal toggle — simple-mode accounts never see this.

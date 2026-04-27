@@ -1231,10 +1231,11 @@ The per-order confirmation URL (`/:slug/orders/:prefixed_id`) is the access toke
 
 | Enum key | Display | Billing | Notes |
 |---|---|---|---|
-| `free` | **Gratis** | no Stripe entry | entry tier, 20 pedidos/month cap |
-| `pro`  | **Pro**    | $150 MXN/mes    | single paid plan, uncapped |
+| `free` | **Gratis** | no Stripe entry | entry tier, **40 pedidos/mes cap** |
+| `pro_monthly` | **Pro · Mensual** | **$199 MXN/mes** (Stripe `price_1TQgsp58g89ERoPrzw3U7GQ5`) | uncapped pedidos, full Pro feature set |
+| `pro_yearly`  | **Pro · Anual**   | **$1,990 MXN/año** (Stripe `price_1TQgsp58g89ERoPrPaVTz8A3`) | 2 meses gratis vs mensual (−16.7%) |
 
-Display strings live under `t("subscription.plans.*")` in `config/locales/es-MX/domain.yml`. An annual variant of Pro ships as a second Stripe price ID against the same `plan: :pro` enum value.
+Display strings live under `t("subscription.plans.*")` in `config/locales/es-MX/domain.yml`. Both Pro prices belong to the same Stripe product `prod_UPVu3WmAhMdJKm` (Kitchef Pro). Trial: 14 días, sin tarjeta (`payment_method_collection: 'if_required'` on the Checkout Session, plus a single-use guard via `customer.metadata.has_trialed`). Save-flow coupon: `ucUpunx9` (50% off × 3 meses, repeating).
 
 ### Flow
 1. Operator clicks *Mejorar a Pro*.

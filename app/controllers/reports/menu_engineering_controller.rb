@@ -2,6 +2,9 @@ require "csv"
 
 module Reports
   class MenuEngineeringController < AuthenticatedController
+    include Subscriptions::FeatureGated
+    gate_feature :menu_engineering_reports
+
     DEFAULT_PRESET = :last_30_days
 
     # Bucket sizes — top-N stars, bottom-N review. The "steady" group is

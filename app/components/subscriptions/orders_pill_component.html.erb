@@ -1,0 +1,19 @@
+<div class="<%= container_classes %>">
+  <div class="flex flex-col gap-1 min-w-0">
+    <span class="font-mono text-[12px] tabular-nums leading-none text-ink-2">
+      <%= label %>
+    </span>
+    <div class="w-[120px] h-[3px] rounded-full bg-bg-2 overflow-hidden">
+      <div class="h-full <%= progress_class %> rounded-full transition-all"
+           style="width: <%= counter.percent %>%"
+           aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <% if cta_visible? %>
+    <%= link_to cta_path,
+          class: "inline-flex items-center gap-1 rounded-pill bg-accent text-bg px-3 py-1 text-[11.5px] font-semibold no-underline hover:bg-accent-2 transition-colors" do %>
+      <%= cta_label %>
+    <% end %>
+  <% end %>
+</div>

@@ -1,0 +1,13 @@
+<%
+  classes = case status
+            when "paid"          then "bg-accent-soft text-accent border-accent/30"
+            when "open"          then "bg-warn/15 text-warn-ink border-warn/30"
+            when "uncollectible" then "bg-err/15 text-err border-err/30"
+            when "void"          then "bg-bg-2 text-muted border-line"
+            else                       "bg-bg-2 text-ink-2 border-line"
+            end
+  label = t("subscriptions.invoices.statuses.#{status}", default: status.to_s.titleize)
+%>
+<span class="inline-flex items-center gap-1 rounded-pill border <%= classes %> px-2 py-px font-mono text-[10.5px] uppercase tracking-[0.08em]">
+  <%= label %>
+</span>

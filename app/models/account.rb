@@ -5,6 +5,7 @@
 #  id                  :bigint           not null, primary key
 #  branding            :jsonb            not null
 #  default_currency    :string           default("MXN"), not null
+#  demo                :boolean          default(FALSE), not null
 #  discarded_at        :datetime
 #  geocoded_at         :datetime
 #  geocoding_failed_at :datetime
@@ -24,6 +25,7 @@
 #
 # Indexes
 #
+#  idx_accounts_demo_true                    (demo) WHERE (demo = true)
 #  index_accounts_on_discarded_at            (discarded_at)
 #  index_accounts_on_latitude_and_longitude  (latitude,longitude)
 #  index_accounts_on_owner_id                (owner_id)
@@ -88,7 +90,7 @@ class Account < ApplicationRecord
     menus
     new news notifications
     onboarding
-    packaging password passwords platform platforms pricing privacy production products profile purchase purchases
+    packaging password passwords platform platforms pricing privacy product production products profile purchase purchases
     r register rent reports reset-password root
     schedule search settings sign-in signin sign-out signout sign-up signup supplier suppliers
     stats status subscribe subscription support
@@ -151,6 +153,7 @@ class Account < ApplicationRecord
   has_many :categories,             dependent: :destroy   # last — ingredients + recipes FK to it
   has_one  :schedule,               dependent: :destroy, inverse_of: :account
   has_one  :subscription,           dependent: :destroy
+  has_many :dismissed_hints,        class_name: "Subscriptions::DismissedHint", dependent: :destroy
 
   # Every account boots with a blank Schedule so storefront code can count
   # on `account.schedule` being non-nil. Operators fill it in from
@@ -216,9 +219,13 @@ class Account < ApplicationRecord
     where("accounts.settings @> ?", { use_composable_recipes: true }.to_json)
   }
 
-  # Convenience: true when the operator has opted into advanced mode.
+  # Composable-recipe / cost-engine UI lights up when the operator
+  # has opted into advanced mode AND her plan grants the entitlement
+  # (Phase 14, Slice 7). A Free account that previously decomposed
+  # recipes keeps the data; the UI just stops rendering the cost
+  # tree + decomposition controls until she activates Pro.
   def composable_recipes?
-    settings.use_composable_recipes
+    settings.use_composable_recipes && Entitlements.for(self).allows?(:composable_recipes)
   end
 
   def payment_settings
@@ -233,8 +240,27 @@ class Account < ApplicationRecord
     settings.inventory_settings
   end
 
+  # Inventory is opt-in (Phase 13 toggle) AND Pro-gated (Phase 14
+  # Slice 7). Both must be true; flipping the toggle on a Free
+  # account silently has no effect until the operator activates Pro.
   def inventory_enabled?
-    inventory_settings.enabled
+    inventory_settings.enabled && Entitlements.for(self).allows?(:inventory)
+  end
+
+  # Phase 14, Slice 1 — demo flag. When true, the operator + storefront
+  # surfaces render a persistent banner and every external-side-effect
+  # service (Mailer, WhatsApp, Stripe, geocoding, Noticed delivery)
+  # silently no-ops. Demo accounts can't open Stripe Checkout —
+  # entitlement comes from a comp Subscription seeded by `dev:bootstrap`.
+  def demo?
+    demo == true
+  end
+
+  # Convenience: is this account currently entitled to Pro features?
+  # Reads through Subscription so admins toggling comp grants flip
+  # behavior instantly across every surface that uses Entitlements.
+  def pro?
+    subscription&.pro? || false
   end
 
   # ── Pickup address + geocoding ───────────────────────────────────────

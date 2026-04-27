@@ -31,19 +31,31 @@
   <section class="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-start">
     <%# ── Left column: photo + kitchen strip + all customization options ── %>
     <div>
-      <div class="overflow-hidden rounded-[18px] border border-line bg-surface"
-           style="aspect-ratio: 4 / 3;">
-        <% if photo_hero %>
-          <%= image_tag photo_hero,
-                class: "h-full w-full object-cover",
-                alt: @recipe.name %>
-        <% else %>
-          <div class="flex h-full w-full items-center justify-center font-serif italic text-[80px]"
-               style="color: var(--brand-1);">
-            <%= @recipe.name.first.upcase %>
-          </div>
-        <% end %>
-      </div>
+      <%# Phase 14, Slice 12 — multi-photo gallery on the dish detail.
+          1 photo or 0 → keep the legacy single-image hero.
+          2+ photos → component renders carousel + thumb strip in one
+          shared Stimulus scope (with_thumbs: true). %>
+      <% if @recipe.photo_count > 1 %>
+        <%= render Storefronts::PhotoCarouselComponent.new(
+              recipe: @recipe,
+              variant: :hero,
+              alt: @recipe.name,
+              with_thumbs: true) %>
+      <% else %>
+        <div class="overflow-hidden rounded-[18px] border border-line bg-surface"
+             style="aspect-ratio: 4 / 3;">
+          <% if photo_hero %>
+            <%= image_tag photo_hero,
+                  class: "h-full w-full object-cover",
+                  alt: @recipe.name %>
+          <% else %>
+            <div class="flex h-full w-full items-center justify-center font-serif italic text-[80px]"
+                 style="color: var(--brand-1);">
+              <%= @recipe.name.first.upcase %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
 
       <%# "About the kitchen" strip %>
       <%= link_to back_href,

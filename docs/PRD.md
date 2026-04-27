@@ -282,7 +282,8 @@ Pro is the *"I'm running a serious operation"* tier. It unlocks analytics, autom
 - **Excel export** of finance and production reports (`caxlsx`).
 - **SMS pickup/delivery reminders** (Twilio).
 - **Priority email support**, daily digest, and multi-user (coming with fonda tier).
-- **$150 MXN/month** (or $1,500 MXN/year, 2 months free)
+- **$199 MXN/mes** (o **$1,990 MXN/año**, 2 meses gratis · ≈ −16.7%)
+- **14-day Pro trial — no credit card required.** Trial-end auto-reverts to Free, never paywalls. Card only needed when the operator actively chooses to continue with Pro.
 
 ### Payment rails (v1)
 - Stripe for card payments in MXN
@@ -355,7 +356,7 @@ All five modules above, free + Pro tiers, Stripe, Resend, Turbo real-time, publi
 ## 11. Risks & Open Questions
 
 ### Risks
-- **Willingness to pay at $150 MXN/month is unproven for this audience.** Mitigation: free tier with generous limit (20 pedidos) + clear upgrade moments.
+- **Willingness to pay at $199 MXN/month is unproven for this audience.** Mitigation: free tier with generous limit (**40 pedidos/mes**) + 14-day no-card Pro trial + clear in-context upgrade moments. Save-flow coupon (`50% × 3 meses`) absorbs price-sensitive cancels at the moment of churn.
 - **Acquisition is WhatsApp/Instagram organic, which is slow.** Mitigation: seed 20–30 founding operators with direct outreach before public launch; invest in content SEO around *"cómo vender comida desde casa"*.
 - **Support load for non-technical users could be high.** Mitigation: ruthless UX simplicity, in-app WhatsApp support channel, video walkthroughs.
 - **WhatsApp changes its deep-link or Business API terms.** Mitigation: we rely only on public `wa.me` URLs in v1; no API lock-in.

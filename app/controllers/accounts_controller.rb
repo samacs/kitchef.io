@@ -51,6 +51,34 @@ class AccountsController < AuthenticatedController
     redirect_to edit_account_path, notice: t("account.cover_removed")
   end
 
+  # Phase 14, Slice 5 — physical "Borrar mi cuenta" zona peligrosa.
+  # Operator must type her kitchen name as the confirmation token; if
+  # it matches, we hard-delete the account + everything under it AND
+  # the owner's User row (via Account#users cascade), then sign her
+  # out. No undo, no soft-delete preserved. Stripe-side cleanup
+  # (cancel paying subscription) is handled inside Accounts::Destroy.
+  def destroy
+    confirmation = params[:confirmation_name].to_s.strip
+    if confirmation != Current.account.name
+      redirect_to subscription_path,
+                  alert: t("account.destroy.name_mismatch", name: Current.account.name)
+      return
+    end
+
+    result = Accounts::Destroy.call(
+      account:        Current.account,
+      acted_by_user:  Current.user
+    )
+
+    if result.success?
+      reset_session
+      redirect_to root_path, notice: t("account.destroy.success")
+    else
+      redirect_to subscription_path,
+                  alert: t("account.destroy.failure", message: result.errors.to_a.first)
+    end
+  end
+
   private
 
   def account_params

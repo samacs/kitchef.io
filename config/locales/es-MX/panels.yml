@@ -394,6 +394,13 @@ es-MX:
       stock_alert:
         warn: "Sin lotes para hoy — vendiendo sin stock."
         block: "Agotado en tu tienda. Anota un lote para volver a vender."
+      stock_summary:
+        available:
+          one: "Queda %{count} para vender"
+          other: "Quedan %{count} para vender"
+        producing:
+          one: "%{count} en producción"
+          other: "%{count} en producción"
     bulk_publish:
       title:
         one: "Tienes 1 platillo listo para publicar"
@@ -448,6 +455,21 @@ es-MX:
       photo_upload: "Elige una foto"
       photo_replace: "Cambiar foto"
       photo_hint: "JPG, PNG, WebP o HEIC. Máximo 5 MB."
+      # Phase 14, Slice 12 — multi-photo grid copy.
+      photos:
+        label: "Fotos del platillo"
+        counter: "%{count} de %{max}"
+        counter_free:
+          one: "%{count} foto · Gratis"
+          other: "%{count} fotos · Gratis"
+        add_first: "Agrega tu primera foto"
+        add_more: "Agrega otra foto"
+        tip: "Toma cerca de una ventana, sin flash. La primera foto es la que se ve en tu menú."
+        tile_aria: "Foto del platillo"
+        remove_aria: "Quitar foto"
+        add_aria: "Agregar foto"
+        locked_aria: "Disponible en Pro"
+        locked: "Pro"
       publish_label: "Mostrar en mi tienda"
       publish_hint: "Tus clientes verán este platillo en tu menú público."
       publish_hint_needs_photo: "Sube una foto primero — sin ella, tu menú se ve incompleto."
@@ -901,6 +923,20 @@ es-MX:
       subtitle: "Define cuándo aceptas pedidos y para cuándo entregas. Tus cambios se guardan solos."
     update:
       updated: "Horario actualizado."
+    # Phase 14, Slice 8 — vacation mode card.
+    vacation:
+      title: "Pausar mi cocina"
+      subtitle: "Sal de vacaciones, descansa o cierra temporalmente sin perder a tus clientes. Tu storefront muestra «Volvemos pronto» y deja de recibir pedidos hasta la fecha que elijas."
+      paused_chip: "EN PAUSA"
+      until_label: "Pausar hasta el día"
+      message_label: "Mensaje (opcional)"
+      message_placeholder: "Ej.: Cerramos por mudanza · Regresamos en agosto"
+      pause_cta: "Pausar mi cocina"
+      pause_confirm: "¿Pausar tu cocina hasta esta fecha? Tu storefront va a dejar de recibir pedidos."
+      warning: "Tu suscripción Pro sigue activa durante la pausa. Tus datos se quedan intactos."
+      resume_cta: "Reanudar mi cocina"
+      active_until_html: "Tu cocina está pausada hasta el <strong>%{date}</strong>"
+      resumes_on_html: "Reanudamos automáticamente el %{date}."
     autosave:
       saving: "Guardando…"
       saved: "Guardado"
@@ -963,6 +999,10 @@ es-MX:
     save_error: "Revisa los campos marcados y vuelve a intentarlo."
     logo_removed: "Quitaste el logo."
     cover_removed: "Quitaste la portada."
+    destroy:
+      success: "Tu cuenta se borró por completo. Adiós, y gracias por probar Kitchef."
+      name_mismatch: "Para confirmar, escribe el nombre exacto de tu cocina: «%{name}»."
+      failure: "No pudimos borrar tu cuenta: %{message}"
     autosave:
       saving: "Guardando…"
       saved: "Guardado"
@@ -1078,6 +1118,249 @@ es-MX:
       default_batch_window_hint: "Cuántos días después de que cocinas un lote sigue disponible para venta. 0 = sólo el mismo día."
   subscription:
     title: "Plan"
+
+  # Phase 14, Slice 1 — copy for the locked-feature card and
+  # dismissible upgrade hint banners. Each gated surface passes its
+  # own title/lede; the keys below are the chrome the components
+  # need (kicker, CTA, dismiss aria-label, etc.).
+  subscriptions:
+    locked:
+      kicker: "DISPONIBLE EN PRO"
+      cta:    "Activa Pro"
+      # Phase 14, Slice 7 — per-feature copy used by
+      # Subscriptions::FeatureGated whenever a controller blocks a
+      # Free account. Adding a new gated controller is one locale
+      # entry under the feature's symbol.
+      finance_reports:
+        title: "Tus reportes te esperan en Pro"
+        subtitle: "Cómo te va, semana tras semana"
+        lede: "Aquí vivirá tu reporte de finanzas — ventas, gastos, margen real, utilidad neta — la semana que decidas activar Pro."
+        bullets:
+          - "Ventas y gastos por semana, mes y año"
+          - "Margen bruto, margen real y utilidad neta"
+          - "Tendencia de 8 semanas + exportable a CSV"
+      menu_engineering_reports:
+        title: "Tu menú, ordenado por desempeño"
+        subtitle: "Estrellas, estables y para revisar"
+        lede: "Cuando actives Pro, vemos qué platillos jalan más, cuáles se mantienen, y cuáles vale la pena revisar."
+        bullets:
+          - "Tus 3 estrellas (mejor margen × volumen)"
+          - "Platillos estables — los pilares de tu cocina"
+          - "Platillos para revisar — qué bajar o quitar"
+      fixed_costs:
+        title: "Gastos fijos y utilidad neta"
+        subtitle: "Renta, gas, plataformas — todo lo que no es por pedido"
+        lede: "Lleva el control de tus costos fijos para ver cuánto te llevas a casa después de la renta. Disponible en Pro."
+        bullets:
+          - "Renta, gas, plataformas, empaque mensual"
+          - "Costo fijo por pedido (cuánto te cuesta sólo abrir)"
+          - "Margen real + utilidad neta en /reportes"
+      inventory:
+        title: "Inventario y lotes de producción"
+        subtitle: "Cuánto cocinaste, cuánto te queda"
+        lede: "Activa Pro para llevar control de tus lotes — cuántos tamales hiciste, cuántos te quedan, y qué ingrediente bajó de stock."
+        bullets:
+          - "Lotes con fecha de cocción y ventana"
+          - "Stock por ingrediente que decrementa solito"
+          - "Avisos en el menú: «Quedan 3» / «Agotado»"
+      composable_recipes:
+        title: "Recetas componibles + costo automático"
+        subtitle: "Sabe qué te cuesta cada platillo"
+        lede: "Cuando actives Pro, descompones tus recetas en ingredientes y bases, y vemos en vivo cuánto te cuesta cada uno + tu margen real."
+        bullets:
+          - "Costos automáticos cuando sube un insumo"
+          - "Margen real por platillo — actualizado al instante"
+          - "Análisis de impacto: «Si sube la harina 10%, estos platillos pierden margen»"
+      recipe_customization:
+        title: "Personalización de platillos"
+        subtitle: "Tamaño, sabor, dedicatoria, extras"
+        lede: "Activa Pro para que tus clientes pidan tu pastel «grande, de fresa, con velas y dedicatoria personalizada» sin escribirte por WhatsApp."
+        bullets:
+          - "Opciones por receta (tamaño, relleno, color)"
+          - "Tu cliente quita ingredientes (sin cilantro, sin chile)"
+          - "Texto libre (dedicatorias, instrucciones)"
+      kds:
+        title: "Kitchen Display System"
+        subtitle: "La pantalla de tu cocina"
+        lede: "Pronto llega: una pantalla en tu comal con todos los pedidos en orden de cocción. Activa Pro para reservar tu acceso anticipado."
+        bullets:
+          - "Pantalla grande, legible desde el comal"
+          - "Pedidos ordenados por hora de entrega"
+          - "Un toque para «Empezar» y «Listo»"
+      custom_domain:
+        title: "Tu dominio personalizado"
+        subtitle: "tu-cocina.mx en lugar de kitchef.mx/tu-cocina"
+        lede: "En Pro, tu storefront vive en el dominio que tú elijas. Se ve más profesional para tus clientes y para ti."
+        bullets:
+          - "Apunta tu propio .mx, .com, etc."
+          - "Sin marca «Hecha con Kitchef» en el footer"
+          - "Configuración guiada paso a paso"
+      hide_kitchef_branding:
+        title: "Tu cocina, tu marca"
+        subtitle: "Sin marca Kitchef en tu storefront"
+        lede: "Cuando actives Pro, quitamos «Hecha con Kitchef» del footer y los emails. Tus clientes ven tu cocina, no la nuestra."
+        bullets:
+          - "Footer del storefront sin marca Kitchef"
+          - "Correos transaccionales con tu identidad"
+          - "Más tu marca, menos la nuestra"
+    hints:
+      dismiss_label: "No me muestres esto otra vez"
+    orders_pill:
+      safe: "%{count}/%{limit} pedidos · %{remaining} restantes"
+      approaching: "%{count}/%{limit} pedidos · sólo %{remaining} restantes"
+      near_limit: "%{count}/%{limit} pedidos · %{remaining} restantes"
+      reached: "%{count}/%{limit} pedidos · alcanzaste tu límite"
+      cta_default: "Activar Pro"
+      cta_approaching: "Pasa a Pro"
+      cta_near_limit: "Activa Pro"
+      cta_reached: "Activa Pro"
+      warn_title:
+        approaching: "Llevas %{count} de %{limit} pedidos este mes — te quedan %{remaining}"
+        near_limit: "Sólo %{remaining} pedidos antes de tu límite"
+      warn_body:
+        approaching: "Cuando llegues a %{limit}, tu storefront va a dejar de aceptar pedidos hasta que termine el mes — o hasta que actives Pro."
+        near_limit: "Cuando llegues a %{limit}, tu storefront se detiene. Activa Pro y sigue recibiendo pedidos sin parar."
+      warn_cta: "Pasa a Pro"
+    # Slice 3/5 — /subscription show page + checkout copy.
+    show:
+      title: "Tu plan"
+      subtitle: "Cómo te cobramos y qué incluye"
+      current_plan_kicker: "PLAN ACTUAL"
+      active_chip: "Activo"
+      free_chip: "Gratis"
+      cancel_pending_chip: "Termina pronto"
+      coming_soon: "Disponible pronto"
+      trial_until_html: "Estás en prueba gratis hasta el <strong>%{date}</strong>. Después tu cuenta vuelve a Gratis si no agregas tarjeta."
+      comp_until_html: "Pro de cortesía hasta el <strong>%{date}</strong>. Después vuelves al plan Gratis automáticamente."
+      renews_html: "Próxima renovación: <strong>%{date}</strong>."
+      cancel_pending_html: "Tu Pro termina el <strong>%{date}</strong>. Hasta esa fecha sigues con acceso completo. Después tu cuenta vuelve a Gratis automáticamente."
+      upgrade_yearly_note: "Anual · 2 meses gratis"
+      upgrade_monthly_note: "Mensual · cancela cuando quieras"
+      no_card_note: "Sin tarjeta durante la prueba. Sólo te pedimos método de pago si decides continuar."
+      switch:
+        title: "Cambiar de plan mensual a anual (o al revés)"
+        lede:  "Stripe calcula el prorrateo automáticamente. Te damos crédito por los días que pagaste de más."
+        to_yearly_cta: "Cambiar a Anual"
+        to_yearly_hint: "Ahorras 2 meses al año (~17%)."
+        to_monthly_cta: "Cambiar a Mensual"
+        to_monthly_hint: "Llega en tu próxima renovación."
+        confirm_to_yearly: "¿Cambiar a Pro Anual? Te cobramos la diferencia prorrateada hoy y luego $1,990 cada año."
+        confirm_to_monthly: "¿Cambiar a Pro Mensual? El cambio aplica al renovar."
+      cancel:
+        title: "Cancelar Pro"
+        body:  "Te damos opciones para pausar o bajar a Gratis sin perder nada."
+        cta:   "Cancelar suscripción"
+      payment_method:
+        title: "Método de pago"
+        body:  "Actualiza tu tarjeta o dirección de facturación en el portal de Stripe."
+        cta:   "Administrar método de pago"
+      invoices:
+        title: "Tus facturas y comprobantes"
+        body:  "Descarga tus comprobantes o solicita CFDI con tu RFC."
+        cta:   "Ver facturas"
+      danger:
+        title: "Borrar mi cuenta"
+        body:  "Esto elimina TU cocina, TUS pedidos, TUS clientes, TUS recetas y todo lo que has creado. No hay forma de recuperarlo. Confirma escribiendo el nombre exacto de tu cocina."
+        input_label: "Escribe «%{name}» para confirmar"
+        cta: "Borrar mi cuenta para siempre"
+        confirm_browser: "Esto es irreversible. ¿Estás segura?"
+      banner:
+        save_applied_title: "¡Listo! Aplicamos el descuento del 50%"
+        save_applied_body:  "Los próximos 3 pagos llevan medio precio. Bienvenida de vuelta."
+        downgraded_title: "Tu cuenta está en Gratis"
+        downgraded_body:  "Tu storefront sigue activo. Cuando quieras volver a Pro, lo activas desde aquí."
+        checkout_canceled_title: "Cancelaste el pago"
+        checkout_canceled_body:  "Tu cuenta sigue en su plan actual. Cuando quieras seguir, vuelve a intentar."
+    create:
+      demo_blocked: "Esta es una cocina demo — no se puede activar Pro desde aquí."
+      checkout_failed: "No pudimos abrir el pago. Intenta de nuevo o escríbenos: %{message}"
+    plan_switches:
+      create:
+        success: "Listo — cambiaste a %{period}."
+        failure: "No pudimos cambiar tu plan: %{message}"
+    downgrades:
+      create:
+        success: "Bajaste a Gratis. Tu storefront sigue activo y conservamos todos tus datos."
+        failure: "No pudimos completar el cambio: %{message}"
+    cancellations:
+      not_pro: "Tu cuenta no tiene una suscripción Pro activa."
+      reasons:
+        too_expensive:
+          label: "Está muy caro"
+          body:  "El precio no me funciona ahora mismo."
+        not_using:
+          label: "No la estoy usando lo suficiente"
+          body:  "Pago Pro pero no aprovecho lo que ofrece."
+        missing_feature:
+          label: "Me faltó una función"
+          body:  "Necesitaba algo que Kitchef no tiene."
+        closing_kitchen:
+          label: "Voy a cerrar mi cocina por un tiempo"
+          body:  "Vacaciones, embarazo, mudanza, descanso."
+        other:
+          label: "Otra razón"
+          body:  "Cuéntanos por WhatsApp si quieres."
+      new:
+        title: "Cancelar Pro"
+        subtitle: "Antes de irte, queremos entender por qué"
+        kicker: "Cancelar"
+        headline: "¿Por qué te vas?"
+        lede: "Tu respuesta nos ayuda a mejorar. También nos dice si podemos ofrecerte algo que sí te sirva."
+        back: "← Volver"
+        continue_cta: "Continuar"
+      show:
+        title: "Cancelar Pro"
+        subtitle: "Tienes algunas opciones antes de irte"
+        save_offer_kicker: "ESPERA"
+        downgrade_title: "¿Y si te quedas en Gratis?"
+        downgrade_body:  "Conservas tu cocina, tus clientes y tus recetas. Sólo bajan los pedidos a 40 al mes y se desactivan las funciones Pro. Cuando quieras volver, lo activas con un clic."
+        downgrade_cta: "Quedarme en Gratis"
+        downgrade_confirm: "¿Bajar a Gratis ahora? Mantienes tu cocina pero pierdes acceso a las funciones Pro."
+        confirm_title: "Cancelar definitivamente"
+        confirm_body_html: "Mantienes acceso completo hasta el <strong>%{date}</strong>. Después tu cuenta vuelve a Gratis automáticamente."
+        confirm_body_no_date: "Tu Pro se cancela y vuelves al plan Gratis."
+        confirm_cta: "Sí, cancelar"
+        confirm_browser: "¿Cancelar tu Pro? Conservas acceso hasta el final del periodo que ya pagaste."
+        back: "← Volver al panel"
+      save_offers:
+        too_expensive:
+          headline: "¿Qué tal 50% de descuento por 3 meses?"
+          body:    "Sabemos que el precio importa. Te damos los próximos 3 pagos a la mitad — Pro a $99 al mes (o $99/12 si pagas anual). Después regresa al precio normal."
+          accept_cta: "Aceptar el descuento"
+          confirm: "¿Aplicar el 50% × 3 meses a tu próxima factura?"
+        closing_kitchen:
+          headline: "¿Quieres pausar tu cocina sin cancelar?"
+          body:    "Activa el modo vacaciones en Horario. Tu storefront muestra «Volvemos pronto», dejas de recibir pedidos y nadie pierde tus datos."
+          accept_cta: "Pausar mi cocina"
+          confirm: "¿Ir a Horario para pausar?"
+      save:
+        success_too_expensive: "Listo — 50% de descuento aplicado durante 3 meses."
+        pause_redirect: "Pausa tu cocina desde aquí. Tu suscripción sigue activa."
+        failure: "No pudimos aplicar la oferta: %{message}"
+      confirm:
+        success_html: "Tu Pro queda cancelado. Tienes acceso completo hasta el <strong>%{date}</strong>."
+        failure: "No pudimos cancelar: %{message}"
+    portal_sessions:
+      create:
+        failure: "No pudimos abrir el portal de Stripe: %{message}"
+    invoices:
+      index:
+        title: "Tus facturas"
+        subtitle: "Comprobantes de Stripe y solicitud de CFDI"
+        back: "Volver al panel"
+        download_pdf: "Descargar PDF"
+        view_online: "Ver en línea"
+        cfdi_cta: "Solicitar CFDI"
+        cfdi_title: "¿Necesitas factura CFDI con tu RFC?"
+        cfdi_body: "Mientras automatizamos la facturación CFDI 4.0, la emitimos manualmente. El botón «Solicitar CFDI» abre un correo prellenado con tus datos — sólo agrega tu RFC y razón social."
+        empty_title: "Aún no tienes facturas"
+        empty_body: "Cuando se cobre tu primer pago de Pro, encontrarás aquí todos tus comprobantes con su PDF descargable."
+      statuses:
+        paid: "Pagada"
+        open: "Pendiente"
+        uncollectible: "No cobrable"
+        void: "Anulada"
+        draft: "Borrador"
 
   production:
     show:
@@ -1430,7 +1713,42 @@ es-MX:
       summary_cover: "Portada"
       summary_cover_set: "Lista"
       summary_cover_empty: "Sin portada (por ahora)"
-      submit: "Entrar a mi panel"
+      submit: "Empezar mi cocina"
+      # Phase 14, Slice 4 — plan picker tucked into the final
+      # onboarding step. Pro is pre-selected with yearly billing per
+      # the ROADMAP recommendation; "Sin tarjeta de crédito durante
+      # la prueba" is intentionally dominant.
+      plan:
+        kicker: "Tu plan"
+        headline: "Elige cómo continuar"
+        lede: "Puedes empezar gratis o probar Pro 14 días sin tarjeta de crédito. Cambia cuando quieras desde Ajustes → Suscripción."
+        free:
+          name: "Gratis"
+          tagline: "Para empezar tu cocina"
+          features:
+            - "Hasta 40 pedidos al mes"
+            - "Tu tienda en kitchef.mx/tu-cocina"
+            - "Recetas con foto y precio"
+            - "Pedidos por WhatsApp + kanban"
+        pro:
+          name: "Pro"
+          tag: "Recomendado"
+          tagline: "14 días gratis · sin tarjeta"
+          toggle_monthly: "Mensual"
+          toggle_yearly: "Anual"
+          toggle_savings: "−2 meses"
+          savings_badge: "Ahorra 17%"
+          features:
+            - "Pedidos ilimitados"
+            - "Costos y margen automáticos"
+            - "Reportes de finanzas y menú"
+            - "Personalización de platillos"
+            - "Inventario y lotes de producción"
+        no_card_title: "No te pedimos tarjeta de crédito durante la prueba"
+        no_card_body: "Probarás Pro 14 días completos sin método de pago. Sólo te pedimos tarjeta cuando decidas seguir. Si no continúas, tu cuenta vuelve automáticamente al plan Gratis sin perder nada."
+    create:
+      free_chosen: "Tu cocina está lista. ¡Vamos a recibir pedidos!"
+      checkout_failed: "No pudimos abrir el pago. Empezamos en Gratis y puedes activar Pro después: %{message}"
 
   # Phase 13 — production batches (lotes). Top-level so it doesn't
   # entangle with the existing /production daily-orders surface from
