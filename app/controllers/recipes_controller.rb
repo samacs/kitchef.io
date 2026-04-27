@@ -184,7 +184,15 @@ class RecipesController < AuthenticatedController
     params.require(:recipe).permit(
       :name, :sale_price, :category_id, :description, :is_published,
       :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent, :lead_time_hours,
-      photos: [],
+      # Phase 14, Slice 12 — multi-photo fields. `photos[]` stays for
+      # the legacy single-photo path; `new_photos[]` is the multi-tile
+      # grid's file input; `remove_photo_ids` is a CSV of attachment
+      # ids the operator clicked X on; `photo_order` is the JSON
+      # array driving the on-save reorder. All four are stripped from
+      # params inside Recipes::Update before `assign_attributes`.
+      :remove_photo_ids, :photo_order,
+      photos:     [],
+      new_photos: [],
       components_attributes: [
         :id, :componentable_type, :componentable_id,
         :quantity, :unit, :notes, :position, :is_removable, :_destroy

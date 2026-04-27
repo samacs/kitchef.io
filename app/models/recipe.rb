@@ -98,8 +98,29 @@ class Recipe < ApplicationRecord
 
   has_many_attached :photos do |attachable|
     attachable.variant :thumb, resize_to_limit: [ 120, 120 ]
-    attachable.variant :card,  resize_to_limit: [ 400, 400 ]
-    attachable.variant :hero,  resize_to_limit: [ 1200, 800 ]
+    attachable.variant :card,  resize_to_limit: [ 600, 450 ]
+    attachable.variant :hero,  resize_to_limit: [ 1600, 1200 ]
+  end
+
+  # Phase 14, Slice 12 — multi-photo support. Photos are sorted by
+  # the explicit `position` column on ActiveStorage::Attachment
+  # (NULL positions sort last, then by created_at as a tiebreaker
+  # so legacy attachments without a position keep their upload
+  # order). The first photo is the "primary" — it's what the
+  # storefront card uses when there's only one image and what the
+  # recipe detail page uses as its hero.
+  MAX_PHOTOS_PRO = 6
+
+  def ordered_photos
+    photos.attachments.order(Arel.sql("position NULLS LAST, created_at ASC, id ASC"))
+  end
+
+  def primary_photo
+    ordered_photos.first
+  end
+
+  def photo_count
+    photos.attached? ? ordered_photos.count : 0
   end
 
   validates :name, presence: true, length: { maximum: 120 }

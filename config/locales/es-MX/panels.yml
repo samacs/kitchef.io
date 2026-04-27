@@ -455,6 +455,21 @@ es-MX:
       photo_upload: "Elige una foto"
       photo_replace: "Cambiar foto"
       photo_hint: "JPG, PNG, WebP o HEIC. Máximo 5 MB."
+      # Phase 14, Slice 12 — multi-photo grid copy.
+      photos:
+        label: "Fotos del platillo"
+        counter: "%{count} de %{max}"
+        counter_free:
+          one: "%{count} foto · Gratis"
+          other: "%{count} fotos · Gratis"
+        add_first: "Agrega tu primera foto"
+        add_more: "Agrega otra foto"
+        tip: "Toma cerca de una ventana, sin flash. La primera foto es la que se ve en tu menú."
+        tile_aria: "Foto del platillo"
+        remove_aria: "Quitar foto"
+        add_aria: "Agregar foto"
+        locked_aria: "Disponible en Pro"
+        locked: "Pro"
       publish_label: "Mostrar en mi tienda"
       publish_hint: "Tus clientes verán este platillo en tu menú público."
       publish_hint_needs_photo: "Sube una foto primero — sin ella, tu menú se ve incompleto."

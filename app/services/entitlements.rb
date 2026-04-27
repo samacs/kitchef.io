@@ -46,6 +46,7 @@ class Entitlements
     hide_kitchef_branding
     priority_support
     unlimited_orders
+    multi_photos
   ].to_set.freeze
 
   ALL_FEATURES = (CORE_FEATURES + PRO_ONLY_FEATURES).freeze
