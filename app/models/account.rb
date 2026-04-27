@@ -219,9 +219,13 @@ class Account < ApplicationRecord
     where("accounts.settings @> ?", { use_composable_recipes: true }.to_json)
   }
 
-  # Convenience: true when the operator has opted into advanced mode.
+  # Composable-recipe / cost-engine UI lights up when the operator
+  # has opted into advanced mode AND her plan grants the entitlement
+  # (Phase 14, Slice 7). A Free account that previously decomposed
+  # recipes keeps the data; the UI just stops rendering the cost
+  # tree + decomposition controls until she activates Pro.
   def composable_recipes?
-    settings.use_composable_recipes
+    settings.use_composable_recipes && Entitlements.for(self).allows?(:composable_recipes)
   end
 
   def payment_settings
@@ -236,8 +240,11 @@ class Account < ApplicationRecord
     settings.inventory_settings
   end
 
+  # Inventory is opt-in (Phase 13 toggle) AND Pro-gated (Phase 14
+  # Slice 7). Both must be true; flipping the toggle on a Free
+  # account silently has no effect until the operator activates Pro.
   def inventory_enabled?
-    inventory_settings.enabled
+    inventory_settings.enabled && Entitlements.for(self).allows?(:inventory)
   end
 
   # Phase 14, Slice 1 — demo flag. When true, the operator + storefront

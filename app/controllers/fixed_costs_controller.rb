@@ -1,4 +1,7 @@
 class FixedCostsController < AuthenticatedController
+  include Subscriptions::FeatureGated
+  gate_feature :fixed_costs
+
   expose :fixed_costs, -> {
     Current.account.fixed_costs.kept
       .includes(:fixed_cost_category)

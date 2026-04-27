@@ -39,6 +39,18 @@ module Storefronts
         return Result.new(success: false, object: order, errors: order.errors)
       end
 
+      # Phase 14, Slice 7 — Free tier hard cap (40 pedidos/mes).
+      # Reject the storefront submission once the kitchen has hit
+      # the cap so the operator's plan stays a hard ceiling, not a
+      # soft suggestion. Pro always returns `unlimited: true` so
+      # this branch never fires for paid accounts.
+      counter = Subscriptions::MonthlyOrderCounter.call(account: storefront)
+      if counter.reached?
+        order = storefront.orders.new(order_params.to_h.deep_symbolize_keys)
+        order.errors.add(:base, :monthly_limit_reached)
+        return Result.new(success: false, object: order, errors: order.errors)
+      end
+
       client = resolve_client(phone: phone, email: email)
       if client.nil?
         order = storefront.orders.new(order_params.to_h.deep_symbolize_keys)

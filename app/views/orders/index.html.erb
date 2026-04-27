@@ -3,11 +3,37 @@
 <% content_for :page_subtitle, t("orders.index.subtitle") %>
 
 <% content_for :page_action do %>
-  <%= link_to new_order_path,
-        class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
-    <%= icon(:plus, size: :xs) %>
-    <span><%= t("orders.index.cta") %></span>
-  <% end %>
+  <div class="flex items-center gap-3 flex-wrap">
+    <%# Phase 14, Slice 7 — pedidos-this-month pill (Free only). %>
+    <%= render Subscriptions::OrdersPillComponent.new(account: Current.account) %>
+    <%= link_to new_order_path,
+          class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+      <%= icon(:plus, size: :xs) %>
+      <span><%= t("orders.index.cta") %></span>
+    <% end %>
+  </div>
+<% end %>
+
+<%# Pre-warning banner — fires at 35/40 (approaching) and louder at
+    38/40 (near limit). Dismissible per-month so it resurfaces every
+    1st of month after the counter resets. Hidden for Pro accounts. %>
+<% pedidos_counter = Subscriptions::MonthlyOrderCounter.call(account: Current.account) %>
+<% if pedidos_counter.approaching? || pedidos_counter.near_limit? %>
+  <div class="mb-5">
+    <%= render Subscriptions::HintBanner.new(
+          hint_key:     "pedidos:#{pedidos_counter.state}:#{Date.current.strftime('%Y%m')}",
+          tone:         pedidos_counter.near_limit? ? :warn : :info,
+          icon:         :gauge,
+          title:        t("subscriptions.orders_pill.warn_title.#{pedidos_counter.state}",
+                          count: pedidos_counter.count,
+                          limit: pedidos_counter.limit,
+                          remaining: pedidos_counter.remaining),
+          body:         t("subscriptions.orders_pill.warn_body.#{pedidos_counter.state}"),
+          cta_label:    t("subscriptions.orders_pill.warn_cta"),
+          cta_path:     subscription_path(highlight: :unlimited_orders),
+          redismiss_in: 30.days,
+          account:      Current.account) %>
+  </div>
 <% end %>
 
 <%= turbo_stream_from Current.account, :orders %>

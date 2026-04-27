@@ -29,6 +29,7 @@ es-MX:
       invalid_phone:    "El número de WhatsApp no es válido"
       not_accepted:     "Este método de pago no está disponible en esta cocina"
       invalid_email:    "El correo no es válido"
+      monthly_limit_reached: "Esta cocina ya alcanzó su límite mensual de pedidos. Vuelve el primer día del próximo mes — o pídele al cocinero que active Pro para recibir pedidos sin límite."
       logo_missing: "Elige una imagen o salta este paso."
       cover_missing: "Elige una imagen o salta este paso."
       wday_and_date_exclusive: "no puede ser un día de la semana y una fecha al mismo tiempo"

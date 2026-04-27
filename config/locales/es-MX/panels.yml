@@ -1098,8 +1098,100 @@ es-MX:
     locked:
       kicker: "DISPONIBLE EN PRO"
       cta:    "Activa Pro"
+      # Phase 14, Slice 7 — per-feature copy used by
+      # Subscriptions::FeatureGated whenever a controller blocks a
+      # Free account. Adding a new gated controller is one locale
+      # entry under the feature's symbol.
+      finance_reports:
+        title: "Tus reportes te esperan en Pro"
+        subtitle: "Cómo te va, semana tras semana"
+        lede: "Aquí vivirá tu reporte de finanzas — ventas, gastos, margen real, utilidad neta — la semana que decidas activar Pro."
+        bullets:
+          - "Ventas y gastos por semana, mes y año"
+          - "Margen bruto, margen real y utilidad neta"
+          - "Tendencia de 8 semanas + exportable a CSV"
+      menu_engineering_reports:
+        title: "Tu menú, ordenado por desempeño"
+        subtitle: "Estrellas, estables y para revisar"
+        lede: "Cuando actives Pro, vemos qué platillos jalan más, cuáles se mantienen, y cuáles vale la pena revisar."
+        bullets:
+          - "Tus 3 estrellas (mejor margen × volumen)"
+          - "Platillos estables — los pilares de tu cocina"
+          - "Platillos para revisar — qué bajar o quitar"
+      fixed_costs:
+        title: "Gastos fijos y utilidad neta"
+        subtitle: "Renta, gas, plataformas — todo lo que no es por pedido"
+        lede: "Lleva el control de tus costos fijos para ver cuánto te llevas a casa después de la renta. Disponible en Pro."
+        bullets:
+          - "Renta, gas, plataformas, empaque mensual"
+          - "Costo fijo por pedido (cuánto te cuesta sólo abrir)"
+          - "Margen real + utilidad neta en /reportes"
+      inventory:
+        title: "Inventario y lotes de producción"
+        subtitle: "Cuánto cocinaste, cuánto te queda"
+        lede: "Activa Pro para llevar control de tus lotes — cuántos tamales hiciste, cuántos te quedan, y qué ingrediente bajó de stock."
+        bullets:
+          - "Lotes con fecha de cocción y ventana"
+          - "Stock por ingrediente que decrementa solito"
+          - "Avisos en el menú: «Quedan 3» / «Agotado»"
+      composable_recipes:
+        title: "Recetas componibles + costo automático"
+        subtitle: "Sabe qué te cuesta cada platillo"
+        lede: "Cuando actives Pro, descompones tus recetas en ingredientes y bases, y vemos en vivo cuánto te cuesta cada uno + tu margen real."
+        bullets:
+          - "Costos automáticos cuando sube un insumo"
+          - "Margen real por platillo — actualizado al instante"
+          - "Análisis de impacto: «Si sube la harina 10%, estos platillos pierden margen»"
+      recipe_customization:
+        title: "Personalización de platillos"
+        subtitle: "Tamaño, sabor, dedicatoria, extras"
+        lede: "Activa Pro para que tus clientes pidan tu pastel «grande, de fresa, con velas y dedicatoria personalizada» sin escribirte por WhatsApp."
+        bullets:
+          - "Opciones por receta (tamaño, relleno, color)"
+          - "Tu cliente quita ingredientes (sin cilantro, sin chile)"
+          - "Texto libre (dedicatorias, instrucciones)"
+      kds:
+        title: "Kitchen Display System"
+        subtitle: "La pantalla de tu cocina"
+        lede: "Pronto llega: una pantalla en tu comal con todos los pedidos en orden de cocción. Activa Pro para reservar tu acceso anticipado."
+        bullets:
+          - "Pantalla grande, legible desde el comal"
+          - "Pedidos ordenados por hora de entrega"
+          - "Un toque para «Empezar» y «Listo»"
+      custom_domain:
+        title: "Tu dominio personalizado"
+        subtitle: "tu-cocina.mx en lugar de kitchef.mx/tu-cocina"
+        lede: "En Pro, tu storefront vive en el dominio que tú elijas. Se ve más profesional para tus clientes y para ti."
+        bullets:
+          - "Apunta tu propio .mx, .com, etc."
+          - "Sin marca «Hecha con Kitchef» en el footer"
+          - "Configuración guiada paso a paso"
+      hide_kitchef_branding:
+        title: "Tu cocina, tu marca"
+        subtitle: "Sin marca Kitchef en tu storefront"
+        lede: "Cuando actives Pro, quitamos «Hecha con Kitchef» del footer y los emails. Tus clientes ven tu cocina, no la nuestra."
+        bullets:
+          - "Footer del storefront sin marca Kitchef"
+          - "Correos transaccionales con tu identidad"
+          - "Más tu marca, menos la nuestra"
     hints:
       dismiss_label: "No me muestres esto otra vez"
+    orders_pill:
+      safe: "%{count}/%{limit} pedidos · %{remaining} restantes"
+      approaching: "%{count}/%{limit} pedidos · sólo %{remaining} restantes"
+      near_limit: "%{count}/%{limit} pedidos · %{remaining} restantes"
+      reached: "%{count}/%{limit} pedidos · alcanzaste tu límite"
+      cta_default: "Activar Pro"
+      cta_approaching: "Pasa a Pro"
+      cta_near_limit: "Activa Pro"
+      cta_reached: "Activa Pro"
+      warn_title:
+        approaching: "Llevas %{count} de %{limit} pedidos este mes — te quedan %{remaining}"
+        near_limit: "Sólo %{remaining} pedidos antes de tu límite"
+      warn_body:
+        approaching: "Cuando llegues a %{limit}, tu storefront va a dejar de aceptar pedidos hasta que termine el mes — o hasta que actives Pro."
+        near_limit: "Cuando llegues a %{limit}, tu storefront se detiene. Activa Pro y sigue recibiendo pedidos sin parar."
+      warn_cta: "Pasa a Pro"
     # Slice 3/5 — /subscription show page + checkout copy.
     show:
       title: "Tu plan"

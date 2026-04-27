@@ -1,0 +1,16 @@
+<% feature_key = @gated_feature.to_s %>
+<% content_for :title, t("subscriptions.locked.#{feature_key}.title", default: t("subscriptions.locked.cta")) %>
+<% content_for :page_title, t("subscriptions.locked.#{feature_key}.title", default: t("subscriptions.locked.cta")) %>
+<% content_for :page_subtitle, t("subscriptions.locked.#{feature_key}.subtitle", default: "") %>
+
+<%# Phase 14, Slice 7 — full-page locked landing for any controller
+    that includes `Subscriptions::FeatureGated` and lacks the
+    entitlement. Copy is keyed by feature symbol so adding a gated
+    surface is just a locale entry. %>
+<div class="max-w-[640px]">
+  <%= render Subscriptions::LockedComponent.new(
+        feature_key: @gated_feature,
+        title:       t("subscriptions.locked.#{feature_key}.title", default: t("subscriptions.locked.cta")),
+        lede:        t("subscriptions.locked.#{feature_key}.lede", default: ""),
+        bullets:     I18n.t("subscriptions.locked.#{feature_key}.bullets", default: []).to_a) %>
+</div>

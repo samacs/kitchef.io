@@ -2,6 +2,9 @@ require "csv"
 
 module Reports
   class FinanceController < AuthenticatedController
+    include Subscriptions::FeatureGated
+    gate_feature :finance_reports
+
     TREND_WEEKS = 8
 
     def show
