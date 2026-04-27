@@ -39,6 +39,7 @@ Rails.application.routes.draw do
   # the matching view template from the :page default. Adding a page =
   # add a view file + one line here.
   get "/pricing",       to: "static_pages#show", defaults: { page: "pricing" }
+  get "/product",       to: "static_pages#show", defaults: { page: "product" }
   get "/how-it-works",  to: "static_pages#show", defaults: { page: "how_it_works" }
   get "/faq",           to: "static_pages#show", defaults: { page: "faq" }
   get "/legal/:doc",    to: "static_pages#show", defaults: { page: "legal" }, as: :legal

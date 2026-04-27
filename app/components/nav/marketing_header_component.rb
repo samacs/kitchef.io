@@ -16,12 +16,15 @@ module Nav
     option :current_account, optional: true
     option :transparent,     default: -> { false }
 
+    # Phase 14, Slice 9 — nav cleanup. Producto is now a real
+    # feature page (not a placeholder pointing at how-it-works);
+    # Historias is dropped until we have actual operator stories
+    # to publish; FAQ stays one click deeper inside /pricing.
     def nav_links
       [
-        { label: t("marketing.nav.product"),      href: how_it_works_path, anchor: true },
+        { label: t("marketing.nav.product"),      href: product_path },
         { label: t("marketing.nav.how_it_works"), href: how_it_works_path },
-        { label: t("marketing.nav.pricing"),      href: pricing_path },
-        { label: t("marketing.nav.stories"),      href: faq_path }
+        { label: t("marketing.nav.pricing"),      href: pricing_path }
       ]
     end
 
@@ -33,6 +36,6 @@ module Nav
     # readability we delegate a few at class level.
     def how_it_works_path = helpers.how_it_works_path
     def pricing_path      = helpers.pricing_path
-    def faq_path          = helpers.faq_path
+    def product_path      = helpers.product_path
   end
 end

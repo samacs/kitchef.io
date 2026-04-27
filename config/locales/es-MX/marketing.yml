@@ -11,7 +11,6 @@ es-MX:
       product: "Producto"
       how_it_works: "Cómo funciona"
       pricing: "Precios"
-      stories: "Historias"
       sign_in: "Iniciar sesión"
       sign_up: "Empezar gratis"
       open_menu: "Abrir menú"
@@ -288,9 +287,67 @@ es-MX:
           free:  false
           pro:   true
 
+    # Phase 14, Slice 9 — real Producto page (replaces the
+    # placeholder that pointed at /how-it-works).
+    product:
+      title: "El producto · Kitchef"
+      kicker: "Lo que recibes"
+      headline_html: 'Tu cocina, <em class="italic text-accent">en una sola pantalla.</em>'
+      lede: "Pedidos, recetas, costos, clientes y horarios en un solo lugar. Hecho para cocineras mexicanas independientes — no para gerentes de cadenas."
+      features:
+        - title: "Recetario con costos"
+          body: "Tus platillos con foto, precio y categoría. En Pro, descomponlos en ingredientes y vemos en vivo cuánto te cuesta cada uno."
+          icon: "book_open"
+        - title: "Pedidos en kanban"
+          body: "Cada pedido es una tarjeta que se mueve por estados (recibido → confirmado → en cocina → listo → entregado). Cancelaciones con motivo, duplicar canceladas, todo desde el celular."
+          icon: "list_checks"
+        - title: "Tu tienda pública"
+          body: "kitchef.mx/tu-cocina con tu marca, tu menú, tus horarios. Tus clientes piden ahí — directo, sin comisión, por WhatsApp."
+          icon: "shopping_bag"
+        - title: "Reportes que sí lees"
+          body: "Cuánto vendiste, cuánto te costó, cuánto te llevas a casa. Reporte semanal, ranking de tu menú, exportable a CSV."
+          icon: "trending_up"
+          badge: "Pro"
+        - title: "Inventario y lotes"
+          body: "Anota cuántos tamales cocinaste; el storefront muestra «Quedan 3» a tus clientes. El stock de ingredientes baja solo. Activable cuando estés lista."
+          icon: "package"
+          badge: "Pro"
+        - title: "Pantalla en cocina"
+          body: "Una vista grande para tu tablet en el comal — pedidos en orden de entrega, dos botones grandes para empezar y marcar listo. Llega pronto."
+          icon: "monitor"
+          badge: "Pronto"
+      not_goals:
+        headline: "Lo que NO hacemos (a propósito)"
+        body: "Kitchef no es un marketplace — no aparecemos como Uber Eats, no te enviamos clientes que no son tuyos. No procesamos pagos por ti — tus clientes te pagan por los medios que tú decidas. No hacemos delivery — eso lo coordinas tú o tu repartidor. Vendemos herramientas, no acceso a tu cliente."
+      cta:
+        headline: "¿Lista para tu primer pedido digital?"
+        body: "Empieza gratis, sin tarjeta. En 10 minutos tienes tu menú en línea y un kanban de pedidos esperando."
+        primary: "Empezar gratis"
+        secondary: "Ver precios"
+
     how_it_works:
-      title: "Cómo funciona"
-      lede: "De tu primera receta al cierre del mes, sin aprender a usar Excel."
+      title: "Cómo funciona · Kitchef"
+      kicker: "Tu primer pedido"
+      headline_html: 'En tres pasos, <em class="italic text-accent">de WhatsApp a un sistema.</em>'
+      lede: "Sin instalar nada, sin curso, sin contadora. Lo que ya haces a mano — pero ordenado y compartible."
+      steps:
+        - kicker: "Paso 1 · Configura"
+          title: "Crea tu cocina"
+          body: "Elige el nombre, el slug de tu storefront (kitchef.mx/tu-cocina), tu logo y tu portada. Escribimos juntas tu presentación. 5 minutos, sin tarjeta de crédito."
+          tip: "Tu storefront sigue activo aunque te tardes en cargar tu menú — después agregas platillos cuando estés lista."
+        - kicker: "Paso 2 · Carga tu menú"
+          title: "Agrega tus platillos"
+          body: "Foto, nombre, precio, categoría — uno por uno o en bloque. Cuando publicas, tu storefront se ve completo. Tus clientes hacen pedido directo desde ahí, sin descargar nada."
+          tip: "Si tu cocina ya tiene clientes recurrentes, comparte tu link kitchef.mx/tu-cocina por WhatsApp — los pedidos llegan a tu kanban."
+        - kicker: "Paso 3 · Recibe pedidos"
+          title: "Trabaja con un kanban"
+          body: "Cada pedido es una tarjeta que se mueve de columna en columna. Confirma con un toque, cocina, marca listo, entrega. Tu cliente recibe correo de confirmación + un link de WhatsApp para coordinar contigo."
+          tip: "Cuando lleves 40 pedidos al mes, te invitamos a Pro: pedidos ilimitados, costos automáticos y reportes de finanzas."
+      cta:
+        headline: "Suena bien — ¿lo intentamos?"
+        body: "Empieza gratis. Si no te sirve, exportas tus datos y listo."
+        primary: "Empezar gratis"
+        secondary: "Ver el producto completo"
 
     faq:
       title: "Preguntas frecuentes"

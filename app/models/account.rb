@@ -90,7 +90,7 @@ class Account < ApplicationRecord
     menus
     new news notifications
     onboarding
-    packaging password passwords platform platforms pricing privacy production products profile purchase purchases
+    packaging password passwords platform platforms pricing privacy product production products profile purchase purchases
     r register rent reports reset-password root
     schedule search settings sign-in signin sign-out signout sign-up signup supplier suppliers
     stats status subscribe subscription support
