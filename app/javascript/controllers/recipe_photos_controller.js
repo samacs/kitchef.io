@@ -43,6 +43,7 @@ export default class extends Controller {
 
   connect() {
     this.removedIds = new Set()
+    this.pendingFiles = []
     this.#initSortable()
     this.#refreshOrder()
   }
@@ -65,7 +66,7 @@ export default class extends Controller {
     event.preventDefault()
     const files = event.dataTransfer?.files
     if (!files || files.length === 0) return
-    this.#mergeFiles(files)
+    this.#addFiles(files)
   }
 
   preventDefault(event) {
@@ -77,7 +78,7 @@ export default class extends Controller {
   filesPicked(event) {
     const files = event.target.files
     if (!files || files.length === 0) return
-    this.#mergeFiles(files)
+    this.#addFiles(files)
   }
 
   // X button on a tile → mark for removal.
@@ -90,8 +91,14 @@ export default class extends Controller {
     if (attachmentId) {
       this.removedIds.add(attachmentId)
       this.#paintRemovedIds()
+      tile.remove()
+    } else if (tile.dataset.state === "pending") {
+      const pendingIdx = Number(tile.dataset.pendingIndex)
+      this.pendingFiles.splice(pendingIdx, 1)
+      this.#syncFileInput()
+      this.#renderPendingPreviews()
     }
-    tile.remove()
+
     this.#refreshOrder()
     this.#refreshEmptyHint()
   }
@@ -112,24 +119,32 @@ export default class extends Controller {
     })
   }
 
-  #mergeFiles(fileList) {
-    const dt = new DataTransfer()
-    Array.from(this.fileInputTarget.files || []).forEach(f => dt.items.add(f))
-    Array.from(fileList).forEach(f => dt.items.add(f))
-    this.fileInputTarget.files = dt.files
-    this.#renderPendingPreviews(this.fileInputTarget.files)
+  // Add new files to our own accumulator. We can't rely on
+  // `fileInputTarget.files` as a source of truth because each fresh
+  // user pick REPLACES the input's files (the browser doesn't
+  // accumulate across picks), and on the change event the input is
+  // already the new selection — so iterating it would double-count.
+  #addFiles(fileList) {
+    Array.from(fileList).forEach(f => this.pendingFiles.push(f))
+    this.#syncFileInput()
+    this.#renderPendingPreviews()
     this.#refreshEmptyHint()
   }
 
-  #renderPendingPreviews(fileList) {
-    // Remove previous "pending" tiles so re-picking doesn't duplicate.
+  #syncFileInput() {
+    const dt = new DataTransfer()
+    this.pendingFiles.forEach(f => dt.items.add(f))
+    this.fileInputTarget.files = dt.files
+  }
+
+  #renderPendingPreviews() {
     this.canvasTarget
         .querySelectorAll("[data-state='pending']")
         .forEach(t => t.remove())
 
     const empty = this.canvasTarget.querySelector("[data-state='empty']")
 
-    Array.from(fileList).forEach((file, idx) => {
+    this.pendingFiles.forEach((file, idx) => {
       const tile = this.#buildPendingTile(file, idx)
       if (empty) {
         this.canvasTarget.insertBefore(tile, empty)

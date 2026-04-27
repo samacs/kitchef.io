@@ -860,6 +860,12 @@
     width: 100%; height: 100%;
   }
   .kc-photo-carousel-track::-webkit-scrollbar { display: none; }
+  /* Desktop drops swipe — arrows are the only paginator. Mobile
+     keeps native swipe behavior. Programmatic scrollLeft (used by
+     prev/next/goTo) still works with overflow-x: hidden. */
+  @media (hover: hover) and (pointer: fine) {
+    .kc-photo-carousel-track { overflow-x: hidden; }
+  }
   .kc-photo-carousel-slide {
     flex: 0 0 100%;
     scroll-snap-align: start;

@@ -79,10 +79,18 @@ module Recipes
     # Returns the freshly created attachments in the order they were
     # provided so the position-application step can map `pending`
     # entries (`{kind: "pending", index: N}`) back to a real id.
+    #
+    # We create blob + attachment rows explicitly because reading back
+    # `recipe.photos.attachments` mid-flight returns the in-memory
+    # change array (not an AR relation), which has no `.order`.
     def attach_new_files!(files)
       files.map do |file|
-        recipe.photos.attach(file)
-        recipe.photos.attachments.order(:id).last
+        blob = ActiveStorage::Blob.create_and_upload!(
+          io: file.respond_to?(:tempfile) ? file.tempfile : file,
+          filename: file.original_filename,
+          content_type: file.content_type
+        )
+        ActiveStorage::Attachment.create!(record: recipe, name: "photos", blob: blob)
       end
     end
 

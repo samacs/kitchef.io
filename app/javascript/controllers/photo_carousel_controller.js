@@ -24,11 +24,18 @@ export default class extends Controller {
     this.trackTarget.removeEventListener("keydown", this.#onKeydown)
   }
 
-  prev() {
+  // Arrow + keyboard handlers stop propagation so a parent <a> (used
+  // on storefront menu cards to make the whole image clickable to
+  // the dish detail page) doesn't navigate away when paginating.
+  prev(event) {
+    event?.preventDefault()
+    event?.stopPropagation()
     this.#scrollBy(-1)
   }
 
-  next() {
+  next(event) {
+    event?.preventDefault()
+    event?.stopPropagation()
     this.#scrollBy(+1)
   }
 
@@ -36,6 +43,7 @@ export default class extends Controller {
   // Stimulus reads the index from `data-photo-carousel-index-param`.
   goTo(event) {
     event?.preventDefault()
+    event?.stopPropagation()
     const index = Number(event.params?.index ?? 0)
     if (Number.isNaN(index)) return
     const slideWidth = this.slideTargets[0]?.clientWidth || this.trackTarget.clientWidth

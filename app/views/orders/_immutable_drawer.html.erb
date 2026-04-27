@@ -1,0 +1,130 @@
+<%# Read-only drawer for delivered + canceled pedidos. Lives inside
+    `turbo_frame_tag "drawer_content"` (rendered by edit.html.erb) so
+    Turbo can swap it into the right drawer just like the editable
+    flow. The operator can review the contents and recover via
+    "Duplicar" (which spawns a fresh editable draft for the same
+    client). %>
+<div class="max-w-[820px] mx-auto flex flex-col gap-6 p-5 sm:p-6">
+  <div class="flex items-start gap-3 p-4 rounded-card border border-line bg-bg-2/40">
+    <span class="inline-flex items-center justify-center w-8 h-8 rounded-input shrink-0 bg-surface border border-line">
+      <%= icon(order.canceled? ? :x_circle : :check_circle_2, size: :sm) %>
+    </span>
+    <div class="flex-1 flex flex-col gap-0.5">
+      <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+        <%= t("orders.immutable_drawer.kicker_#{order.state}") %>
+      </span>
+      <span class="text-[13.5px] text-ink-2 leading-[1.45]">
+        <%= t("orders.errors.immutable") %>
+      </span>
+    </div>
+  </div>
+
+  <div class="bg-surface border border-line rounded-panel shadow-card p-6 sm:p-7 flex flex-col gap-5">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex flex-col gap-1 min-w-0 flex-1">
+        <span class="font-mono text-[11px] text-muted/70 tracking-[0.08em]">
+          #<%= order.prefix_id.sub(/\Aord_/, "") %>
+        </span>
+        <h2 class="font-serif text-[24px] sm:text-[28px] leading-[1.1] tracking-[-0.01em] text-ink truncate">
+          <%= order.client&.name.presence || t("dashboard.today_orders.empty_client") %>
+        </h2>
+      </div>
+      <%= render Orders::StateBadgeComponent.new(state: order.state) %>
+    </div>
+
+    <div class="flex items-center gap-1.5 font-mono text-[11px] text-muted uppercase tracking-[0.14em]">
+      <%= icon(order.delivery? ? :bike : :shopping_bag, size: :xs) %>
+      <span>
+        <%= t("order.delivery_types.#{order.delivery_type}") %> ·
+        <%= l(order.delivery_date, format: :long) %><%
+          if order.delivery_start_time.present? %> · <%= order.delivery_start_time_hhmm %><%
+          if order.delivery_end_time.present? %>–<%= order.delivery_end_time_hhmm %><% end %><% end %>
+      </span>
+    </div>
+
+    <ul class="flex flex-col gap-1.5">
+      <% order.items.each do |item| %>
+        <li class="flex items-baseline justify-between gap-3 text-[14px]">
+          <span class="text-ink-2">
+            <span class="font-mono text-muted mr-1.5"><%= item.quantity.to_s.sub(/\.0+\z/, "") %>×</span>
+            <%= item.recipe&.name %>
+          </span>
+          <span class="font-mono text-[13px] text-muted shrink-0">
+            <%= humanized_money_with_symbol(item.line_total) %>
+          </span>
+        </li>
+      <% end %>
+    </ul>
+
+    <div class="flex flex-col gap-1 pt-3 border-t border-line text-[13px]">
+      <% if order.packaging_cents.to_i.positive? %>
+        <div class="flex items-baseline justify-between gap-3 font-mono text-muted">
+          <span><%= t("orders.immutable_drawer.summary.packaging") %></span>
+          <span><%= humanized_money_with_symbol(order.packaging) %></span>
+        </div>
+      <% end %>
+      <% if order.tip_cents.to_i.positive? %>
+        <div class="flex items-baseline justify-between gap-3 font-mono text-muted">
+          <span><%= t("orders.immutable_drawer.summary.tip") %></span>
+          <span>+<%= humanized_money_with_symbol(order.tip) %></span>
+        </div>
+      <% end %>
+      <div class="flex items-baseline justify-between gap-3 mt-1">
+        <span class="font-mono text-[12px] uppercase tracking-[0.1em] text-muted">
+          <%= t("orders.immutable_drawer.summary.total") %>
+        </span>
+        <span class="font-serif text-[20px] text-ink">
+          <%= humanized_money_with_symbol(order.total) %>
+        </span>
+      </div>
+    </div>
+
+    <% if order.payment_method.present? || order.paid? %>
+      <div class="flex flex-wrap items-center gap-2">
+        <% if order.payment_method.present? %>
+          <span class="inline-flex items-center gap-1 rounded-full bg-bg-2 px-2.5 py-1 font-mono text-[11px] text-muted">
+            <%= t("orders.card.payment_method.#{order.payment_method}") %>
+          </span>
+        <% end %>
+        <% if order.paid? %>
+          <span class="inline-flex items-center gap-1 text-accent">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            <span class="font-mono text-[11px] font-medium uppercase tracking-[0.1em]">
+              <%= t("orders.payment_status.paid") %>
+            </span>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if order.canceled? && order.cancel_reason_code.present? %>
+      <div class="flex flex-col gap-1 px-4 py-3 rounded-card bg-err/5 border border-err/20">
+        <span class="font-mono text-[11px] text-err uppercase tracking-[0.14em]">
+          <%= t("orders.cancellations.reason_kicker") %>
+        </span>
+        <span class="text-[13px] text-ink-2 leading-[1.4]">
+          <%= t("order.cancel_reasons.#{order.cancel_reason_code}") %><%
+            if order.cancel_reason_note.present? %> · <%= order.cancel_reason_note %><% end %>
+        </span>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="flex items-center justify-between gap-3">
+    <button type="button"
+            data-action="click->right-drawer#close"
+            class="inline-flex items-center text-[13px] font-medium text-muted hover:text-ink transition-colors">
+      <%= t("orders.immutable_drawer.close") %>
+    </button>
+    <%= button_to order_duplication_path(order),
+          method: :post,
+          form: { class: "inline-flex", data: { turbo_frame: "drawer_content" } },
+          data: { action: "click->right-drawer#open" },
+          class: "inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-[9px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+      <%= icon(:copy, size: :sm) %>
+      <span><%= t("orders.transitions.duplicate") %></span>
+    <% end %>
+  </div>
+</div>

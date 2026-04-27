@@ -87,6 +87,14 @@ es-MX:
       unmarked_paid: "Marca de pago deshecha."
     errors:
       immutable: "Este pedido ya no se puede editar. Si necesitas hacer cambios, duplícalo para abrir uno nuevo."
+    immutable_drawer:
+      kicker_delivered: "Pedido entregado · solo lectura"
+      kicker_canceled: "Pedido cancelado · solo lectura"
+      close: "Cerrar"
+      summary:
+        packaging: "Empaque"
+        tip: "Propina"
+        total: "Total"
     transitions:
       confirm: "Confirmar"
       start_production: "Iniciar producción"

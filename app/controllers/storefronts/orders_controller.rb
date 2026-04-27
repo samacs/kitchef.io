@@ -178,11 +178,13 @@ module Storefronts
       )
     end
 
+    # The form's `$` input collects pesos ("500", "500.50") regardless
+    # of whether the value contains a decimal, so always convert to
+    # cents on the way in. Mirrors the operator-side `normalize_packaging`.
     def normalize_cash_amount(attrs)
       raw = attrs[:cash_payment_amount_cents]
-      if raw.present? && !raw.to_s.match?(/\A\d+\z/)
-        attrs[:cash_payment_amount_cents] = (raw.to_s.gsub(",", ".").to_d * 100).to_i
-      end
+      return attrs if raw.blank?
+      attrs[:cash_payment_amount_cents] = (raw.to_s.gsub(",", ".").to_d * 100).to_i
       attrs
     end
 
