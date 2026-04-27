@@ -86,9 +86,9 @@ class AccountsController < AuthenticatedController
   end
 
   def normalize_settings_packaging(permitted)
-    raw = permitted.dig(:settings, :default_packaging)
+    return permitted unless permitted[:settings]&.key?(:default_packaging)
+    raw = permitted[:settings].delete(:default_packaging)
     return permitted if raw.blank?
-    permitted[:settings].delete(:default_packaging)
     normalized = raw.to_s.gsub(",", ".").to_d
     permitted[:settings][:default_packaging_cents] = (normalized * 100).to_i
     permitted
