@@ -1,9 +1,20 @@
 <% content_for :title, t("onboarding.done.seo_title") %>
 <% content_for :onboarding_step, 5 %>
 
-<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] gap-6 lg:gap-10 items-start" data-step-transition-target="step">
-  <div class="order-1">
-    <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-6">
+<%# Phase 14, Slice 4 — combined summary + plan picker. The form
+    posts to Onboarding::CompletionsController#create with
+    plan_choice (free | pro) and billing_period (monthly | yearly).
+    `data-turbo: false` is load-bearing on the form because the Pro
+    path 303-redirects to checkout.stripe.com, and Turbo Drive
+    silently swallows cross-origin redirects without it. %>
+<%= form_with url: onboarding_done_path,
+              method: :post,
+              data: { turbo: false, controller: "plan-picker", "plan-picker-default-period-value": "yearly" },
+              class: "grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] gap-6 lg:gap-10 items-start" do %>
+  <div class="order-1 flex flex-col gap-5">
+
+    <%# ── Kitchen summary card (compact) ────────────────────────── %>
+    <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-5">
       <div class="flex flex-col gap-3">
         <%= render Ui::KickerComponent.new(text: t("onboarding.done.kicker")) %>
         <h1 class="font-serif text-[34px] sm:text-[40px] leading-[1.04] tracking-[-0.02em] text-ink pb-[0.1em]">
@@ -29,18 +40,6 @@
         </div>
         <div class="flex items-start justify-between gap-3 py-2 border-t border-line">
           <dt class="text-[12.5px] font-mono uppercase tracking-[0.14em] text-muted shrink-0 w-[130px] pt-[2px]">
-            <%= t("onboarding.done.summary_description") %>
-          </dt>
-          <dd class="flex-1 text-[14px] text-ink-2 whitespace-pre-line">
-            <% if current_onboarding_account.public_profile.description.present? %>
-              <%= current_onboarding_account.public_profile.description %>
-            <% else %>
-              <span class="text-muted italic"><%= t("onboarding.done.summary_description_empty") %></span>
-            <% end %>
-          </dd>
-        </div>
-        <div class="flex items-start justify-between gap-3 py-2 border-t border-line">
-          <dt class="text-[12.5px] font-mono uppercase tracking-[0.14em] text-muted shrink-0 w-[130px] pt-[2px]">
             <%= t("onboarding.done.summary_logo") %>
           </dt>
           <dd class="flex-1 text-[14px] <%= current_onboarding_account.logo.attached? ? 'text-accent' : 'text-muted italic' %>">
@@ -56,16 +55,166 @@
           </dd>
         </div>
       </dl>
+    </div>
 
-      <%= button_to t("onboarding.done.submit"),
-            onboarding_done_path,
-            method: :post,
-            class: "w-full inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta",
-            form: { class: "contents" } %>
+    <%# ── Plan picker ──────────────────────────────────────────── %>
+    <div class="bg-surface border border-line rounded-panel shadow-card p-7 sm:p-9 flex flex-col gap-5">
+      <div class="flex flex-col gap-1.5">
+        <%= render Ui::KickerComponent.new(text: t("onboarding.done.plan.kicker")) %>
+        <h2 class="font-serif text-[26px] leading-[1.1] tracking-[-0.01em] text-ink">
+          <%= t("onboarding.done.plan.headline") %>
+        </h2>
+        <p class="text-[14px] text-ink-2 leading-[1.5]">
+          <%= t("onboarding.done.plan.lede") %>
+        </p>
+      </div>
+
+      <%# Free / Pro card pair. Native radios drive the form submit;
+          the surrounding cards are click targets that toggle them.
+          `data-selected` is painted by `plan_picker_controller`. %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+        <%# Free card %>
+        <label class="kc-plan-card group relative block rounded-card border bg-bg-2 p-5 cursor-pointer"
+               data-plan-picker-target="planCard"
+               data-choice="free"
+               data-action="click->plan-picker#selectPlan">
+          <%= radio_button_tag :plan_choice, "free", false,
+                class: "sr-only",
+                data: { plan_picker_target: "choiceRadio", action: "change->plan-picker#choiceChanged" } %>
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex flex-col gap-0.5">
+              <span class="font-serif text-[20px] text-ink leading-none">
+                <%= t("onboarding.done.plan.free.name") %>
+              </span>
+              <span class="text-[12.5px] text-ink-2"><%= t("onboarding.done.plan.free.tagline") %></span>
+            </div>
+            <span class="kc-plan-card-dot inline-flex h-[20px] w-[20px] rounded-full border-2 border-line shrink-0"></span>
+          </div>
+          <div class="flex items-baseline gap-1.5 py-2 border-t border-line">
+            <span class="font-serif text-[28px] text-ink leading-none">$0</span>
+            <span class="text-[11.5px] text-muted font-mono">/mes · para siempre</span>
+          </div>
+          <ul class="flex flex-col gap-1.5 mt-3 text-[12.5px] text-ink-2">
+            <% t("onboarding.done.plan.free.features").each do |feat| %>
+              <li class="flex items-start gap-1.5">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="text-accent shrink-0 mt-1" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><%= feat %></span>
+              </li>
+            <% end %>
+          </ul>
+        </label>
+
+        <%# Pro card %>
+        <label class="kc-plan-card group relative block rounded-card border bg-bg-2 p-5 cursor-pointer"
+               data-plan-picker-target="planCard"
+               data-choice="pro"
+               data-action="click->plan-picker#selectPlan">
+          <%= radio_button_tag :plan_choice, "pro", true,
+                class: "sr-only",
+                data: { plan_picker_target: "choiceRadio", action: "change->plan-picker#choiceChanged" } %>
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div class="flex flex-col gap-0.5">
+              <span class="font-serif text-[20px] text-ink leading-none">
+                <%= t("onboarding.done.plan.pro.name") %>
+              </span>
+              <span class="text-[12.5px] text-ink-2"><%= t("onboarding.done.plan.pro.tagline") %></span>
+            </div>
+            <span class="inline-flex items-center gap-1.5 shrink-0">
+              <span class="font-mono text-[10px] tracking-[0.12em] uppercase px-2 py-px rounded-pill bg-accent text-bg">
+                <%= t("onboarding.done.plan.pro.tag") %>
+              </span>
+              <span class="kc-plan-card-dot inline-flex h-[20px] w-[20px] rounded-full border-2 border-line"></span>
+            </span>
+          </div>
+
+          <%# Mensual / Anual segmented toggle. %>
+          <div class="inline-flex items-center gap-1 p-1 rounded-pill border border-line bg-surface mb-3">
+            <button type="button"
+                    data-plan-picker-target="periodToggle"
+                    data-action="click->plan-picker#selectMonthly"
+                    data-period="monthly"
+                    data-active="false"
+                    aria-pressed="false"
+                    class="kc-pricing-toggle px-3 py-1 rounded-pill text-[12px] font-medium transition-colors">
+              <%= t("onboarding.done.plan.pro.toggle_monthly") %>
+            </button>
+            <button type="button"
+                    data-plan-picker-target="periodToggle"
+                    data-action="click->plan-picker#selectYearly"
+                    data-period="yearly"
+                    data-active="true"
+                    aria-pressed="true"
+                    class="kc-pricing-toggle inline-flex items-center gap-1.5 px-3 py-1 rounded-pill text-[12px] font-medium transition-colors">
+              <%= t("onboarding.done.plan.pro.toggle_yearly") %>
+              <span class="font-mono text-[9.5px] uppercase tracking-[0.06em] text-accent">
+                <%= t("onboarding.done.plan.pro.toggle_savings") %>
+              </span>
+            </button>
+          </div>
+          <%= hidden_field_tag :billing_period, "yearly",
+                data: { plan_picker_target: "billingPeriodInput" } %>
+
+          <div class="flex flex-col gap-0.5 py-2 border-t border-line">
+            <div class="flex items-baseline gap-1.5">
+              <span class="font-serif text-[28px] text-ink leading-none"
+                    data-plan-picker-target="priceAmount"
+                    data-monthly="$199"
+                    data-yearly="$1,990">$1,990</span>
+              <span class="text-[11.5px] text-muted font-mono"
+                    data-plan-picker-target="pricePeriod"
+                    data-monthly="/mes"
+                    data-yearly="/año">/año</span>
+            </div>
+            <span class="text-[11.5px] text-muted font-mono"
+                  data-plan-picker-target="pricePeriod"
+                  data-monthly="$199 MXN/mes"
+                  data-yearly="$1,990 MXN/año · 2 meses gratis">$1,990 MXN/año · 2 meses gratis</span>
+            <span class="hidden inline-flex items-center gap-1 mt-1"
+                  data-plan-picker-target="savingsBadge">
+              <span class="font-mono text-[10px] uppercase tracking-[0.08em] px-2 py-px rounded-pill bg-accent/15 text-accent-2">
+                <%= t("onboarding.done.plan.pro.savings_badge") %>
+              </span>
+            </span>
+          </div>
+
+          <ul class="flex flex-col gap-1.5 mt-3 text-[12.5px] text-ink-2">
+            <% t("onboarding.done.plan.pro.features").each do |feat| %>
+              <li class="flex items-start gap-1.5">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="text-accent shrink-0 mt-1" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                <span><%= feat %></span>
+              </li>
+            <% end %>
+          </ul>
+        </label>
+      </div>
+
+      <%# No-card-during-trial reassurance. Dominant on purpose —
+          per the user spec we should be VERY clear about this. %>
+      <div class="rounded-card border border-accent/30 bg-accent-soft px-4 py-3 flex items-start gap-3">
+        <span class="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full bg-accent text-bg shrink-0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="6" width="18" height="13" rx="2"/>
+            <path d="M3 10h18"/>
+            <line x1="7" y1="15" x2="11" y2="15"/>
+          </svg>
+        </span>
+        <div class="flex flex-col gap-0.5 min-w-0">
+          <div class="text-[13.5px] font-semibold text-ink">
+            <%= t("onboarding.done.plan.no_card_title") %>
+          </div>
+          <div class="text-[12.5px] text-ink-2 leading-[1.5]">
+            <%= t("onboarding.done.plan.no_card_body") %>
+          </div>
+        </div>
+      </div>
+
+      <%= submit_tag t("onboarding.done.submit"),
+            class: "w-full inline-flex items-center justify-center gap-2 text-[14px] font-semibold px-[22px] py-[12px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer" %>
     </div>
   </div>
 
   <aside class="order-2 lg:sticky lg:top-6">
     <%= render Onboarding::StorefrontPreviewComponent.new(account: current_onboarding_account) %>
   </aside>
-</div>
+<% end %>
