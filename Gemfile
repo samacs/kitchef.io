@@ -72,7 +72,7 @@ gem "ruby-vips", "~> 2.3"
 gem "aws-sdk-s3", "~> 1.219"
 
 # Integrations
-gem "stripe", "~> 19.0"
+gem "stripe", "~> 19.1"
 gem "resend", "~> 1.3"
 gem "twilio-ruby", "~> 7.10"
 gem "geocoder", "~> 1.8"
