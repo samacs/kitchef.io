@@ -233,11 +233,49 @@ Rails.application.routes.draw do
     post "/recipes/:recipe_id", to: "decomposition#create"
   end
 
-  resource :account, only: %i[show edit update] do
+  resource :account, only: %i[show edit update destroy] do
     delete :logo,  to: "accounts#destroy_logo",  as: :logo
     delete :cover, to: "accounts#destroy_cover", as: :cover
   end
-  resource :subscription, only: %i[show new create destroy]
+  resource :subscription, only: %i[show new create destroy] do
+    # Hint banner dismissals (Phase 14, Slice 1). Posted by the "x"
+    # button on `Subscriptions::HintBanner`; writes a per-account
+    # `DismissedHint` row so the same banner doesn't reappear on
+    # device-switch.
+    post "hints/:hint_key/dismiss",
+         to:   "subscriptions/hint_dismissals#create",
+         as:   :hint_dismissal,
+         constraints: { hint_key: %r{[\w:.-]+} }
+
+    # Phase 14, Slice 5 — billing dashboard actions.
+    # Plan switching (mensual ↔ anual with proration via Stripe).
+    post "plan-switch",
+         to: "subscriptions/plan_switches#create",
+         as: :plan_switch
+
+    # Cancel save-flow:
+    #   GET  /subscription/cancel       → exit-survey form
+    #   POST /subscription/cancel       → choose reason → save-offer page
+    #   POST /subscription/cancel/save  → accept the matched save offer
+    #   POST /subscription/cancel/confirm → hard cancel
+    get  "cancel",         to: "subscriptions/cancellations#new",     as: :cancel
+    post "cancel",         to: "subscriptions/cancellations#create"
+    post "cancel/save",    to: "subscriptions/cancellations#save",    as: :cancel_save
+    post "cancel/confirm", to: "subscriptions/cancellations#confirm", as: :cancel_confirm
+
+    # Downgrade to Free without going through the save-flow.
+    post "downgrade",
+         to: "subscriptions/downgrades#create",
+         as: :downgrade
+
+    # Phase 14, Slice 6 — billing history + Stripe Portal entry.
+    get  "invoices",
+         to: "subscriptions/invoices#index",
+         as: :invoices
+    post "portal",
+         to: "subscriptions/portal_sessions#create",
+         as: :portal
+  end
 
   resources :notifications, only: %i[index] do
     member do

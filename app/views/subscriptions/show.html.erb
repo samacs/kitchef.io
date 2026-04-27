@@ -1,0 +1,250 @@
+<% content_for :title, t("subscriptions.show.title") %>
+<% content_for :page_title, t("subscriptions.show.title") %>
+<% content_for :page_subtitle, t("subscriptions.show.subtitle") %>
+
+<%
+  sub          = subscription
+  pro_active   = sub.pro?
+  on_trial     = sub.on_trial?
+  via_comp     = sub.source_comp?
+  via_stripe   = sub.source_stripe?
+  current_period = sub.plan.to_s
+  is_monthly   = current_period == "pro_monthly"
+  is_yearly    = current_period == "pro_yearly"
+  cancel_pending = pro_active && sub.cancel_at_period_end?
+%>
+
+<div class="flex flex-col gap-6 max-w-[820px]">
+
+  <%# Flash from various save-flow / switch / downgrade actions. %>
+  <% if params[:saved] == "1" %>
+    <%= render Subscriptions::HintBanner.new(
+          hint_key: "subscription:save_applied:#{Date.current.strftime('%Y%m')}",
+          tone:     :pro,
+          icon:     :sparkles,
+          title:    t("subscriptions.show.banner.save_applied_title"),
+          body:     t("subscriptions.show.banner.save_applied_body")) %>
+  <% end %>
+
+  <% if params[:downgraded] == "1" %>
+    <%= render Subscriptions::HintBanner.new(
+          hint_key: "subscription:downgraded:#{Date.current.strftime('%Y%m%d')}",
+          tone:     :info,
+          icon:     :info,
+          title:    t("subscriptions.show.banner.downgraded_title"),
+          body:     t("subscriptions.show.banner.downgraded_body")) %>
+  <% end %>
+
+  <% if params[:checkout] == "canceled" %>
+    <%= render Subscriptions::HintBanner.new(
+          hint_key: "subscription:checkout_canceled:#{Time.current.to_i}",
+          tone:     :info,
+          icon:     :info,
+          title:    t("subscriptions.show.banner.checkout_canceled_title"),
+          body:     t("subscriptions.show.banner.checkout_canceled_body")) %>
+  <% end %>
+
+  <%# Current plan card %>
+  <article class="rounded-card border border-line bg-surface p-6 flex flex-col gap-4">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex flex-col gap-1 min-w-0">
+        <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+          <%= t("subscriptions.show.current_plan_kicker") %>
+        </span>
+        <% display_plan_key = pro_active ? sub.plan : "free" %>
+        <h2 class="font-serif text-[28px] tracking-tight text-ink leading-[1.1]">
+          <%= t("subscription.plans.#{display_plan_key}", default: t("subscription.plans.free")) %>
+        </h2>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <% if cancel_pending %>
+          <span class="inline-flex items-center gap-1.5 rounded-pill bg-warn/15 text-warn-ink border border-warn/30 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em]">
+            <%= t("subscriptions.show.cancel_pending_chip") %>
+          </span>
+        <% elsif via_comp %>
+          <span class="inline-flex items-center gap-1.5 rounded-pill bg-accent-soft text-accent px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em]">
+            <%= t("subscription.sources.comp") %>
+          </span>
+        <% elsif pro_active %>
+          <span class="inline-flex items-center gap-1.5 rounded-pill bg-accent text-bg px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em]">
+            <%= t("subscriptions.show.active_chip") %>
+          </span>
+        <% else %>
+          <span class="inline-flex items-center gap-1.5 rounded-pill bg-bg-2 text-ink-2 border border-line px-3 py-1 font-mono text-[11px] uppercase tracking-[0.08em]">
+            <%= t("subscriptions.show.free_chip") %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Status line: trial countdown / comp expiry / renewal / cancel-pending %>
+    <% if cancel_pending && sub.current_period_end %>
+      <p class="text-[13.5px] text-warn-ink leading-[1.5]">
+        <%= t("subscriptions.show.cancel_pending_html",
+              date: l(sub.current_period_end.to_date, format: :long)).html_safe %>
+      </p>
+    <% elsif on_trial && sub.trial_ends_at %>
+      <p class="text-[13.5px] text-ink-2 leading-[1.5]">
+        <%= t("subscriptions.show.trial_until_html",
+              date: l(sub.trial_ends_at.to_date, format: :long)).html_safe %>
+      </p>
+    <% elsif via_comp && sub.comp_expires_at %>
+      <p class="text-[13.5px] text-ink-2 leading-[1.5]">
+        <%= t("subscriptions.show.comp_until_html",
+              date: l(sub.comp_expires_at.to_date, format: :long)).html_safe %>
+      </p>
+    <% elsif pro_active && sub.current_period_end %>
+      <p class="text-[13.5px] text-ink-2 leading-[1.5]">
+        <%= t("subscriptions.show.renews_html",
+              date: l(sub.current_period_end.to_date, format: :long)).html_safe %>
+      </p>
+    <% end %>
+
+    <%# Upgrade CTAs (only when not Pro) %>
+    <% unless pro_active %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+        <%= button_to subscription_path(billing_period: "yearly"),
+              method: :post,
+              class: "inline-flex flex-col items-start gap-1 rounded-card border border-accent/30 bg-accent-soft px-4 py-3 text-left hover:border-accent transition-colors",
+              form: { class: "contents", data: { turbo: false } } do %>
+          <span class="font-serif text-[20px] text-accent leading-none">$1,990 <span class="text-[12px] font-mono opacity-75">/año</span></span>
+          <span class="text-[12px] text-accent-2 leading-[1.4]"><%= t("subscriptions.show.upgrade_yearly_note") %></span>
+        <% end %>
+
+        <%= button_to subscription_path(billing_period: "monthly"),
+              method: :post,
+              class: "inline-flex flex-col items-start gap-1 rounded-card border border-line bg-surface px-4 py-3 text-left hover:border-line-2 transition-colors",
+              form: { class: "contents", data: { turbo: false } } do %>
+          <span class="font-serif text-[20px] text-ink leading-none">$199 <span class="text-[12px] font-mono opacity-75">/mes</span></span>
+          <span class="text-[12px] text-ink-2 leading-[1.4]"><%= t("subscriptions.show.upgrade_monthly_note") %></span>
+        <% end %>
+      </div>
+
+      <p class="text-[12px] text-muted font-mono">
+        <%= t("subscriptions.show.no_card_note") %>
+      </p>
+    <% end %>
+  </article>
+
+  <%# Stripe-managed actions: Pro Mensual ↔ Pro Anual switch.
+      Only renders for paying customers (via_stripe + not comp). %>
+  <% if via_stripe && pro_active && !cancel_pending %>
+    <article class="rounded-card border border-line bg-surface p-6 flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <h3 class="font-serif text-[20px] text-ink leading-[1.2]">
+          <%= t("subscriptions.show.switch.title") %>
+        </h3>
+        <p class="text-[13px] text-ink-2 leading-[1.5]">
+          <%= t("subscriptions.show.switch.lede") %>
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <% if is_monthly %>
+          <%= button_to plan_switch_subscription_path(billing_period: "yearly"),
+                method: :post,
+                data:   { turbo_confirm: t("subscriptions.show.switch.confirm_to_yearly") },
+                class:  "inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors",
+                form:   { class: "contents" } do %>
+            <%= t("subscriptions.show.switch.to_yearly_cta") %>
+          <% end %>
+          <span class="text-[12px] text-muted">
+            <%= t("subscriptions.show.switch.to_yearly_hint") %>
+          </span>
+        <% elsif is_yearly %>
+          <%= button_to plan_switch_subscription_path(billing_period: "monthly"),
+                method: :post,
+                data:   { turbo_confirm: t("subscriptions.show.switch.confirm_to_monthly") },
+                class:  "inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-button bg-surface text-ink-2 border border-line hover:border-line-2 transition-colors",
+                form:   { class: "contents" } do %>
+            <%= t("subscriptions.show.switch.to_monthly_cta") %>
+          <% end %>
+          <span class="text-[12px] text-muted">
+            <%= t("subscriptions.show.switch.to_monthly_hint") %>
+          </span>
+        <% end %>
+      </div>
+    </article>
+  <% end %>
+
+  <%# Cancel / downgrade actions (Pro only). Comped accounts can
+      downgrade via the admin tool, not from here. %>
+  <% if pro_active && via_stripe && !cancel_pending %>
+    <article class="rounded-card border border-line bg-surface p-6 flex items-center justify-between gap-3">
+      <div class="flex flex-col gap-1 min-w-0">
+        <h3 class="font-serif text-[18px] text-ink leading-[1.2]">
+          <%= t("subscriptions.show.cancel.title") %>
+        </h3>
+        <p class="text-[13px] text-ink-2 leading-[1.5]">
+          <%= t("subscriptions.show.cancel.body") %>
+        </p>
+      </div>
+      <%= link_to t("subscriptions.show.cancel.cta"),
+            cancel_subscription_path,
+            class: "inline-flex items-center gap-1.5 text-[13px] font-medium px-4 py-2 rounded-button bg-surface text-ink-2 border border-line hover:border-line-2 transition-colors no-underline shrink-0" %>
+    </article>
+  <% end %>
+
+  <%# Stripe-managed billing surfaces. Both render only for paying
+      operators — comp + Free have nothing to show on either side. %>
+  <% if via_stripe %>
+    <article class="rounded-card border border-line bg-surface px-6 py-5 flex flex-col gap-3">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex flex-col gap-1 min-w-0">
+          <div class="text-[14px] font-semibold text-ink"><%= t("subscriptions.show.payment_method.title") %></div>
+          <div class="text-[12.5px] text-ink-2"><%= t("subscriptions.show.payment_method.body") %></div>
+        </div>
+        <%= button_to portal_subscription_path,
+              method: :post,
+              class:  "inline-flex items-center gap-1.5 text-[12.5px] font-medium px-4 py-2 rounded-button bg-surface text-ink-2 border border-line hover:border-line-2 transition-colors no-underline shrink-0",
+              form:   { class: "contents", data: { turbo: false } } do %>
+          <%= icon(:credit_card, size: :xs) %>
+          <%= t("subscriptions.show.payment_method.cta") %>
+        <% end %>
+      </div>
+    </article>
+
+    <article class="rounded-card border border-line bg-surface px-6 py-5 flex items-center justify-between gap-3">
+      <div class="flex flex-col gap-1 min-w-0">
+        <div class="text-[14px] font-semibold text-ink"><%= t("subscriptions.show.invoices.title") %></div>
+        <div class="text-[12.5px] text-ink-2"><%= t("subscriptions.show.invoices.body") %></div>
+      </div>
+      <%= link_to invoices_subscription_path,
+            class: "inline-flex items-center gap-1.5 text-[12.5px] font-medium px-4 py-2 rounded-button bg-surface text-ink-2 border border-line hover:border-line-2 transition-colors no-underline shrink-0" do %>
+        <%= icon(:file_text, size: :xs) %>
+        <%= t("subscriptions.show.invoices.cta") %>
+      <% end %>
+    </article>
+  <% end %>
+
+  <%# Zona peligrosa — borrar mi cuenta. Always renders so the
+      operator can find it; the form requires typing the kitchen
+      name to confirm. %>
+  <article class="rounded-card border border-err/30 bg-[color-mix(in_oklab,var(--color-err)_4%,var(--color-surface))] p-6 flex flex-col gap-3">
+    <div class="flex flex-col gap-1">
+      <h3 class="font-serif text-[20px] text-err leading-[1.2]">
+        <%= t("subscriptions.show.danger.title") %>
+      </h3>
+      <p class="text-[13px] text-ink-2 leading-[1.5]">
+        <%= t("subscriptions.show.danger.body") %>
+      </p>
+    </div>
+
+    <%= form_with url: account_path,
+                  method: :delete,
+                  data: { turbo_confirm: t("subscriptions.show.danger.confirm_browser") },
+                  class: "flex flex-col sm:flex-row gap-3 items-stretch sm:items-end" do |f| %>
+      <div class="flex flex-col gap-1.5 flex-1">
+        <%= label_tag :confirmation_name,
+              t("subscriptions.show.danger.input_label", name: Current.account.name),
+              class: "text-[12.5px] font-mono uppercase tracking-[0.12em] text-muted" %>
+        <%= text_field_tag :confirmation_name, nil,
+              autocomplete: "off",
+              class: "rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink focus:border-err focus:outline-none" %>
+      </div>
+      <%= f.submit t("subscriptions.show.danger.cta"),
+            class: "inline-flex items-center justify-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-button bg-err text-bg border border-err hover:bg-err/90 transition-colors cursor-pointer shrink-0" %>
+    <% end %>
+  </article>
+</div>
