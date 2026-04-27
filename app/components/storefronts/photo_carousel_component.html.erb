@@ -23,7 +23,8 @@
                aria-label="<%= t("storefronts.photo_carousel.slide_label", n: idx + 1, total: photos.size) %>">
             <img src="<%= helpers.url_for(attachment.variant(variant)) %>"
                  alt="<%= idx.zero? ? alt_text : "" %>"
-                 loading="<%= idx.zero? ? "eager" : "lazy" %>" />
+                 loading="<%= idx.zero? ? "eager" : "lazy" %>"
+                 class="transition-transform duration-300 group-hover:scale-[1.02]" />
           </div>
         <% end %>
       </div>
@@ -82,7 +83,8 @@
              aria-label="<%= t("storefronts.photo_carousel.slide_label", n: idx + 1, total: photos.size) %>">
           <img src="<%= helpers.url_for(attachment.variant(variant)) %>"
                alt="<%= idx.zero? ? alt_text : "" %>"
-               loading="<%= idx.zero? ? "eager" : "lazy" %>" />
+               loading="<%= idx.zero? ? "eager" : "lazy" %>"
+               class="transition-transform duration-300 group-hover:scale-[1.02]" />
         </div>
       <% end %>
     </div>

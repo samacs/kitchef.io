@@ -7,12 +7,16 @@
   <div class="relative overflow-hidden"
        style="aspect-ratio: 4 / 3; background: var(--color-bg-2);">
     <% if recipe.photo_count > 1 %>
-      <%= render Storefronts::PhotoCarouselComponent.new(recipe: recipe, variant: :card, alt: name) %>
-      <%# Title-anchor over the carousel: only the slide image deep-
-          links; arrow buttons sit above and intercept clicks. %>
+      <%# The whole carousel is a navigation link — clicking the image
+          (anywhere it isn't an arrow button) takes the customer to
+          the dish detail page. Arrows stop propagation so they
+          paginate without navigating away. Swipe is intentionally
+          disabled on this surface; arrows are the only paginator. %>
       <%= link_to detail_href,
-            class: "absolute inset-0 z-[1] no-underline",
-            aria:  { label: t("storefronts.menu.view_dish_aria", name: name) } %>
+            class: "group block w-full h-full no-underline",
+            aria:  { label: t("storefronts.menu.view_dish_aria", name: name) } do %>
+        <%= render Storefronts::PhotoCarouselComponent.new(recipe: recipe, variant: :card, alt: name) %>
+      <% end %>
     <% else %>
       <%= link_to detail_href,
             class: "group relative block overflow-hidden no-underline w-full h-full",

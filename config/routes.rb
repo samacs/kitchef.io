@@ -102,32 +102,26 @@ Rails.application.routes.draw do
     end
   end
 
-  # Phase 9 — proveedores & per-supplier price history. Combobox inline
+  # Phase 9 — suppliers & per-supplier price history. Combobox inline
   # flow on the ingredient form hits #create via JSON; the management
-  # surface at /proveedores lives for the "I just opened a new shop"
+  # surface at /suppliers lives for the "I just opened a new shop"
   # and "bulk-edit contact info" cases.
-  resources :suppliers,
-    path: "proveedores",
-    path_names: { new: "nuevo", edit: "editar" } do
+  resources :suppliers do
     collection do
       get :search
     end
   end
 
   # Purchase ledger — the "paper receipt + thumb" surface. The mobile-
-  # first new-purchase form lives at /compras/nuevo; index is the
+  # first new-purchase form lives at /purchases/new; index is the
   # chronological list of what's been bought; CSV export feeds the
   # operator's contador.
-  resources :purchases,
-    path: "compras",
-    path_names: { new: "nuevo", edit: "editar" }
+  resources :purchases
 
   # Phase 10 — fixed costs (renta, gas, plataformas). One row per
   # recurring line item; the finance report prorates them against the
   # window to land on "Utilidad neta".
-  resources :fixed_costs,
-    path: "costos-fijos",
-    path_names: { new: "nuevo", edit: "editar" }
+  resources :fixed_costs, path: "fixed-costs"
 
   # Inline creator for the fixed-cost category combobox (same pattern
   # as CategoriesController#create). No management UI in v1 — inline

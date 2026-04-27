@@ -2,12 +2,13 @@ class OrdersController < AuthenticatedController
   expose :orders, -> { Current.account.orders.kept.includes(:client, items: :recipe).order(created_at: :desc) }
   expose :order,  -> { find_or_build_order }
 
-  # Canceled and paid pedidos are terminal — edits go through "Duplicar"
-  # (creates a fresh draft) so the audit trail stays clean and reports
-  # don't see post-hoc mutations. Applies to edit/update/destroy only;
-  # the drawer still opens for inspection through a read-only drawer
-  # later if we want one.
-  before_action :reject_if_immutable, only: %i[edit update destroy]
+  # Canceled and delivered pedidos are terminal — edits go through
+  # "Duplicar" (creates a fresh draft) so the audit trail stays clean
+  # and reports don't see post-hoc mutations. The drawer for `edit`
+  # still opens but renders a read-only summary (see
+  # `_immutable_drawer.html.erb`); `update` / `destroy` reject with
+  # an alert because they're action POSTs, not inspection requests.
+  before_action :reject_if_immutable, only: %i[update destroy]
 
   def index; end
   def new;   end
