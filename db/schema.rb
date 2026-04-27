@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_27_074348) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_27_204354) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -466,7 +466,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_074348) do
     t.integer "lead_time_minutes", default: 0, null: false
     t.integer "order_mode", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.text "vacation_message"
+    t.date "vacation_until"
     t.index ["account_id"], name: "index_schedules_on_account_id", unique: true
+    t.index ["vacation_until"], name: "idx_schedules_vacation_until", where: "(vacation_until IS NOT NULL)"
     t.check_constraint "lead_time_minutes >= 0", name: "chk_schedules_lead_time_nonnegative"
     t.check_constraint "order_mode = ANY (ARRAY[0, 1, 2])", name: "chk_schedules_order_mode"
   end

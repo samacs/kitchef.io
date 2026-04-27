@@ -8,7 +8,7 @@
 #  comp_reason            :text
 #  current_period_end     :datetime
 #  plan                   :integer          default("free"), not null
-#  source                 :integer          default(0), not null
+#  source                 :integer          default("free"), not null
 #  status                 :integer          default("trialing"), not null
 #  trial_ends_at          :datetime
 #  created_at             :datetime         not null

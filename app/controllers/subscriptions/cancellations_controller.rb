@@ -34,7 +34,11 @@ module Subscriptions
       end
 
       if @reason == "closing_kitchen"
-        redirect_to schedule_path,
+        # Anchor on the vacation card so the operator lands directly
+        # on it. Slice 8 wired the matching `#vacation` id + the
+        # kc-highlightable class so target_highlight_controller.js
+        # flashes the card when the URL fragment matches.
+        redirect_to schedule_path(anchor: "vacation"),
                     notice: t(".pause_redirect")
         return
       end

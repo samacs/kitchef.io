@@ -8,3 +8,9 @@ pickup_reminder_scan:
   cron: "*/15 * * * *"
   class: "PickupReminderScanJob"
   queue: low
+
+clear_expired_vacations:
+  description: "Phase 14, Slice 8 — auto-clear Schedule#vacation_until for kitchens whose pause window has ended"
+  cron: "0 9 * * *"   # 03:00 America/Mexico_City (UTC−6 standard)
+  class: "Schedules::ClearExpiredVacationsJob"
+  queue: low

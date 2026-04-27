@@ -51,6 +51,16 @@ module Storefronts
         return Result.new(success: false, object: order, errors: order.errors)
       end
 
+      # Phase 14, Slice 8 — vacation mode. Defense in depth: the
+      # storefront page already hides the checkout when on vacation,
+      # but a stale tab or a tampered submit can still POST here.
+      # Reject with a clear error pointing at the resume date.
+      if storefront.schedule&.on_vacation?
+        order = storefront.orders.new(order_params.to_h.deep_symbolize_keys)
+        order.errors.add(:base, :kitchen_on_vacation)
+        return Result.new(success: false, object: order, errors: order.errors)
+      end
+
       client = resolve_client(phone: phone, email: email)
       if client.nil?
         order = storefront.orders.new(order_params.to_h.deep_symbolize_keys)

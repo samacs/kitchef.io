@@ -5,12 +5,15 @@
 #  id                :bigint           not null, primary key
 #  lead_time_minutes :integer          default(0), not null
 #  order_mode        :integer          default("advance"), not null
+#  vacation_message  :text
+#  vacation_until    :date
 #  created_at        :datetime         not null
 #  updated_at        :datetime         not null
 #  account_id        :bigint           not null
 #
 # Indexes
 #
+#  idx_schedules_vacation_until   (vacation_until) WHERE (vacation_until IS NOT NULL)
 #  index_schedules_on_account_id  (account_id) UNIQUE
 #
 # Foreign Keys
@@ -36,6 +39,24 @@ class Schedule < ApplicationRecord
 
   validates :lead_time_minutes,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }
+  validates :vacation_message, length: { maximum: 280 }, allow_blank: true
+  validate  :vacation_until_not_in_the_past_on_set
+
+  # --- Vacation mode (Phase 14, Slice 8) ---------------------------
+  #
+  # `vacation_until` is the inclusive last day of the pause. While
+  # today is on or before that date, the storefront morphs to
+  # "Volvemos pronto" + refuses checkout, and the operator's dashboard
+  # surfaces a banner that the kitchen is paused. A daily cron clears
+  # expired rows so the surface auto-recovers without operator action.
+  def on_vacation?(date = Date.current)
+    vacation_until.present? && vacation_until >= date
+  end
+
+  def vacation_resumes_on
+    return nil unless vacation_until
+    vacation_until + 1
+  end
 
   # --- Lead time accessor ------------------------------------------
   #
@@ -93,5 +114,15 @@ class Schedule < ApplicationRecord
   # The XOR validation on Availability still catches explicit corruption.
   def blank_availability?(attrs)
     attrs["wday"].blank? && attrs["date"].blank?
+  end
+
+  # Reject only on CHANGE — existing rows whose vacation_until has
+  # since become "today or yesterday" still pass through validation
+  # so the auto-clear cron can do its job without bouncing on this
+  # check. New / edited rows must set a future-or-today date.
+  def vacation_until_not_in_the_past_on_set
+    return unless will_save_change_to_vacation_until? && vacation_until.present?
+    return if vacation_until >= Date.current
+    errors.add(:vacation_until, :must_be_today_or_future)
   end
 end

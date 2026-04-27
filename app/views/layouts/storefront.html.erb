@@ -74,6 +74,15 @@
         <% if @storefront %>data-storefront-cart-slug-value="<%= @storefront.slug %>"<% end %>>
     <%= render Storefronts::HeaderComponent.new(storefront: @storefront) if @storefront %>
 
+    <%# Phase 14, Slice 8 — vacation banner. Mounted at the layout
+        level so it surfaces on every storefront page (landing, dish
+        detail, cart, checkout). The component returns nothing when
+        the kitchen isn't on vacation, so non-paused stores stay
+        identical. %>
+    <% if @storefront %>
+      <%= render Storefronts::VacationBannerComponent.new(storefront: @storefront) %>
+    <% end %>
+
     <%= yield %>
 
     <%= render Storefronts::FooterComponent.new(storefront: @storefront) if @storefront %>

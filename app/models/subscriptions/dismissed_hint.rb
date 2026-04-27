@@ -1,3 +1,24 @@
+# == Schema Information
+#
+# Table name: subscriptions_dismissed_hints
+#
+#  id           :bigint           not null, primary key
+#  dismissed_at :datetime         not null
+#  hint_key     :string           not null
+#  redismiss_at :datetime
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  account_id   :bigint           not null
+#
+# Indexes
+#
+#  idx_dismissed_hints_account_key                    (account_id,hint_key) UNIQUE
+#  index_subscriptions_dismissed_hints_on_account_id  (account_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (account_id => accounts.id)
+#
 module Subscriptions
   # Per-account dismissal record for upgrade-hint banners. When an
   # operator closes a hint, we write a row here so the same hint

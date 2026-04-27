@@ -908,6 +908,20 @@ es-MX:
       subtitle: "Define cuándo aceptas pedidos y para cuándo entregas. Tus cambios se guardan solos."
     update:
       updated: "Horario actualizado."
+    # Phase 14, Slice 8 — vacation mode card.
+    vacation:
+      title: "Pausar mi cocina"
+      subtitle: "Sal de vacaciones, descansa o cierra temporalmente sin perder a tus clientes. Tu storefront muestra «Volvemos pronto» y deja de recibir pedidos hasta la fecha que elijas."
+      paused_chip: "EN PAUSA"
+      until_label: "Pausar hasta el día"
+      message_label: "Mensaje (opcional)"
+      message_placeholder: "Ej.: Cerramos por mudanza · Regresamos en agosto"
+      pause_cta: "Pausar mi cocina"
+      pause_confirm: "¿Pausar tu cocina hasta esta fecha? Tu storefront va a dejar de recibir pedidos."
+      warning: "Tu suscripción Pro sigue activa durante la pausa. Tus datos se quedan intactos."
+      resume_cta: "Reanudar mi cocina"
+      active_until_html: "Tu cocina está pausada hasta el <strong>%{date}</strong>"
+      resumes_on_html: "Reanudamos automáticamente el %{date}."
     autosave:
       saving: "Guardando…"
       saved: "Guardado"
