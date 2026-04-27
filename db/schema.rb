@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_26_141545) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_27_074348) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -18,6 +18,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_141545) do
     t.jsonb "branding", default: {}, null: false
     t.datetime "created_at", null: false
     t.string "default_currency", default: "MXN", null: false
+    t.boolean "demo", default: false, null: false
     t.datetime "discarded_at"
     t.datetime "geocoded_at"
     t.datetime "geocoding_failed_at"
@@ -33,6 +34,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_141545) do
     t.string "street_address"
     t.string "time_zone", default: "America/Mexico_City", null: false
     t.datetime "updated_at", null: false
+    t.index ["demo"], name: "idx_accounts_demo_true", where: "(demo = true)"
     t.index ["discarded_at"], name: "index_accounts_on_discarded_at"
     t.index ["latitude", "longitude"], name: "index_accounts_on_latitude_and_longitude"
     t.index ["owner_id"], name: "index_accounts_on_owner_id"
@@ -499,17 +501,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_141545) do
   create_table "subscriptions", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.boolean "cancel_at_period_end", default: false, null: false
+    t.datetime "comp_expires_at"
+    t.bigint "comp_granted_by_id"
+    t.text "comp_reason"
     t.datetime "created_at", null: false
     t.datetime "current_period_end"
     t.integer "plan", default: 0, null: false
+    t.integer "source", default: 0, null: false
     t.integer "status", default: 0, null: false
     t.string "stripe_customer_id"
     t.string "stripe_subscription_id"
     t.datetime "trial_ends_at"
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_subscriptions_on_account_id", unique: true
+    t.index ["comp_expires_at"], name: "idx_subscriptions_comp_expires_at", where: "(comp_expires_at IS NOT NULL)"
+    t.index ["comp_granted_by_id"], name: "index_subscriptions_on_comp_granted_by_id"
+    t.index ["source"], name: "index_subscriptions_on_source"
     t.index ["stripe_customer_id"], name: "index_subscriptions_on_stripe_customer_id", unique: true, where: "(stripe_customer_id IS NOT NULL)"
     t.index ["stripe_subscription_id"], name: "index_subscriptions_on_stripe_subscription_id", unique: true, where: "(stripe_subscription_id IS NOT NULL)"
+  end
+
+  create_table "subscriptions_dismissed_hints", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "dismissed_at", null: false
+    t.string "hint_key", null: false
+    t.datetime "redismiss_at"
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "hint_key"], name: "idx_dismissed_hints_account_key", unique: true
+    t.index ["account_id"], name: "index_subscriptions_dismissed_hints_on_account_id"
   end
 
   create_table "supplier_ingredients", force: :cascade do |t|
@@ -618,6 +638,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_26_141545) do
   add_foreign_key "stock_movements", "accounts"
   add_foreign_key "stock_movements", "ingredients"
   add_foreign_key "subscriptions", "accounts"
+  add_foreign_key "subscriptions", "users", column: "comp_granted_by_id", on_delete: :nullify
+  add_foreign_key "subscriptions_dismissed_hints", "accounts"
   add_foreign_key "supplier_ingredients", "ingredients", on_delete: :cascade
   add_foreign_key "supplier_ingredients", "suppliers", on_delete: :cascade
   add_foreign_key "suppliers", "accounts"

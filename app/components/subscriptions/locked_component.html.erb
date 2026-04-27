@@ -1,0 +1,39 @@
+<div class="<%= container_classes %>">
+  <div class="flex items-center gap-2.5">
+    <span class="inline-flex h-[28px] w-[28px] items-center justify-center rounded-full bg-bg-3 text-muted shrink-0">
+      <%= helpers.icon(lock_icon, size: :xs) %>
+    </span>
+    <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+      <%= t("subscriptions.locked.kicker") %>
+    </span>
+  </div>
+
+  <h3 class="font-serif text-[20px] leading-[1.2] text-ink">
+    <%= title %>
+  </h3>
+
+  <% if lede.present? %>
+    <p class="text-[13.5px] leading-[1.5] text-ink-2 max-w-prose">
+      <%= lede %>
+    </p>
+  <% end %>
+
+  <% if bullets.any? %>
+    <ul class="flex flex-col gap-1.5 text-[13px] text-ink-2">
+      <% bullets.each do |bullet| %>
+        <li class="flex items-start gap-2">
+          <span class="text-accent shrink-0 mt-[3px]">
+            <%= helpers.icon(:check, size: :xs) %>
+          </span>
+          <span><%= bullet %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <%= link_to cta_path,
+        class: "mt-1 inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta no-underline" do %>
+    <%= helpers.icon(:sparkles, size: :xs) %>
+    <span><%= cta_label %></span>
+  <% end %>
+</div>

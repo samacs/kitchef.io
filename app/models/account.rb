@@ -5,6 +5,7 @@
 #  id                  :bigint           not null, primary key
 #  branding            :jsonb            not null
 #  default_currency    :string           default("MXN"), not null
+#  demo                :boolean          default(FALSE), not null
 #  discarded_at        :datetime
 #  geocoded_at         :datetime
 #  geocoding_failed_at :datetime
@@ -24,6 +25,7 @@
 #
 # Indexes
 #
+#  idx_accounts_demo_true                    (demo) WHERE (demo = true)
 #  index_accounts_on_discarded_at            (discarded_at)
 #  index_accounts_on_latitude_and_longitude  (latitude,longitude)
 #  index_accounts_on_owner_id                (owner_id)
@@ -151,6 +153,7 @@ class Account < ApplicationRecord
   has_many :categories,             dependent: :destroy   # last — ingredients + recipes FK to it
   has_one  :schedule,               dependent: :destroy, inverse_of: :account
   has_one  :subscription,           dependent: :destroy
+  has_many :dismissed_hints,        class_name: "Subscriptions::DismissedHint", dependent: :destroy
 
   # Every account boots with a blank Schedule so storefront code can count
   # on `account.schedule` being non-nil. Operators fill it in from
@@ -235,6 +238,22 @@ class Account < ApplicationRecord
 
   def inventory_enabled?
     inventory_settings.enabled
+  end
+
+  # Phase 14, Slice 1 — demo flag. When true, the operator + storefront
+  # surfaces render a persistent banner and every external-side-effect
+  # service (Mailer, WhatsApp, Stripe, geocoding, Noticed delivery)
+  # silently no-ops. Demo accounts can't open Stripe Checkout —
+  # entitlement comes from a comp Subscription seeded by `dev:bootstrap`.
+  def demo?
+    demo == true
+  end
+
+  # Convenience: is this account currently entitled to Pro features?
+  # Reads through Subscription so admins toggling comp grants flip
+  # behavior instantly across every surface that uses Entitlements.
+  def pro?
+    subscription&.pro? || false
   end
 
   # ── Pickup address + geocoding ───────────────────────────────────────

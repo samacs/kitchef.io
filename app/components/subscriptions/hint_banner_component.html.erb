@@ -1,0 +1,40 @@
+<div class="<%= container_classes %>"
+     data-controller="hint-banner"
+     data-hint-banner-key-value="<%= hint_key %>">
+  <% if icon %>
+    <span class="inline-flex h-[24px] w-[24px] items-center justify-center rounded-full bg-bg-3 shrink-0">
+      <%= helpers.icon(icon, size: :xs) %>
+    </span>
+  <% end %>
+
+  <div class="min-w-0 flex flex-col gap-1 flex-1">
+    <div class="text-[13.5px] font-semibold text-ink leading-[1.3]">
+      <%= title %>
+    </div>
+    <% if body.present? %>
+      <div class="text-[12.5px] text-ink-2 leading-[1.4]">
+        <%= body %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="flex items-center gap-2 shrink-0">
+    <% if cta_label && cta_path %>
+      <%= link_to cta_label, cta_path,
+            class: "inline-flex items-center gap-1.5 text-[12.5px] font-semibold px-3 py-[6px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors no-underline" %>
+    <% end %>
+
+    <%= button_to dismiss_path,
+          method: :post,
+          form: {
+            data: { hint_banner_target: "form", turbo_method: :post }
+          },
+          class: "inline-flex items-center justify-center w-[28px] h-[28px] rounded-pill text-muted hover:text-ink hover:bg-bg-3 transition-colors",
+          aria: { label: t("subscriptions.hints.dismiss_label") } do %>
+      <% if redismiss_at_param %>
+        <%= hidden_field_tag :redismiss_at, redismiss_at_param %>
+      <% end %>
+      <%= helpers.icon(:x, size: :xs) %>
+    <% end %>
+  </div>
+</div>
