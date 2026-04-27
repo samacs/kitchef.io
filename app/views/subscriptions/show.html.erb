@@ -78,26 +78,29 @@
       </div>
     </div>
 
-    <%# Status line: trial countdown / comp expiry / renewal / cancel-pending %>
+    <%# Status line: trial countdown / comp expiry / renewal /
+        cancel-pending. I18n auto-escapes interpolations on `_html`
+        keys and returns an html_safe string already; the explicit
+        `.html_safe` is redundant and trips Brakeman as weak XSS. %>
     <% if cancel_pending && sub.current_period_end %>
       <p class="text-[13.5px] text-warn-ink leading-[1.5]">
         <%= t("subscriptions.show.cancel_pending_html",
-              date: l(sub.current_period_end.to_date, format: :long)).html_safe %>
+              date: l(sub.current_period_end.to_date, format: :long)) %>
       </p>
     <% elsif on_trial && sub.trial_ends_at %>
       <p class="text-[13.5px] text-ink-2 leading-[1.5]">
         <%= t("subscriptions.show.trial_until_html",
-              date: l(sub.trial_ends_at.to_date, format: :long)).html_safe %>
+              date: l(sub.trial_ends_at.to_date, format: :long)) %>
       </p>
     <% elsif via_comp && sub.comp_expires_at %>
       <p class="text-[13.5px] text-ink-2 leading-[1.5]">
         <%= t("subscriptions.show.comp_until_html",
-              date: l(sub.comp_expires_at.to_date, format: :long)).html_safe %>
+              date: l(sub.comp_expires_at.to_date, format: :long)) %>
       </p>
     <% elsif pro_active && sub.current_period_end %>
       <p class="text-[13.5px] text-ink-2 leading-[1.5]">
         <%= t("subscriptions.show.renews_html",
-              date: l(sub.current_period_end.to_date, format: :long)).html_safe %>
+              date: l(sub.current_period_end.to_date, format: :long)) %>
       </p>
     <% end %>
 

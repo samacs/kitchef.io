@@ -58,8 +58,11 @@
       </h3>
       <p class="text-[13px] text-ink-2 leading-[1.5]">
         <% if @subscription.current_period_end %>
+          <%# I18n auto-escapes interpolations on `_html` keys and returns
+              an html_safe string already; no extra .html_safe needed (and
+              Brakeman flags the chain as weak XSS otherwise). %>
           <%= t("subscriptions.cancellations.show.confirm_body_html",
-                date: l(@subscription.current_period_end.to_date, format: :long)).html_safe %>
+                date: l(@subscription.current_period_end.to_date, format: :long)) %>
         <% else %>
           <%= t("subscriptions.cancellations.show.confirm_body_no_date") %>
         <% end %>

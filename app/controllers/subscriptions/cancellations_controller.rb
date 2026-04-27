@@ -58,8 +58,10 @@ module Subscriptions
       )
 
       if result.success?
+        # I18n auto-escapes interpolations on `_html` keys and returns
+        # an html_safe string already — no `.html_safe` chain needed.
         redirect_to subscription_path(canceled: 1),
-                    notice: t(".success_html", date: l(subscription.reload.current_period_end&.to_date || Date.current, format: :long)).html_safe
+                    notice: t(".success_html", date: l(subscription.reload.current_period_end&.to_date || Date.current, format: :long))
       else
         redirect_to cancel_subscription_path,
                     alert:  t(".failure", message: result.errors.to_a.first)
