@@ -134,7 +134,159 @@ es-MX:
 
     pricing:
       title: "Precios"
-      lede: "Arranca gratis. Crece con Pro. Sin comisión sobre tus ventas, nunca."
+      kicker: "Precios claros · en pesos"
+      headline_html: 'Una tarifa fija. <em class="italic text-accent">Todo lo que ganas es tuyo.</em>'
+      lede: "Arranca gratis. Crece con Pro cuando estés lista. Sin comisión sobre tus ventas, nunca."
+      no_card:
+        title: "Sin tarjeta de crédito durante la prueba"
+        body: "Tienes 14 días para probar todo lo que Pro ofrece. Sólo te pedimos tarjeta cuando decidas seguir. Si no continúas, tu cocina sigue funcionando en Gratis — sin paywalls, sin perder tus datos."
+      trust_strip:
+        - kicker: "Sin comisión"
+          body:   "0% de tus ventas. Lo que cobras a tus clientes es tuyo."
+        - kicker: "Sin contratos"
+          body:   "Cancelas en un clic. Tus datos siempre son tuyos."
+        - kicker: "Pago seguro"
+          body:   "Procesado por Stripe. Recibes comprobante por correo."
+        - kicker: "En pesos"
+          body:   "Cobramos en MXN. Sin sorpresas por tipo de cambio."
+      faq:
+        headline_html: 'Preguntas <em class="italic text-accent">honestas.</em>'
+        lede: "Si tu duda no está aquí, escríbenos por WhatsApp."
+        items:
+          - q: "¿De verdad no cobran comisión por venta?"
+            a: "Ni un peso. Pagas tu mensualidad y todo lo que ganas es tuyo. Kitchef no procesa los pagos de tus clientes — tú decides cómo te pagan (efectivo, transferencia SPEI, tarjeta)."
+          - q: "¿Necesito tarjeta para probar Pro?"
+            a: "No. Te damos 14 días de Pro completos sin tarjeta de crédito. Cuando decidas continuar, ahí sí te pedimos tu método de pago. Si no continúas, tu cuenta sigue funcionando en Gratis con todos tus datos intactos."
+          - q: "¿Qué pasa cuando termina la prueba si no agrego tarjeta?"
+            a: "Tu cuenta vuelve automáticamente al plan Gratis. Conservas tu tienda, tus pedidos, tus clientes y tus recetas. Las funciones de Pro quedan en pausa hasta que decidas activarlas."
+          - q: "¿Hay descuento si pago anual?"
+            a: "Sí. Pagando anual son **2 meses gratis** comparado con la mensualidad — $1,990 MXN al año en lugar de $2,388. Se ajusta automáticamente al activar la suscripción."
+          - q: "¿Puedo cambiar entre mensual y anual después?"
+            a: "Sí. Puedes cambiar de plan cuando quieras desde tu panel. Si pasas de mensual a anual, te damos crédito por los días que pagaste de más; si vas de anual a mensual, el cambio entra en tu próxima renovación."
+          - q: "¿Cómo cancelo?"
+            a: "Desde Ajustes → Suscripción. Te damos opciones para pausar (vacaciones, embarazo, mudanza) o bajar a Gratis sin perder nada. Si quieres cancelar definitivamente, lo haces en un clic — y tienes acceso completo hasta el último día de tu ciclo."
+          - q: "¿Qué pasa con mis datos si bajo a Gratis o cancelo?"
+            a: "Tus datos siguen ahí. Si bajas a Gratis, tus recetas componibles, reportes y demás funciones Pro quedan en pausa pero los datos no se borran. Si cancelas, exportas todo en CSV antes de irte. Y si vuelves después, retomas donde te quedaste."
+          - q: "¿Emiten factura con CFDI?"
+            a: "Mientras automatizamos la facturación CFDI 4.0, emitimos tu factura manualmente. Te enviamos un comprobante de Stripe automáticamente con cada cobro, y si necesitas CFDI con tu RFC, escribe a no-reply@kitchef.mx con tus datos fiscales y te la emitimos cada mes."
+          - q: "¿Necesito RFC para usar Kitchef?"
+            a: "No. Kitchef funciona igual con o sin RFC. La factura CFDI sólo aplica si tu negocio ya está dado de alta y la necesitas para deducir."
+
+    pricing_cards:
+      toggle:
+        monthly: "Mensual"
+        yearly:  "Anual"
+        savings_chip: "−2 meses"
+      free:
+        name: "Gratis"
+        desc: "Para cocinas que están empezando."
+        billed: "Para siempre · sin tarjeta"
+        cta: "Empezar gratis"
+        features:
+          - "Hasta 40 pedidos al mes"
+          - "Tu tienda en kitchef.mx/tu-cocina"
+          - "Recetas con foto y precio"
+          - "Pedidos por WhatsApp + kanban"
+          - "Calendario de horarios y entregas"
+          - "Catálogo de proveedores y compras"
+          - "Pausa de operación (modo vacaciones)"
+      pro:
+        name: "Pro"
+        tag: "Recomendado"
+        desc: "Para cocinas establecidas que quieren crecer sin perder margen."
+        billed:
+          monthly: "$199 MXN/mes · cancela cuando quieras"
+          yearly:  "$1,990 MXN/año · 2 meses gratis · cancela cuando quieras"
+        savings_badge: "Ahorra %{pct}%"
+        cta: "Probar 14 días gratis"
+        no_card_note: "Sin tarjeta. Sin compromiso."
+        features:
+          - "Todo lo del plan Gratis"
+          - "Pedidos ilimitados"
+          - "Recetas componibles + costeo y margen automático"
+          - "Reportes de finanzas e ingeniería de menú"
+          - "Costos fijos + utilidad neta"
+          - "Personalización de platillos (tamaño, sabor, dedicatoria)"
+          - "Inventario + lotes de producción"
+          - "Dominio personalizado en tu tienda"
+          - "Sin marca Kitchef en tu storefront"
+          - "Soporte prioritario por WhatsApp"
+      compare_cta: "Ver comparación completa de funciones"
+
+    feature_comparison:
+      headline: "Compara funciones lado a lado"
+      lede: "Lo que incluye cada plan, sin asteriscos."
+      headers:
+        feature: "Función"
+        free: "Gratis"
+        pro: "Pro"
+      rows:
+        - section: "Operación diaria"
+        - label: "Pedidos al mes"
+          free:  "Hasta 40"
+          pro:   "Ilimitados"
+        - label: "Tu tienda en kitchef.mx/tu-cocina"
+          free:  true
+          pro:   true
+        - label: "Sin marca Kitchef en tu tienda"
+          free:  false
+          pro:   true
+        - label: "Dominio personalizado (tu-cocina.mx)"
+          free:  false
+          pro:   true
+        - label: "Kanban de pedidos + cancelaciones"
+          free:  true
+          pro:   true
+        - label: "Calendario, horarios y entregas programadas"
+          free:  true
+          pro:   true
+        - label: "Pausa de operación (modo vacaciones)"
+          free:  true
+          pro:   true
+
+        - section: "Crecer tu cocina"
+        - label: "Recetas con foto y precio"
+          free:  true
+          pro:   true
+        - label: "Recetas componibles (costo + margen automáticos)"
+          free:  false
+          pro:   true
+        - label: "Personalización de platillos (tamaño, sabor, dedicatoria)"
+          free:  false
+          pro:   true
+        - label: "Inventario y lotes de producción"
+          free:  false
+          pro:   true
+
+        - section: "Saber cómo te va"
+        - label: "Reporte de finanzas (ventas, gastos, margen)"
+          free:  false
+          pro:   true
+        - label: "Ingeniería de menú (estrellas, estables, revisar)"
+          free:  false
+          pro:   true
+        - label: "Costos fijos y utilidad neta"
+          free:  false
+          pro:   true
+
+        - section: "Catálogos y compras"
+        - label: "Directorio de clientes"
+          free:  true
+          pro:   true
+        - label: "Proveedores con historial de precios"
+          free:  true
+          pro:   true
+        - label: "Lista de compras semanal y registro de gastos"
+          free:  true
+          pro:   true
+
+        - section: "Soporte"
+        - label: "Centro de ayuda + comunidad"
+          free:  true
+          pro:   true
+        - label: "Soporte prioritario por WhatsApp"
+          free:  false
+          pro:   true
 
     how_it_works:
       title: "Cómo funciona"

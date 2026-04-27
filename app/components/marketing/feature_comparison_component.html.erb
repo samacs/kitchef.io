@@ -1,0 +1,23 @@
+<div class="rounded-card border border-line bg-surface overflow-hidden">
+  <div class="grid grid-cols-[1.6fr_1fr_1fr] text-[12px] font-mono uppercase tracking-[0.12em] text-muted border-b border-line bg-bg-2/40 px-5 py-3">
+    <div><%= t("marketing.feature_comparison.headers.feature") %></div>
+    <div class="text-center"><%= t("marketing.feature_comparison.headers.free") %></div>
+    <div class="text-center"><%= t("marketing.feature_comparison.headers.pro") %></div>
+  </div>
+
+  <% rows.each do |row| %>
+    <% if section_row?(row) %>
+      <div class="px-5 py-3 border-b border-line bg-bg-2/30">
+        <div class="font-mono text-[11px] uppercase tracking-[0.14em] text-accent">
+          <%= row[:section] %>
+        </div>
+      </div>
+    <% else %>
+      <div class="grid grid-cols-[1.6fr_1fr_1fr] items-center px-5 py-3 border-b border-line last:border-b-0 text-[13.5px]">
+        <div class="text-ink leading-[1.4]"><%= row[:label] %></div>
+        <div class="text-center"><%= render_cell(row[:free]) %></div>
+        <div class="text-center"><%= render_cell(row[:pro]) %></div>
+      </div>
+    <% end %>
+  <% end %>
+</div>
