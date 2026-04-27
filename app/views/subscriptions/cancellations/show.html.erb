@@ -1,0 +1,81 @@
+<% content_for :title, t("subscriptions.cancellations.show.title") %>
+<% content_for :page_title, t("subscriptions.cancellations.show.title") %>
+<% content_for :page_subtitle, t("subscriptions.cancellations.show.subtitle") %>
+
+<%# Cancel save-flow steps 2–4 — matched offer / downgrade / hard cancel.
+    The save offer rendered depends on the @reason picked in step 1. %>
+<div class="max-w-[640px] flex flex-col gap-6">
+
+  <%# Step 2: matched save offer. %>
+  <% has_save_offer = @reason.in?(%w[too_expensive closing_kitchen]) %>
+
+  <% if has_save_offer %>
+    <article class="rounded-card border border-accent/30 bg-accent-soft p-6 flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <%= render Ui::KickerComponent.new(text: t("subscriptions.cancellations.show.save_offer_kicker")) %>
+        <h2 class="font-serif text-[24px] leading-[1.15] tracking-[-0.01em] text-accent">
+          <%= t("subscriptions.cancellations.save_offers.#{@reason}.headline") %>
+        </h2>
+        <p class="text-[14px] text-ink-2 leading-[1.5]">
+          <%= t("subscriptions.cancellations.save_offers.#{@reason}.body") %>
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 flex-wrap">
+        <%= button_to t("subscriptions.cancellations.save_offers.#{@reason}.accept_cta"),
+              cancel_save_subscription_path(reason: @reason),
+              method: :post,
+              data:   { turbo_confirm: t("subscriptions.cancellations.save_offers.#{@reason}.confirm") },
+              class:  "inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta",
+              form:   { class: "contents" } %>
+      </div>
+    </article>
+  <% end %>
+
+  <%# Step 3: downgrade-to-Free as the explicit alternative. %>
+  <article class="rounded-card border border-line bg-surface p-6 flex flex-col gap-3">
+    <div class="flex flex-col gap-1">
+      <h3 class="font-serif text-[18px] text-ink leading-[1.2]">
+        <%= t("subscriptions.cancellations.show.downgrade_title") %>
+      </h3>
+      <p class="text-[13px] text-ink-2 leading-[1.5]">
+        <%= t("subscriptions.cancellations.show.downgrade_body") %>
+      </p>
+    </div>
+    <%= button_to t("subscriptions.cancellations.show.downgrade_cta"),
+          downgrade_subscription_path(reason: @reason),
+          method: :post,
+          data:   { turbo_confirm: t("subscriptions.cancellations.show.downgrade_confirm") },
+          class:  "self-start inline-flex items-center gap-2 text-[13px] font-medium px-4 py-2 rounded-button bg-bg-2 text-ink border border-line hover:border-line-2 transition-colors",
+          form:   { class: "contents" } %>
+  </article>
+
+  <%# Step 4: hard cancel. %>
+  <article class="rounded-card border border-line bg-surface p-6 flex flex-col gap-3">
+    <div class="flex flex-col gap-1">
+      <h3 class="font-serif text-[18px] text-ink leading-[1.2]">
+        <%= t("subscriptions.cancellations.show.confirm_title") %>
+      </h3>
+      <p class="text-[13px] text-ink-2 leading-[1.5]">
+        <% if @subscription.current_period_end %>
+          <%= t("subscriptions.cancellations.show.confirm_body_html",
+                date: l(@subscription.current_period_end.to_date, format: :long)).html_safe %>
+        <% else %>
+          <%= t("subscriptions.cancellations.show.confirm_body_no_date") %>
+        <% end %>
+      </p>
+    </div>
+    <%= button_to t("subscriptions.cancellations.show.confirm_cta"),
+          cancel_confirm_subscription_path(reason: @reason),
+          method: :post,
+          data:   { turbo_confirm: t("subscriptions.cancellations.show.confirm_browser") },
+          class:  "self-start inline-flex items-center gap-2 text-[13px] font-medium px-4 py-2 rounded-button bg-surface text-err border border-err/30 hover:bg-err/10 transition-colors",
+          form:   { class: "contents" } %>
+  </article>
+
+  <div class="flex items-center justify-start">
+    <%= link_to t("subscriptions.cancellations.show.back"),
+          subscription_path,
+          class: "inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink transition-colors no-underline" %>
+  </div>
+</div>
