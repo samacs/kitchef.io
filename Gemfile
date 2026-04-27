@@ -69,7 +69,7 @@ gem "oj_serializers", "~> 3.0"
 gem "active_storage_validations", "~> 3.0"
 gem "image_processing", "~> 1.2"
 gem "ruby-vips", "~> 2.3"
-gem "aws-sdk-s3", "~> 1.219"
+gem "aws-sdk-s3", "~> 1.220"
 
 # Integrations
 gem "stripe", "~> 19.1"
