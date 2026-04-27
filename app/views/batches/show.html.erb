@@ -1,0 +1,96 @@
+<% content_for :title, @batch.recipe.name %>
+<% content_for :page_title, @batch.recipe.name %>
+<% content_for :page_subtitle, l(@batch.cooked_on, format: :long) %>
+
+<%
+  state_classes = {
+    "planned"     => "border-line bg-bg-2 text-ink-2",
+    "in_progress" => "border-accent/40 bg-accent-soft text-accent",
+    "completed"   => "border-accent/40 bg-accent text-bg",
+    "canceled"    => "border-warn/40 bg-[color-mix(in_oklab,var(--color-warn)_8%,var(--color-surface))] text-warn"
+  }
+  state_dot = {
+    "planned"     => "bg-muted",
+    "in_progress" => "bg-accent animate-pulse",
+    "completed"   => "bg-accent",
+    "canceled"    => "bg-warn"
+  }
+%>
+
+<div class="max-w-[820px] flex flex-col gap-6">
+  <section class="rounded-panel border border-line bg-surface p-6 flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex flex-col gap-2 min-w-0">
+      <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+        <%= t("batches.show.title") %>
+      </span>
+      <div class="flex items-baseline gap-3">
+        <span class="font-serif text-[32px] tabular-nums text-ink">
+          <%= @batch.actual_quantity.to_i %>
+        </span>
+        <span class="text-[13px] text-ink-2"><%= t("batches.show.units_label").downcase %></span>
+        <span class="inline-flex items-center gap-1 rounded-pill border <%= state_classes[@batch.state] %> px-2.5 py-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em]">
+          <span class="inline-block w-1.5 h-1.5 rounded-full <%= state_dot[@batch.state] %>"></span>
+          <%= t("batches.state.#{@batch.state}") %>
+        </span>
+      </div>
+      <span class="font-mono text-[12px] text-muted">
+        <%= t("batches.index.units_remaining", count: [ @batch.units_remaining.to_i, 0 ].max) %>
+        · <%= t("batches.index.sold_count", count: @batch.units_consumed.to_i) %>
+      </span>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      <% if @batch.aasm.may_fire_event?(:complete) %>
+        <%= button_to t("batches.show.complete_cta"),
+              complete_batch_path(@batch),
+              method: :post,
+              class: "inline-flex items-center gap-1.5 rounded-button border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 hover:border-line-2 cursor-pointer" %>
+      <% end %>
+      <% if @batch.aasm.may_fire_event?(:cancel) %>
+        <%= button_to t("batches.show.cancel_cta"),
+              cancel_batch_path(@batch),
+              method: :post,
+              data: { turbo_confirm: t("batches.show.cancel_confirm") },
+              class: "inline-flex items-center gap-1.5 rounded-button border border-err/40 bg-transparent px-3 py-1.5 text-[12.5px] font-medium text-err hover:bg-err/5 cursor-pointer" %>
+      <% end %>
+    </div>
+  </section>
+
+  <% if @batch.consumptions.any? %>
+    <section class="rounded-panel border border-line bg-surface p-6">
+      <h3 class="font-serif text-[18px] text-ink mb-4">
+        <%= t("batches.show.consumption_label") %>
+      </h3>
+      <ul class="flex flex-col divide-y divide-line">
+        <% @batch.consumptions.includes(:consumable).each do |consumption| %>
+          <li class="flex items-center justify-between gap-3 py-2">
+            <span class="text-[13px] text-ink"><%= consumption.consumable&.name || "—" %></span>
+            <span class="font-mono text-[13px] tabular-nums text-warn">
+              −<%= format("%.3f", consumption.quantity_consumed.to_d).sub(/\.?0+$/, "") %> <%= consumption.unit %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <% pedidos = @batch.order_items.includes(:order).where.not(order_id: nil) %>
+  <% if pedidos.any? %>
+    <section class="rounded-panel border border-line bg-surface p-6">
+      <h3 class="font-serif text-[18px] text-ink mb-4">
+        <%= t("batches.show.orders_label") %>
+      </h3>
+      <ul class="flex flex-col divide-y divide-line">
+        <% pedidos.each do |item| %>
+          <li class="flex items-center justify-between gap-3 py-2">
+            <%= link_to item.order.prefix_id, order_path(item.order),
+                  class: "font-mono text-[12.5px] text-ink-2 hover:underline no-underline" %>
+            <span class="font-mono text-[13px] tabular-nums text-ink">
+              <%= item.consumed_quantity.to_i %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+</div>

@@ -1,0 +1,51 @@
+<%# Single batch card. Color-coded by state (Phase 13B) so the operator
+    can scan the list and immediately see what's planned vs in progress
+    vs done vs canceled. %>
+<%
+  state_classes = {
+    "planned"     => "border-line bg-bg-2 text-ink-2",
+    "in_progress" => "border-accent/40 bg-accent-soft text-accent",
+    "completed"   => "border-accent/40 bg-accent text-bg",
+    "canceled"    => "border-warn/40 bg-[color-mix(in_oklab,var(--color-warn)_8%,var(--color-surface))] text-warn"
+  }
+  state_dot = {
+    "planned"     => "bg-muted",
+    "in_progress" => "bg-accent animate-pulse",
+    "completed"   => "bg-accent",
+    "canceled"    => "bg-warn"
+  }
+  is_canceled = batch.state == "canceled"
+%>
+<article class="rounded-panel border <%= is_canceled ? "border-line/60 bg-bg-2/40" : "border-line bg-surface" %> p-4 sm:p-5 flex items-center justify-between gap-4 flex-wrap">
+  <div class="flex flex-col gap-1.5 min-w-0">
+    <div class="flex items-center gap-2">
+      <span class="font-serif text-[18px] <%= is_canceled ? "text-muted line-through" : "text-ink" %> truncate">
+        <%= batch.recipe.name %>
+      </span>
+      <span class="inline-flex items-center gap-1 rounded-pill border <%= state_classes[batch.state] %> px-2 py-px font-mono text-[10.5px] uppercase tracking-[0.08em]">
+        <span class="inline-block w-1.5 h-1.5 rounded-full <%= state_dot[batch.state] %>"></span>
+        <%= t("batches.state.#{batch.state}") %>
+      </span>
+    </div>
+    <span class="font-mono text-[12px] text-muted">
+      <%= l(batch.cooked_on, format: :long) %> ·
+      <%= t("batches.index.units_planned", count: batch.planned_quantity.to_i) %>
+    </span>
+  </div>
+  <div class="flex items-center gap-3">
+    <% unless is_canceled %>
+      <div class="text-right">
+        <% remaining = [ batch.units_remaining.to_i, 0 ].max %>
+        <span class="font-mono text-[16px] font-semibold tabular-nums text-ink">
+          <%= t("batches.index.units_remaining", count: remaining) %>
+        </span>
+        <div class="font-mono text-[11px] text-muted">
+          <%= t("batches.index.sold_count", count: batch.units_consumed.to_i) %>
+        </div>
+      </div>
+    <% end %>
+    <%= link_to t("batches.show.title"),
+          batch_path(batch),
+          class: "inline-flex items-center gap-1.5 rounded-button border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 no-underline hover:border-line-2" %>
+  </div>
+</article>

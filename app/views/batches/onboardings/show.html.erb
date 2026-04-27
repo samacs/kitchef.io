@@ -1,0 +1,66 @@
+<% content_for :title, t("batches.onboarding.title") %>
+<% content_for :page_title, t("batches.onboarding.page_title") %>
+<% content_for :page_subtitle, t("batches.onboarding.page_subtitle") %>
+
+<div class="mx-auto max-w-[720px] flex flex-col gap-6">
+  <section class="rounded-panel border border-line bg-surface p-7">
+    <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+      <%= t("batches.onboarding.kicker") %>
+    </div>
+    <h1 class="mt-2 font-serif text-[28px] leading-tight text-ink">
+      <%= t("batches.onboarding.title") %>
+    </h1>
+    <p class="mt-2 text-[14px] leading-[1.55] text-ink-2 max-w-[560px]">
+      <%= t("batches.onboarding.lede") %>
+    </p>
+  </section>
+
+  <section class="rounded-panel border border-line bg-surface p-6">
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="flex flex-col gap-2">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent">
+          <%= icon(:chef_hat, size: :sm) %>
+        </span>
+        <h3 class="font-serif text-[17px] text-ink"><%= t("batches.onboarding.steps.cook.title") %></h3>
+        <p class="text-[12.5px] text-ink-2 leading-[1.5]"><%= t("batches.onboarding.steps.cook.body") %></p>
+      </div>
+      <div class="flex flex-col gap-2">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent">
+          <%= icon(:clipboard_list, size: :sm) %>
+        </span>
+        <h3 class="font-serif text-[17px] text-ink"><%= t("batches.onboarding.steps.sell.title") %></h3>
+        <p class="text-[12.5px] text-ink-2 leading-[1.5]"><%= t("batches.onboarding.steps.sell.body") %></p>
+      </div>
+      <div class="flex flex-col gap-2">
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-accent-soft text-accent">
+          <%= icon(:receipt, size: :sm) %>
+        </span>
+        <h3 class="font-serif text-[17px] text-ink"><%= t("batches.onboarding.steps.restock.title") %></h3>
+        <p class="text-[12.5px] text-ink-2 leading-[1.5]"><%= t("batches.onboarding.steps.restock.body") %></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="rounded-panel border border-line bg-surface p-6 flex flex-col gap-4">
+    <div>
+      <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+        <%= t("batches.onboarding.next_kicker") %>
+      </div>
+      <h2 class="mt-1 font-serif text-[20px] text-ink">
+        <%= t("batches.onboarding.next_title") %>
+      </h2>
+    </div>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to batches_path,
+            class: "inline-flex items-center gap-1.5 rounded-button px-4 py-2 text-[13.5px] font-semibold text-bg bg-accent border border-accent no-underline hover:bg-ink" do %>
+        <%= icon(:plus, size: :xs) %>
+        <%= t("batches.onboarding.first_batch_cta") %>
+      <% end %>
+      <%= link_to edit_account_path,
+            class: "inline-flex items-center gap-1.5 rounded-button border border-line bg-surface px-4 py-2 text-[13.5px] font-medium text-ink-2 no-underline hover:border-line-2" do %>
+        <%= icon(:settings, size: :xs) %>
+        <%= t("batches.onboarding.policies_cta") %>
+      <% end %>
+    </div>
+  </section>
+</div>

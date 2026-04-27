@@ -8,6 +8,7 @@ class AccountsController < AuthenticatedController
   end
 
   def update
+    inventory_was_enabled = Current.account.inventory_enabled?
     result = Accounts::Update.call(
       account:     Current.account,
       attributes:  account_params,
@@ -16,9 +17,18 @@ class AccountsController < AuthenticatedController
     )
 
     if result.success?
+      Current.account.reload
+      first_inventory_opt_in = !inventory_was_enabled && Current.account.inventory_enabled?
+
       respond_to do |format|
         format.turbo_stream { head :no_content }
-        format.html { redirect_to edit_account_path, notice: t("account.saved") }
+        format.html do
+          if first_inventory_opt_in
+            redirect_to batches_onboarding_path
+          else
+            redirect_to edit_account_path, notice: t("account.saved")
+          end
+        end
       end
     else
       @account = result.object
@@ -62,18 +72,23 @@ class AccountsController < AuthenticatedController
           transfer_holder transfer_bank transfer_clabe transfer_account_number
           card_instructions
           accepts_tips
-        ] + [ tip_presets_pct: [] ] }
+        ] + [ tip_presets_pct: [] ] },
+        { inventory_settings: %i[
+          enabled oversell_policy
+          low_stock_threshold_pct default_batch_window_days
+        ] }
       ]
     ).then { |p| normalize_settings_packaging(p) }
      .then { |p| normalize_payment_settings(p) }
+     .then { |p| normalize_inventory_settings(p) }
      .then { |p| normalize_public_profile(p) }
      .then { |p| normalize_address_coords(p) }
   end
 
   def normalize_settings_packaging(permitted)
-    raw = permitted.dig(:settings, :default_packaging)
+    return permitted unless permitted[:settings]&.key?(:default_packaging)
+    raw = permitted[:settings].delete(:default_packaging)
     return permitted if raw.blank?
-    permitted[:settings].delete(:default_packaging)
     normalized = raw.to_s.gsub(",", ".").to_d
     permitted[:settings][:default_packaging_cents] = (normalized * 100).to_i
     permitted
@@ -89,6 +104,21 @@ class AccountsController < AuthenticatedController
 
     %i[accepts_cash accepts_transfer accepts_card accepts_tips].each do |key|
       ps[key] = ActiveModel::Type::Boolean.new.cast(ps[key]) if ps.key?(key)
+    end
+
+    permitted
+  end
+
+  def normalize_inventory_settings(permitted)
+    inv = permitted.dig(:settings, :inventory_settings)
+    return permitted if inv.blank?
+
+    if inv.key?(:enabled)
+      inv[:enabled] = ActiveModel::Type::Boolean.new.cast(inv[:enabled])
+    end
+
+    %i[low_stock_threshold_pct default_batch_window_days].each do |key|
+      inv[key] = inv[key].to_i if inv.key?(key) && inv[key].present?
     end
 
     permitted

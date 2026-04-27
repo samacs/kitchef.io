@@ -71,7 +71,11 @@ Rails.application.configure do
   #     deserialization hooks reach for this exact attribute (Sidekiq
   #     raises `undefined method 'default_url_options'` on AnalyzeJob
   #     without it).
-  url_opts = { host: "lvh.me", port: 3000, protocol: "https" }
+  url_opts = {
+    host:     ENV.fetch("RAILS_DEV_URL_HOST",     "lvh.me"),
+    port:     Integer(ENV.fetch("RAILS_DEV_URL_PORT", "3000")),
+    protocol: ENV.fetch("RAILS_DEV_URL_PROTOCOL", "https")
+  }
   config.action_mailer.default_url_options      = url_opts
   config.action_controller.default_url_options  = url_opts
   config.default_url_options                    = url_opts

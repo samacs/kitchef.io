@@ -10,6 +10,25 @@
   <% end %>
 <% end %>
 
+<%# Print-only brand header — sits OUTSIDE the .kc-print-shopping-list
+    wrapper so the wholesale `* { color: #000 !important }` reset on
+    that scope doesn't strip the Kitchef green from the logo. Hidden
+    on screen because the panel chrome already brands the page. %>
+<header class="hidden print:flex items-center justify-between gap-3 mb-3 pb-2 border-b border-[#bbb] kc-print-brand">
+  <div class="flex items-center gap-2.5">
+    <%= render Ui::LogoComponent.new(size: :md) %>
+    <% if Current.account&.name.present? %>
+      <span class="font-mono text-[11px] text-[#888]">·</span>
+      <span class="font-sans font-semibold text-[13px] text-[#1a1a1a]">
+        <%= Current.account.name %>
+      </span>
+    <% end %>
+  </div>
+  <span class="font-mono text-[10px] text-[#777] uppercase tracking-[0.12em]">
+    <%= l(Date.current, format: :long) %>
+  </span>
+</header>
+
 <article class="kc-print-shopping-list">
   <section class="mb-6 flex items-baseline justify-between gap-3 print:mb-3 print:gap-2">
     <div class="flex flex-col gap-1 print:gap-0">

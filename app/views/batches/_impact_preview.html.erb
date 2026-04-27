@@ -1,0 +1,78 @@
+<%# Phase 13C — pre-flight ingredient impact for the new-batch form.
+    Wrapped in a Turbo Frame so the batch-form Stimulus controller can
+    swap it in real time as the operator changes recipe or quantity.
+
+    Locals:
+      - recipe   : Recipe or nil (empty state)
+      - quantity : decimal (planned units this batch will produce)
+%>
+<turbo-frame id="batch_impact_preview">
+  <% if recipe.present? && quantity.to_d.positive? %>
+    <% rows       = Batches::ImpactPreview.call(recipe: recipe, quantity: quantity) %>
+    <% shortages  = rows.select(&:shortage?) %>
+    <% empty      = rows.empty? %>
+    <% all_clear  = !empty && shortages.empty? %>
+
+    <% if !empty %>
+      <div class="rounded-card-sm border <%= shortages.any? ? "border-warn/40 bg-[color-mix(in_oklab,var(--color-warn)_8%,var(--color-surface))]" : "border-line bg-bg-2/50" %> p-4 flex flex-col gap-3">
+        <%# ---- Headline (educational, dynamic) ---------------------- %>
+        <div class="flex items-baseline justify-between gap-3">
+          <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] <%= shortages.any? ? "text-warn" : "text-muted" %>">
+            <%= shortages.any? ? t("batches.impact.shortage_kicker") : t("batches.impact.kicker") %>
+          </span>
+        </div>
+
+        <% if shortages.any? %>
+          <%# Concrete shortage list — name what's missing and by how much. %>
+          <p class="text-[12.5px] text-warn leading-[1.5]">
+            <strong class="font-semibold"><%= t("batches.impact.shortage_headline") %></strong>
+            <%= safe_join(shortages.map { |row|
+              shortfall = (row.needed - row.current_stock)
+              tag.span(
+                t("batches.impact.shortage_item",
+                  qty:  format("%.3f", shortfall).sub(/\.?0+$/, ""),
+                  unit: row.unit,
+                  name: row.ingredient.name),
+                class: "whitespace-nowrap"
+              )
+            }, tag.span(", ")) %>.
+            <%= t("batches.impact.shortage_hint") %>
+          </p>
+        <% else %>
+          <p class="text-[12.5px] text-ink-2 leading-[1.5]">
+            <%= t("batches.impact.all_clear", count: rows.size) %>
+          </p>
+        <% end %>
+
+        <%# ---- Per-ingredient detail rows --------------------------- %>
+        <ul class="flex flex-col divide-y divide-line">
+          <% rows.each do |row| %>
+            <li class="flex items-center justify-between gap-3 py-1.5">
+              <span class="text-[12.5px] <%= row.shortage? ? "text-warn font-medium" : "text-ink-2" %>">
+                <%= row.ingredient.name %>
+              </span>
+              <div class="flex items-center gap-2 font-mono text-[11.5px] tabular-nums">
+                <span class="<%= row.shortage? ? "text-warn" : "text-muted" %>">
+                  <%= t("batches.impact.needs", qty: format("%.3f", row.needed).sub(/\.?0+$/, ""), unit: row.unit) %>
+                </span>
+                <span class="text-muted/70">/</span>
+                <span class="<%= row.shortage? ? "text-warn font-semibold" : "text-muted" %>">
+                  <%= t("batches.impact.has", qty: format("%.3f", row.current_stock).sub(/\.?0+$/, ""), unit: row.unit) %>
+                </span>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+
+        <% if shortages.any? %>
+          <%= link_to new_purchase_path,
+                class: "self-start inline-flex items-center gap-1.5 rounded-button border border-warn/40 bg-surface px-3 py-1.5 text-[12.5px] font-medium text-warn no-underline hover:bg-warn/5",
+                data: { turbo_frame: "_top" } do %>
+            <%= icon(:receipt, size: :xs) %>
+            <%= t("batches.impact.buy_more_cta") %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</turbo-frame>

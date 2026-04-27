@@ -20,6 +20,12 @@
       <%= render "supplier_prices_panel", ingredient: ingredient, panel_error: nil %>
     </div>
 
+    <% if Current.account.inventory_enabled? %>
+      <div class="bg-surface border border-line rounded-panel shadow-card p-6 sm:p-7">
+        <%= render "stock_history", ingredient: ingredient %>
+      </div>
+    <% end %>
+
     <div class="bg-surface border border-line rounded-card p-5 flex items-center justify-between gap-4">
       <div class="flex flex-col gap-0.5">
         <span class="text-[13.5px] font-medium text-ink">

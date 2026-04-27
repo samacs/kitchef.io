@@ -642,7 +642,19 @@
     margin: 10mm 12mm;
   }
 
-  html, body {
+  /* Force light-mode token values regardless of the on-screen theme.
+     Most paper is white — printing the dark palette wastes ink and
+     turns the wordmark (which uses currentColor → text-ink) into a
+     near-invisible cream on white. Override the variables on both
+     :root and .dark so the page reverts to light values for print. */
+  html, body, html.dark {
+    --color-ink:         #0E1714 !important;
+    --color-ink-2:       #2F3A35 !important;
+    --color-bg:          #F8F6F1 !important;
+    --color-bg-2:        #EFEBE3 !important;
+    --color-accent:      #0A5A3C !important;
+    --color-accent-2:    #074830 !important;
+    --color-accent-soft: #E3EDE6 !important;
     background: #fff !important;
     color: #000 !important;
   }

@@ -39,7 +39,15 @@ module Accounts
     attribute :payment_settings, Accounts::PaymentSettings.to_type,
       default: -> { Accounts::PaymentSettings.new }
 
+    # Phase 13 — production runs + inventory. Off by default for every
+    # account; the operator opts in from /account/edit. See
+    # Accounts::InventorySettings for the per-account knobs (oversell
+    # policy, low-stock threshold, default run window).
+    attribute :inventory_settings, Accounts::InventorySettings.to_type,
+      default: -> { Accounts::InventorySettings.new }
+
     validates :payment_settings, store_model: true
+    validates :inventory_settings, store_model: true
 
     validates :digest_time,
       format: { with: /\A([01]\d|2[0-3]):[0-5]\d\z/ },

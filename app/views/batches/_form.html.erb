@@ -1,0 +1,95 @@
+<% recipes = Current.account.recipes.kept.saleable.order(:name) %>
+<% window_days = Current.account.inventory_settings.default_batch_window_days.to_i %>
+
+<%= form_with model: batch, url: batch.persisted? ? batch_path(batch) : batches_path,
+              html: {
+                class: "flex flex-col gap-5 bg-surface border border-line rounded-panel p-6",
+                data: {
+                  controller: "batch-form",
+                  batch_form_impact_url_value: batches_impact_path
+                }
+              } do |f| %>
+  <% if batch.errors.any? %>
+    <div class="rounded-card-sm border border-err/30 bg-[color-mix(in_oklab,var(--color-err)_8%,var(--color-surface))] p-3 text-[12.5px] text-err">
+      <ul class="list-disc list-inside">
+        <% batch.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :recipe_id, t("batches.new.recipe_label"),
+          class: "block text-[12px] font-medium text-muted mb-1" %>
+    <%= f.select :recipe_id,
+          recipes.map { |r| [ r.name, r.id ] },
+          { prompt: t("batches.new.recipe_prompt"), selected: batch.recipe_id },
+          class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink",
+          data: {
+            batch_form_target: "recipe",
+            action: "change->batch-form#refreshImpact"
+          } %>
+    <p class="mt-1 text-[11.5px] text-muted"><%= t("batches.new.recipe_hint") %></p>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= f.label :planned_quantity, t("batches.new.planned_quantity_label"),
+            class: "block text-[12px] font-medium text-muted mb-1" %>
+      <%= f.number_field :planned_quantity, step: 0.001, min: 0.001,
+            value: (batch.planned_quantity.presence || 1),
+            class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono tabular-nums",
+            data: {
+              batch_form_target: "quantity",
+              action: "input->batch-form#refreshImpact"
+            } %>
+      <p class="mt-1 text-[11.5px] text-muted"><%= t("batches.new.planned_quantity_hint") %></p>
+    </div>
+    <div>
+      <%= f.label :cooked_on, t("batches.new.cooked_on_label"),
+            class: "block text-[12px] font-medium text-muted mb-1" %>
+      <%= f.date_field :cooked_on,
+            value: (batch.cooked_on || Date.current),
+            class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+    </div>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= f.label :available_from, t("batches.new.available_from_label"),
+            class: "block text-[12px] font-medium text-muted mb-1" %>
+      <%= f.date_field :available_from,
+            value: (batch.available_from || Date.current),
+            class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+    </div>
+    <div>
+      <%= f.label :available_until, t("batches.new.available_until_label"),
+            class: "block text-[12px] font-medium text-muted mb-1" %>
+      <%= f.date_field :available_until,
+            value: (batch.available_until || (Date.current + window_days.days)),
+            class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :notes, t("batches.new.notes_label"),
+          class: "block text-[12px] font-medium text-muted mb-1" %>
+    <%= f.text_area :notes, rows: 2,
+          placeholder: t("batches.new.notes_placeholder"),
+          class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink" %>
+  </div>
+
+  <%# Phase 13C — live ingredient impact preview. The Turbo Frame is
+      always present; the batch-form Stimulus controller updates its
+      `src` on every recipe/quantity change so the operator sees what
+      she'll consume in real time. Educational, not blocking. %>
+  <%= render "impact_preview", recipe: batch.recipe, quantity: batch.planned_quantity %>
+
+  <div class="flex items-center gap-2 pt-2">
+    <%= f.submit (batch.persisted? ? t("batches.edit.submit") : t("batches.new.submit")),
+          class: "inline-flex items-center gap-2 text-[13.5px] font-semibold px-4 py-[10px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer" %>
+    <%= link_to t("batches.new.cancel"), batches_path,
+          class: "inline-flex items-center gap-2 text-[13.5px] font-medium px-4 py-[10px] rounded-button border border-line bg-surface text-ink-2 hover:border-line-2 no-underline" %>
+  </div>
+<% end %>

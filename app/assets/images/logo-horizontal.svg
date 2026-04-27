@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 184 64" role="img" aria-label="Kitchef">
+  <!-- Mark — accent token flips light/dark via Tailwind. -->
+  <rect width="64" height="64" rx="14" ry="14"
+        fill="var(--color-accent, #0A5A3C)"/>
+  <text x="32" y="46"
+        font-family="Instrument Serif, Times New Roman, Georgia, serif"
+        font-style="italic"
+        font-weight="400"
+        font-size="40"
+        text-anchor="middle"
+        fill="var(--color-bg, #F8F6F1)">k</text>
+  <!-- Wordmark uses currentColor so the parent's text color (set by
+       Tailwind's text-ink utility) drives it. Falls back to ink in
+       contexts without an inherited color. -->
+  <text x="80" y="42"
+        font-family="Inter, -apple-system, Helvetica Neue, Helvetica, sans-serif"
+        font-weight="700"
+        font-size="28"
+        letter-spacing="-0.5"
+        fill="currentColor">Kitchef</text>
+</svg>

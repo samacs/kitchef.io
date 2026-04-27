@@ -1,0 +1,7 @@
+<% content_for :title, t("batches.new.title") %>
+<% content_for :page_title, t("batches.new.page_title") %>
+<% content_for :page_subtitle, t("batches.new.page_subtitle") %>
+
+<div class="max-w-[640px] flex flex-col gap-6">
+  <%= render "form", batch: @batch %>
+</div>

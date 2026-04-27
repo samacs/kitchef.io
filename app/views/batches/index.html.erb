@@ -1,0 +1,48 @@
+<% content_for :title, t("batches.index.title") %>
+<% content_for :page_title, t("batches.index.page_title") %>
+<% content_for :page_subtitle, t("batches.index.page_subtitle") %>
+
+<% content_for :page_action do %>
+  <%= link_to new_batch_path,
+        class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta no-underline" do %>
+    <%= icon(:plus, size: :xs) %>
+    <span><%= t("batches.index.new_cta") %></span>
+  <% end %>
+<% end %>
+
+<div class="flex flex-col gap-6">
+  <%# ---- Scope tabs ------------------------------------------------ %>
+  <div class="inline-flex gap-1 self-start rounded-pill border border-line bg-bg-2 p-1">
+    <% %i[today week].each do |scope| %>
+      <%= link_to batches_path(scope: scope),
+            class: [
+              "px-3.5 py-1.5 rounded-pill font-mono text-[12px] uppercase tracking-[0.1em] no-underline",
+              (@scope == scope ? "bg-surface text-ink shadow-card" : "text-muted hover:text-ink")
+            ].join(" ") do %>
+        <%= t("batches.index.scope.#{scope}") %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if @batches.empty? %>
+    <section class="rounded-panel border border-line bg-surface p-8 text-center flex flex-col gap-3 items-center">
+      <h2 class="font-serif text-[20px] text-ink">
+        <%= t("batches.index.empty.#{@scope}_headline") %>
+      </h2>
+      <p class="text-[13px] text-ink-2 max-w-[420px] leading-[1.5]">
+        <%= t("batches.index.empty.#{@scope}_sub") %>
+      </p>
+      <%= link_to new_batch_path,
+            class: "inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-[9px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors no-underline" do %>
+        <%= icon(:plus, size: :xs) %>
+        <span><%= t("batches.index.new_cta") %></span>
+      <% end %>
+    </section>
+  <% else %>
+    <section class="flex flex-col gap-3">
+      <% @batches.each do |batch| %>
+        <%= render "card", batch: batch %>
+      <% end %>
+    </section>
+  <% end %>
+</div>

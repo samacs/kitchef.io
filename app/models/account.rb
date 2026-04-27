@@ -76,7 +76,7 @@ class Account < ApplicationRecord
     webhooks
 
     about account accounts admin-panel api-docs apis auth
-    billing
+    batch batches billing
     careers cart categories category changelog checkout clients company contact cookies
     dashboard demo docs docs-api documentation
     enterprise explore expenses expense
@@ -142,6 +142,8 @@ class Account < ApplicationRecord
   has_many :purchases,              dependent: :destroy   # PurchaseItem FK → ingredients (cascade)
   has_many :clients,                dependent: :destroy
   has_many :suppliers,              dependent: :destroy   # SupplierIngredient FK → ingredients (cascade)
+  has_many :batches,                dependent: :destroy   # FK → recipes (must run BEFORE recipes)
+  has_many :stock_movements,        dependent: :destroy   # FK → ingredients (must run BEFORE ingredients)
   has_many :recipes,                dependent: :destroy
   has_many :ingredients,            dependent: :destroy
   has_many :fixed_costs,            dependent: :destroy   # before categories — FKs into fixed_cost_categories
@@ -221,6 +223,18 @@ class Account < ApplicationRecord
 
   def payment_settings
     settings.payment_settings
+  end
+
+  # Phase 13 — production-runs + inventory feature flag. Defaults off;
+  # the operator opts in from /account/edit. Every Phase-13 surface
+  # (sidebar Tandas entry, menu stock badges, ingredient on-hand column)
+  # gates on this.
+  def inventory_settings
+    settings.inventory_settings
+  end
+
+  def inventory_enabled?
+    inventory_settings.enabled
   end
 
   # ── Pickup address + geocoding ───────────────────────────────────────
