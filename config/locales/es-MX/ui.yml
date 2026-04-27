@@ -11,3 +11,14 @@ es-MX:
       toggle: "Abrir opciones"
       empty: "Nada que coincida"
       create_prefix: "Agregar"
+
+  # Phase 14, Slice 11 — demo banner mounted on operator + storefront
+  # layouts when Account#demo? is true.
+  demo:
+    banner:
+      operator:
+        title: "MODO DEMO"
+        body: "Estás en una cocina de demostración. Los pedidos no se cobran ni se entregan; los emails y mensajes de WhatsApp no se envían. Todo lo que cocines aquí se borra cada noche."
+      storefront:
+        title: "Cocina de demostración"
+        body: "Esta cocina está activa para mostrarte cómo se ve Kitchef. Si haces un pedido, se registra como ejemplo — pero no recibirás llamada, correo ni entrega."

@@ -24,6 +24,9 @@ class StaticMapJob < ApplicationJob
     return if record.respond_to?(:discarded?) && record.discarded?
     return unless record.respond_to?(:static_map) && record.respond_to?(:geocoded?)
     return unless record.geocoded?
+    # Phase 14, Slice 11 — don't burn Google's static-map API quota
+    # on demo addresses; just skip cleanly.
+    return if Demo.skip?(record)
 
     url = static_map_url(record)
     return if url.blank?

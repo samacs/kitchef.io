@@ -39,6 +39,10 @@
               current_path: request.path) %>
 
         <div class="flex-1 min-w-0 flex flex-col">
+          <%# Phase 14, Slice 11 — demo banner. Renders nothing for
+              non-demo accounts so the production layout is identical. %>
+          <%= render Demo::BannerComponent.new(account: Current.account, context: :operator) %>
+
           <%= render Nav::DashboardTopBarComponent.new(
                 current_user: Current.user,
                 current_account: Current.account,

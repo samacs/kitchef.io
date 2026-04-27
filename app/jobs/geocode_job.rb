@@ -17,6 +17,9 @@ class GeocodeJob < ApplicationJob
     return if record.respond_to?(:discarded?) && record.discarded?
     return unless record.respond_to?(:needs_geocoding?) && record.needs_geocoding?
     return if record.geocoding_on_cooldown?
+    # Phase 14, Slice 11 — demo accounts shouldn't bill the Google
+    # API for fake addresses. Skip silently.
+    return if Demo.skip?(record)
 
     result = Geocoder.search(record.geocoding_address).first
 
