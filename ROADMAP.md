@@ -738,7 +738,80 @@ See `~/.claude/plans/phase-12-pagos-spei-propina.md` for any pre-build whiteboar
 
 ---
 
-## Phase 14 — KDS (Kitchen Display System) (next)
+## Phase 14 — Planes pagados, suscripciones y facturación (next — `feature/paid-plan`)
+
+**Context.** Up to Phase 13 the platform has been free-by-default. Every cocinera using Kitchef pays nothing; we eat infra. Phase 14 turns Kitchef into a real business: a generous **Free** tier (40 pedidos/mes) and a **Pro** tier ($199 MXN/mes · $1,990 MXN/año with 2 meses gratis) gated by features that mature operators reach for naturally — composable recipes, full reports, fixed costs, customization, inventory + batches, custom domain, hide-Kitchef-branding. KDS (Phase 15), multi-user, and lifecycle-nurture (Phase 16) all gate Pro when they ship.
+
+**Why now.** Three alpha operators are running real businesses on Kitchef with no revenue back. The product surfaces (Phases 7–13) are dense enough that Pro has a credible ladder of "you'll want this" moments; trying to monetize earlier would have left Pro feeling thin.
+
+**Why this is bounded.** No payment processing for the operator's own customers (that's still Stripe-Kitchef-the-platform vs operator's own SPEI/cash from Phase 12). No CFDI 4.0 automation in v1 — Stripe issues card receipts; we issue CFDI manually until we have the e.firma to wire `Stripe Tax MX`. No multi-currency. No team seats (deferred indefinitely; shared logins tolerated).
+
+### Goals
+
+1. **Free tier feels like a real product, not a trial.** A solo cocinera ≤40 pedidos/mes can run her business on it forever. Storefront, kanban, schedule, suppliers, purchases — all included.
+2. **Pro gates pull on graduation moments.** Each gated feature is unlocked at a moment a maturing operator naturally asks for it (decompose recipes, weekly margen report, fixed-cost utilidad neta, vacation pause, KDS for the wall).
+3. **14-day Pro trial — no card, no friction.** The card is only requested when she actively chooses to continue. Trial-end auto-reverts to Free; nothing she made disappears.
+4. **Cancellations land on a save flow, not a void.** Exit-survey → matched offer (50%×3 coupon, vacation pause, downgrade-to-Free, listen-to-feature-gap). Hard cancel keeps Pro through period-end and the data forever.
+5. **Stripe owns the money plumbing.** Customer Portal handles cards + invoices + receipts; Kitchef wraps a `/subscription` index with brand consistency on top.
+6. **Vacation mode** lets an operator step away without canceling — subscription continues, storefront says "*Volvemos pronto*", checkout disabled.
+
+### Scope (slices — see `~/.claude/plans/phase-14-paid-plan.md` for the full plan once written)
+
+- **Slice 1 — Plan model + entitlements layer (M).** `Subscription` columns (`source`, `plan`, `status`, Stripe IDs, comp fields), `Account#demo`, `PLAN_FEATURES` catalog, `Entitlements` service, `Subscriptions::LockedComponent`, dismissible `Subscriptions::HintBanner` + `Notifications::DismissedHint`, `User#destroy` cascading to `owned_account`.
+- **Slice 2 — Pricing page redesign (S).** Two cards · monthly/anual toggle · "sin tarjeta hasta que decidas" trust strip · FAQ. Live at `/pricing`.
+- **Slice 3 — Stripe Checkout + webhooks (M).** Pro Mensual + Pro Anual prices already created in sandbox (`price_1TQgsp58g89ERoPrzw3U7GQ5` + `price_1TQgsp58g89ERoPrPaVTz8A3`); add Checkout Session w/ trial (no card), webhook handlers, `Subscription#sync_from_stripe!`. Demo accounts can't open Checkout.
+- **Slice 4 — Onboarding plan selector (S).** New "Elige tu plan" step after profile, with Pro trial CTA dominant.
+- **Slice 5 — Subscription dashboard + cancel flow (M).** `/subscription` (current plan, renewal, monthly↔yearly with proration preview, invoice list, "Volver a Free"). `/subscription/cancel` 4-step save flow using coupon `ucUpunx9` (50% × 3 meses) + vacation pause + downgrade-to-Free. Cancel button lands on `/subscription` for signed-in operators, `/pricing` for anonymous. Comp accounts see "Pro · Cortesía · expira el [fecha]" instead of billing fields. **Physical "Borrar mi cuenta" lives here in Zona peligrosa** (2-step, type kitchen name to confirm).
+- **Slice 6 — Invoice list (S).** `/subscription/invoices` from Stripe API. "Solicitar CFDI" via mailto to `no-reply@kitchef.mx` until automation lands. Hidden for comp + demo accounts.
+- **Slice 7 — Contextual upgrade hints (S).** 5–7 in-context nudges + the pedidos-remaining pill on `/orders` topbar (32/40 · 8 restantes; pre-warning at 35 + 38; **hard block at 40** with "Activa Pro · sigues recibiendo pedidos en 30 segundos"). Hidden for comp + demo accounts.
+- **Slice 8 — Pausar operación (vacation mode) (S).** `Schedule#vacation_until` date column + toggle on `/schedule`. **Already-confirmed pedidos honor their delivery date; only NEW pedidos are blocked.** Storefront morphs to "Volvemos el [fecha]"; checkout disabled; cron auto-clears on date. Save-offer surface inside the cancel flow.
+- **Slice 9 — Marketing pages cleanup (S).** Producto = real feature grid, Cómo funciona = 3-step explainer, Precios moves to live `/pricing`, Historias removed from navbar until real testimonials exist.
+- **Slice 10 — Admin: comp grants + demo flag (M).** `/admin/subscriptions` table + filter. "Donar Pro" drawer (account picker, duration, reason) → `Subscriptions::GrantComp`. "Quitar Pro donado" → `Subscriptions::RevokeComp`. `Subscriptions::SweepExpiredComps` daily cron. `/admin/accounts/:id` toggle for `demo`. Audit log via paper_trail.
+- **Slice 11 — Demo guards + banner + shared demo seed (S).** `Demo::BannerComponent` mounted in operator + storefront layouts (persistent amber chip). `before_deliver` guard in `ApplicationMailer` (no email when `to_account.demo?`). `whatsapp_link` no-op. Early-return in geocoding/static-map jobs + Noticed channels. `dev:bootstrap` extends to seed a single shared public demo account (`kitchef.mx/cocina-demo`) flagged `demo: true` with indefinite comp-Pro. Nightly `Demo::Reset` job clears its pedidos / clients / notifications and restores recipes to seed state.
+
+**Total: ~14 focused days.** Stripe sandbox already wired (account `acct_1TQgYl58g89ERoPr`, product `prod_UPVu3WmAhMdJKm`, save coupon `ucUpunx9`).
+
+### Locked decisions
+
+1. **Free pedidos cap = 40/mes.** Hard block at 40 with a clear upgrade CTA.
+2. **Pro = $199/mes · $1,990/año.** Yearly = 2 meses gratis (≈ −16.7%). Bumped from PRD's original $150 to absorb upcoming WhatsApp Business costs.
+3. **Trial = 14 días, sin tarjeta.** One trial per account lifetime (Stripe enforced via `customer.metadata.has_trialed`).
+4. **Trial-end behavior = auto-revert to Free.** Never paywall a working business.
+5. **Save coupon = 50% × 3 meses, repeating** (Stripe coupon `ucUpunx9`). Non-stackable (Stripe default). No additional coupons planned.
+6. **Multi-user = deferred indefinitely.** Shared logins tolerated. No team seats in Pro v1.
+7. **CFDI = manual via `no-reply@kitchef.mx` mailto.** Until e.firma + Stripe Tax MX integration lands. Operators educated via in-app copy to use other contact channels (TBD).
+8. **Pundit = NOT ADOPTED.** Plain `Entitlements` service handles account-level booleans; per-record auth waits for multi-user.
+9. **Cancellations land on `/subscription` for signed-in operators**, `/pricing` for anonymous.
+10. **Vacation mode honors confirmed pedidos**, blocks only new ones; cron auto-clears on the resume date.
+11. **Comp accounts** = `Subscription#source = :comp` with `comp_expires_at` (nullable for indefinite) + `comp_granted_by_id` + `comp_reason`. `Entitlements` treats them identically to paid Pro. Expired comps auto-revert to Free via daily sweep. `paper_trail` captures grant/revoke history.
+12. **Demo accounts** = `Account#demo = true` boolean. Single shared public demo account (`kitchef.mx/cocina-demo`) seeded by `dev:bootstrap` with indefinite comp-Pro + nightly state reset. Persistent banner on operator + storefront. Hard guards on Mailer / WhatsApp / Stripe / Notifications / external-API jobs.
+
+### Free vs Pro feature list (canonical)
+
+| | Free | Pro |
+|---|---|---|
+| Storefront on `kitchef.mx/:slug` | ✓ (con footer "Hecha con Kitchef") | ✓ (sin marca) |
+| Custom domain | — | ✓ |
+| Pedidos/mes | hasta 40 | ilimitados |
+| Recetas (flat: name, foto, precio) | ✓ | ✓ |
+| **Recetario compuesto + costo + margen** (Phase 7) | — | ✓ |
+| Clientes | ✓ | ✓ |
+| Kanban + cancelaciones + duplicar | ✓ | ✓ |
+| Production daily focus + runner view | ✓ | ✓ |
+| Schedule editor | ✓ | ✓ |
+| Categorías + Proveedores + Compras | ✓ | ✓ |
+| **Reportes finance + menu** (Phase 8) | — | ✓ |
+| **Costos fijos + Utilidad neta** (Phase 10) | — | ✓ |
+| **Personalización de platillos** (Phase 11) | — | ✓ |
+| Pagos + propina (instrucciones) | ✓ | ✓ |
+| **Inventario + Lotes** (Phase 13) | — | ✓ |
+| **KDS** (Phase 15, when shipped) | — | ✓ |
+| Pausar operación (vacation mode) | ✓ | ✓ |
+| Soporte | comunidad / docs | prioritario por WhatsApp |
+
+---
+
+## Phase 15 — KDS (Kitchen Display System)
 
 **Context.** Phase 5 gave the operator a daily focus view on her phone; Phase 13 told her how many tamales she still has. The missing surface is the **kitchen wall**: a tablet (or a spare phone, or the laptop she keeps next to the comal) showing live tickets in cook order, big enough to read from across the room with greasy hands. Today she alternates between the kanban tab and her phone notification bell — that's a context switch every time a pedido lands, and a missed pedido every time her hands are full.
 
@@ -762,7 +835,7 @@ A KDS — Kitchen Display System (and yes, a happy pun on "Kitchef") — is a re
 #### Slice 1 — KDS shell + token pairing (S)
 
 - [ ] `/kds/:token` route — `KdsController#show`, no session auth, signed token via `Rails.application.message_verifier(:kds)`. Token encodes `account_id` + `paired_at`, no expiry (the operator can rotate).
-- [ ] `/account/edit` → "KDS" card: "Mostrar pantalla en cocina" toggle. When on, surfaces a paired URL + QR code (using `rqrcode` already in Gemfile via Phase 14 deferreds) + a "Generar nuevo enlace" button that rotates the token.
+- [ ] `/account/edit` → "KDS" card: "Mostrar pantalla en cocina" toggle. When on, surfaces a paired URL + QR code (using `rqrcode` already in Gemfile) + a "Generar nuevo enlace" button that rotates the token.
 - [ ] Add `kds` to `Account::RESERVED_SLUGS` + `bin/check_reserved_slugs`.
 
 #### Slice 2 — Ticket grid (M)
@@ -796,7 +869,7 @@ A KDS — Kitchen Display System (and yes, a happy pun on "Kitchef") — is a re
 - **Bump-bar / barcode hardware.** Touch is plenty.
 - **Sound packs / customizable chimes.** One tone, one mute toggle. If three operators ask, revisit.
 - **Multi-screen mirroring (master + secondary).** A second tablet just opens the same `/kds/:token` URL — works today, no model needed.
-- **Order timing analytics ("avg time from confirmed → ready").** Belongs in `/reports`, not on the wall display. Phase 15+.
+- **Order timing analytics ("avg time from confirmed → ready").** Belongs in `/reports`, not on the wall display. Phase 17+.
 
 ### Key decisions to lock before building
 
@@ -849,7 +922,108 @@ Total: ~1 focused work-week.
 
 ---
 
-## Phase 15 — Growth, retention, polish
+## Phase 16 — Operator nurture & lifecycle reminders
+
+**Context.** Sign-up brings a cocinera to a half-finished kitchen: her storefront is live but missing a logo, her schedule has the default hours, she hasn't published a single platillo. Today she has to remember to come back. Phase 16 wires up a small, observable reminder system that nudges her at the right moments — without ever feeling like a drip campaign.
+
+**Why now.** Phase 14's free tier brings every signup that doesn't trial Pro. Without a nurture loop, the activation curve is whatever organic email opens she manages. With one, we recover the long tail.
+
+**Why this is bounded.** No new infra: Sidekiq + Noticed + `sidekiq-cron` are already in the Gemfile. No new comms channel — reminders flow through the existing in-app bell + email. WhatsApp delivery comes later (Phase 14's "send to WhatsApp" feature). All nudges idempotent and dismissible.
+
+### Scope
+
+- [ ] **`OperatorNudge` model** — `account_id`, `nudge_key` (string, unique-per-account), `triggered_at`, `dismissed_at`, `acted_on_at`, `payload` (jsonb for nudge-specific copy/links). Soft-delete via `HasSoftDelete`.
+- [ ] **`Nudges::Scan` cron (hourly via `sidekiq-cron`)** — iterates registered nudge classes, checks `applies_to?(account)` for every account, fires a Noticed event for each match. Events deliver to `:database` (in-app bell + `/notifications`) and `:email` (Resend). Idempotent — never fires the same `nudge_key` twice for the same account.
+- [ ] **Nudge classes** under `app/nudges/` — one Ruby class per nudge (`Nudges::MissingLogo`, `Nudges::MissingDescription`, `Nudges::FirstRecipe`, `Nudges::FirstPedidoFollowup`, `Nudges::TrialDay12`, `Nudges::TrialDay14`, `Nudges::DormantAccount`). Each implements `#applies_to?(account)` + `#payload(account)`. Adding a nudge = one file + one register call, no schema churn.
+- [ ] **`Admin::NudgesController` + `/admin/nudges`** — table of every fired nudge, filter by account / nudge_key / status (pending / dismissed / acted-on), CSV export. Lets us measure "of N accounts that hit `missing_logo`, M added a logo within 7 days" — the conversion intel we'll want.
+- [ ] **Operator-side dismissal** — every nudge in the `/notifications` inbox carries a "No me interesa" affordance that sets `dismissed_at`. Dismissed nudges don't refire. Optional `redismiss_at` on a nudge class lets things like "your kitchen is closed all month" resurface monthly.
+- [ ] **Sample nudge set (v1):**
+  - **Missing logo** — fires 48h after signup if `account.logo` not attached + `pedidos_count == 0`.
+  - **Missing description** — fires 72h after signup if `public_profile.description.blank?`.
+  - **First recipe** — fires 24h after signup if `recipes.count == 0`.
+  - **First pedido followup** — fires 24h after the operator's first delivered pedido ("¡felicidades por tu primera entrega! Aquí está cómo aprovechar [feature]").
+  - **Trial day 12 / 14** — Pro-trial reminders pointing at the upgrade CTA.
+  - **Dormant account** — fires 30 days after last login if pedido count > 0.
+
+### Why we picked Noticed + Sidekiq over a third-party drip tool
+
+- **Already wired.** Phase 4 already uses Noticed for storefront-order notifications. Adding lifecycle nudges is one more event class, not a new vendor.
+- **Native admin visibility.** Querying `OperatorNudge.where(...).count` beats a Customer.io dashboard — it's the same Postgres the rest of the admin reads.
+- **MX-friendly cost curve.** No per-message billing on Customer.io / Iterable / Userlist — Resend's free tier covers the email volume; in-app delivery is free.
+- **No drift between operator UI and nudge content.** The nudge text lives in `config/locales/es-MX/nudges.yml` next to the operator-facing copy it references.
+
+### Effort estimate
+
+| Slice | Effort | Unlocks |
+|---|---|---|
+| 1 — Model + cron + first 3 nudges | M (~2d) | Real activation lift |
+| 2 — Admin /admin/nudges + CSV | S (~1d) | Visibility for tuning |
+| 3 — Trial nudges + dormant nudge | S (~1d) | Closes the lifecycle |
+
+Total: ~4 focused days. Lands on top of Phase 14 once subscriptions are live.
+
+---
+
+## Phase 17 — SEO foundation: Open Graph, schema.org, sitemap
+
+**Context.** Today every public surface — kitchen storefronts, dish detail pages, marketing pages — ships with whatever default `<title>` and `<meta description>` the browser inferred. WhatsApp link previews show a generic Kitchef logo on a white card. Google indexes the pages but with no structured data, so they don't earn rich results (recipe cards, restaurant cards, breadcrumb trails). Phase 17 fixes the entire metadata layer — every kitchen and every recipe gets full Open Graph + Twitter Card tags + JSON-LD schema.org markup, plus a sitemap that Google can crawl and a robots.txt that says where to find it.
+
+**Why now.** Phase 14 turns Kitchef into a paid business; SEO is the long-tail acquisition channel that brings paid customers without per-lead spend. A shared cocinera typing "tamales caseros Hermosillo" should land on her storefront — not on a Facebook group screenshot from 2019. Schema.org markup turns those landings into rich results (photo + price + rating in the SERP) which 2–3× CTR over plain text.
+
+**Why this is bounded.** No content marketing in this phase (that's Phase 18). No backlink campaign. No paid SEO consultancy. Just the technical metadata foundation that makes every page maximally shareable + crawlable. `sitemap_generator` gem is already in the Gemfile (per cross-cutting reminders). Favicon + PWA manifest deferreds also fold in here.
+
+### Goals
+
+1. **Every public URL has rich Open Graph + Twitter Card metadata** — title, description, hero image, canonical URL, locale (`es_MX`), site name. WhatsApp/Facebook/Twitter/iMessage preview cards look polished, not generic.
+2. **Every kitchen surfaces as a `Restaurant` / `FoodEstablishment`** — name, image, address, phone, openingHours, priceRange, hasMenu (full Menu schema), areaServed, paymentAccepted.
+3. **Every dish surfaces as both `Product` (it's sold) AND `Recipe` (it's food)** — name, image, description, offers (price + currency + availability), recipeIngredient (the components when composed), recipeCategory, suitableForDiet (vegetarian flags from Phase 11 selectables, when present).
+4. **Sitemap.xml dynamically generated** — every published kitchen, every published dish, every marketing page (current + future landing pages for verticals). Auto-pings Google + Bing on regeneration.
+5. **Operator can edit her storefront's SEO meta** — title, description, social-share image (separate from her hero photo). Sensible auto-defaults so 90% of operators never touch it.
+6. **Marketing page metadata** — clean tags on `/`, `/pricing`, `/how-it-works`, `/faq`, `/legal/*`, and the future vertical landing pages (dark kitchens, taquerías, cafés, reposterías).
+
+### Scope
+
+- [ ] **`Seo::Tags` view helper module** — `seo_tags(title:, description:, image:, type:, canonical_url:)` returns a memoized hash + renders the full set of `<meta>` tags. Drop-in on every layout via `<%= seo_tags(**page_seo) %>`.
+- [ ] **`Seo::JsonLd` builder** — pure Ruby, no gem. `Seo::JsonLd::Restaurant.for(account)`, `Seo::JsonLd::Recipe.for(recipe)`, `Seo::JsonLd::Product.for(recipe)`, `Seo::JsonLd::BreadcrumbList.for(crumbs)`. Each returns a hash; layout's `<script type="application/ld+json">` block stringifies. Keep it as plain hashes — schema.org JSON-LD is verbose, gems add ceremony.
+- [ ] **Storefront layout integration** — `app/views/layouts/storefront.html.erb` renders OG + Twitter + Restaurant JSON-LD on the kitchen home + Recipe + Product JSON-LD on dish detail + BreadcrumbList on every nested page.
+- [ ] **Operator app** — operator-only pages get `<meta name="robots" content="noindex,nofollow">` (the kanban shouldn't show in Google).
+- [ ] **Marketing layout** — `app/views/layouts/marketing.html.erb` renders OG + Twitter + WebSite/Organization JSON-LD on `/`, with per-page overrides on `/pricing`, `/how-it-works`, etc.
+- [ ] **`Storefronts::SeoSettings` StoreModel on `Account#settings.seo`** — `meta_title` (string, ≤ 70 chars), `meta_description` (text, ≤ 160 chars), `share_image` (ActiveStorage attachment, 1200×630). All optional with computed defaults.
+- [ ] **`/account/edit` SEO card** — collapsible "SEO y compartir" section with live preview of the WhatsApp / Twitter / Facebook share card. Defaults shown muted; operator overrides shown ink.
+- [ ] **`Seo::ShareImage` service** — when `share_image` is blank, falls back to a server-generated 1200×630 image: kitchen logo + name (Instrument Serif) + tagline (Inter) + accent palette stripe. Uses `vips` (already in the Gemfile) for composition; cached in ActiveStorage so we generate once.
+- [ ] **Sitemap via `sitemap_generator`** — `config/sitemap.rb` enumerates: marketing pages (each with priority + changefreq), every published kitchen (`account.is_published?`), every published dish (`recipe.is_published?`), every legal doc. Daily cron re-generates. `Sitemaps::PingSearchEngines` job submits to Google + Bing on regen.
+- [ ] **`robots.txt`** — `Allow: /`, `Disallow: /admin/`, `Disallow: /sign-in`, `Disallow: /sign-up`, `Disallow: /reset-password`, `Disallow: /onboarding/`, `Disallow: /subscription`, `Disallow: /letter_opener/`, `Sitemap: https://kitchef.mx/sitemap.xml`.
+- [ ] **Canonical URLs** — every public page renders `<link rel="canonical" href="...">` so trailing-slash, query-param, and slug-collision variants don't fragment ranking.
+- [ ] **Favicon set + PWA manifest** — full favicon set (16/32/180/192/512 + maskable), `manifest.json` per-storefront so a customer can "Agregar a inicio" the kitchen on iOS/Android. Pulls colors from the kitchen's palette.
+- [ ] **`hreflang` self-reference** — every page declares `<link rel="alternate" hreflang="es-mx" href="...">` even though we're MX-only. Prepares for if we ever ship es-CO / es-AR / en-US variants.
+- [ ] **Storefront RSS / JSON Feed** — `kitchef.mx/:slug/menu.json` returns the kitchen's published dishes as a structured feed (price, photo, description). Lets cocineras embed their menu on their own WordPress / Wix sites.
+
+### Verification
+
+1. **Google Rich Results Test** — paste a storefront URL into [search.google.com/test/rich-results](https://search.google.com/test/rich-results) → returns valid Restaurant + BreadcrumbList markup, no errors.
+2. **Recipe rich result** — paste a dish detail URL → returns valid Recipe markup with image + description + ingredients (when composed).
+3. **WhatsApp preview** — paste `kitchef.mx/cocina-de-elena` into WhatsApp → preview card renders with kitchen name, description, hero image (not the Kitchef logo).
+4. **Twitter Card validator** — [cards-dev.twitter.com/validator](https://cards-dev.twitter.com/validator) → renders summary_large_image with the kitchen's photo + name.
+5. **Facebook Sharing Debugger** — [developers.facebook.com/tools/debug](https://developers.facebook.com/tools/debug) → all OG tags present, og:image dimensions correct.
+6. **Sitemap valid** — `curl https://kitchef.mx/sitemap.xml` → well-formed XML with every published kitchen + dish + marketing page.
+7. **`robots.txt`** — `curl https://kitchef.mx/robots.txt` → references the sitemap, blocks the right paths.
+8. **Operator override** — an operator edits her `meta_title` on `/account/edit` → Google Rich Results Test re-paste shows the new title.
+
+### Effort estimate
+
+| Slice | Effort | Unlocks |
+|---|---|---|
+| 1 — `Seo::Tags` helper + `Seo::JsonLd` builders | M (~2d) | The whole markup foundation |
+| 2 — Layout integration (storefront + marketing + operator no-index) | S (~1d) | Real metadata rendering everywhere |
+| 3 — Operator SEO settings card + share-image generator | M (~2d) | Operator-tuned previews |
+| 4 — Sitemap + robots.txt + ping cron | S (~1d) | Discovery |
+| 5 — Favicon + PWA manifest + canonical/hreflang/JSON menu feed | S (~1d) | Polish + embedding |
+
+Total: ~7 focused days. Independent of every other phase — can ship in parallel with KDS or lifecycle reminders.
+
+---
+
+## Phase 18 — Growth, retention, polish
 
 - [ ] QR code generator for printed flyers (`rqrcode`)
 - [ ] Daily operator digest email (`DailyOperatorDigestJob` — scaffold exists, needs content)
@@ -888,8 +1062,11 @@ Total: ~1 focused work-week.
 8. ~~**Phase 11 (personalización de platillos)**~~ — shipped. Storefront option groups (tamaño / sabor / color / extras / dedicatoria) + removable ingredients + selectable ingredients. Recipe editor's "Opciones de personalización" section; every `OrderItem` snapshots the customer's picks. Bonus: lead-time-hours on recipes, yield_unit/yield_quantity in the recipe form (essential for prep recipes), morph-based autosave preserving focus, picker dedupe, recipe duplication + soft-delete archive flow. Availability gating on ingredient stock stays deferred until depletion ships.
 9. ~~**Phase 12 (instrucciones de pago + propina)**~~ — shipped. Display-only payment configuration: kitchen sets SPEI details + accepted methods at `/account/edit`; storefront checkout grew a Propina card (percentage-based, 10/15/20% calculated against subtotal in real time, tip-toggle to opt out entirely) + Método de pago card (Efectivo / SPEI / Tarjeta) with method-specific reveals (cash-change calculation, CLABE + Copiar buttons, free-text card instructions). Bonus shipped alongside: kitchen pickup address with bidirectional Google Maps + new Places API autocomplete (suggestions render below input, never overwrite it; marker drag reverse-geocodes), public storefront pickup address card + static map, gender-neutral copy across all locales, and a structured `rails dev:bootstrap` task replacing monolithic seeds (8 realistic Hermosillo kitchens, real addresses, 30-day order history, decomposed recipes, purchases, fixed costs, local image cache in `tmp/recipes/`). Mercado Pago / Stripe / reconciliation dashboard remain deferred for 12.5+ once gateway demand lands.
 10. ~~**Phase 13 (producción, batches e inventario)**~~ — shipped. Opt-in stock tracking gated on `Account#inventory_enabled?`. New `Batch` model with planned/in_progress/completed/canceled lifecycle, `BatchConsumption` ledger feeding ingredient depletion + restock, `Orders::BatchPicker` powering "Quedan N" / "Agotado" chips on the storefront menu and operator card, `StockMovement` append-only ledger with seven sources, `Accounts::InventorySettings` (enabled / block_oversells / low_stock_threshold_pct), `/batches` CRUD + onboarding + impact preview, ingredient on-hand column, oversold pedido reassignment when fresh batches land. Manual rewritten alongside (`docs/manual/01..13`, compiled to `Kitchef-Manual.pdf`). FIFO cost accounting, waitlist policy, and CSV stock import stay deferred until demand lands.
-11. **Phase 14 next (KDS — Kitchen Display System)** — wall-mounted single-screen surface for the kitchen tablet. Tokenized auth (mirrors `/r/:token`), ticket grid sorted by delivery window, two-button cook flow (Empezar / Listo), subtle chime + visual flash on new tickets, inventory-aware line items showing `Batch.units_remaining`. Read-mostly: order entry stays on storefront + drawer, the kanban stays the truth for editing. ~1 focused work-week.
+11. **Phase 14 next (planes pagados, suscripciones, facturación — `feature/paid-plan`)** — turning Kitchef into a real business. Free tier (40 pedidos/mes) + Pro at **$199 MXN/mes** or **$1,990 MXN/año** (2 meses gratis). 14-day trial, no card. Stripe Checkout + Customer Portal + custom subscription dashboard + cancel save-flow + vacation mode + marketing pages cleanup. **Plus**: admin tooling to donate Pro (comp source), `Account#demo` flag with banners + side-effect guards, single shared public demo account with nightly reset. Pro gates: composable recipes, full reportes, costos fijos + utilidad neta, customization, inventario + lotes, custom domain, hide-Kitchef-branding. Save coupon `ucUpunx9` (50% × 3 meses). ~14 focused days.
+12. **Phase 15 (KDS — Kitchen Display System)** — wall-mounted single-screen surface for the kitchen tablet, gated to Pro. Tokenized auth (mirrors `/r/:token`), ticket grid sorted by delivery window, two-button cook flow, subtle chime + visual flash, inventory-aware line items showing `Batch.units_remaining`. ~1 focused work-week.
+13. **Phase 16 (operator nurture & lifecycle reminders)** — Sidekiq + Noticed-powered nudge system that gently brings cocineras back when their kitchen is half-finished or dormant. `OperatorNudge` model + `Nudges::Scan` hourly cron + `/admin/nudges` for visibility. Idempotent, dismissible, locale-driven. ~4 focused days.
+14. **Phase 17 (SEO foundation — Open Graph, schema.org, sitemap)** — full metadata layer on every public surface. `Restaurant` JSON-LD per kitchen, `Recipe` + `Product` per dish, OG + Twitter cards (rich WhatsApp / Facebook / Twitter previews), per-kitchen share images, dynamic sitemap.xml, robots.txt, favicon set + PWA manifest, `kitchef.mx/:slug/menu.json` feed for embedding. `sitemap_generator` already in Gemfile. ~7 focused days.
 
-Phase 14 is the natural next step after Phase 13 — batches gave us live stock counts; KDS surfaces them in the kitchen where decisions actually happen.
+Phase 14 is the natural next step after Phase 13 — the platform is mature enough that Pro has a credible feature ladder; trying to monetize earlier would have left Pro feeling thin.
 
-Phase 15 (growth, retention, polish) is continuous; each ships a slice per quarter once the core loop is done.
+Phase 18 (growth, retention, polish) is continuous; each ships a slice per quarter once the core loop is done.
