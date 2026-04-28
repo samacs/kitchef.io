@@ -24,28 +24,44 @@
   </div>
 <% end %>
 
-<%# Decomposition nudge — appears only for accounts still in simple mode
-    with enough recipes to make decomposition meaningful. Dismissal lives
-    client-side for now (localStorage), so a new session sees it again;
-    a future version can persist dismissal as an account setting. %>
-<% if !Current.account.composable_recipes? && recipes.size >= 3 && (first_recipe = recipes.first) %>
+<%# Decomposition nudge — appears only for accounts that haven't tried
+    decomposition yet and have enough recipes to make it meaningful. We
+    check `settings.use_composable_recipes` directly (NOT the gated
+    `composable_recipes?` predicate) so the nudge disappears as soon as
+    the operator completes the onboarding, regardless of plan tier.
+    Otherwise a Free user who decomposed once would see the nudge
+    forever because Entitlements gates the predicate to Pro. %>
+<% if !Current.account.settings.use_composable_recipes && recipes.size >= 3 && (first_recipe = recipes.first) %>
+  <% pro_locked = !Entitlements.for(Current.account).allows?(:composable_recipes) %>
   <aside class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-card-sm border border-line bg-surface px-5 py-4 shadow-card">
     <div class="flex items-start gap-3 min-w-0 flex-1">
       <span class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full bg-accent-soft text-accent shrink-0">
         <%= icon(:scale, size: :sm) %>
       </span>
       <div class="min-w-0 flex flex-col gap-1">
-        <div class="text-[14px] font-semibold text-ink">
-          <%= t("onboarding.decomposition.nudge.title") %>
+        <div class="flex items-center gap-2">
+          <div class="text-[14px] font-semibold text-ink">
+            <%= t("onboarding.decomposition.nudge.title") %>
+          </div>
+          <% if pro_locked %>
+            <span class="inline-flex items-center gap-1 px-2 py-[1px] rounded-pill bg-accent-soft text-accent text-[10.5px] font-mono uppercase tracking-[0.14em]">
+              <%= t("subscriptions.locked.pro_pill") %>
+            </span>
+          <% end %>
         </div>
         <div class="text-[12.5px] text-ink-2 max-w-prose">
           <%= t("onboarding.decomposition.nudge.lede") %>
         </div>
       </div>
     </div>
-    <%= link_to onboarding_decomposition_path(first_recipe),
+    <%= link_to (pro_locked ? subscription_path(highlight: :composable_recipes) : onboarding_decomposition_path(first_recipe)),
           class: "shrink-0 inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
-      <%= t("onboarding.decomposition.nudge.cta") %>
+      <% if pro_locked %>
+        <%= icon(:sparkles, size: :xs) %>
+        <span><%= t("subscriptions.locked.cta") %></span>
+      <% else %>
+        <%= t("onboarding.decomposition.nudge.cta") %>
+      <% end %>
     <% end %>
   </aside>
 <% end %>

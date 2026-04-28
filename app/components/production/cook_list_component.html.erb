@@ -21,22 +21,73 @@
   <% if empty? %>
     <p class="text-muted text-[14px]"><%= t("production.cook_list.empty") %></p>
   <% else %>
-    <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface">
-      <% plan.cook_list.each do |row| %>
-        <li class="flex flex-col gap-1.5 px-4 py-3">
-          <div class="flex items-baseline justify-between gap-3">
-            <span class="text-[15.5px] text-ink font-medium"><%= row.recipe_name %></span>
-            <span class="font-mono text-[13px] text-ink-2 shrink-0 tabular-nums">
-              <%= row.display_qty %> <%= t("units.#{row.unit}", default: row.unit) %>
-            </span>
-          </div>
-          <% unless row.notes_roll_up.empty? %>
-            <p class="text-[12.5px] text-muted leading-[1.4]">
-              <%= row.notes_roll_up.join(" · ") %>
-            </p>
+    <%# Active rows — recipes still needing kitchen attention %>
+    <% if active_rows.any? %>
+      <ul class="flex flex-col divide-y divide-line rounded-card border border-line bg-surface">
+        <% active_rows.each do |row| %>
+          <li class="flex flex-col gap-1.5 px-4 py-3">
+            <div class="flex items-baseline justify-between gap-3">
+              <span class="text-[15.5px] text-ink font-medium"><%= row.recipe_name %></span>
+              <span class="font-mono text-[13px] text-ink-2 shrink-0 tabular-nums">
+                <%= row.display_qty %> <%= t("units.#{row.unit}", default: row.unit) %>
+              </span>
+            </div>
+
+            <%# State breakdown dots %>
+            <div class="flex items-center gap-3 flex-wrap">
+              <% if row.waiting_qty.positive? %>
+                <span class="inline-flex items-center gap-1 text-[11.5px] text-muted">
+                  <span class="w-[6px] h-[6px] rounded-full bg-line-2"></span>
+                  <%= row.waiting_qty.to_i %> <%= t("production.cook_list.state.waiting") %>
+                </span>
+              <% end %>
+              <% if row.cooking_qty.positive? %>
+                <span class="inline-flex items-center gap-1 text-[11.5px] text-[var(--color-status-en-produccion-fg)]">
+                  <span class="w-[6px] h-[6px] rounded-full bg-current"></span>
+                  <%= row.cooking_qty.to_i %> <%= t("production.cook_list.state.cooking") %>
+                </span>
+              <% end %>
+              <% if row.done_qty.positive? %>
+                <span class="inline-flex items-center gap-1 text-[11.5px] text-accent">
+                  <span class="w-[6px] h-[6px] rounded-full bg-current"></span>
+                  <%= row.done_qty.to_i %> <%= t("production.cook_list.state.done") %>
+                </span>
+              <% end %>
+            </div>
+
+            <% unless row.notes_roll_up.empty? %>
+              <p class="text-[12.5px] text-muted leading-[1.4]">
+                <%= row.notes_roll_up.join(" · ") %>
+              </p>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <%# Done rows — all quantities in ready/en_route/delivered %>
+    <% if done_rows.any? %>
+      <details class="group">
+        <summary class="flex items-center gap-2 cursor-pointer select-none text-[13px] text-muted hover:text-ink-2 transition-colors py-1">
+          <span class="inline-block transition-transform group-open:rotate-90 text-[10px]">&#x25B8;</span>
+          <span class="text-accent">
+            <%= helpers.icon(:check, size: :xs) %>
+          </span>
+          <span>
+            <%= t("production.cook_list.done_section", count: done_rows.size) %>
+          </span>
+        </summary>
+        <ul class="mt-2 flex flex-col divide-y divide-line rounded-card border border-line bg-surface opacity-70">
+          <% done_rows.each do |row| %>
+            <li class="flex items-baseline justify-between gap-3 px-4 py-2.5">
+              <span class="text-[14px] text-ink-2"><%= row.recipe_name %></span>
+              <span class="font-mono text-[12.5px] text-muted shrink-0 tabular-nums">
+                <%= row.display_qty %> <%= t("units.#{row.unit}", default: row.unit) %>
+              </span>
+            </li>
           <% end %>
-        </li>
-      <% end %>
-    </ul>
+        </ul>
+      </details>
+    <% end %>
   <% end %>
 </section>

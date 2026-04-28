@@ -567,7 +567,7 @@ es-MX:
         empty_title: "Sin categorías aún"
         empty_body: "Tus categorías se crean automáticamente cuando agregas un platillo. Aquí podrás reordenarlas y renombrarlas."
         hint_title: "Arrastra para reordenar"
-        hint_body: "El orden que elijas aquí es el que verán tus clientes en tu menú público. Arrastra las categorías a la posición que prefieras."
+        hint_body: "El orden que elijas aquí es el que verán tus clientes en tu menú público. Las categorías con borde verde tienen al menos un platillo publicado y son visibles para tus clientes."
         col_name: "Categoría"
         col_recipes: "Platillos"
         col_status: "Estado"
@@ -577,6 +577,11 @@ es-MX:
           one: "platillo"
           other: "platillos"
         draft: "borrador"
+        internal: "interno"
+        published_tooltip: "Platillos publicados, visibles en tu menú público"
+        draft_tooltip: "Platillos guardados como borrador — solo tú los ves"
+        internal_tooltip: "Recetas internas (no se venden por sí solas)"
+        hidden_from_menu: "No visible en tu menú"
         edit_label: "Renombrar categoría"
         delete_label: "Eliminar categoría"
         delete_confirm: "¿Eliminar la categoría «%{name}»? Esta acción no se puede deshacer."
@@ -1038,6 +1043,7 @@ es-MX:
     view_storefront: "Ver mi tienda"
     saved: "Listo, tu cocina se actualizó."
     save_error: "Revisa los campos marcados y vuelve a intentarlo."
+    pro_only_setting_blocked: "Esa función está disponible en Pro. Activa Pro para usarla."
     logo_removed: "Quitaste el logo."
     cover_removed: "Quitaste la portada."
     destroy:
@@ -1157,6 +1163,9 @@ es-MX:
       low_stock_threshold_hint: "Porcentaje de tu última compra. Cuando bajas de aquí, lo marcamos en tu lista de ingredientes."
       default_batch_window_label: "Días que vive un lote por defecto"
       default_batch_window_hint: "Cuántos días después de que cocinas un lote sigue disponible para venta. 0 = sólo el mismo día."
+      pro_locked_lede: "Lleva el control de cuánto cocinas, cuánto te queda y qué ingredientes te están escaseando. Disponible al activar Pro."
+      pro_locked_hint: "Lotes con fecha y ventana, stock por ingrediente que decrementa solo, y avisos de «Quedan 3» o «Agotado» en tu menú público."
+      pro_locked_cta: "Activa Pro"
   subscription:
     title: "Plan"
 
@@ -1168,6 +1177,7 @@ es-MX:
     locked:
       kicker: "DISPONIBLE EN PRO"
       cta:    "Activa Pro"
+      pro_pill: "Pro"
       # Phase 14, Slice 7 — per-feature copy used by
       # Subscriptions::FeatureGated whenever a controller blocks a
       # Free account. Adding a new gated controller is one locale
@@ -1278,6 +1288,32 @@ es-MX:
       upgrade_yearly_note: "Anual · 2 meses gratis"
       upgrade_monthly_note: "Mensual · cancela cuando quieras"
       no_card_note: "Sin tarjeta durante la prueba. Sólo te pedimos método de pago si decides continuar."
+      free_benefits_kicker: "LO QUE TIENES"
+      free_benefits:
+        list:
+          - "Tu menú público con tu marca"
+          - "Hasta 40 pedidos al mes"
+          - "Kanban de pedidos y horarios"
+          - "Clientes, proveedores y compras"
+          - "Recordatorios y notificaciones"
+          - "Modo vacaciones"
+      pro_invite:
+        kicker: "ACTIVA PRO"
+        title: "Lleva tu cocina al siguiente nivel"
+        lede: "Pro desbloquea las herramientas que te ahorran horas y te ayudan a ganar más por cada platillo. 14 días gratis, sin tarjeta."
+        benefits:
+          - "Pedidos sin límite mensual"
+          - "Recetas componibles + costos automáticos"
+          - "Inventario y lotes de producción"
+          - "Reportes de menú y finanzas"
+          - "Personalización de platillos por cliente"
+          - "Múltiples fotos por platillo"
+      tile_monthly_kicker: "MENSUAL"
+      tile_monthly_hint: "Cancela cuando quieras."
+      tile_yearly_kicker: "ANUAL"
+      tile_yearly_hint: "Equivale a $166/mes — pagas 10, te damos 12."
+      tile_yearly_save: "Ahorra 17%"
+      tile_cta: "Activar Pro"
       switch:
         title: "Cambiar de plan mensual a anual (o al revés)"
         lede:  "Stripe calcula el prorrateo automáticamente. Te damos crédito por los días que pagaste de más."
@@ -1452,6 +1488,13 @@ es-MX:
       bulk_cta:
         one: "Iniciar producción (%{count})"
         other: "Iniciar producción (%{count})"
+      state:
+        waiting: "por iniciar"
+        cooking: "en cocina"
+        done: "listos"
+      done_section:
+        one: "%{count} platillo listo"
+        other: "%{count} platillos listos"
     handoff_list:
       kicker: "Entregar hoy"
       headline: "A quién le toca"

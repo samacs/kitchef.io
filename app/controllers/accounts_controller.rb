@@ -1,4 +1,6 @@
 class AccountsController < AuthenticatedController
+  before_action :guard_pro_only_settings, only: :update
+
   def show
     redirect_to edit_account_path
   end
@@ -80,6 +82,25 @@ class AccountsController < AuthenticatedController
   end
 
   private
+
+  # Defense in depth: the inventory toggle is locked in the UI for Free
+  # accounts, but a hand-crafted POST could still try to flip it to
+  # `true`. If a Free user attempts to enable a Pro-only setting, 422
+  # the whole update so nothing else in the form sneaks through with
+  # an invalid feature flag set.
+  def guard_pro_only_settings
+    inv = params.dig(:account, :settings, :inventory_settings, :enabled)
+    return if inv.blank?
+    return if ActiveModel::Type::Boolean.new.cast(inv) == false
+    return if Entitlements.for(Current.account).allows?(:inventory)
+
+    @account = Current.account
+    flash.now[:alert] = t("account.pro_only_setting_blocked")
+    respond_to do |format|
+      format.turbo_stream { head :payment_required }
+      format.html { render :edit, status: :payment_required }
+    end
+  end
 
   def account_params
     params.require(:account).permit(

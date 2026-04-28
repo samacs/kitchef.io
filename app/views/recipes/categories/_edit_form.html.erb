@@ -2,8 +2,9 @@
     operator clicks the pencil icon. Submitting swaps back to the
     read-only row partial. %>
 <%= turbo_frame_tag dom_id(category) do %>
+  <% visible_in_menu = category.recipes.kept.where(is_saleable: true, is_published: true).exists? %>
   <div id="<%= dom_id(category) %>_form"
-       class="flex items-center gap-4 px-5 py-2.5 border-b border-line last:border-b-0 bg-accent-soft/30">
+       class="<%= visible_in_menu ? 'border-l-[3px] border-l-accent' : 'border-l-[3px] border-l-transparent' %> flex items-center gap-4 px-5 py-2.5 border-b border-line last:border-b-0 bg-accent-soft/30">
 
     <%# Drag handle placeholder (disabled during edit) %>
     <div class="w-8 flex justify-center">
