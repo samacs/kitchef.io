@@ -1444,6 +1444,7 @@ es-MX:
       title: "Producción"
       subtitle: "Qué cocinar, a quién le toca y cuándo."
       shopping_list_cta: "Lista de compras"
+      weekly_plan_cta: "Plan de la semana"
       active_day_kicker: "Día activo"
       summary:
         to_confirm:
@@ -1519,14 +1520,19 @@ es-MX:
       subtitle: "Lo que necesitas para los próximos siete días."
       kicker: "Mercado"
       headline: "Lista de compras"
+      simple:
+        title: "Plan de la semana"
+        subtitle: "Qué preparar en los próximos siete días."
+        kicker: "Producción"
+        headline: "Qué preparar"
       window: "Del %{from} al %{to}"
       print_cta: "Imprimir"
       back_cta: "Volver a producción"
       already_done: "Ya cocinado y entregado"
-      decomposition_nudge: "Cuando decompongas tus recetas en ingredientes, esta lista baja al nivel de ingrediente."
+      decomposition_nudge: "Cuando descompongas tus recetas en ingredientes, esta lista se convierte en una lista de compras real — con cada insumo, su cantidad y su proveedor."
       empty:
-        headline: "Aún no hay qué comprar"
-        sub: "Cuando tengas pedidos confirmados para los próximos siete días, verás aquí un resumen listo para llevar al mercado."
+        headline: "Aún no hay qué preparar"
+        sub: "Cuando tengas pedidos confirmados para los próximos siete días, verás aquí un resumen de lo que necesitas cocinar."
       week_totals:
         kicker: "Lo que llevas esta semana"
         marked_count:

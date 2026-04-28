@@ -1,10 +1,10 @@
 <li class="kc-print-row flex items-start gap-4 px-4 py-4 print:gap-2 print:px-0 print:py-[3px] <%= 'opacity-60' if row.all_done %>">
   <% if row.all_done %>
-    <span class="mt-[3px] inline-flex items-center justify-center w-5 h-5 rounded-sm border border-accent bg-accent-soft shrink-0 text-accent print:w-[11px] print:h-[11px] print:mt-[4px]" aria-hidden="true">
+    <span class="mt-[3px] inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent-soft text-accent shrink-0 print:w-[11px] print:h-[11px] print:mt-[4px]" aria-hidden="true">
       <%= icon(:check, size: :xs) %>
     </span>
   <% else %>
-    <span class="mt-[3px] inline-block w-5 h-5 rounded-sm border border-ink-2 shrink-0 print:w-[11px] print:h-[11px] print:mt-[4px] print:border-[#555]" aria-hidden="true"></span>
+    <span class="mt-[5px] w-[6px] h-[6px] rounded-full bg-ink/30 shrink-0 print:mt-[6px] print:w-[5px] print:h-[5px]" aria-hidden="true"></span>
   <% end %>
   <div class="flex-1 flex flex-col gap-1 print:gap-0">
     <div class="flex items-baseline justify-between gap-3 print:gap-2">
