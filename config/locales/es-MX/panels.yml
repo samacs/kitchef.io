@@ -426,6 +426,7 @@ es-MX:
       internal_section_lede: "Recetas que no se venden solas. Úsalas como componentes de tus platillos finales."
       uncategorized: "Sin categoría"
       archived_link: "Ver archivados"
+      categories_cta: "Categorías"
       archived_count:
         one: "1 archivado"
         other: "%{count} archivados"
@@ -558,6 +559,38 @@ es-MX:
       headline: "Tu recetario está vacío"
       sub: "Agrega tu primer platillo para empezar a recibir pedidos. Lo verás aparecer en tu menú público."
       cta: "Agregar platillo"
+    categories:
+      index:
+        title: "Categorías del menú"
+        subtitle: "Organiza cómo aparecen tus platillos en tu menú público"
+        back: "Platillos"
+        empty_title: "Sin categorías aún"
+        empty_body: "Tus categorías se crean automáticamente cuando agregas un platillo. Aquí podrás reordenarlas y renombrarlas."
+        hint_title: "Arrastra para reordenar"
+        hint_body: "El orden que elijas aquí es el que verán tus clientes en tu menú público. Arrastra las categorías a la posición que prefieras."
+        col_name: "Categoría"
+        col_recipes: "Platillos"
+        col_status: "Estado"
+        footer_hint: "El orden se guarda automáticamente al soltar. Tus clientes verán los cambios de inmediato."
+      row:
+        recipe_count:
+          one: "platillo"
+          other: "platillos"
+        draft: "borrador"
+        edit_label: "Renombrar categoría"
+        delete_label: "Eliminar categoría"
+        delete_confirm: "¿Eliminar la categoría «%{name}»? Esta acción no se puede deshacer."
+        delete_blocked: "Tiene %{count} platillos — muévelos a otra categoría antes de eliminar."
+      edit_form:
+        save: "Guardar nombre"
+        cancel: "Cancelar"
+      update:
+        updated: "Categoría renombrada."
+      destroy:
+        in_use:
+          one: "Esta categoría tiene %{count} platillo. Muévelo a otra antes de eliminarla."
+          other: "Esta categoría tiene %{count} platillos. Muévelos a otra antes de eliminarla."
+        discarded: "Categoría eliminada."
   categories:
     destroy:
       in_use:

@@ -4,6 +4,11 @@
 
 <% content_for :page_action do %>
   <div class="flex items-center gap-2">
+    <%= link_to recipes_categories_path,
+          class: "inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3 py-[8px] rounded-button bg-bg-2 text-ink-2 border border-line hover:border-line-2 hover:text-ink transition-colors" do %>
+      <%= icon(:layout_list, size: :xs) %>
+      <span><%= t("recipes.index.categories_cta") %></span>
+    <% end %>
     <% if @archived_count.to_i.positive? %>
       <%= link_to archived_recipes_path,
             class: "inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3 py-[8px] rounded-button bg-bg-2 text-ink-2 border border-line hover:border-line-2 hover:text-ink transition-colors" do %>

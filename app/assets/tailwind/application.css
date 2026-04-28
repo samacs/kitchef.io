@@ -841,6 +841,18 @@
     background: var(--color-accent-soft);
   }
 
+  /* Category reorder ghost + drag — sortable list on /recipes/categories */
+  .kc-category-ghost {
+    opacity: 0.35;
+    background: var(--color-accent-soft);
+    border-radius: var(--radius-input);
+  }
+  .kc-category-drag {
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lift);
+    border-radius: var(--radius-input);
+  }
+
   /* Storefront card carousel — height-stable: scroll-snap inside
      the existing aspect-[4/3] card; dots float at the bottom edge
      of the image so they never push the card taller. */

@@ -129,6 +129,22 @@ Rails.application.routes.draw do
   resources :fixed_cost_categories, only: %i[create destroy],
     path: "fixed-cost-categories"
 
+  # Recipe category management — reorder, rename, delete categories that
+  # organize the operator's public menu. Separate from the inline-create
+  # `resources :categories` below which serves the combobox picker.
+  # Must be declared BEFORE `resources :recipes` so `/recipes/categories`
+  # doesn't get swallowed by RecipesController#show.
+  namespace :recipes do
+    resources :categories, only: %i[index update destroy] do
+      member do
+        get :edit_form
+      end
+      collection do
+        patch :reorder
+      end
+    end
+  end
+
   resources :recipes do
     member do
       post :toggle_publish, path: "toggle-publish"
