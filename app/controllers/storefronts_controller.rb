@@ -13,7 +13,7 @@ class StorefrontsController < Storefronts::BaseController
       .includes(:category, :option_groups, components: :componentable)
       .order(position: :asc)
       .group_by(&:category)
-      .sort_by { |cat, _| [cat&.position || 999, cat&.name.to_s] }
+      .sort_by { |cat, _| [ cat&.position || 999, cat&.name.to_s ] }
       .to_h
     @viewing_own_storefront = Current.user.present? && Current.user.owned_account&.id == @storefront.id
     @draft_count = @viewing_own_storefront ? @storefront.recipes.kept.saleable.where(is_published: false).count : 0
