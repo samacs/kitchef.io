@@ -23,6 +23,7 @@
 #
 # Indexes
 #
+#  idx_ingredients_name_trgm                                     (name) USING gin
 #  index_ingredients_on_account_id                               (account_id)
 #  index_ingredients_on_account_id_and_category_id_and_position  (account_id,category_id,position)
 #  index_ingredients_on_account_id_and_name                      (account_id,name)
@@ -38,6 +39,9 @@ class Ingredient < ApplicationRecord
   include AccountScoped
   include HasPrefixedId.new(prefix: "ing")
   include HasSoftDelete
+  include Searchable
+
+  searchable_on :name
 
   has_paper_trail
   positioned on: [ :account, :category_id ]
