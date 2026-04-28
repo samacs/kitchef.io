@@ -2,93 +2,53 @@
 <% content_for :page_title, t("dashboard.title") %>
 <% content_for :page_subtitle, t("dashboard.subtitle") %>
 
-<% if total_count.zero? %>
+<% if @recipe_count.zero? %>
   <%= render Recipes::EmptyStateComponent.new(
         headline_key: "dashboard.empty_state.headline",
         sub_key:      "dashboard.empty_state.sub",
         cta_label_key: "dashboard.empty_state.cta",
         cta_href: new_recipe_path) %>
 <% else %>
-  <section class="mb-10 max-w-[720px]">
-    <%= render Dashboards::WeeklySnapshotComponent.new(account: Current.account) %>
-  </section>
+  <%# Bento grid: 3 columns on large screens, 2 on medium, stacked on mobile.
+      Cards claim space based on content density — not uniform boxes. %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
 
-  <% if today_count.positive? %>
-    <section class="flex flex-col gap-4 mb-10">
-      <div class="flex flex-col gap-2">
-        <%= render Ui::KickerComponent.new(text: t("dashboard.today_orders.kicker")) %>
-        <div class="flex items-end justify-between gap-3 flex-wrap">
-          <h2 class="font-serif text-[26px] leading-[1.1] tracking-[-0.01em] text-ink">
-            <%= t("dashboard.today_orders.title") %>
-          </h2>
-          <div class="flex items-center gap-4">
-            <span class="font-mono text-[13px] text-muted">
-              <%= t("dashboard.today_orders.stat", count: today_count) %>
-            </span>
-            <%= link_to t("dashboard.today_orders.see_all"),
-                  orders_path,
-                  class: "text-[13px] font-medium text-accent hover:underline" %>
-          </div>
-        </div>
-      </div>
+    <%# Row 1: Summary · Today · Upcoming work %>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <% today_orders.each do |order| %>
-          <article class="flex flex-col gap-2 p-4 rounded-card bg-surface border border-line shadow-card">
-            <header class="flex items-start justify-between gap-3">
-              <span class="font-serif text-[16px] leading-[1.2] text-ink truncate">
-                <%= order.client&.name.presence || t("dashboard.today_orders.empty_client") %>
-              </span>
-              <%= render Orders::StateBadgeComponent.new(state: order.state) %>
-            </header>
-            <div class="flex items-center justify-between gap-3">
-              <span class="font-mono text-[12px] text-muted uppercase tracking-[0.14em]">
-                <% if order.delivery_start_time.present? %>
-                  <%= order.delivery_start_time_hhmm %><% if order.delivery_end_time.present? %>–<%= order.delivery_end_time_hhmm %><% end %>
-                <% else %>
-                  <%= t("order.delivery_types.#{order.delivery_type}") %>
-                <% end %>
-              </span>
-              <span class="font-mono text-[14px] font-medium text-ink">
-                <%= humanized_money_with_symbol(order.total) %>
-              </span>
-            </div>
-          </article>
-        <% end %>
-      </div>
-    </section>
-  <% end %>
-
-  <section class="flex flex-col gap-5">
-    <div class="flex flex-col gap-2">
-      <%= render Ui::KickerComponent.new(text: t("dashboard.menu_section.kicker")) %>
-      <div class="flex items-end justify-between gap-3 flex-wrap">
-        <h2 class="font-serif text-[26px] leading-[1.1] tracking-[-0.01em] text-ink">
-          <%= t("dashboard.menu_section.title") %>
-        </h2>
-        <div class="flex items-center gap-4">
-          <span class="font-mono text-[13px] text-muted">
-            <%= t("dashboard.menu_section.stat", count: total_count) %>
-          </span>
-          <%= link_to t("dashboard.menu_section.see_all"),
-                recipes_path,
-                class: "text-[13px] font-medium text-accent hover:underline" %>
-        </div>
-      </div>
+    <%# Weekly snapshot — tall, medium-width (revenue, margin, comparison, net profit) %>
+    <div class="md:col-span-1">
+      <%= render Dashboards::WeeklySnapshotComponent.new(account: @account) %>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <% recipes.each do |item| %>
-        <%= render Recipes::CardComponent.new(recipe: item) %>
-      <% end %>
+    <%# Today — compact date + state badges. On medium screens shares
+        the row with the snapshot; on large screens gets its own narrow column. %>
+    <div class="md:col-span-1 lg:col-span-1">
+      <%= render Dashboards::TodayCardComponent.new(plan: @today_plan, today: @today) %>
     </div>
 
-    <div class="flex justify-center pt-2">
-      <%= render Ui::ButtonComponent.new(
-            label: t("dashboard.menu_section.cta"),
-            variant: :primary,
-            icon: :plus,
-            href: new_recipe_path) %>
+    <%# Upcoming work — tall list of recipes/ingredients + alerts.
+        On medium screens drops to its own row spanning full width;
+        on large screens fills the 3rd column alongside the first two. %>
+    <div class="md:col-span-2 lg:col-span-1">
+      <%= render Dashboards::UpcomingWorkComponent.new(
+            account: @account,
+            weekly_list: @weekly_list,
+            low_stock_ingredients: @low_stock_ingredients || []) %>
     </div>
-  </section>
+
+    <%# Row 2: Recent orders (wide) · Menu health (compact) %>
+
+    <%# Recent orders — needs horizontal space for name + badge + price columns %>
+    <div class="md:col-span-2 lg:col-span-2">
+      <%= render Dashboards::RecentOrdersComponent.new(orders: @recent_orders) %>
+    </div>
+
+    <%# Menu health — compact: counts + top sellers %>
+    <div class="md:col-span-2 lg:col-span-1">
+      <%= render Dashboards::MenuHealthComponent.new(
+            account: @account,
+            published_count: @published_count,
+            draft_count: @draft_count) %>
+    </div>
+  </div>
 <% end %>
