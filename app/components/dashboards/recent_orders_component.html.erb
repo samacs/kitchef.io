@@ -1,0 +1,42 @@
+<div class="p-5 rounded-card bg-surface border border-line shadow-card h-full flex flex-col gap-3">
+  <div class="flex items-start justify-between gap-3">
+    <%= render Ui::KickerComponent.new(text: t("dashboard.recent_orders.kicker")) %>
+    <%= link_to orders_path,
+          class: "font-mono text-[12px] font-medium text-accent whitespace-nowrap pt-1 no-underline hover:underline" do %>
+      <%= t("dashboard.recent_orders.see_all") %> <span aria-hidden="true">&rarr;</span>
+    <% end %>
+  </div>
+
+  <h3 class="font-serif text-[20px] leading-[1.2] text-ink">
+    <%= t("dashboard.recent_orders.title") %>
+  </h3>
+
+  <% if empty? %>
+    <p class="text-[13.5px] text-muted flex-1">
+      <%= t("dashboard.recent_orders.empty") %>
+    </p>
+  <% else %>
+    <ul class="flex flex-col divide-y divide-line flex-1">
+      <% orders.each do |order| %>
+        <li class="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <span class="text-[13.5px] text-ink font-medium truncate">
+                <%= order.client&.name.presence || t("dashboard.recent_orders.anonymous") %>
+              </span>
+              <span class="font-mono text-[11px] text-muted">
+                <%= helpers.time_ago_in_words(order.created_at) %>
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2.5 shrink-0">
+            <%= render Orders::StateBadgeComponent.new(state: order.state) %>
+            <span class="font-mono text-[13px] text-ink tabular-nums font-medium">
+              <%= helpers.humanized_money_with_symbol(order.total) %>
+            </span>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

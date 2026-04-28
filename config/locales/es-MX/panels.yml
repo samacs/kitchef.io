@@ -33,6 +33,46 @@ es-MX:
         other: "%{count} pedidos para hoy"
       see_all: "Ver todos"
       empty_client: "Cliente eliminado"
+    today_card:
+      kicker: "Hoy"
+      see_all: "Producción"
+      empty: "Sin pedidos para hoy. Descansa o prepara el de mañana."
+      total:
+        one: "%{count} pedido"
+        other: "%{count} pedidos"
+      placed: "por confirmar"
+      confirmed: "confirmados"
+      cooking: "en cocina"
+      ready: "listos"
+      delivered: "entregados"
+    upcoming_work:
+      kicker: "Próximos 7 días"
+      kicker_pro: "Lista de compras"
+      title: "Qué preparar"
+      title_pro: "Qué comprar"
+      see_all: "Ver plan"
+      empty: "Sin pedidos confirmados para los próximos siete días."
+      more: "más"
+      estimated_cost: "Costo estimado"
+      low_stock: "stock bajo"
+      more_alerts: "alertas más"
+    recent_orders:
+      kicker: "Movimientos"
+      title: "Últimos pedidos"
+      see_all: "Ver todos"
+      empty: "Aún no hay pedidos."
+      anonymous: "Cliente"
+    menu_health:
+      kicker: "Tu menú"
+      title: "Tu recetario"
+      see_all: "Ver todos"
+      published:
+        one: "%{count} publicado"
+        other: "%{count} publicados"
+      drafts:
+        one: "%{count} borrador"
+        other: "%{count} borradores"
+      top_sellers_label: "Más pedidos esta semana"
     empty_state:
       headline: "Empieza por tu primer platillo"
       sub: "Agrega tu platillo estrella con foto y precio. Luego súmale los demás y arma tu menú en minutos."
