@@ -23,7 +23,7 @@
             aria-pressed="<%= default_period == :yearly %>"
             class="kc-pricing-toggle inline-flex items-center gap-1.5 px-4 py-1.5 rounded-pill text-[12.5px] font-medium transition-colors">
       <%= t("marketing.pricing_cards.toggle.yearly") %>
-      <span class="font-mono text-[10.5px] uppercase tracking-[0.06em] text-accent">
+      <span class="kc-pricing-toggle-chip font-mono text-[10.5px] uppercase tracking-[0.06em]">
         <%= t("marketing.pricing_cards.toggle.savings_chip") %>
       </span>
     </button>
@@ -90,7 +90,7 @@
              data-yearly="<%= pro[:yearly][:billed_note] %>">
           <%= pro[default_period][:billed_note] %>
         </div>
-        <div class="<%= "hidden" unless default_period == :yearly %> inline-flex items-center gap-1.5 mt-1 self-start"
+        <div class="kc-savings-badge <%= "hidden" unless default_period == :yearly %> items-center gap-1.5 mt-1 self-start"
              data-pricing-toggle-target="savingsBadge">
           <span class="font-mono text-[10.5px] uppercase tracking-[0.08em] px-2 py-px rounded-pill bg-accent/15 text-accent-2 dark:text-accent">
             <%= t("marketing.pricing_cards.pro.savings_badge", pct: catalog.yearly_savings_pct) %>
