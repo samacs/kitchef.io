@@ -1,0 +1,55 @@
+<%= turbo_frame_tag "search_results" do %>
+  <% if @term.blank? %>
+    <div class="py-12 text-center">
+      <h2 class="font-serif text-[22px] text-ink"><%= t("search.show.empty.title") %></h2>
+      <p class="text-[13px] text-muted mt-1"><%= t("search.show.empty.hint") %></p>
+    </div>
+
+  <% elsif @result.groups.empty? %>
+    <p class="text-[13px] text-muted leading-[1.5] py-8 text-center bg-surface border border-line rounded-panel">
+      <%= t("search.show.no_results", term: @term) %>
+    </p>
+
+  <% else %>
+    <% total = @result.groups.sum { |g| g.items.size } %>
+    <p class="font-mono text-[12px] text-muted uppercase tracking-[0.14em]">
+      <%= t("search.show.count", count: total) %>
+    </p>
+
+    <div class="flex flex-col gap-5">
+      <% @result.groups.each do |group| %>
+        <section>
+          <h3 class="font-mono text-[11.5px] text-muted uppercase tracking-[0.14em] mb-2">
+            <%= t("search.show.groups.#{group.kind}") %>
+          </h3>
+
+          <div class="bg-surface border border-line rounded-panel shadow-card overflow-hidden divide-y divide-line">
+            <% group.items.each do |item| %>
+              <%= link_to search_result_path(group.kind, item.record),
+                    class: "flex items-center gap-3 px-4 py-3 hover:bg-bg-2/40 transition-colors group" do %>
+                <span class="shrink-0 w-8 h-8 rounded-full bg-bg-2 flex items-center justify-center text-muted group-hover:text-accent transition-colors">
+                  <%= icon(search_result_icon(group.kind), size: :xs) %>
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-[14px] font-semibold text-ink truncate"><%= item.title %></span>
+                  <% if item.subtitle.present? %>
+                    <span class="block text-[12px] text-muted truncate"><%= item.subtitle %></span>
+                  <% end %>
+                </span>
+                <% if group.kind == :orders %>
+                  <span class="shrink-0">
+                    <%= render Orders::StateBadgeComponent.new(state: item.record.state) %>
+                  </span>
+                <% elsif group.kind == :recipes && item.record.is_saleable? %>
+                  <span class="shrink-0 font-mono text-[13px] text-ink">
+                    <%= humanized_money_with_symbol(item.record.sale_price) %>
+                  </span>
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>

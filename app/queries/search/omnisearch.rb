@@ -39,7 +39,8 @@ class Search::Omnisearch < ApplicationQuery
 
   def search_orders
     q = term.downcase.strip
-    sanitized = Order.connection.quote("%#{q}%")
+    escaped = q.gsub("%", "\\%").gsub("_", "\\_")
+    sanitized = Order.connection.quote("%#{escaped}%")
 
     orders = account.orders.kept
       .left_joins(:client)

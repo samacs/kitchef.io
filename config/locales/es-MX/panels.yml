@@ -86,6 +86,25 @@ es-MX:
       label: "Panel de edición"
       close: "Cerrar panel"
 
+  search:
+    show:
+      title: "Buscar"
+      subtitle: "Pedidos, clientes, recetas e ingredientes"
+      placeholder: "Busca pedidos, clientes, recetas…"
+      kbd_hint: "⌘K"
+      groups:
+        orders: "Pedidos"
+        clients: "Clientes"
+        recipes: "Recetas"
+        ingredients: "Ingredientes"
+      empty:
+        title: "¿Qué buscas?"
+        hint: "Escribe el nombre, teléfono o folio de pedido."
+      no_results: "No encontramos nada con \"%{term}\". Prueba con menos letras."
+      count:
+        one: "%{count} resultado"
+        other: "%{count} resultados"
+
   orders:
     title: "Pedidos"
     index:

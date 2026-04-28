@@ -288,6 +288,10 @@ Rails.application.routes.draw do
          as: :portal
   end
 
+  # Global omnisearch — the command palette hits this endpoint with a
+  # Turbo Frame request; the full-page fallback is shareable/bookmarkable.
+  get "/search", to: "search#show", as: :search
+
   resources :notifications, only: %i[index] do
     member do
       post :mark_read, path: "mark-read"
