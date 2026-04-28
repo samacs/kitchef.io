@@ -18,7 +18,7 @@
   qty: row.display_qty,
   unit: row.unit
 ) : nil %>
-<li class="kc-print-row flex items-start gap-4 px-4 py-4 print:gap-2 print:px-0 print:py-[3px] <%= marked ? 'bg-accent-soft/30' : '' %>">
+<li class="kc-print-row flex items-start gap-4 px-4 py-4 print:gap-2 print:px-0 print:py-[3px] <%= marked ? 'bg-accent-soft/30' : '' %> <%= row.all_done && !marked ? 'opacity-60' : '' %>">
   <% if marked %>
     <span class="mt-[3px] inline-flex items-center justify-center w-5 h-5 rounded-sm bg-accent text-bg shrink-0 print:w-[11px] print:h-[11px] print:mt-[4px] print:bg-white print:border print:border-[#555]" aria-hidden="true">
       <%= icon(:check, size: :xs) %>
@@ -43,6 +43,12 @@
         <% if last_supplier %>
           <span class="text-ink-2">· <%= last_supplier %></span>
         <% end %>
+      </p>
+    <% end %>
+
+    <% if row.all_done && !marked %>
+      <p class="text-[12px] text-accent leading-[1.4] print:hidden">
+        <%= t("production.shopping_list.already_done") %>
       </p>
     <% end %>
 

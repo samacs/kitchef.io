@@ -1522,6 +1522,7 @@ es-MX:
       window: "Del %{from} al %{to}"
       print_cta: "Imprimir"
       back_cta: "Volver a producción"
+      already_done: "Ya cocinado y entregado"
       decomposition_nudge: "Cuando decompongas tus recetas en ingredientes, esta lista baja al nivel de ingrediente."
       empty:
         headline: "Aún no hay qué comprar"

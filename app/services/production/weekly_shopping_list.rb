@@ -14,13 +14,15 @@ module Production
   # the operator's decision and would poison the list with speculative
   # purchases.
   class WeeklyShoppingList < ApplicationService
-    ShoppingRow = Data.define(:recipe, :recipe_name, :total_qty, :unit, :prep_notes) do
+    DONE_STATES = %w[ready en_route delivered].freeze
+
+    ShoppingRow = Data.define(:recipe, :recipe_name, :total_qty, :unit, :prep_notes, :all_done) do
       def display_qty
         WeeklyShoppingList.format_quantity(total_qty)
       end
     end
 
-    IngredientRow = Data.define(:ingredient, :ingredient_name, :category, :total_qty, :unit, :source_recipes) do
+    IngredientRow = Data.define(:ingredient, :ingredient_name, :category, :total_qty, :unit, :source_recipes, :all_done) do
       def display_qty
         WeeklyShoppingList.format_quantity(total_qty)
       end
@@ -68,7 +70,7 @@ module Production
     private
 
     def aggregate_recipes(orders)
-      buckets = Hash.new { |h, k| h[k] = { recipe: nil, total: BigDecimal("0"), notes: [] } }
+      buckets = Hash.new { |h, k| h[k] = { recipe: nil, total: BigDecimal("0"), notes: [], has_pending: false } }
 
       orders.each do |order|
         order.items.each do |item|
@@ -78,6 +80,7 @@ module Production
           bucket[:recipe] ||= item.recipe
           bucket[:total]  += BigDecimal(item.quantity.to_s)
           bucket[:notes] << item.notes.strip if item.notes.present?
+          bucket[:has_pending] = true unless DONE_STATES.include?(order.state)
         end
       end
 
@@ -89,7 +92,8 @@ module Production
             recipe_name: b[:recipe].name,
             total_qty:   b[:total],
             unit:        b[:recipe].yield_unit,
-            prep_notes:  b[:notes]
+            prep_notes:  b[:notes],
+            all_done:    !b[:has_pending]
           )
         end
     end
@@ -102,12 +106,13 @@ module Production
       buckets = {}
 
       orders.each do |order|
+        done = DONE_STATES.include?(order.state)
         order.items.each do |item|
           recipe = item.recipe
           next unless recipe
 
           qty_factor = BigDecimal(item.quantity.to_s)
-          expand_recipe(recipe, qty_factor, buckets, source_recipe: recipe)
+          expand_recipe(recipe, qty_factor, buckets, source_recipe: recipe, order_done: done)
         end
       end
 
@@ -120,7 +125,8 @@ module Production
             category:        b[:ingredient].category,
             total_qty:       b[:total],
             unit:            b[:ingredient].unit,
-            source_recipes:  b[:sources].uniq.compact
+            source_recipes:  b[:sources].uniq.compact,
+            all_done:        !b[:has_pending]
           )
         end
     end
@@ -128,16 +134,16 @@ module Production
     # Recursive expansion. `factor` is how many units of the enclosing
     # recipe we need (1 for the outermost order item; fractional for
     # internal sub-recipes scaled by their yield).
-    def expand_recipe(recipe, factor, buckets, source_recipe:)
+    def expand_recipe(recipe, factor, buckets, source_recipe:, order_done: false)
       recipe.components.includes(:componentable).each do |component|
         case component.componentable
-        when Ingredient then accumulate_ingredient(component, factor, buckets, source_recipe: source_recipe)
-        when Recipe     then accumulate_recipe(component, factor, buckets, source_recipe: source_recipe)
+        when Ingredient then accumulate_ingredient(component, factor, buckets, source_recipe: source_recipe, order_done: order_done)
+        when Recipe     then accumulate_recipe(component, factor, buckets, source_recipe: source_recipe, order_done: order_done)
         end
       end
     end
 
-    def accumulate_ingredient(component, factor, buckets, source_recipe:)
+    def accumulate_ingredient(component, factor, buckets, source_recipe:, order_done: false)
       ing = component.componentable
       qty_in_canonical =
         begin
@@ -146,12 +152,13 @@ module Production
           BigDecimal("0")
         end
 
-      bucket = (buckets[ing.id] ||= { ingredient: ing, total: BigDecimal("0"), sources: [] })
+      bucket = (buckets[ing.id] ||= { ingredient: ing, total: BigDecimal("0"), sources: [], has_pending: false })
       bucket[:total] += qty_in_canonical * factor
       bucket[:sources] << source_recipe.name
+      bucket[:has_pending] = true unless order_done
     end
 
-    def accumulate_recipe(component, factor, buckets, source_recipe:)
+    def accumulate_recipe(component, factor, buckets, source_recipe:, order_done: false)
       child = component.componentable
       return if child.yield_quantity.to_d.zero?
 
@@ -163,7 +170,7 @@ module Production
         end
       scaled_factor = factor * (qty_in_child_yield / BigDecimal(child.yield_quantity.to_s))
 
-      expand_recipe(child, scaled_factor, buckets, source_recipe: source_recipe)
+      expand_recipe(child, scaled_factor, buckets, source_recipe: source_recipe, order_done: order_done)
     end
   end
 end
