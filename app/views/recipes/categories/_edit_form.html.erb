@@ -1,0 +1,61 @@
+<%# Inline rename form — replaces the row via Turbo Frame when the
+    operator clicks the pencil icon. Submitting swaps back to the
+    read-only row partial. %>
+<%= turbo_frame_tag dom_id(category) do %>
+  <% visible_in_menu = category.recipes.kept.where(is_saleable: true, is_published: true).exists? %>
+  <div id="<%= dom_id(category) %>_form"
+       class="<%= visible_in_menu ? 'border-l-[3px] border-l-accent' : 'border-l-[3px] border-l-transparent' %> flex items-center gap-4 px-5 py-2.5 border-b border-line last:border-b-0 bg-accent-soft/30">
+
+    <%# Drag handle placeholder (disabled during edit) %>
+    <div class="w-8 flex justify-center">
+      <span class="text-muted/30" aria-hidden="true">
+        <%= icon(:grip_vertical, size: :md) %>
+      </span>
+    </div>
+
+    <%# Position number %>
+    <div class="w-8 text-center">
+      <span class="font-mono text-[13px] font-medium text-muted tabular-nums">
+        <%= category.position.to_i + 1 %>
+      </span>
+    </div>
+
+    <%# Inline form %>
+    <div class="flex-1 min-w-0">
+      <%= form_with model: category,
+            url: recipes_category_path(category),
+            method: :patch,
+            class: "flex items-center gap-2",
+            data: { turbo_frame: dom_id(category) } do |f| %>
+        <%= f.text_field :name,
+              class: "flex-1 min-w-0 bg-surface text-ink text-[14.5px] font-medium border border-line rounded-input px-3 py-1.5 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-[border-color,box-shadow]",
+              maxlength: 60,
+              autofocus: true,
+              data: { action: "keydown.esc->turbo#clearCache" } %>
+
+        <% if category.errors[:name].any? %>
+          <span class="text-[12px] text-err font-medium shrink-0">
+            <%= category.errors[:name].first %>
+          </span>
+        <% end %>
+
+        <button type="submit"
+                class="inline-flex items-center justify-center shrink-0 w-8 h-8 rounded-input bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors"
+                aria-label="<%= t("recipes.categories.edit_form.save") %>">
+          <%= icon(:check, size: :sm) %>
+        </button>
+        <%= link_to recipes_categories_path,
+              class: "inline-flex items-center justify-center shrink-0 w-8 h-8 rounded-input text-muted border border-line hover:text-ink hover:border-line-2 transition-colors",
+              data: { turbo_frame: dom_id(category) },
+              aria: { label: t("recipes.categories.edit_form.cancel") } do %>
+          <%= icon(:x, size: :sm) %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# Spacers match the row columns on wider screens %>
+    <div class="hidden sm:block w-28 shrink-0"></div>
+    <div class="hidden md:block w-36 shrink-0"></div>
+    <div class="hidden sm:block w-20 shrink-0"></div>
+  </div>
+<% end %>

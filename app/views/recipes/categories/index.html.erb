@@ -1,0 +1,82 @@
+<% content_for :title, t("recipes.categories.index.title") %>
+<% content_for :page_title, t("recipes.categories.index.title") %>
+<% content_for :page_subtitle, t("recipes.categories.index.subtitle") %>
+
+<% content_for :page_action do %>
+  <%= link_to recipes_path,
+        class: "inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3 py-[8px] rounded-button bg-bg-2 text-ink-2 border border-line hover:border-line-2 hover:text-ink transition-colors" do %>
+    <%= icon(:arrow_left, size: :xs) %>
+    <span><%= t("recipes.categories.index.back") %></span>
+  <% end %>
+<% end %>
+
+<% if @categories.empty? %>
+  <div class="rounded-card border border-dashed border-line bg-surface px-6 py-16 text-center shadow-card">
+    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+      <%= icon(:layout_list, size: :lg) %>
+    </div>
+    <h2 class="mt-4 font-serif text-[20px] text-ink">
+      <%= t("recipes.categories.index.empty_title") %>
+    </h2>
+    <p class="mt-2 text-[13px] text-muted max-w-[36ch] mx-auto">
+      <%= t("recipes.categories.index.empty_body") %>
+    </p>
+  </div>
+<% else %>
+  <%# Explainer card — helps the operator understand what this page does %>
+  <div class="mb-6 flex items-start gap-3 rounded-card-sm border border-line bg-surface px-5 py-4 shadow-card">
+    <span class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full bg-accent-soft text-accent shrink-0 mt-0.5">
+      <%= icon(:grip_vertical, size: :sm) %>
+    </span>
+    <div class="min-w-0 flex flex-col gap-1">
+      <div class="text-[14px] font-semibold text-ink">
+        <%= t("recipes.categories.index.hint_title") %>
+      </div>
+      <div class="text-[12.5px] text-ink-2 max-w-prose">
+        <%= t("recipes.categories.index.hint_body") %>
+      </div>
+    </div>
+  </div>
+
+  <%# Sortable category list %>
+  <div class="rounded-card border border-line bg-surface shadow-card overflow-hidden"
+       data-controller="category-sort"
+       data-category-sort-url-value="<%= reorder_recipes_categories_path %>">
+
+    <%# Header %>
+    <div class="flex items-center gap-4 px-5 py-3 border-b border-line bg-bg-2/40">
+      <div class="w-8"></div>
+      <div class="w-8 text-center">
+        <span class="font-mono text-[11px] text-muted uppercase tracking-[0.12em]">#</span>
+      </div>
+      <div class="flex-1 min-w-0">
+        <span class="text-[12px] font-medium text-muted uppercase tracking-[0.08em]">
+          <%= t("recipes.categories.index.col_name") %>
+        </span>
+      </div>
+      <div class="hidden sm:block w-28 text-right">
+        <span class="text-[12px] font-medium text-muted uppercase tracking-[0.08em]">
+          <%= t("recipes.categories.index.col_recipes") %>
+        </span>
+      </div>
+      <div class="hidden md:block w-36 text-right">
+        <span class="text-[12px] font-medium text-muted uppercase tracking-[0.08em]">
+          <%= t("recipes.categories.index.col_status") %>
+        </span>
+      </div>
+      <div class="w-20"></div>
+    </div>
+
+    <%# Rows %>
+    <div data-category-sort-target="list" role="list">
+      <% @categories.each_with_index do |category, idx| %>
+        <%= render "recipes/categories/row", category: category, position: idx + 1 %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Footer context %>
+  <p class="mt-4 text-[12px] text-muted text-center">
+    <%= t("recipes.categories.index.footer_hint") %>
+  </p>
+<% end %>

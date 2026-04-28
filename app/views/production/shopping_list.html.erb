@@ -1,6 +1,12 @@
-<% content_for :title, t("production.shopping_list.title") %>
-<% content_for :page_title, t("production.shopping_list.title") %>
-<% content_for :page_subtitle, t("production.shopping_list.subtitle") %>
+<% if @list.advanced? %>
+  <% content_for :title, t("production.shopping_list.title") %>
+  <% content_for :page_title, t("production.shopping_list.title") %>
+  <% content_for :page_subtitle, t("production.shopping_list.subtitle") %>
+<% else %>
+  <% content_for :title, t("production.shopping_list.simple.title") %>
+  <% content_for :page_title, t("production.shopping_list.simple.title") %>
+  <% content_for :page_subtitle, t("production.shopping_list.simple.subtitle") %>
+<% end %>
 
 <% content_for :page_action do %>
   <%= link_to production_path,
@@ -33,10 +39,10 @@
   <section class="mb-6 flex items-baseline justify-between gap-3 print:mb-3 print:gap-2">
     <div class="flex flex-col gap-1 print:gap-0">
       <span class="font-mono text-[11px] uppercase tracking-[0.18em] text-muted print:hidden">
-        <%= t("production.shopping_list.kicker") %>
+        <%= @list.advanced? ? t("production.shopping_list.kicker") : t("production.shopping_list.simple.kicker") %>
       </span>
       <h1 class="font-serif text-[28px] leading-[1.1] text-ink tracking-tight print:text-[16px] print:font-sans print:font-semibold print:leading-tight">
-        <%= t("production.shopping_list.headline") %>
+        <%= @list.advanced? ? t("production.shopping_list.headline") : t("production.shopping_list.simple.headline") %>
         <span class="hidden print:inline font-normal text-ink-2 font-mono text-[10.5px] ml-2">
           · <%= t("production.shopping_list.window", from: l(@list.starting, format: :short), to: l(@list.ending, format: :short)) %>
         </span>

@@ -3,9 +3,16 @@ module Production
   # non-canceled pedido on a given day. Notes roll up as a muted sub-line
   # so the operator doesn't have to click into each pedido to find the
   # "sin cilantro" requests.
+  #
+  # State-aware: each row shows a breakdown of waiting / cooking / done
+  # quantities. Rows where every quantity is in a "done" state collapse
+  # under a summary so the operator focuses on actual remaining work.
   class CookListComponent < ApplicationComponent
     option :plan     # Production::DailyPlan::Result
     option :on_date
+
+    def active_rows  = plan.active_cook_list
+    def done_rows    = plan.done_cook_list
 
     def empty?
       plan.cook_list.empty?

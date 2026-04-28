@@ -11,15 +11,36 @@ module Production
   # against the recipe dependency graph (ingredient-level rollups) without
   # changing this call signature.
   class DailyPlan < ApplicationService
-    CookRow = Data.define(:recipe, :recipe_name, :total_qty, :unit, :notes_roll_up) do
+    DONE_STATES = %w[ready en_route delivered].freeze
+
+    CookRow = Data.define(:recipe, :recipe_name, :total_qty, :unit, :notes_roll_up, :state_breakdown) do
       def display_qty
         formatted = total_qty.to_s("F").sub(/\.0+\z/, "").sub(/(\.\d*?)0+\z/, '\1')
         formatted.presence || total_qty.to_s
+      end
+
+      def done?
+        state_breakdown.except(*DONE_STATES).values.none?(&:positive?)
+      end
+
+      def waiting_qty
+        (state_breakdown.fetch("placed", 0) + state_breakdown.fetch("confirmed", 0))
+      end
+
+      def cooking_qty
+        state_breakdown.fetch("in_production", 0)
+      end
+
+      def done_qty
+        DONE_STATES.sum { |s| state_breakdown.fetch(s, 0) }
       end
     end
 
     Result = Data.define(:date, :cook_list, :handoffs, :counts) do
       def empty? = cook_list.empty? && handoffs.empty?
+
+      def active_cook_list = cook_list.reject(&:done?)
+      def done_cook_list   = cook_list.select(&:done?)
     end
 
     option :account
@@ -48,7 +69,9 @@ module Production
     private
 
     def build_cook_list(orders)
-      buckets = Hash.new { |h, k| h[k] = { recipe: nil, total: BigDecimal("0"), notes: [] } }
+      buckets = Hash.new do |h, k|
+        h[k] = { recipe: nil, total: BigDecimal("0"), notes: [], states: Hash.new(BigDecimal("0")) }
+      end
 
       orders.each do |order|
         order.items.each do |item|
@@ -56,7 +79,9 @@ module Production
 
           bucket = buckets[item.recipe.id]
           bucket[:recipe] ||= item.recipe
-          bucket[:total]  += BigDecimal(item.quantity.to_s)
+          qty = BigDecimal(item.quantity.to_s)
+          bucket[:total]  += qty
+          bucket[:states][order.state] += qty
           if item.notes.present?
             client_label = order.client&.name.presence || I18n.t("production.cook_list.anonymous_client")
             bucket[:notes] << "#{client_label}: #{item.notes.strip}"
@@ -68,11 +93,12 @@ module Production
         .sort_by { |b| [ -b[:total], b[:recipe].name.to_s.downcase ] }
         .map do |b|
           CookRow.new(
-            recipe:         b[:recipe],
-            recipe_name:    b[:recipe].name,
-            total_qty:      b[:total],
-            unit:           b[:recipe].yield_unit,
-            notes_roll_up:  b[:notes]
+            recipe:          b[:recipe],
+            recipe_name:     b[:recipe].name,
+            total_qty:       b[:total],
+            unit:            b[:recipe].yield_unit,
+            notes_roll_up:   b[:notes],
+            state_breakdown: b[:states]
           )
         end
     end

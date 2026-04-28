@@ -60,7 +60,16 @@ class ProductionController < AuthenticatedController
     end
 
     notice = bulk_flash_message(succeeded: succeeded, failed: failed, event: :start_production)
-    redirect_to production_path(on: on.to_s), notice: notice
+    respond_to do |format|
+      format.turbo_stream do
+        flash.now[:notice] = notice
+        render turbo_stream: [
+          turbo_stream.refresh(request_id: SecureRandom.uuid),
+          turbo_stream.append("flash-region", partial: "shared/flash_region")
+        ]
+      end
+      format.html { redirect_to production_path(on: on.to_s), notice: notice }
+    end
   end
 
   private

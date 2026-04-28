@@ -323,6 +323,25 @@ has_many :ingredients,    dependent: :destroy
 - Broadcast model changes via Turbo Streams to the operator's dashboard.
 - `Order` broadcasts **two** channels: `[account, :orders]` for the operator kanban AND `[order, :status]` for the customer's per-order status page. The customer page subscribes via `<turbo-stream-from>` on the narrower channel so they never see unrelated orders from the same kitchen.
 
+### Real-time re-render on operational surfaces
+
+State-changing actions on operational surfaces (`/production`, `/orders`, future KDS) must re-render affected DOM immediately via Turbo Streams — not just flash a message and redirect. Pattern:
+
+```ruby
+respond_to do |format|
+  format.turbo_stream do
+    flash.now[:notice] = notice
+    render turbo_stream: [
+      turbo_stream.refresh(request_id: SecureRandom.uuid),
+      turbo_stream.append("flash-region", partial: "shared/flash_region")
+    ]
+  end
+  format.html { redirect_to fallback_path, notice: notice }
+end
+```
+
+The `request_id: SecureRandom.uuid` override forces the morph-refresh on the submitting tab (see `DrawerResponder` for the reasoning). The HTML fallback covers non-Turbo clients. Adopt this pattern for every bulk action, state transition, and inline update on operational pages.
+
 ### **Every controller action that a Turbo-driven form redirects to must return HTML.**
 
 Turbo Drive follows 302 redirects after `form_with` submissions and expects an HTML body to replace the DOM. If the target returns `text/plain` (e.g. `render plain: "..."`), Turbo silently bails, the URL bar doesn't change, and the sign-in flow looks broken. Use `render_stub(title: ...)` (defined on `ApplicationController`) for placeholders — it returns `text/html` from the shared `app/views/shared/stub.html.erb` template.

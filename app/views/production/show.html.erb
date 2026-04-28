@@ -3,10 +3,18 @@
 <% content_for :page_subtitle, t("production.show.subtitle") %>
 
 <% content_for :page_action do %>
-  <%= link_to production_shopping_list_path,
-        class: "inline-flex items-center gap-2 text-[13px] font-medium px-3.5 py-[8px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
-    <%= icon(:shopping_cart, size: :xs) %>
-    <span><%= t("production.show.shopping_list_cta") %></span>
+  <% if Current.account.composable_recipes? %>
+    <%= link_to production_shopping_list_path,
+          class: "inline-flex items-center gap-2 text-[13px] font-medium px-3.5 py-[8px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
+      <%= icon(:shopping_cart, size: :xs) %>
+      <span><%= t("production.show.shopping_list_cta") %></span>
+    <% end %>
+  <% else %>
+    <%= link_to production_shopping_list_path,
+          class: "inline-flex items-center gap-2 text-[13px] font-medium px-3.5 py-[8px] rounded-button bg-transparent text-ink-2 border border-line hover:border-line-2 transition-colors" do %>
+      <%= icon(:calendar_range, size: :xs) %>
+      <span><%= t("production.show.weekly_plan_cta") %></span>
+    <% end %>
   <% end %>
 <% end %>
 

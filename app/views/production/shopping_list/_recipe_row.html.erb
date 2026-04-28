@@ -1,12 +1,23 @@
-<li class="kc-print-row flex items-start gap-4 px-4 py-4 print:gap-2 print:px-0 print:py-[3px]">
-  <span class="mt-[3px] inline-block w-5 h-5 rounded-sm border border-ink-2 shrink-0 print:w-[11px] print:h-[11px] print:mt-[4px] print:border-[#555]" aria-hidden="true"></span>
+<li class="kc-print-row flex items-start gap-4 px-4 py-4 print:gap-2 print:px-0 print:py-[3px] <%= 'opacity-60' if row.all_done %>">
+  <% if row.all_done %>
+    <span class="mt-[3px] inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent-soft text-accent shrink-0 print:w-[11px] print:h-[11px] print:mt-[4px]" aria-hidden="true">
+      <%= icon(:check, size: :xs) %>
+    </span>
+  <% else %>
+    <span class="mt-[5px] w-[6px] h-[6px] rounded-full bg-ink/30 shrink-0 print:mt-[6px] print:w-[5px] print:h-[5px]" aria-hidden="true"></span>
+  <% end %>
   <div class="flex-1 flex flex-col gap-1 print:gap-0">
     <div class="flex items-baseline justify-between gap-3 print:gap-2">
-      <span class="text-[17px] text-ink font-medium print:text-[11.5px] print:font-normal"><%= row.recipe_name %></span>
+      <span class="text-[17px] text-ink font-medium print:text-[11.5px] print:font-normal <%= 'line-through decoration-muted/50' if row.all_done %>"><%= row.recipe_name %></span>
       <span class="font-mono text-[14px] text-ink-2 shrink-0 tabular-nums print:text-[11px]">
         <%= row.display_qty %> <%= t("units.#{row.unit}", default: row.unit) %>
       </span>
     </div>
+    <% if row.all_done %>
+      <p class="text-[12px] text-accent leading-[1.4] print:hidden">
+        <%= t("production.shopping_list.already_done") %>
+      </p>
+    <% end %>
     <% unless row.prep_notes.empty? %>
       <p class="text-[12.5px] text-muted leading-[1.4] print:hidden">
         <%= row.prep_notes.uniq.join(" · ") %>

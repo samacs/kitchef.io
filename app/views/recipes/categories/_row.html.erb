@@ -1,0 +1,106 @@
+<%# A single category row in the sortable list. Wrapped in a turbo_frame_tag
+    so inline rename can swap just this row without a full page reload. %>
+<%
+  recipes        = category.recipes.kept
+  total          = recipes.count
+  published_n    = recipes.where(is_saleable: true, is_published: true).count
+  draft_n        = recipes.where(is_saleable: true, is_published: false).count
+  internal_n     = recipes.where(is_saleable: false).count
+  visible_in_menu = published_n.positive?
+%>
+<%= turbo_frame_tag dom_id(category) do %>
+  <div id="<%= dom_id(category) %>_container"
+       class="<%= visible_in_menu ? 'border-l-[3px] border-l-accent' : 'border-l-[3px] border-l-transparent' %> flex items-center gap-4 px-5 py-3.5 border-b border-line last:border-b-0 hover:bg-bg-2/30 transition-colors group"
+       data-category-id="<%= category.id %>"
+       role="listitem">
+
+    <%# Drag handle %>
+    <div class="w-8 flex justify-center" data-sort-handle>
+      <span class="cursor-grab active:cursor-grabbing text-muted/60 group-hover:text-muted transition-colors touch-manipulation"
+            aria-hidden="true">
+        <%= icon(:grip_vertical, size: :md) %>
+      </span>
+    </div>
+
+    <%# Position number %>
+    <div class="w-8 text-center">
+      <span class="font-mono text-[13px] font-medium text-muted tabular-nums"
+            data-position-label>
+        <%= local_assigns[:position] || category.position.to_i + 1 %>
+      </span>
+    </div>
+
+    <%# Category name + visibility hint %>
+    <div class="flex-1 min-w-0">
+      <span class="text-[14.5px] font-medium text-ink truncate block">
+        <%= category.name %>
+      </span>
+      <% unless visible_in_menu %>
+        <span class="mt-0.5 inline-flex items-center gap-1 text-[11.5px] text-muted">
+          <span class="w-[5px] h-[5px] rounded-full bg-muted/50"></span>
+          <%= t("recipes.categories.row.hidden_from_menu") %>
+        </span>
+      <% end %>
+    </div>
+
+    <%# Recipe count (hidden on mobile) %>
+    <div class="hidden sm:block w-28 text-right">
+      <span class="font-mono text-[13px] text-ink-2 tabular-nums">
+        <%= total %>
+      </span>
+      <span class="text-[12px] text-muted ml-0.5">
+        <%= t("recipes.categories.row.recipe_count", count: total) %>
+      </span>
+    </div>
+
+    <%# Published / draft / internal breakdown (hidden on small screens) %>
+    <div class="hidden md:flex w-36 items-center justify-end gap-1.5">
+      <% if published_n.positive? %>
+        <span class="inline-flex items-center gap-1 px-2 py-[1px] rounded-pill bg-accent-soft text-accent text-[11px] font-medium"
+              title="<%= t("recipes.categories.row.published_tooltip") %>">
+          <span class="w-[5px] h-[5px] rounded-full bg-current"></span>
+          <%= published_n %>
+        </span>
+      <% end %>
+      <% if draft_n.positive? %>
+        <span class="inline-flex items-center gap-1 px-2 py-[1px] rounded-pill bg-bg-2 text-muted border border-line text-[11px] font-medium"
+              title="<%= t("recipes.categories.row.draft_tooltip") %>">
+          <%= draft_n %> <%= t("recipes.categories.row.draft") %>
+        </span>
+      <% end %>
+      <% if internal_n.positive? %>
+        <span class="inline-flex items-center gap-1 px-2 py-[1px] rounded-pill bg-bg-2 text-muted border border-line text-[11px] font-medium"
+              title="<%= t("recipes.categories.row.internal_tooltip") %>">
+          <%= internal_n %> <%= t("recipes.categories.row.internal") %>
+        </span>
+      <% end %>
+    </div>
+
+    <%# Actions %>
+    <div class="w-20 flex items-center justify-end gap-1">
+      <%# Edit (inline rename) %>
+      <%= link_to edit_form_recipes_category_path(category),
+            data: { turbo_frame: dom_id(category) },
+            class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-ink hover:border-line hover:bg-surface transition-colors",
+            aria: { label: t("recipes.categories.row.edit_label") } do %>
+        <%= icon(:pencil, size: :sm) %>
+      <% end %>
+
+      <%# Delete %>
+      <% if category.usage_count.zero? %>
+        <%= button_to recipes_category_path(category),
+              method: :delete,
+              class: "inline-flex items-center justify-center w-8 h-8 rounded-input text-muted border border-transparent hover:text-err hover:border-err/40 hover:bg-err/5 transition-colors",
+              form: { data: { turbo_confirm: t("recipes.categories.row.delete_confirm", name: category.name) } },
+              aria: { label: t("recipes.categories.row.delete_label") } do %>
+          <%= icon(:trash_2, size: :sm) %>
+        <% end %>
+      <% else %>
+        <span class="inline-flex items-center justify-center w-8 h-8 rounded-input text-muted/40 cursor-not-allowed"
+              title="<%= t("recipes.categories.row.delete_blocked", count: category.usage_count) %>">
+          <%= icon(:trash_2, size: :sm) %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+<% end %>

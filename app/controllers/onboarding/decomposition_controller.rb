@@ -3,6 +3,9 @@ module Onboarding
   # Current.account.settings.use_composable_recipes to true via the
   # Onboarding::CompleteFirstDecomposition command.
   class DecompositionController < AuthenticatedController
+    include Subscriptions::FeatureGated
+    gate_feature :composable_recipes
+
     before_action :load_recipe
 
     def show; end
@@ -33,7 +36,7 @@ module Onboarding
     def components_params
       permitted = params.require(:recipe).permit(
         components_attributes: [
-          :componentable_type, :componentable_id,
+          :id, :componentable_type, :componentable_id,
           :quantity, :unit, :notes, :_destroy
         ]
       )
