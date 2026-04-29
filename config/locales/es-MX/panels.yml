@@ -104,6 +104,11 @@ es-MX:
       count:
         one: "%{count} resultado"
         other: "%{count} resultados"
+    palette:
+      label: "Buscar"
+      close: "Cerrar búsqueda"
+      placeholder: "Busca pedidos, clientes, recetas…"
+      trigger: "Buscar…"
 
   orders:
     title: "Pedidos"

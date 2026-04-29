@@ -6,5 +6,9 @@ class SearchController < AuthenticatedController
       term: @term,
       limit_per_group: 5
     )
+
+    if params[:palette].present?
+      render partial: "search/palette_results", layout: false
+    end
   end
 end

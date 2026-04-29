@@ -1,0 +1,61 @@
+<div data-controller="command-palette"
+     data-command-palette-url-value="<%= helpers.search_path %>">
+  <dialog data-command-palette-target="dialog"
+          data-action="click->command-palette#backdropClick cancel->command-palette#close"
+          class="kc-palette"
+          aria-label="<%= t("search.palette.label") %>">
+    <div class="flex flex-col max-h-[inherit] h-full sm:h-auto">
+      <%# ── Search input ─────────────────────────────────────────── %>
+      <div class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-line shrink-0">
+        <%# Mobile: back arrow to close %>
+        <button type="button"
+                data-action="click->command-palette#close"
+                class="sm:hidden shrink-0 inline-flex items-center justify-center w-8 h-8 -ml-1 rounded-full text-muted hover:text-ink hover:bg-bg-2 transition-colors"
+                aria-label="<%= t("search.palette.close") %>">
+          <%= helpers.icon(:arrow_left, size: :sm) %>
+        </button>
+        <%# Desktop: search icon %>
+        <span class="hidden sm:inline-flex text-muted shrink-0">
+          <%= helpers.icon(:search, size: :sm) %>
+        </span>
+        <input type="search"
+               data-command-palette-target="input"
+               data-action="keyup->command-palette#type keydown->command-palette#navigate keydown->command-palette#submit"
+               autocomplete="off"
+               spellcheck="false"
+               placeholder="<%= t("search.palette.placeholder") %>"
+               class="flex-1 min-w-0 bg-transparent text-[15px] text-ink placeholder:text-muted focus:outline-none">
+        <button type="button"
+                data-action="click->command-palette#close"
+                class="hidden sm:inline-flex shrink-0 text-[11px] font-mono text-muted border border-line rounded-[5px] px-1.5 py-0.5 hover:text-ink hover:border-line-2 transition-colors"
+                aria-label="<%= t("search.palette.close") %>">
+          esc
+        </button>
+      </div>
+
+      <%# ── Results ──────────────────────────────────────────────── %>
+      <div data-command-palette-target="results"
+           class="flex-1 overflow-y-auto overscroll-contain kc-scroll">
+        <turbo-frame id="command_palette_results"
+                     data-action="turbo:frame-load->command-palette#resultsLoaded">
+        </turbo-frame>
+      </div>
+
+      <%# ── Footer (desktop only — no physical keyboard on mobile) %>
+      <div class="hidden sm:flex items-center gap-4 px-4 py-2 border-t border-line shrink-0 text-[11px] font-mono text-muted">
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1 py-px border border-line rounded-[3px]">↑↓</kbd>
+          navegar
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1 py-px border border-line rounded-[3px]">↵</kbd>
+          abrir
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <kbd class="px-1 py-px border border-line rounded-[3px]">esc</kbd>
+          cerrar
+        </span>
+      </div>
+    </div>
+  </dialog>
+</div>
