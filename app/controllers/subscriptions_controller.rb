@@ -9,6 +9,7 @@ class SubscriptionsController < AuthenticatedController
   expose :subscription, -> { Current.account.subscription || Current.account.create_subscription! }
 
   def show
+    sync_from_stripe_if_stale!
     @entitlements = Entitlements.for(Current.account)
     @highlight    = sanitize_highlight(params[:highlight])
   end
@@ -66,5 +67,36 @@ class SubscriptionsController < AuthenticatedController
     return nil if raw.blank?
     key = raw.to_s.to_sym
     Entitlements::ALL_FEATURES.include?(key) ? key : nil
+  end
+
+  # Sync from Stripe when the local record looks stale:
+  #   1. Returning from Checkout (?checkout=complete) — webhook race.
+  #   2. Has Stripe identifiers but source is still free — missed webhook.
+  # Runs at most once per page load and only when there's something to
+  # sync (a stripe_subscription_id or stripe_customer_id on the record).
+  def sync_from_stripe_if_stale!
+    sub = subscription
+    returning = params[:checkout] == "complete"
+    stale     = sub.source_free? && (sub.stripe_subscription_id.present? || sub.stripe_customer_id.present?)
+
+    return unless returning || stale
+
+    if sub.stripe_subscription_id.present?
+      Subscriptions::SyncFromStripe.call(stripe_subscription_id: sub.stripe_subscription_id)
+      sub.reload
+    elsif sub.stripe_customer_id.present?
+      sync_via_customer!(sub)
+    end
+  rescue Stripe::StripeError => e
+    Rails.logger.warn("Subscription sync failed: #{e.message}")
+  end
+
+  def sync_via_customer!(sub)
+    subs = Stripe::Subscription.list(customer: sub.stripe_customer_id, limit: 1)
+    stripe_sub = subs.data.first
+    return if stripe_sub.nil?
+
+    Subscriptions::SyncFromStripe.call(stripe_subscription: stripe_sub)
+    sub.reload
   end
 end

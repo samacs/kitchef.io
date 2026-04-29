@@ -18,7 +18,7 @@
 
   <%# Flash from various save-flow / switch / downgrade actions. %>
   <% if params[:saved] == "1" %>
-    <%= render Subscriptions::HintBanner.new(
+    <%= render Subscriptions::HintBannerComponent.new(
           hint_key: "subscription:save_applied:#{Date.current.strftime('%Y%m')}",
           tone:     :pro,
           icon:     :sparkles,
@@ -27,7 +27,7 @@
   <% end %>
 
   <% if params[:downgraded] == "1" %>
-    <%= render Subscriptions::HintBanner.new(
+    <%= render Subscriptions::HintBannerComponent.new(
           hint_key: "subscription:downgraded:#{Date.current.strftime('%Y%m%d')}",
           tone:     :info,
           icon:     :info,
@@ -35,8 +35,17 @@
           body:     t("subscriptions.show.banner.downgraded_body")) %>
   <% end %>
 
+  <% if params[:checkout] == "complete" && sub.pro? %>
+    <%= render Subscriptions::HintBannerComponent.new(
+          hint_key: "subscription:checkout_complete:#{Time.current.to_i}",
+          tone:     :pro,
+          icon:     :check,
+          title:    t("subscriptions.show.banner.checkout_complete_title"),
+          body:     t("subscriptions.show.banner.checkout_complete_body")) %>
+  <% end %>
+
   <% if params[:checkout] == "canceled" %>
-    <%= render Subscriptions::HintBanner.new(
+    <%= render Subscriptions::HintBannerComponent.new(
           hint_key: "subscription:checkout_canceled:#{Time.current.to_i}",
           tone:     :info,
           icon:     :info,

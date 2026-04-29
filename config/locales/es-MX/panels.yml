@@ -1410,6 +1410,8 @@ es-MX:
         save_applied_body:  "Los próximos 3 pagos llevan medio precio. Bienvenida de vuelta."
         downgraded_title: "Tu cuenta está en Gratis"
         downgraded_body:  "Tu storefront sigue activo. Cuando quieras volver a Pro, lo activas desde aquí."
+        checkout_complete_title: "¡Bienvenida a Pro!"
+        checkout_complete_body:  "Tu prueba de 14 días ya empezó. Todas las herramientas Pro están activas."
         checkout_canceled_title: "Cancelaste el pago"
         checkout_canceled_body:  "Tu cuenta sigue en su plan actual. Cuando quieras seguir, vuelve a intentar."
     create:

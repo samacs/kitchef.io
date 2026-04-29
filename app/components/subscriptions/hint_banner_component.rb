@@ -9,7 +9,7 @@ module Subscriptions
   # dismissal.
   #
   # Usage:
-  #   <%= render Subscriptions::HintBanner.new(
+  #   <%= render Subscriptions::HintBannerComponent.new(
   #         hint_key:    "pedidos:approaching_limit",
   #         tone:        :warn,
   #         icon:        :gauge,
@@ -18,7 +18,7 @@ module Subscriptions
   #         cta_label:   t("hints.pedidos.approaching.cta"),
   #         cta_path:    helpers.subscription_path
   #       ) %>
-  class HintBanner < ApplicationComponent
+  class HintBannerComponent < ApplicationComponent
     option :hint_key
     option :title
     option :body,         optional: true, default: -> { nil }
