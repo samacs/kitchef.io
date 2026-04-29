@@ -38,46 +38,6 @@ export default class extends Controller {
   // disconnect when only the inner rows are swapped.
   connect() {
     this.nextIndex = 1_000_000 + Math.floor(Math.random() * 1_000_000)
-    this.onBeforeReplace = this.saveFocus.bind(this)
-    this.onAfterReplace = this.restoreFocus.bind(this)
-    document.addEventListener("turbo:before-stream-render", this.onBeforeReplace)
-    document.addEventListener("turbo:after-stream-render", this.onAfterReplace)
-  }
-
-  disconnect() {
-    document.removeEventListener("turbo:before-stream-render", this.onBeforeReplace)
-    document.removeEventListener("turbo:after-stream-render", this.onAfterReplace)
-  }
-
-  saveFocus() {
-    const active = document.activeElement
-    if (!active || !this.element.contains(active)) {
-      this.savedFocus = null
-      return
-    }
-    this.savedFocus = {
-      rowId: active.closest("[data-recipes-components-target='row']")?.id,
-      field: active.getAttribute("name")?.replace(/.*\]\[/, "[")
-    }
-  }
-
-  restoreFocus() {
-    if (!this.savedFocus) return
-    const { rowId, field } = this.savedFocus
-    this.savedFocus = null
-    if (!rowId) return
-
-    requestAnimationFrame(() => {
-      const row = document.getElementById(rowId)
-      if (!row) return
-      const input = field
-        ? row.querySelector(`input[name$='${field}'], select[name$='${field}']`)
-        : null
-      if (input) {
-        input.focus()
-        if (input.type === "number" || input.type === "text") input.select()
-      }
-    })
   }
 
   // ── Adding ───────────────────────────────────────────────────────────

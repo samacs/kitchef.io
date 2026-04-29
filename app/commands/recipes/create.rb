@@ -46,9 +46,16 @@ module Recipes
 
       attrs = SIMPLE_DEFAULTS.merge(submitted.compact)
 
-      # Auto-publish when a photo is submitted AND the operator didn't
-      # explicitly mark this as a draft via the form toggle.
-      attrs[:is_published] = photos.any? if attrs[:is_published].nil?
+      # Normalize is_saleable from form checkbox ("0"/"1" string).
+      attrs[:is_saleable] = ActiveModel::Type::Boolean.new.cast(attrs[:is_saleable])
+
+      # Internal recipes never auto-publish and don't need a price.
+      if attrs[:is_saleable] == false
+        attrs[:is_published] = false
+        attrs[:sale_price_cents] ||= 0
+      elsif attrs[:is_published].nil?
+        attrs[:is_published] = photos.any?
+      end
 
       # Fallback category for simple mode: Phase 9 replaced the enum
       # with a FK. If the form didn't submit a category, pin the
