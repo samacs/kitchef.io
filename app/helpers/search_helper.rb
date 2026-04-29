@@ -3,7 +3,8 @@ module SearchHelper
     orders:      :shopping_bag,
     clients:     :user,
     recipes:     :chef_hat,
-    ingredients: :scale
+    ingredients: :scale,
+    suppliers:   :store
   }.freeze
 
   def search_result_icon(kind)
@@ -16,6 +17,7 @@ module SearchHelper
     when :clients     then client_path(record)
     when :recipes     then recipe_path(record)
     when :ingredients then ingredient_path(record)
+    when :suppliers   then supplier_path(record)
     end
   end
 end

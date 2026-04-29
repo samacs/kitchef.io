@@ -13,7 +13,8 @@
     <ol class="flex flex-col divide-y divide-line rounded-card-sm bg-surface border border-line">
       <% components.each_with_index do |component, index| %>
         <% prefix = "recipe[components_attributes][#{index}]" %>
-        <li class="flex items-center gap-3 px-3 py-3 sm:px-4"
+        <li id="component_<%= component.componentable_type.downcase %>_<%= component.componentable_id %>"
+            class="flex items-center gap-3 px-3 py-3 sm:px-4"
             data-recipes-components-target="row"
             data-componentable-type="<%= component.componentable_type %>"
             data-componentable-id="<%= component.componentable_id %>">

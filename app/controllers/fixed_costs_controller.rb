@@ -17,7 +17,14 @@ class FixedCostsController < AuthenticatedController
     record = Current.account.fixed_costs.new(create_attrs)
 
     if record.save
-      redirect_to fixed_costs_path, notice: t(".created")
+      respond_to do |format|
+        format.turbo_stream do
+          flash.now[:notice] = t(".created")
+          render turbo_stream: close_drawer_and_refresh +
+            [ turbo_stream.append("flash-region", partial: "shared/flash_region") ]
+        end
+        format.html { redirect_to fixed_costs_path, notice: t(".created") }
+      end
     else
       render :new, status: :unprocessable_content, locals: { fixed_cost: record }
     end
@@ -25,7 +32,14 @@ class FixedCostsController < AuthenticatedController
 
   def update
     if fixed_cost.update(fixed_cost_attrs)
-      redirect_to fixed_costs_path, notice: t(".updated")
+      respond_to do |format|
+        format.turbo_stream do
+          flash.now[:notice] = t(".updated")
+          render turbo_stream: close_drawer_and_refresh +
+            [ turbo_stream.append("flash-region", partial: "shared/flash_region") ]
+        end
+        format.html { redirect_to fixed_costs_path, notice: t(".updated") }
+      end
     else
       render :edit, status: :unprocessable_content, locals: { fixed_cost: fixed_cost }
     end
@@ -33,7 +47,14 @@ class FixedCostsController < AuthenticatedController
 
   def destroy
     fixed_cost.discard
-    redirect_to fixed_costs_path, notice: t(".discarded")
+    respond_to do |format|
+      format.turbo_stream do
+        flash.now[:notice] = t(".discarded")
+        render turbo_stream: close_drawer_and_refresh +
+          [ turbo_stream.append("flash-region", partial: "shared/flash_region") ]
+      end
+      format.html { redirect_to fixed_costs_path, notice: t(".discarded") }
+    end
   end
 
   private

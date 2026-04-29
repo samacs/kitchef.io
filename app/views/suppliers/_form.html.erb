@@ -1,7 +1,7 @@
 <%= form_with model: supplier,
       url: supplier.persisted? ? supplier_path(supplier) : suppliers_path,
       class: "flex flex-col gap-5",
-      data: supplier.persisted? ? { controller: "form-autosave", action: "change->form-autosave#save" } : {} do |form| %>
+      data: supplier.persisted? ? { controller: "form-autosave", action: "change->form-autosave#save input->form-autosave#save" } : {} do |form| %>
 
   <% if supplier.errors.any? %>
     <div role="alert"

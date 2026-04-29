@@ -89,6 +89,8 @@ es-MX:
     drawer:
       label: "Panel de edición"
       close: "Cerrar panel"
+      expand: "Ampliar panel"
+      shrink: "Reducir panel"
 
   search:
     show:
@@ -101,6 +103,7 @@ es-MX:
         clients: "Clientes"
         recipes: "Recetas"
         ingredients: "Ingredientes"
+        suppliers: "Proveedores"
       empty:
         title: "¿Qué buscas?"
         hint: "Escribe el nombre, teléfono o folio de pedido."

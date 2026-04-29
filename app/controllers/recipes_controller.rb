@@ -86,13 +86,7 @@ class RecipesController < AuthenticatedController
               partial: "recipes/cost_summary",
               locals: { recipe: recipe }
             ),
-            # Morph (not replace) the rows. Replace blows away the input
-            # the operator may be mid-typing in, killing focus and caret
-            # position. Morph diffs the incoming HTML against the live
-            # DOM and only patches what changed — focus on a quantity
-            # input survives the autosave round-trip.
-            turbo_stream.action(
-              :morph,
+            turbo_stream.replace(
               "recipe_components_rows",
               partial: "recipes/components_rows",
               locals: { recipe: recipe }
