@@ -35,6 +35,15 @@
           body:     t("subscriptions.show.banner.downgraded_body")) %>
   <% end %>
 
+  <% if params[:checkout] == "complete" && sub.pro? %>
+    <%= render Subscriptions::HintBanner.new(
+          hint_key: "subscription:checkout_complete:#{Time.current.to_i}",
+          tone:     :pro,
+          icon:     :check,
+          title:    t("subscriptions.show.banner.checkout_complete_title"),
+          body:     t("subscriptions.show.banner.checkout_complete_body")) %>
+  <% end %>
+
   <% if params[:checkout] == "canceled" %>
     <%= render Subscriptions::HintBanner.new(
           hint_key: "subscription:checkout_canceled:#{Time.current.to_i}",
