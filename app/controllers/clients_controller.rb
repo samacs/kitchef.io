@@ -58,7 +58,8 @@ class ClientsController < AuthenticatedController
   def find_or_build_client
     return Current.account.clients.new if params[:id].blank?
 
-    Current.account.clients.kept.find(params[:id])
+    resolve_record(Current.account.clients.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def client_params

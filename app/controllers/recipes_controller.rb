@@ -23,9 +23,7 @@ class RecipesController < AuthenticatedController
   # leaves it as a draft (the model's discard column is the only state
   # that flips). Lands the operator back on the index with a confirmation.
   def restore
-    target = Current.account.recipes.discarded.find_by(id: Recipe.find_by_prefix_id(params[:id])&.id)
-    target ||= Current.account.recipes.discarded.friendly.find_by(slug: params[:id])
-    target ||= Current.account.recipes.discarded.find_by(id: params[:id]) if params[:id].to_i.positive?
+    target = resolve_record(Current.account.recipes.discarded)
 
     if target
       target.undiscard
@@ -171,13 +169,8 @@ class RecipesController < AuthenticatedController
   def find_or_build_recipe
     return Current.account.recipes.new if params[:id].blank?
 
-    # URLs can arrive as either the friendly slug (from friendly_id) or
-    # the prefixed id (from has_prefix_id's to_param override) depending
-    # on which module's to_param ran last for a given record. Accept both.
-    scope = Current.account.recipes.kept
-    scope.friendly.find(params[:id])
-  rescue ActiveRecord::RecordNotFound
-    scope.find(params[:id])
+    resolve_record(Current.account.recipes.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def recipe_params

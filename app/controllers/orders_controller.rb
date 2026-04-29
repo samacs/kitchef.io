@@ -160,7 +160,8 @@ class OrdersController < AuthenticatedController
   def find_or_build_order
     return new_order if params[:id].blank?
 
-    Current.account.orders.kept.find(params[:id])
+    resolve_record(Current.account.orders.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def new_order

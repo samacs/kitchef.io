@@ -11,10 +11,13 @@
 # reference to a Ruby module.
 class AuthenticatedController < ApplicationController
   include DrawerResponder
+  include ResolvesRecord
 
   layout "panel"
 
   before_action :require_account
+
+  rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
   private
 
@@ -22,5 +25,10 @@ class AuthenticatedController < ApplicationController
     return if Current.account
 
     redirect_to new_session_path, alert: t("panel.errors.account_missing")
+  end
+
+  def record_not_found
+    redirect_back fallback_location: root_path,
+                  alert: t("panel.errors.record_not_found")
   end
 end

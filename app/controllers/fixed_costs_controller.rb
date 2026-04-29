@@ -40,7 +40,9 @@ class FixedCostsController < AuthenticatedController
 
   def find_or_build_fixed_cost
     return Current.account.fixed_costs.new(start_date: Date.current, recurrence: :monthly) if params[:id].blank?
-    Current.account.fixed_costs.kept.find(params[:id])
+
+    resolve_record(Current.account.fixed_costs.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def fixed_cost_params

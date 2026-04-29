@@ -6,8 +6,11 @@
       class: "flex flex-col gap-5",
       data: {
         controller: autosave ? "image-upload form-autosave reset-files-on-save" : "image-upload",
-        action: (autosave ? "change->form-autosave#save input->form-autosave#save" : nil)
-      }.compact do |form| %>
+        action: [
+          (autosave ? "change->form-autosave#save input->form-autosave#save" : nil),
+          "recipe-photos:changed->image-upload#publishGate"
+        ].compact.join(" ")
+      } do |form| %>
 
   <% if recipe.errors.any? %>
     <div role="alert"
@@ -173,11 +176,15 @@
   <%# Mostrar en tu tienda — publishes the recipe to the public menu.
       Disabled until the operator has attached a photo, since a photoless
       menu card looks broken to customers. The hint text flips accordingly
-      so the operator understands the gate. %>
+      so the operator understands the gate. On new recipes, recipe-photos
+      dispatches "recipe-photos:changed" when files are picked/removed;
+      the data-action below enables the checkbox client-side. %>
   <% can_publish = recipe.photos.attached? %>
-  <label class="flex items-start gap-3 p-4 rounded-card-sm bg-bg-2/60 border border-line <%= 'opacity-60' unless can_publish %>">
+  <label id="publish-gate"
+         class="flex items-start gap-3 p-4 rounded-card-sm bg-bg-2/60 border border-line <%= 'opacity-60' unless can_publish %>">
     <%= form.check_box :is_published,
           disabled: !can_publish,
+          id: "recipe_is_published",
           class: "mt-[3px] w-4 h-4 accent-accent" %>
     <div class="flex-1 flex flex-col gap-1">
       <span class="text-[14px] font-medium text-ink"><%= t("recipes.form.publish_label") %></span>

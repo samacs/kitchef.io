@@ -72,7 +72,8 @@ class IngredientsController < AuthenticatedController
   def find_or_build_ingredient
     return Current.account.ingredients.new if params[:id].blank?
 
-    Current.account.ingredients.kept.find(params[:id])
+    resolve_record(Current.account.ingredients.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def ingredient_params

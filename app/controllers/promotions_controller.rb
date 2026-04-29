@@ -55,7 +55,9 @@ class PromotionsController < AuthenticatedController
 
   def find_or_build_promotion
     return Current.account.promotions.new if params[:id].blank?
-    Current.account.promotions.kept.find(params[:id])
+
+    resolve_record(Current.account.promotions.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def promotion_params

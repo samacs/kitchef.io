@@ -118,6 +118,7 @@ es-MX:
   panel:
     errors:
       account_missing: "Necesitas una cocina activa para entrar al panel."
+      record_not_found: "No encontramos lo que buscas. Es posible que haya sido eliminado."
     nav:
       section: "Cocina"
       home: "Inicio"
