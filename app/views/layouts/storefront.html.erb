@@ -71,7 +71,8 @@
   </head>
   <body class="min-h-screen bg-bg text-ink-2 font-sans antialiased"
         data-controller="<%= "storefront-cart" if @storefront %>"
-        <% if @storefront %>data-storefront-cart-slug-value="<%= @storefront.slug %>"<% end %>>
+        <% if @storefront %>data-storefront-cart-slug-value="<%= @storefront.slug %>"<% end %>
+        <% if @storefront %>data-storefront-cart-promotions-value="<%= @auto_promotions_json %>"<% end %>>
     <%# Phase 14, Slice 11 — demo banner. Above the storefront
         header so customers see "Esto es una demo" before any
         kitchen branding. Renders nothing for non-demo accounts. %>

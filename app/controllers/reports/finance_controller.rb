@@ -131,6 +131,8 @@ module Reports
       CSV.generate(write_headers: true, force_quotes: true) do |csv|
         csv << [
           t("reports.finance.csv.headers.date"),
+          t("reports.finance.csv.headers.gross_revenue"),
+          t("reports.finance.csv.headers.discount"),
           t("reports.finance.csv.headers.revenue"),
           t("reports.finance.csv.headers.cogs"),
           t("reports.finance.csv.headers.margin"),
@@ -147,6 +149,8 @@ module Reports
           net_pct   = day.revenue_cents.zero? ? nil : ((net_cents.to_f / day.revenue_cents * 100).round)
           csv << [
             day.date.iso8601,
+            cents_to_mxn(day.gross_revenue_cents),
+            cents_to_mxn(day.discount_cents),
             cents_to_mxn(day.revenue_cents),
             cents_to_mxn(day.cogs_cents),
             cents_to_mxn(day.margin_cents),
@@ -159,7 +163,7 @@ module Reports
             net_pct
           ]
         end
-      end.then { |body| "\uFEFF" + body }  # BOM so Excel on es-MX opens cleanly
+      end.then { |body| "\uFEFF" + body }
     end
 
     def cents_to_mxn(cents)

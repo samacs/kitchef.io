@@ -300,6 +300,29 @@
     </span>
   </label>
 
+  <%# ---- Coupon code --------------------------------------------------- %>
+  <label for="order_coupon_code" class="flex flex-col gap-2">
+    <span class="text-[13px] font-medium text-ink leading-none">
+      <%= t("orders.form.coupon_code_label") %>
+    </span>
+    <input type="text"
+           name="order[coupon_code]"
+           id="order_coupon_code"
+           value="<%= order.discount_label.to_s.scan(/\(([A-Z0-9_-]+)\)/).flatten.first %>"
+           placeholder="<%= t("orders.form.coupon_code_placeholder") %>"
+           class="w-full max-w-[240px] bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3.5 py-2.5 text-[14px] leading-[1.3] font-mono uppercase outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+    <span class="text-[12px] text-muted"><%= t("orders.form.coupon_code_hint") %></span>
+  </label>
+
+  <% if order.discount_cents.to_i.positive? %>
+    <div class="flex items-center gap-2 p-3 rounded-card-sm bg-accent-soft border border-accent/20">
+      <%= icon(:tag, size: :sm, class: "text-accent shrink-0") %>
+      <span class="text-[13px] text-accent font-medium">
+        <%= order.discount_label %> · −<%= humanized_money_with_symbol(order.discount) %>
+      </span>
+    </div>
+  <% end %>
+
   <label for="order_notes" class="flex flex-col gap-2">
     <span class="text-[13px] font-medium text-ink leading-none">
       <%= t("orders.form.notes_label") %>

@@ -23,6 +23,7 @@
 #
 # Indexes
 #
+#  idx_suppliers_name_trgm                 (name) USING gin
 #  index_suppliers_on_account_id           (account_id)
 #  index_suppliers_on_account_id_and_name  (account_id,name)
 #  index_suppliers_on_account_id_and_rfc   (account_id,rfc) WHERE (rfc IS NOT NULL)
@@ -39,6 +40,9 @@ class Supplier < ApplicationRecord
   include HasSoftDelete
   include HasRfc
   include Geocodable
+  include Searchable
+
+  searchable_on :name
 
   geocodable_by :street_address, :colonia, :city
 

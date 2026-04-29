@@ -89,6 +89,8 @@ es-MX:
     drawer:
       label: "Panel de edición"
       close: "Cerrar panel"
+      expand: "Ampliar panel"
+      shrink: "Reducir panel"
 
   search:
     show:
@@ -101,6 +103,7 @@ es-MX:
         clients: "Clientes"
         recipes: "Recetas"
         ingredients: "Ingredientes"
+        suppliers: "Proveedores"
       empty:
         title: "¿Qué buscas?"
         hint: "Escribe el nombre, teléfono o folio de pedido."
@@ -162,6 +165,7 @@ es-MX:
       summary:
         packaging: "Empaque"
         tip: "Propina"
+        discount: "Descuento"
         total: "Total"
     transitions:
       confirm: "Confirmar"
@@ -309,6 +313,9 @@ es-MX:
         label: "Empaque de este pedido"
         hint: "Bolsa, servilleta, etiqueta — se suma al total."
         default_hint: "Default de tu cocina: %{amount}"
+      coupon_code_label: "Cupón"
+      coupon_code_placeholder: "Ej. BIENVENIDA"
+      coupon_code_hint: "Si tu cliente tiene un código de descuento, anótalo aquí."
       submit_create: "Capturar pedido"
       submit_update: "Guardar cambios"
       done: "Listo"
@@ -1724,7 +1731,9 @@ es-MX:
         cta: "Exportar a CSV"
         headers:
           date: "Fecha"
-          revenue: "Ingresos MXN"
+          gross_revenue: "Ingreso bruto MXN"
+          discount: "Descuentos MXN"
+          revenue: "Ingreso neto MXN"
           cogs: "Costo MXN"
           margin: "Margen MXN"
           margin_pct: "Margen %"
@@ -1743,6 +1752,10 @@ es-MX:
         real_margin_hint: "Ingresos − gastos reales en ingredientes de este periodo"
         drift_hint: "La diferencia con el margen bruto refleja cambios de precio después de cada pedido."
         day_column: "Gastos"
+      discounts:
+        banner_label: "Descuentos aplicados"
+        banner_hint: "Ingreso bruto %{gross} − descuentos = ingreso neto %{net}"
+        day_column: "Desc."
       fixed_costs:
         kpi_label: "Costos fijos"
         kpi_sub: "Prorrateados al periodo"

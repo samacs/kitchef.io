@@ -35,27 +35,36 @@
           1 photo or 0 → keep the legacy single-image hero.
           2+ photos → component renders carousel + thumb strip in one
           shared Stimulus scope (with_thumbs: true). %>
-      <% if @recipe.photo_count > 1 %>
-        <%= render Storefronts::PhotoCarouselComponent.new(
-              recipe: @recipe,
-              variant: :hero,
-              alt: @recipe.name,
-              with_thumbs: true) %>
-      <% else %>
-        <div class="overflow-hidden rounded-[18px] border border-line bg-surface"
-             style="aspect-ratio: 4 / 3;">
-          <% if photo_hero %>
-            <%= image_tag photo_hero,
-                  class: "h-full w-full object-cover",
-                  alt: @recipe.name %>
-          <% else %>
-            <div class="flex h-full w-full items-center justify-center font-serif italic text-[80px]"
-                 style="color: var(--brand-1);">
-              <%= @recipe.name.first.upcase %>
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+      <div class="relative">
+        <% if @recipe.photo_count > 1 %>
+          <%= render Storefronts::PhotoCarouselComponent.new(
+                recipe: @recipe,
+                variant: :hero,
+                alt: @recipe.name,
+                with_thumbs: true) %>
+        <% else %>
+          <div class="overflow-hidden rounded-[18px] border border-line bg-surface"
+               style="aspect-ratio: 4 / 3;">
+            <% if photo_hero %>
+              <%= image_tag photo_hero,
+                    class: "h-full w-full object-cover",
+                    alt: @recipe.name %>
+            <% else %>
+              <div class="flex h-full w-full items-center justify-center font-serif italic text-[80px]"
+                   style="color: var(--brand-1);">
+                <%= @recipe.name.first.upcase %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if @promo_badge&.has_custom_label? %>
+          <span class="absolute top-3 right-3 inline-flex items-center rounded-[8px] px-3 py-1.5 text-[13px] font-bold uppercase tracking-[0.04em] text-white shadow-lg z-10"
+                style="background: <%= @promo_badge.color || 'var(--brand-1)' %>;">
+            <%= @promo_badge.label %>
+          </span>
+        <% end %>
+      </div>
 
       <%# "About the kitchen" strip %>
       <%= link_to back_href,
@@ -90,13 +99,19 @@
         <h1 class="font-serif text-[32px] leading-[1.05] tracking-tight text-ink">
           <%= @recipe.name %>
         </h1>
-        <div class="mt-3 flex items-baseline gap-2">
+        <div class="mt-3 flex items-center gap-3">
           <span class="font-serif text-[28px] leading-[1] tracking-tight text-ink">
             <%= humanized_money_with_symbol(@recipe.sale_price) %>
           </span>
           <span class="font-mono text-[12px] text-muted">
             / <%= t("units.#{@recipe.yield_unit}", default: @recipe.yield_unit.to_s) %>
           </span>
+          <% if @promo_badge %>
+            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold"
+                  style="background: var(--brand-1); color: var(--brand-1-ink);">
+              <%= @promo_badge.discount_text %>
+            </span>
+          <% end %>
         </div>
         <% if @recipe.requires_advance_notice? %>
           <div class="mt-3 flex items-start gap-2.5 rounded-[10px] border border-line bg-bg-2/60 px-3.5 py-2.5">
@@ -130,6 +145,23 @@
       <h2 class="hidden lg:block font-serif text-[clamp(28px,3.5vw,40px)] leading-[1.05] tracking-tight text-ink">
         <%= @recipe.name %>
       </h2>
+      <% if @promo_badge %>
+        <div class="hidden lg:flex items-center gap-2 mt-3 flex-wrap">
+          <% if @promo_badge.has_custom_label? %>
+            <span class="inline-flex items-center gap-1.5 rounded-[8px] px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.04em] text-white"
+                  style="background: <%= @promo_badge.color || 'var(--brand-1)' %>;">
+              <%= @promo_badge.label %>
+            </span>
+          <% end %>
+          <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] font-semibold"
+                style="background: var(--brand-1); color: var(--brand-1-ink);">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            <%= @promo_badge.discount_text %>
+          </span>
+        </div>
+      <% end %>
 
       <% if @recipe.description.present? %>
         <div class="mt-4 hidden lg:block">
@@ -189,6 +221,7 @@
                   recipe_slug:     @recipe.slug,
                   name:            @recipe.name,
                   price_cents:     @recipe.sale_price_cents.to_i,
+                  category_id:     @recipe.category_id,
                   lead_time_hours: @recipe.lead_time_hours.to_i,
                   photo:           (url_for(@recipe.photos.first&.variant(resize_to_limit: [ 400, 400 ])) if @recipe.photos.attached?)
                 }.compact.to_json %>"
@@ -287,6 +320,7 @@
                 recipe_slug:  @recipe.slug,
                 name:         @recipe.name,
                 price_cents:  @recipe.sale_price_cents.to_i,
+                category_id:  @recipe.category_id,
                 photo:        (url_for(@recipe.photos.first&.variant(resize_to_limit: [ 400, 400 ])) if @recipe.photos.attached?)
               }.compact.to_json %>"
               class="inline-flex shrink-0 items-center gap-2 rounded-[12px] px-5 py-3 text-[15px] font-semibold transition shadow-lg"

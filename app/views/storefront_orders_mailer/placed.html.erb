@@ -79,7 +79,8 @@
             </td>
           </tr>
         <% end %>
-        <% if @order.tip_cents.to_i.positive? %>
+        <% has_extras = @order.tip_cents.to_i.positive? || @order.packaging_cents.to_i.positive? || @order.discount_cents.to_i.positive? %>
+        <% if has_extras %>
           <tr>
             <td style="padding:8px 0 0 0;font-size:13px;color:#6B7670;">
               <%= t(".subtotal_label") %>
@@ -88,14 +89,36 @@
               <%= humanized_money_with_symbol(@order.subtotal) %>
             </td>
           </tr>
-          <tr>
-            <td style="padding:4px 0 0 0;font-size:13px;color:#6B7670;">
-              <%= t(".tip_label") %>
-            </td>
-            <td align="right" style="padding:4px 0 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#6B7670;">
-              <%= humanized_money_with_symbol(@order.tip) %>
-            </td>
-          </tr>
+          <% if @order.packaging_cents.to_i.positive? %>
+            <tr>
+              <td style="padding:4px 0 0 0;font-size:13px;color:#6B7670;">
+                <%= t(".packaging_label") %>
+              </td>
+              <td align="right" style="padding:4px 0 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#6B7670;">
+                <%= humanized_money_with_symbol(@order.packaging) %>
+              </td>
+            </tr>
+          <% end %>
+          <% if @order.discount_cents.to_i.positive? %>
+            <tr>
+              <td style="padding:4px 0 0 0;font-size:13px;color:#0A5A3C;">
+                &#128993; <%= @order.discount_label.presence || t(".discount_label") %>
+              </td>
+              <td align="right" style="padding:4px 0 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;font-weight:600;color:#0A5A3C;">
+                −<%= humanized_money_with_symbol(@order.discount) %>
+              </td>
+            </tr>
+          <% end %>
+          <% if @order.tip_cents.to_i.positive? %>
+            <tr>
+              <td style="padding:4px 0 0 0;font-size:13px;color:#6B7670;">
+                <%= t(".tip_label") %>
+              </td>
+              <td align="right" style="padding:4px 0 0 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#6B7670;">
+                <%= humanized_money_with_symbol(@order.tip) %>
+              </td>
+            </tr>
+          <% end %>
         <% end %>
         <tr>
           <td style="padding:14px 0 0 0;font-size:14px;font-weight:600;color:#0E1714;">

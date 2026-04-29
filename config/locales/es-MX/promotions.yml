@@ -1,0 +1,164 @@
+es-MX:
+  promotions:
+    kinds:
+      automatic: "Automática"
+      coupon: "Cupón"
+    discount_types:
+      percentage: "Porcentaje"
+      fixed_amount: "Monto fijo"
+      bogo: "2×1"
+    scope_types:
+      order: "Todo el pedido"
+      recipe: "Recetas específicas"
+      category: "Categorías"
+    validity_modes:
+      always: "Siempre activa"
+      date_range: "Fechas específicas"
+      weekdays: "Por días"
+
+    index:
+      title: "Promociones"
+      subtitle: "Crea descuentos y cupones para tus clientes"
+      new_cta: "Nueva promoción"
+      empty:
+        title: "Aún no tienes promociones"
+        body: "Crea tu primera promoción para atraer más pedidos."
+        cta: "Crear promoción"
+      count:
+        one: "%{count} promoción"
+        other: "%{count} promociones"
+      tabs:
+        all: "Todas"
+        active: "Activas"
+        inactive: "Inactivas"
+        coupons: "Cupones"
+
+    new:
+      title: "Nueva promoción"
+    edit:
+      title: "Editar promoción"
+
+    create:
+      created: "Promoción creada"
+    update:
+      updated: "Promoción actualizada"
+    destroy:
+      discarded: "Promoción eliminada"
+    toggle:
+      activated: "\"%{name}\" activada"
+      deactivated: "\"%{name}\" desactivada"
+
+    form:
+      name_label: "Nombre"
+      name_placeholder: "Ej. 10% en tamales"
+      name_hint: "Nombre interno para identificar la promoción."
+      section_identity: "Identidad"
+      section_discount: "Descuento"
+      badge_label_label: "Etiqueta"
+      badge_label_placeholder: "Ej. VERANO"
+      badge_label_hint: "Texto corto en la insignia del menú. Vacío = se genera automáticamente."
+      badge_color_label: "Color de insignia"
+      preview_kicker: "Vista previa"
+      preview_placeholder: "Tu platillo"
+      preview_hint: "Así se verá la insignia en tu menú público."
+      kind_label: "Tipo"
+      kind_hint_automatic: "Se aplica automáticamente a pedidos que cumplan las condiciones."
+      kind_hint_coupon: "El cliente ingresa un código para obtener el descuento."
+      code_label: "Código del cupón"
+      code_placeholder: "Ej. BIENVENIDA"
+      code_hint: "3–20 caracteres. Letras, números, guiones."
+      discount_type_label: "Tipo de descuento"
+      discount_value_label: "Valor del descuento"
+      discount_value_hint_percentage: "Porcentaje de descuento (1–100)"
+      discount_value_hint_fixed: "Monto en centavos"
+      discount_value_hint_bogo: "No aplica para 2×1"
+      bogo_buy_label: "Compra"
+      bogo_get_label: "Lleva gratis"
+      bogo_hint: "Ej. Compra 2, lleva 1 gratis"
+      scope_type_label: "Aplica a"
+      recipes_label: "Recetas"
+      recipes_placeholder: "Selecciona recetas"
+      categories_label: "Categorías"
+      categories_placeholder: "Selecciona categorías"
+      min_order_label: "Pedido mínimo"
+      min_order_hint: "Monto mínimo del pedido para que aplique. 0 = sin mínimo."
+      max_discount_label: "Descuento máximo"
+      max_discount_hint: "Tope del descuento. Vacío = sin tope."
+      starts_at_label: "Fecha de inicio"
+      starts_at_hint: "Vacío = activa inmediatamente."
+      ends_at_label: "Fecha de fin"
+      ends_at_hint: "Vacío = sin fecha de expiración."
+      total_usage_limit_label: "Límite de usos totales"
+      total_usage_limit_hint: "Vacío = usos ilimitados."
+      per_client_limit_label: "Límite por cliente"
+      per_client_limit_hint: "Vacío = sin límite por cliente."
+      priority_label: "Prioridad"
+      priority_hint: "Menor número = mayor prioridad. Se usa cuando hay varias promociones activas."
+      active_label: "Activa"
+      submit_create: "Crear promoción"
+      submit_update: "Guardar cambios"
+      cancel: "Cancelar"
+      unsaved_warning: "Tienes cambios sin guardar en esta promoción. ¿Salir sin guardar?"
+      unsaved_indicator: "Cambios sin guardar"
+      section_conditions: "Condiciones"
+      section_limits: "Límites de uso"
+      section_validity: "Vigencia"
+      weekday_labels:
+        - "D"
+        - "L"
+        - "M"
+        - "M"
+        - "J"
+        - "V"
+        - "S"
+      weekdays_hint: "Selecciona los días en que aplica la promoción."
+
+    card:
+      redemptions:
+        zero: "Sin usos"
+        one: "%{count} uso"
+        other: "%{count} usos"
+      active: "Activa"
+      inactive: "Inactiva"
+      expired: "Expirada"
+      always_active: "Siempre activa"
+      no_days: "Sin días seleccionados"
+      starts: "Inicia %{date}"
+      ends: "Expira %{date}"
+      no_expiry: "Sin expiración"
+      min_order: "Pedido mín. %{amount}"
+      usage_limit: "%{used}/%{limit} usos"
+      unlimited: "Usos ilimitados"
+      toggle_activate: "Activar"
+      toggle_deactivate: "Desactivar"
+      edit: "Editar"
+      delete: "Eliminar"
+      delete_confirm: "¿Eliminar esta promoción? Los pedidos con esta promoción aplicada no se verán afectados."
+      code_label: "Código"
+      scope_recipes: "Recetas: %{names}"
+      scope_categories: "Categorías: %{names}"
+      bogo_label: "Compra %{buy}, lleva %{get} gratis"
+
+    stats:
+      total_redemptions: "Usos totales"
+      total_discount: "Descuento otorgado"
+      active_count: "Activas"
+
+    errors:
+      bogo_requires_item_scope: "2×1 requiere aplicar a recetas o categorías específicas"
+      before_starts_at: "debe ser posterior a la fecha de inicio"
+      required_for_scope: "selecciona al menos una opción"
+
+  activerecord:
+    errors:
+      models:
+        promotion:
+          attributes:
+            scope_type:
+              bogo_requires_item_scope: "2×1 requiere aplicar a recetas o categorías específicas"
+            ends_at:
+              before_starts_at: "debe ser posterior a la fecha de inicio"
+            recipes:
+              required_for_scope: "selecciona al menos una receta"
+            categories:
+              required_for_scope: "selecciona al menos una categoría"

@@ -8,6 +8,7 @@ module Storefronts
   # `Orders::Place` — the client never holds authoritative pricing.
   class MenuCardComponent < ApplicationComponent
     option :recipe
+    option :promo_badge, default: -> { nil }
 
     delegate :name, :description, :sale_price, :display_photo, to: :recipe
 
@@ -59,6 +60,7 @@ module Storefronts
         recipe_slug:     recipe.slug,
         name:            recipe.name,
         price_cents:     recipe.sale_price_cents.to_i,
+        category_id:     recipe.category_id,
         lead_time_hours: recipe.lead_time_hours.to_i,
         photo:           (helpers.url_for(photo_variant) if photo_variant)
       }.compact.to_json

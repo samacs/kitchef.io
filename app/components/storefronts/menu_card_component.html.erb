@@ -7,11 +7,6 @@
   <div class="relative overflow-hidden"
        style="aspect-ratio: 4 / 3; background: var(--color-bg-2);">
     <% if recipe.photo_count > 1 %>
-      <%# The whole carousel is a navigation link — clicking the image
-          (anywhere it isn't an arrow button) takes the customer to
-          the dish detail page. Arrows stop propagation so they
-          paginate without navigating away. Swipe is intentionally
-          disabled on this surface; arrows are the only paginator. %>
       <%= link_to detail_href,
             class: "group block w-full h-full no-underline",
             aria:  { label: t("storefronts.menu.view_dish_aria", name: name) } do %>
@@ -33,13 +28,29 @@
         <% end %>
       <% end %>
     <% end %>
+
+    <%# Promo label overlay — top-right corner of photo (custom label with custom color) %>
+    <% if promo_badge&.has_custom_label? %>
+      <span class="absolute top-2.5 right-2.5 inline-flex items-center rounded-[7px] px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.04em] text-white shadow-md z-10"
+            style="background: <%= promo_badge.color || 'var(--brand-1)' %>;">
+        <%= promo_badge.label %>
+      </span>
+    <% end %>
   </div>
 
   <div class="flex flex-1 flex-col gap-2.5 p-4">
     <div class="flex items-start justify-between gap-3">
-      <h3 class="font-serif text-[22px] leading-[1.1] tracking-tight text-ink">
-        <%= link_to name, detail_href, class: "no-underline hover:underline" %>
-      </h3>
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <h3 class="font-serif text-[22px] leading-[1.1] tracking-tight text-ink truncate">
+          <%= link_to name, detail_href, class: "no-underline hover:underline" %>
+        </h3>
+        <% if promo_badge %>
+          <span class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                style="background: var(--brand-1); color: var(--brand-1-ink);">
+            <%= promo_badge.discount_text %>
+          </span>
+        <% end %>
+      </div>
       <div class="shrink-0 text-right">
         <div class="font-serif text-[20px] leading-[1.1] text-ink"><%= price_display %></div>
       </div>

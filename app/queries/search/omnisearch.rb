@@ -10,7 +10,8 @@ class Search::Omnisearch < ApplicationQuery
   SEARCHABLE_GROUPS = {
     clients:     { model: :clients,     scope: :kept },
     recipes:     { model: :recipes,     scope: :kept },
-    ingredients: { model: :ingredients, scope: :kept }
+    ingredients: { model: :ingredients, scope: :kept },
+    suppliers:   { model: :suppliers,   scope: :kept }
   }.freeze
 
   def call
@@ -79,6 +80,13 @@ class Search::Omnisearch < ApplicationQuery
         record: record,
         title: record.name,
         subtitle: "#{humanized_price(record.unit_cost_cents)} / #{record.unit}",
+        score: record.try(:search_score)
+      )
+    when :suppliers
+      Item.new(
+        record: record,
+        title: record.name,
+        subtitle: record.phone_normalized,
         score: record.try(:search_score)
       )
     when :orders

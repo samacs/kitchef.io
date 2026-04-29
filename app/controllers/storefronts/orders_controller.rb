@@ -174,6 +174,7 @@ module Storefronts
         :payment_method,
         :tip_cents,
         :cash_payment_amount_cents,
+        :coupon_code,
         items_attributes: [ :recipe_id, :quantity, :notes ]
       )
     end

@@ -18,6 +18,7 @@ module PanelNavHelper
       PanelNavItem.new(:fixed_costs,    t("panel.nav.fixed_costs"),    :calendar_range, fixed_costs_path,             nil),
       PanelNavItem.new(:clients,        t("panel.nav.clients"),        :users,          clients_path,                 nil),
       PanelNavItem.new(:schedule,       t("panel.nav.schedule"),       :calendar,       schedule_path,                nil),
+      PanelNavItem.new(:promotions,    t("panel.nav.promotions"),    :tag,            promotions_path,              nil),
       PanelNavItem.new(:production,     t("panel.nav.production"),     :chef_hat,       production_path,              nil)
     ]
 

@@ -36,10 +36,9 @@ class IngredientsController < AuthenticatedController
 
       respond_to do |format|
         format.turbo_stream do
-          # When the operator bumps the price, surface the impact panel
-          # in the drawer. Other saves close the drawer like the Clients
-          # pattern.
-          if price_changed && ingredient.recipe_components.any?
+          if autosave_request?
+            head :no_content
+          elsif price_changed && ingredient.recipe_components.any?
             render turbo_stream: turbo_stream.update(
               "drawer_content",
               render_to_string(
@@ -69,10 +68,15 @@ class IngredientsController < AuthenticatedController
 
   private
 
+  def autosave_request?
+    request.headers["X-Requested-With"] == "XMLHttpRequest"
+  end
+
   def find_or_build_ingredient
     return Current.account.ingredients.new if params[:id].blank?
 
-    Current.account.ingredients.kept.find(params[:id])
+    resolve_record(Current.account.ingredients.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def ingredient_params

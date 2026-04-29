@@ -37,11 +37,25 @@ module Recipes
       # SIMPLE_DEFAULTS only fills in keys the form didn't submit. Once
       # the form ships yield_unit/yield_quantity (Phase 11+ decomposition
       # work), submissions for prep recipes pass through unchanged.
+      legacy     = Array(submitted.delete(:photos))
+      new_photos = Array(submitted.delete(:new_photos))
+      submitted.delete(:remove_photo_ids)
+      submitted.delete(:photo_order)
+
+      photos = (legacy + new_photos).select { |p| p.respond_to?(:size) && p.size.positive? }
+
       attrs = SIMPLE_DEFAULTS.merge(submitted.compact)
 
-      # Auto-publish when a photo is submitted AND the operator didn't
-      # explicitly mark this as a draft via the form toggle.
-      attrs[:is_published] = has_photo?(attrs) if attrs[:is_published].nil?
+      # Normalize is_saleable from form checkbox ("0"/"1" string).
+      attrs[:is_saleable] = ActiveModel::Type::Boolean.new.cast(attrs[:is_saleable])
+
+      # Internal recipes never auto-publish and don't need a price.
+      if attrs[:is_saleable] == false
+        attrs[:is_published] = false
+        attrs[:sale_price_cents] ||= 0
+      elsif attrs[:is_published].nil?
+        attrs[:is_published] = photos.any?
+      end
 
       # Fallback category for simple mode: Phase 9 replaced the enum
       # with a FK. If the form didn't submit a category, pin the
@@ -50,6 +64,7 @@ module Recipes
 
       recipe = account.recipes.new(attrs)
       if recipe.save
+        recipe.photos.attach(photos) if photos.any?
         success(recipe)
       else
         Result.new(success: false, object: recipe, errors: recipe.errors)
@@ -57,13 +72,6 @@ module Recipes
     end
 
     private
-
-    def has_photo?(attrs)
-      photos = attrs[:photos]
-      return false if photos.blank?
-
-      Array(photos).any? { |p| p.respond_to?(:size) && p.size.positive? }
-    end
 
     def default_recipe_category_id
       account.categories.for_kind(:recipe).kept.order(:position, :name).pick(:id)

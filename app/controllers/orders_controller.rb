@@ -160,7 +160,8 @@ class OrdersController < AuthenticatedController
   def find_or_build_order
     return new_order if params[:id].blank?
 
-    Current.account.orders.kept.find(params[:id])
+    resolve_record(Current.account.orders.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def new_order
@@ -177,7 +178,7 @@ class OrdersController < AuthenticatedController
       :client_id, :delivery_type, :source, :delivery_date,
       :delivery_start_time_hhmm, :delivery_end_time_hhmm,
       :colonia, :city, :delivery_address, :delivery_notes, :notes,
-      :packaging, :packaging_cents,
+      :packaging, :packaging_cents, :coupon_code,
       items_attributes: %i[id recipe_id quantity unit_price notes _destroy]
     ).then { |p| normalize_packaging(p) }
   end

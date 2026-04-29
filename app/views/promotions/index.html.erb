@@ -1,0 +1,71 @@
+<% content_for :title, t("promotions.index.title") %>
+<% content_for :page_title, t("promotions.index.title") %>
+<% content_for :page_subtitle, t("promotions.index.subtitle") %>
+
+<% content_for :page_action do %>
+  <%= link_to new_promotion_path,
+        class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+    <%= icon(:plus, size: :xs) %>
+    <span><%= t("promotions.index.new_cta") %></span>
+  <% end %>
+<% end %>
+
+<% if promotions.empty? %>
+  <div class="flex flex-col items-center justify-center gap-4 py-16 text-center">
+    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-accent-soft">
+      <%= icon(:tag, size: :lg, class: "text-accent") %>
+    </div>
+    <div class="flex flex-col gap-1 max-w-[360px]">
+      <h2 class="font-serif text-[22px] text-ink"><%= t("promotions.index.empty.title") %></h2>
+      <p class="text-[14px] text-ink-2 leading-[1.55]"><%= t("promotions.index.empty.body") %></p>
+    </div>
+    <%= link_to new_promotion_path,
+          class: "inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2.5 rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors shadow-cta" do %>
+      <%= icon(:plus, size: :xs) %>
+      <span><%= t("promotions.index.empty.cta") %></span>
+    <% end %>
+  </div>
+<% else %>
+  <div class="flex flex-col gap-6">
+    <% if @performance.total_redemptions.positive? %>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div class="flex flex-col gap-1 rounded-card border border-line bg-surface p-4 shadow-card">
+          <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <%= t("promotions.stats.total_redemptions") %>
+          </span>
+          <span class="font-serif text-[28px] leading-[1] tracking-tight text-ink">
+            <%= @performance.total_redemptions %>
+          </span>
+        </div>
+        <div class="flex flex-col gap-1 rounded-card border border-line bg-surface p-4 shadow-card">
+          <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <%= t("promotions.stats.total_discount") %>
+          </span>
+          <span class="font-serif text-[28px] leading-[1] tracking-tight text-accent">
+            −<%= humanized_money_with_symbol(Money.new(@performance.total_discount_cents, "MXN")) %>
+          </span>
+        </div>
+        <div class="hidden sm:flex flex-col gap-1 rounded-card border border-line bg-surface p-4 shadow-card">
+          <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <%= t("promotions.stats.active_count") %>
+          </span>
+          <span class="font-serif text-[28px] leading-[1] tracking-tight text-ink">
+            <%= promotions.count(&:active?) %>
+          </span>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="flex items-baseline gap-3">
+      <span class="font-mono text-[11.5px] uppercase tracking-[0.14em] text-muted">
+        <%= t("promotions.index.count", count: promotions.size) %>
+      </span>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <% promotions.each do |promo| %>
+        <%= render Promotions::CardComponent.new(promotion: promo) %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

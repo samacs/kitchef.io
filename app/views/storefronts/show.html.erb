@@ -53,7 +53,7 @@
           </div>
           <div class="grid gap-[18px]" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));">
             <% recipes.each do |recipe| %>
-              <%= render Storefronts::MenuCardComponent.new(recipe: recipe) %>
+              <%= render Storefronts::MenuCardComponent.new(recipe: recipe, promo_badge: @promo_badges[recipe.id]) %>
             <% end %>
           </div>
         </div>

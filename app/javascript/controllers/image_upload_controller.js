@@ -13,6 +13,29 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["input", "preview", "placeholder"]
 
+  saleableChanged(event) {
+    const saleable = event.target.checked
+    const priceField = document.getElementById("recipe_sale_price_field")
+    const priceInput = document.getElementById("recipe_sale_price")
+    if (priceField) {
+      priceField.classList.toggle("hidden", !saleable)
+    }
+    if (priceInput) {
+      priceInput.required = saleable
+      if (!saleable) priceInput.value = ""
+    }
+  }
+
+  publishGate(event) {
+    const count = event.detail?.count ?? 0
+    const checkbox = document.getElementById("recipe_is_published")
+    const label = checkbox?.closest("label")
+    if (!checkbox) return
+
+    checkbox.disabled = count === 0
+    label?.classList.toggle("opacity-60", count === 0)
+  }
+
   preview() {
     if (!this.hasInputTarget) return
     const file = this.inputTarget.files && this.inputTarget.files[0]

@@ -79,7 +79,9 @@ export default class extends Controller {
         if (contentType.includes("text/vnd.turbo-stream.html")) {
           const body = await res.text()
           if (body.trim().length > 0 && window.Turbo?.renderStreamMessage) {
+            const focus = this.#captureFocus()
             window.Turbo.renderStreamMessage(body)
+            this.#restoreFocus(focus)
           }
         }
         this.showStatus("saved")
@@ -100,6 +102,52 @@ export default class extends Controller {
   // controller no longer emits since we bypass requestSubmit().
   #dispatchSuccess() {
     this.element.dispatchEvent(new CustomEvent("form-autosave:success", { bubbles: true }))
+  }
+
+  #captureFocus() {
+    const el = document.activeElement
+    if (!el || !this.element.contains(el)) return null
+
+    const id = el.id
+    const rowEl = el.closest("[id]")
+    const rowId = rowEl?.id
+    const tag = el.tagName
+    const nameAttr = el.getAttribute("name")
+    const selStart = el.selectionStart
+    const selEnd = el.selectionEnd
+
+    return { id, rowId, tag, nameAttr, selStart, selEnd }
+  }
+
+  #restoreFocus(state) {
+    if (!state) return
+
+    requestAnimationFrame(() => {
+      let target = null
+
+      if (state.id) {
+        target = document.getElementById(state.id)
+      }
+
+      if (!target && state.rowId && state.nameAttr) {
+        const row = document.getElementById(state.rowId)
+        if (row) {
+          const suffix = state.nameAttr.replace(/^.*\](\[[^\]]+\])$/, "$1")
+          target = row.querySelector(`${state.tag.toLowerCase()}[name$='${suffix}']`)
+        }
+      }
+
+      if (!target && state.nameAttr) {
+        target = this.element.querySelector(`[name="${state.nameAttr}"]`)
+      }
+
+      if (target && typeof target.focus === "function") {
+        target.focus()
+        if (state.selStart != null && typeof target.setSelectionRange === "function") {
+          try { target.setSelectionRange(state.selStart, state.selEnd) } catch { /* not selectable */ }
+        }
+      }
+    })
   }
 
   showStatus(kind) {

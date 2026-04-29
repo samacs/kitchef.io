@@ -29,19 +29,18 @@ export default class extends Controller {
     "footer", "total", "summary", "summaryEmpty", "payload", "submit"
   ]
 
-  static values = { slug: String }
+  static values = { slug: String, promotions: { type: Array, default: [] } }
 
   connect() {
     this.cart = this.load()
     this.tipCents = 0
+    this.couponLabel = null
     this.render()
     window.addEventListener("storage", this.onStorageChange)
     document.addEventListener("storefront-cart:clear", this.onClearRequested)
     document.addEventListener("tip-picker:changed", this.onTipChanged)
-    // Late-mounted controllers (tip-picker, payment-method-picker) ping us
-    // on connect so they get the current totals without waiting for the
-    // next cart mutation. Without this they sit at $0 until the customer
-    // adds another item.
+    document.addEventListener("storefront-coupon:applied", this.onCouponApplied)
+    document.addEventListener("storefront-coupon:removed", this.onCouponRemoved)
     document.addEventListener("storefront-cart:request-totals", this.broadcastTotalsListener)
   }
 
@@ -49,6 +48,8 @@ export default class extends Controller {
     window.removeEventListener("storage", this.onStorageChange)
     document.removeEventListener("storefront-cart:clear", this.onClearRequested)
     document.removeEventListener("tip-picker:changed", this.onTipChanged)
+    document.removeEventListener("storefront-coupon:applied", this.onCouponApplied)
+    document.removeEventListener("storefront-coupon:removed", this.onCouponRemoved)
     document.removeEventListener("storefront-cart:request-totals", this.broadcastTotalsListener)
   }
 
@@ -61,6 +62,16 @@ export default class extends Controller {
     this.updateCheckoutSummary()
     this.updatePayload()
     this.broadcastTotals()
+  }
+
+  onCouponApplied = (event) => {
+    this.couponLabel = event.detail?.label || null
+    this.updateCheckoutSummary()
+  }
+
+  onCouponRemoved = () => {
+    this.couponLabel = null
+    this.updateCheckoutSummary()
   }
 
   // ── Key ─────────────────────────────────────────────────────────────
@@ -129,6 +140,7 @@ export default class extends Controller {
         recipe_slug: payload.recipe_slug || null,
         name: payload.name,
         price_cents: payload.price_cents,
+        category_id: payload.category_id || null,
         lead_time_hours: payload.lead_time_hours || 0,
         photo: payload.photo || null,
         qty: 1,
@@ -175,6 +187,7 @@ export default class extends Controller {
       name: payload.name,
       price_cents: payload.price_cents + deltaCents,
       base_price_cents: payload.price_cents,
+      category_id: payload.category_id || null,
       lead_time_hours: payload.lead_time_hours || 0,
       photo: payload.photo || null,
       qty: 1,
@@ -275,8 +288,10 @@ export default class extends Controller {
   broadcastTotals() {
     const subtotal = this.totalCents()
     const tip = this.tipCents || 0
+    const discount = this.computeAutoDiscount().cents
+    const total = Math.max(subtotal - discount + tip, 0)
     document.dispatchEvent(new CustomEvent("storefront-cart:totals", {
-      detail: { subtotalCents: subtotal, tipCents: tip, totalCents: subtotal + tip }
+      detail: { subtotalCents: subtotal, discountCents: discount, tipCents: tip, totalCents: total }
     }))
   }
 
@@ -336,7 +351,28 @@ export default class extends Controller {
     })
 
     if (this.hasTotalTarget) {
-      this.totalTarget.textContent = this.formatMoney(this.totalCents())
+      const auto = this.computeAutoDiscount()
+      const subtotal = this.totalCents()
+      const displayTotal = Math.max(subtotal - auto.cents, 0)
+      this.totalTarget.textContent = this.formatMoney(displayTotal)
+
+      const existingDiscount = this.listTarget.parentElement?.querySelector("[data-cart-discount]")
+      if (existingDiscount) existingDiscount.remove()
+
+      if (auto.cents > 0 && this.hasFooterTarget) {
+        const discountRow = document.createElement("div")
+        discountRow.dataset.cartDiscount = "true"
+        discountRow.className = "flex items-center justify-between px-4 py-2 -mt-1"
+        discountRow.style.color = "var(--brand-1)"
+        discountRow.innerHTML = `
+          <span class="flex items-center gap-1.5 text-[12px] font-medium">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            ${this.escapeHtml(auto.label)}
+          </span>
+          <span class="font-mono text-[12px] font-medium tabular-nums">−${this.formatMoney(auto.cents)}</span>
+        `
+        this.footerTarget.insertBefore(discountRow, this.footerTarget.firstChild)
+      }
     }
   }
 
@@ -378,9 +414,12 @@ export default class extends Controller {
       this.summaryTarget.appendChild(row)
     })
 
-    const subtotalCents = this.totalCents()
-    const tipCents      = this.tipCents || 0
-    const totalCents    = subtotalCents + tipCents
+    const subtotalCents  = this.totalCents()
+    const tipCents       = this.tipCents || 0
+    const couponLabel    = this.couponLabel || null
+    const auto           = this.computeAutoDiscount()
+    const discountCents  = auto.cents
+    const totalCents     = Math.max(subtotalCents - discountCents + tipCents, 0)
 
     const breakdown = document.createElement("div")
     breakdown.dataset.cartRow = "true"
@@ -399,7 +438,27 @@ export default class extends Controller {
       </div>
     ` : ""
 
-    breakdown.innerHTML = subtotalRow + tipRow
+    const autoDiscountRow = discountCents > 0 ? `
+      <div class="flex justify-between" style="color: var(--brand-1);">
+        <span class="flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          ${this.escapeHtml(auto.label)}
+        </span>
+        <span class="font-mono font-medium tabular-nums">−${this.formatMoney(discountCents)}</span>
+      </div>
+    ` : ""
+
+    const couponRow = couponLabel ? `
+      <div class="flex justify-between" style="color: var(--brand-1);">
+        <span class="flex items-center gap-1.5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          ${this.escapeHtml(couponLabel)}
+        </span>
+        <span class="font-mono font-medium tabular-nums">Aplicado</span>
+      </div>
+    ` : ""
+
+    breakdown.innerHTML = subtotalRow + autoDiscountRow + couponRow + tipRow
     this.summaryTarget.appendChild(breakdown)
 
     const total = document.createElement("div")
@@ -488,6 +547,73 @@ export default class extends Controller {
         </div>
       </div>
     `
+  }
+
+  // ── Auto-promotion discount ──────────────────────────────────────────
+
+  computeAutoDiscount() {
+    const promos = this.promotionsValue || []
+    if (!promos.length || !this.cart.items.length) return { cents: 0, label: null }
+
+    let bestCents = 0
+    let bestLabel = null
+
+    for (const promo of promos) {
+      const cents = this.computePromoDiscount(promo)
+      if (cents > bestCents) {
+        bestCents = cents
+        bestLabel = promo.label
+      }
+    }
+
+    return { cents: bestCents, label: bestLabel }
+  }
+
+  computePromoDiscount(promo) {
+    const qualifying = this.qualifyingItems(promo)
+    const subtotal = this.totalCents()
+
+    if (promo.discount_type === "percentage") {
+      const base = qualifying.reduce((s, i) => s + i.price_cents * i.qty, 0)
+      let discount = Math.floor(base * promo.discount_value / 100)
+      if (promo.max_discount_cents) discount = Math.min(discount, promo.max_discount_cents)
+      return Math.min(discount, subtotal)
+    }
+
+    if (promo.discount_type === "fixed_amount") {
+      if (promo.scope_type === "order") return Math.min(promo.discount_value, subtotal)
+      return qualifying.length > 0 ? Math.min(promo.discount_value, subtotal) : 0
+    }
+
+    if (promo.discount_type === "bogo") {
+      const buy = promo.bogo_buy || 1
+      const get = promo.bogo_get || 1
+      const cycle = buy + get
+      let total = 0
+      for (const item of qualifying) {
+        const qty = item.qty
+        if (qty >= cycle) {
+          const freeUnits = Math.floor(qty / cycle) * get
+          total += freeUnits * item.price_cents
+        }
+      }
+      return Math.min(total, subtotal)
+    }
+
+    return 0
+  }
+
+  qualifyingItems(promo) {
+    if (promo.scope_type === "order") return this.cart.items
+    if (promo.scope_type === "recipe") {
+      const ids = new Set(promo.recipe_ids || [])
+      return this.cart.items.filter(i => ids.has(i.recipe_id))
+    }
+    if (promo.scope_type === "category") {
+      const ids = new Set(promo.category_ids || [])
+      return this.cart.items.filter(i => ids.has(i.category_id))
+    }
+    return []
   }
 
   // ── Utils ───────────────────────────────────────────────────────────

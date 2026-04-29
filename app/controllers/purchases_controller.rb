@@ -60,7 +60,9 @@ class PurchasesController < AuthenticatedController
 
   def find_or_build_purchase
     return Current.account.purchases.new(purchased_on: Date.current) if params[:id].blank?
-    Current.account.purchases.kept.find(params[:id])
+
+    resolve_record(Current.account.purchases.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def purchase_params

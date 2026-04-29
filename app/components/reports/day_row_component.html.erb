@@ -1,5 +1,5 @@
 <%
-  extra_columns = [ show_expenses, show_fixed_costs ].count(true)
+  extra_columns = [ show_discounts, show_expenses, show_fixed_costs ].count(true)
   grid_cols =
     case extra_columns
     when 0 then "grid-cols-[minmax(0,1fr)_auto_auto_auto]"
@@ -37,6 +37,16 @@
     <span class="font-mono text-[13px] text-accent tabular-nums whitespace-nowrap">
       <%= t("reports.finance.day.margin_pct", pct: day_stats.margin_pct || 0) %>
     </span>
+  <% end %>
+
+  <% if show_discounts %>
+    <% if has_discount? %>
+      <span class="font-mono text-[13px] text-accent tabular-nums whitespace-nowrap">
+        −<%= helpers.humanized_money_with_symbol(discount) %>
+      </span>
+    <% else %>
+      <span class="font-mono text-[13px] text-muted/60 tabular-nums">—</span>
+    <% end %>
   <% end %>
 
   <% if show_expenses %>

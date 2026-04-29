@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_28_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
@@ -313,6 +313,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_160000) do
     t.integer "delivery_type", default: 0, null: false
     t.bigint "deposit_cents", default: 0, null: false
     t.datetime "discarded_at"
+    t.bigint "discount_cents", default: 0, null: false
+    t.string "discount_label"
     t.datetime "en_route_started_at"
     t.datetime "geocoded_at"
     t.datetime "geocoding_failed_at"
@@ -359,6 +361,74 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_160000) do
     t.datetime "updated_at", null: false
     t.index ["order_id", "received_at"], name: "index_payments_on_order_id_and_received_at"
     t.index ["order_id"], name: "index_payments_on_order_id"
+  end
+
+  create_table "promotion_categories", force: :cascade do |t|
+    t.bigint "category_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "promotion_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_promotion_categories_on_category_id"
+    t.index ["promotion_id", "category_id"], name: "uniq_promotion_categories", unique: true
+    t.index ["promotion_id"], name: "index_promotion_categories_on_promotion_id"
+  end
+
+  create_table "promotion_recipes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "promotion_id", null: false
+    t.bigint "recipe_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["promotion_id", "recipe_id"], name: "uniq_promotion_recipes", unique: true
+    t.index ["promotion_id"], name: "index_promotion_recipes_on_promotion_id"
+    t.index ["recipe_id"], name: "index_promotion_recipes_on_recipe_id"
+  end
+
+  create_table "promotion_redemptions", force: :cascade do |t|
+    t.bigint "client_id"
+    t.datetime "created_at", null: false
+    t.bigint "discount_cents", default: 0, null: false
+    t.string "discount_label", null: false
+    t.integer "kind", default: 0, null: false
+    t.bigint "order_id", null: false
+    t.bigint "promotion_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_promotion_redemptions_on_client_id"
+    t.index ["order_id", "kind"], name: "uniq_redemption_per_kind", unique: true
+    t.index ["order_id"], name: "index_promotion_redemptions_on_order_id"
+    t.index ["promotion_id", "client_id"], name: "idx_promotion_client_redemptions"
+    t.index ["promotion_id"], name: "index_promotion_redemptions_on_promotion_id"
+  end
+
+  create_table "promotions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.boolean "active", default: true, null: false
+    t.string "badge_color"
+    t.string "badge_label"
+    t.integer "bogo_buy_quantity", default: 1
+    t.integer "bogo_get_quantity", default: 1
+    t.string "code"
+    t.datetime "created_at", null: false
+    t.datetime "discarded_at"
+    t.integer "discount_type", default: 0, null: false
+    t.integer "discount_value", null: false
+    t.datetime "ends_at"
+    t.integer "kind", default: 0, null: false
+    t.bigint "max_discount_cents"
+    t.bigint "min_order_cents", default: 0, null: false
+    t.string "name", null: false
+    t.integer "per_client_limit"
+    t.integer "priority", default: 0, null: false
+    t.integer "scope_type", default: 0, null: false
+    t.datetime "starts_at"
+    t.integer "total_usage_count", default: 0, null: false
+    t.integer "total_usage_limit"
+    t.datetime "updated_at", null: false
+    t.integer "valid_weekdays", default: [], null: false, array: true
+    t.integer "validity_mode", default: 0, null: false
+    t.index ["account_id", "active", "kind"], name: "idx_promotions_account_active_kind"
+    t.index ["account_id", "code"], name: "uniq_promotions_account_code", unique: true, where: "((code IS NOT NULL) AND (discarded_at IS NULL))"
+    t.index ["account_id"], name: "index_promotions_on_account_id"
+    t.index ["discarded_at"], name: "index_promotions_on_discarded_at"
   end
 
   create_table "purchase_items", force: :cascade do |t|
@@ -586,6 +656,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_160000) do
     t.index ["account_id", "rfc"], name: "index_suppliers_on_account_id_and_rfc", where: "(rfc IS NOT NULL)"
     t.index ["account_id"], name: "index_suppliers_on_account_id"
     t.index ["discarded_at"], name: "index_suppliers_on_discarded_at"
+    t.index ["name"], name: "idx_suppliers_name_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "users", force: :cascade do |t|
@@ -638,6 +709,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_160000) do
   add_foreign_key "orders", "accounts"
   add_foreign_key "orders", "clients"
   add_foreign_key "payments", "orders"
+  add_foreign_key "promotion_categories", "categories", on_delete: :cascade
+  add_foreign_key "promotion_categories", "promotions", on_delete: :cascade
+  add_foreign_key "promotion_recipes", "promotions", on_delete: :cascade
+  add_foreign_key "promotion_recipes", "recipes", on_delete: :cascade
+  add_foreign_key "promotion_redemptions", "clients", on_delete: :nullify
+  add_foreign_key "promotion_redemptions", "orders"
+  add_foreign_key "promotion_redemptions", "promotions"
+  add_foreign_key "promotions", "accounts"
   add_foreign_key "purchase_items", "ingredients", on_delete: :cascade
   add_foreign_key "purchase_items", "purchases", on_delete: :cascade
   add_foreign_key "purchases", "accounts"

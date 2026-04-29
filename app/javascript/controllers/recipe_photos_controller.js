@@ -101,6 +101,7 @@ export default class extends Controller {
 
     this.#refreshOrder()
     this.#refreshEmptyHint()
+    this.#dispatchPhotoCount()
   }
 
   // ── Internals ─────────────────────────────────────────────────────
@@ -129,6 +130,7 @@ export default class extends Controller {
     this.#syncFileInput()
     this.#renderPendingPreviews()
     this.#refreshEmptyHint()
+    this.#dispatchPhotoCount()
   }
 
   #syncFileInput() {
@@ -204,9 +206,17 @@ export default class extends Controller {
 
   #refreshEmptyHint() {
     if (!this.hasEmptyHintTarget) return
-    const filledCount = this.tileTargets.filter(t =>
+    const filledCount = this.#filledCount
+    this.emptyHintTarget.classList.toggle("hidden", filledCount > 0)
+  }
+
+  #dispatchPhotoCount() {
+    this.dispatch("changed", { detail: { count: this.#filledCount } })
+  }
+
+  get #filledCount() {
+    return this.tileTargets.filter(t =>
       t.dataset.state === "filled" || t.dataset.state === "pending"
     ).length
-    this.emptyHintTarget.classList.toggle("hidden", filledCount > 0)
   }
 }

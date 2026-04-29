@@ -15,6 +15,27 @@ module Storefronts
 
     def set_storefront
       @storefront = Account.friendly.kept.find(params[:slug])
+      @promo_badges = Promotions::StorefrontBadges.call(account: @storefront)
+      @auto_promotions_json = build_auto_promotions_json
+    end
+
+    def build_auto_promotions_json
+      promos = @storefront.promotions.active_now.automatic
+                          .includes(:promotion_recipes, :promotion_categories)
+      promos.map do |p|
+        {
+          id:             p.id,
+          discount_type:  p.discount_type,
+          discount_value: p.discount_value,
+          scope_type:     p.scope_type,
+          label:          p.display_badge_label,
+          recipe_ids:     p.scope_type_recipe? ? p.promotion_recipes.pluck(:recipe_id) : [],
+          category_ids:   p.scope_type_category? ? p.promotion_categories.pluck(:category_id) : [],
+          bogo_buy:       p.bogo_buy_quantity,
+          bogo_get:       p.bogo_get_quantity,
+          max_discount_cents: p.max_discount_cents
+        }
+      end.to_json
     end
 
     def storefront_not_found

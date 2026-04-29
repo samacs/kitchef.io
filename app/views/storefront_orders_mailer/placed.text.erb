@@ -24,6 +24,18 @@
 <% end -%>
 <% end -%>
 
+<% if @order.packaging_cents.to_i.positive? || @order.discount_cents.to_i.positive? || @order.tip_cents.to_i.positive? -%>
+<%= t(".subtotal_label") %>: <%= humanized_money_with_symbol(@order.subtotal) %>
+<% if @order.packaging_cents.to_i.positive? -%>
+<%= t(".packaging_label") %>: <%= humanized_money_with_symbol(@order.packaging) %>
+<% end -%>
+<% if @order.discount_cents.to_i.positive? -%>
+<%= @order.discount_label.presence || t(".discount_label") %>: −<%= humanized_money_with_symbol(@order.discount) %>
+<% end -%>
+<% if @order.tip_cents.to_i.positive? -%>
+<%= t(".tip_label") %>: <%= humanized_money_with_symbol(@order.tip) %>
+<% end -%>
+<% end -%>
 <%= t(".total_label") %>: <%= humanized_money_with_symbol(@order.total) %>
 
 <%= t(".review_lede") %>

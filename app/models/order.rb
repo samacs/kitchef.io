@@ -21,6 +21,8 @@
 #  delivery_type             :integer          default("delivery"), not null
 #  deposit_cents             :bigint           default(0), not null
 #  discarded_at              :datetime
+#  discount_cents            :bigint           default(0), not null
+#  discount_label            :string
 #  en_route_started_at       :datetime
 #  geocoded_at               :datetime
 #  geocoding_failed_at       :datetime
@@ -83,6 +85,7 @@ class Order < ApplicationRecord
   monetize :packaging_cents
   monetize :tip_cents
   monetize :cash_payment_amount_cents, allow_nil: true
+  monetize :discount_cents
 
   PAYMENT_METHODS = { cash: 0, transfer: 1, card: 2 }.freeze
 
@@ -171,6 +174,7 @@ class Order < ApplicationRecord
   belongs_to :client, optional: true
   has_many :items,    class_name: "OrderItem", dependent: :destroy, inverse_of: :order
   has_many :payments, dependent: :destroy
+  has_many :promotion_redemptions, class_name: "PromotionRedemption", dependent: :destroy
 
   accepts_nested_attributes_for :items, allow_destroy: true, reject_if: :all_blank
 
@@ -188,7 +192,7 @@ class Order < ApplicationRecord
   before_save :recompute_totals
 
   validates :delivery_date, presence: true
-  validates :subtotal_cents, :total_cents, :deposit_cents, :balance_cents, :packaging_cents, :tip_cents,
+  validates :subtotal_cents, :total_cents, :deposit_cents, :balance_cents, :packaging_cents, :tip_cents, :discount_cents,
     numericality: { greater_than_or_equal_to: 0 }
   validates :delivery_start_time, :delivery_end_time,
     numericality: { only_integer: true, in: 0..TimeOfDay::MAX },
@@ -340,7 +344,7 @@ class Order < ApplicationRecord
     end
     self.subtotal_cents = subtotal
     self.tax_cents      = 0
-    self.total_cents    = subtotal + packaging_cents.to_i + tip_cents.to_i
+    self.total_cents    = [ subtotal + packaging_cents.to_i + tip_cents.to_i - discount_cents.to_i, 0 ].max
     self.balance_cents  = [ total_cents - deposit_cents.to_i, 0 ].max
   end
 

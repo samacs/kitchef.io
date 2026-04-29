@@ -82,8 +82,9 @@ export default class extends Controller {
     row.querySelector("[data-field='componentable_id']").value   = id
     row.querySelector("[data-field='name']").textContent         = name
 
-    // Tag the row so the dedupe lookup catches it on subsequent picks
-    // even before the server round-trip.
+    // Stable DOM id so Idiomorph can match the client-added row with
+    // the server-rendered row after autosave — prevents duplication.
+    row.id = `component_${type.toLowerCase()}_${id}`
     row.dataset.componentableType = type
     row.dataset.componentableId   = id
 

@@ -91,6 +91,8 @@ es-MX:
       where_label: "Entrega"
       items_label: "Tu pedido"
       subtotal_label: "Productos"
+      packaging_label: "Empaque"
+      discount_label: "Descuento"
       tip_label: "Propina"
       total_label: "Total"
       payment_method_label: "Método de pago"
@@ -118,6 +120,7 @@ es-MX:
   panel:
     errors:
       account_missing: "Necesitas una cocina activa para entrar al panel."
+      record_not_found: "No encontramos lo que buscas. Es posible que haya sido eliminado."
     nav:
       section: "Cocina"
       home: "Inicio"
@@ -129,6 +132,7 @@ es-MX:
       fixed_costs: "Costos fijos"
       clients: "Clientes"
       schedule: "Horario"
+      promotions: "Promociones"
       production: "Producción"
       batches: "Lotes"
       reports_section: "Reportes"

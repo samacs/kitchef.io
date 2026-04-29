@@ -146,6 +146,20 @@ es-MX:
       email_hint: "Te enviamos un enlace de confirmación a este correo. Al tocarlo confirmas tu pedido."
       back_to_menu: "Seguir viendo el menú"
       submit: "Hacer pedido"
+      coupon:
+        heading: "¿Tienes un cupón?"
+        lede: "Si la cocina te dio un código de descuento, ingrésalo aquí."
+        placeholder: "Ej. BIENVENIDA"
+        apply: "Aplicar"
+        applied: "Cupón aplicado"
+        remove: "Quitar"
+        errors:
+          blank: "Ingresa un código de cupón."
+          not_found: "No encontramos ese cupón. Verifica el código."
+          expired: "Este cupón ya expiró."
+          usage_limit: "Este cupón ya alcanzó su límite de usos."
+          client_limit: "Ya usaste este cupón el número máximo de veces."
+          min_order: "Tu pedido no alcanza el mínimo para este cupón."
       tip:
         heading: "Propina"
         lede: "Si quieres agregar una propina a tu pedido, escoge un monto."
@@ -254,6 +268,7 @@ es-MX:
       items_section: "Tu pedido"
       subtotal_label: "Productos"
       packaging_label: "Empaque"
+      discount_label: "Descuento"
       tip_label: "Propina"
       payment_method_label: "Método de pago"
       cash_pays_with: "Pagas con %{amount} en efectivo"

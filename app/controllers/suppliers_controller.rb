@@ -52,7 +52,9 @@ class SuppliersController < AuthenticatedController
 
   def find_or_build_supplier
     return Current.account.suppliers.new if params[:id].blank?
-    Current.account.suppliers.kept.find(params[:id])
+
+    resolve_record(Current.account.suppliers.kept) ||
+      raise(ActiveRecord::RecordNotFound)
   end
 
   def supplier_params

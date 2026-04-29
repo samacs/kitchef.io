@@ -121,6 +121,12 @@ Rails.application.routes.draw do
   # Phase 10 — fixed costs (renta, gas, plataformas). One row per
   # recurring line item; the finance report prorates them against the
   # window to land on "Utilidad neta".
+  resources :promotions do
+    member do
+      post :toggle
+    end
+  end
+
   resources :fixed_costs, path: "fixed-costs"
 
   # Inline creator for the fixed-cost category combobox (same pattern
@@ -321,6 +327,11 @@ Rails.application.routes.draw do
     # "pozole-rojo" without collision.
     get "/dishes/:recipe_slug",           to: "storefronts/recipes#show",      as: :recipe
     get "/dishes/:recipe_slug/customize", to: "storefronts/recipes#customize", as: :recipe_customize
+    resources :coupons, only: [], controller: "storefronts/coupons" do
+      collection do
+        post :validate
+      end
+    end
     resources :orders, only: %i[new create show],
       controller: "storefronts/orders" do
       member do
