@@ -20,7 +20,7 @@
 <% pedidos_counter = Subscriptions::MonthlyOrderCounter.call(account: Current.account) %>
 <% if pedidos_counter.approaching? || pedidos_counter.near_limit? %>
   <div class="mb-5">
-    <%= render Subscriptions::HintBanner.new(
+    <%= render Subscriptions::HintBannerComponent.new(
           hint_key:     "pedidos:#{pedidos_counter.state}:#{Date.current.strftime('%Y%m')}",
           tone:         pedidos_counter.near_limit? ? :warn : :info,
           icon:         :gauge,
