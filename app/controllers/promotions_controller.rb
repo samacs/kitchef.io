@@ -65,9 +65,10 @@ class PromotionsController < AuthenticatedController
       :name, :code, :kind, :discount_type, :scope_type,
       :discount_value, :bogo_buy_quantity, :bogo_get_quantity,
       :min_order_cents, :max_discount_cents,
-      :starts_at, :ends_at,
+      :validity_mode, :starts_at, :ends_at,
       :total_usage_limit, :per_client_limit, :priority,
       :active,
+      valid_weekdays: [],
       recipe_ids: [],
       category_ids: []
     )

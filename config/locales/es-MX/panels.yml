@@ -162,6 +162,7 @@ es-MX:
       summary:
         packaging: "Empaque"
         tip: "Propina"
+        discount: "Descuento"
         total: "Total"
     transitions:
       confirm: "Confirmar"
@@ -309,6 +310,9 @@ es-MX:
         label: "Empaque de este pedido"
         hint: "Bolsa, servilleta, etiqueta — se suma al total."
         default_hint: "Default de tu cocina: %{amount}"
+      coupon_code_label: "Cupón"
+      coupon_code_placeholder: "Ej. BIENVENIDA"
+      coupon_code_hint: "Si tu cliente tiene un código de descuento, anótalo aquí."
       submit_create: "Capturar pedido"
       submit_update: "Guardar cambios"
       done: "Listo"

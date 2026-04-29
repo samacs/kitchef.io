@@ -69,6 +69,12 @@
           <span>+<%= humanized_money_with_symbol(order.tip) %></span>
         </div>
       <% end %>
+      <% if order.discount_cents.to_i.positive? %>
+        <div class="flex items-baseline justify-between gap-3 font-mono text-accent">
+          <span><%= order.discount_label.presence || t("orders.immutable_drawer.summary.discount") %></span>
+          <span>−<%= humanized_money_with_symbol(order.discount) %></span>
+        </div>
+      <% end %>
       <div class="flex items-baseline justify-between gap-3 mt-1">
         <span class="font-mono text-[12px] uppercase tracking-[0.1em] text-muted">
           <%= t("orders.immutable_drawer.summary.total") %>

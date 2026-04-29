@@ -13,6 +13,7 @@ module Orders
     def call
       attrs       = params.to_h.deep_symbolize_keys
       items_attrs = Array(attrs.delete(:items_attributes)&.values || attrs.delete(:items) || [])
+      coupon_code = attrs.delete(:coupon_code).to_s.strip.presence
 
       order = account.orders.new(attrs)
       # Hydrate per-pedido packaging from account defaults unless the
@@ -61,8 +62,7 @@ module Orders
       end
 
       if order.save
-        # Geocoding enqueue is handled by the Geocodable concern's
-        # after_commit callback — no explicit dispatch needed.
+        apply_promotions(order, coupon_code)
         success(order)
       else
         Result.new(success: false, object: order, errors: order.errors)
@@ -113,6 +113,41 @@ module Orders
       else
         [ nil, true ]
       end
+    end
+
+    def apply_promotions(order, coupon_code)
+      result = Promotions::StackingResolver.call(
+        account:        account,
+        items:          order.items.includes(:recipe),
+        subtotal_cents: order.subtotal_cents,
+        client:         order.client,
+        coupon_code:    coupon_code
+      )
+
+      return unless result.any_discount?
+
+      if result.auto_promotion
+        Promotions::Redeem.call(
+          promotion: result.auto_promotion, order: order,
+          discount_cents: result.auto_discount_cents,
+          discount_label: result.auto_label, kind: :automatic
+        )
+      end
+
+      if result.coupon_promotion
+        Promotions::Redeem.call(
+          promotion: result.coupon_promotion, order: order,
+          discount_cents: result.coupon_discount_cents,
+          discount_label: result.coupon_label, kind: :coupon
+        )
+      end
+
+      order.update_columns(
+        discount_cents: result.total_discount_cents,
+        discount_label: result.combined_label,
+        total_cents:    [ order.subtotal_cents + order.packaging_cents + order.tip_cents - result.total_discount_cents, 0 ].max,
+        balance_cents:  [ order.subtotal_cents + order.packaging_cents + order.tip_cents - result.total_discount_cents - order.deposit_cents, 0 ].max
+      )
     end
 
     def compute_options_delta(selected_options, recipe)

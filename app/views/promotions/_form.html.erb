@@ -183,25 +183,60 @@
     </div>
   </fieldset>
 
-  <%# ── Dates ─────────────────────────────────────────────── %>
+  <%# ── Validity ──────────────────────────────────────────── %>
   <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
     <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
-      <%= t("promotions.form.section_dates") %>
+      <%= t("promotions.form.section_validity") %>
     </legend>
 
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid grid-cols-3 gap-2">
+      <% Promotion::VALIDITY_MODES.each_key do |vm| %>
+        <label class="flex cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-line bg-surface px-3 py-2.5 text-[13px] font-medium transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent">
+          <%= f.radio_button :validity_mode, vm,
+                data: { action: "change->promotion-form#validityModeChanged", promotion_form_target: "validityModeRadio" },
+                class: "hidden" %>
+          <span><%= t("promotions.validity_modes.#{vm}") %></span>
+        </label>
+      <% end %>
+    </div>
+
+    <%# ── Date range fields (visible only for date_range) ── %>
+    <div class="grid gap-4 sm:grid-cols-2"
+         data-promotion-form-target="dateRangeSection"
+         <%= "hidden" unless promotion.validity_mode_date_range? %>>
       <div class="flex flex-col gap-1.5">
         <%= f.label :starts_at, t("promotions.form.starts_at_label"), class: "text-[13px] font-medium text-ink" %>
         <%= f.datetime_local_field :starts_at,
               class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
         <p class="text-[11.5px] text-muted"><%= t("promotions.form.starts_at_hint") %></p>
       </div>
-
       <div class="flex flex-col gap-1.5">
         <%= f.label :ends_at, t("promotions.form.ends_at_label"), class: "text-[13px] font-medium text-ink" %>
         <%= f.datetime_local_field :ends_at,
               class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
         <p class="text-[11.5px] text-muted"><%= t("promotions.form.ends_at_hint") %></p>
+      </div>
+    </div>
+
+    <%# ── Weekday toggles (visible only for weekdays) ───── %>
+    <% weekday_labels = t("promotions.form.weekday_labels") %>
+    <div data-promotion-form-target="weekdaysSection"
+         <%= "hidden" unless promotion.validity_mode_weekdays? %>>
+      <p class="text-[12.5px] text-muted mb-3"><%= t("promotions.form.weekdays_hint") %></p>
+      <div class="flex items-center gap-2">
+        <%# Sunday=0, Monday=1 … Saturday=6 — display Monday-first %>
+        <% [1, 2, 3, 4, 5, 6, 0].each do |wday| %>
+          <% checked = promotion.valid_weekdays.include?(wday) %>
+          <label class="group relative flex items-center justify-center w-10 h-10 rounded-full border cursor-pointer transition-colors
+                        <%= checked ? 'border-accent bg-accent text-bg' : 'border-line bg-surface text-ink-2 hover:border-line-2' %>">
+            <input type="checkbox" name="promotion[valid_weekdays][]" value="<%= wday %>"
+                   <%= "checked" if checked %>
+                   data-action="change->promotion-form#weekdayToggled"
+                   class="sr-only peer" />
+            <span class="text-[13px] font-semibold peer-checked:text-bg"><%= weekday_labels[wday] %></span>
+            <span class="absolute inset-0 rounded-full peer-checked:bg-accent peer-checked:border-accent border border-transparent transition-colors -z-10"></span>
+          </label>
+        <% end %>
       </div>
     </div>
   </fieldset>

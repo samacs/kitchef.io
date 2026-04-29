@@ -11,6 +11,10 @@ es-MX:
       order: "Todo el pedido"
       recipe: "Recetas específicas"
       category: "Categorías"
+    validity_modes:
+      always: "Siempre activa"
+      date_range: "Fechas específicas"
+      weekdays: "Por días"
 
     index:
       title: "Promociones"
@@ -84,7 +88,16 @@ es-MX:
       cancel: "Cancelar"
       section_conditions: "Condiciones"
       section_limits: "Límites de uso"
-      section_dates: "Vigencia"
+      section_validity: "Vigencia"
+      weekday_labels:
+        - "D"
+        - "L"
+        - "M"
+        - "M"
+        - "J"
+        - "V"
+        - "S"
+      weekdays_hint: "Selecciona los días en que aplica la promoción."
 
     card:
       redemptions:
@@ -94,6 +107,8 @@ es-MX:
       active: "Activa"
       inactive: "Inactiva"
       expired: "Expirada"
+      always_active: "Siempre activa"
+      no_days: "Sin días seleccionados"
       starts: "Inicia %{date}"
       ends: "Expira %{date}"
       no_expiry: "Sin expiración"

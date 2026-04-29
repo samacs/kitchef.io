@@ -178,7 +178,7 @@ class OrdersController < AuthenticatedController
       :client_id, :delivery_type, :source, :delivery_date,
       :delivery_start_time_hhmm, :delivery_end_time_hhmm,
       :colonia, :city, :delivery_address, :delivery_notes, :notes,
-      :packaging, :packaging_cents,
+      :packaging, :packaging_cents, :coupon_code,
       items_attributes: %i[id recipe_id quantity unit_price notes _destroy]
     ).then { |p| normalize_packaging(p) }
   end

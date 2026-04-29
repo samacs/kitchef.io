@@ -11,7 +11,10 @@ export default class extends Controller {
     "maxDiscountSection",
     "scopeTypeRadio",
     "recipesSection",
-    "categoriesSection"
+    "categoriesSection",
+    "validityModeRadio",
+    "dateRangeSection",
+    "weekdaysSection"
   ]
 
   kindChanged() {
@@ -36,6 +39,24 @@ export default class extends Controller {
     this.categoriesSectionTarget.hidden = st !== "category"
   }
 
+  validityModeChanged() {
+    const vm = this.selectedValidityMode
+    this.dateRangeSectionTarget.hidden = vm !== "date_range"
+    this.weekdaysSectionTarget.hidden = vm !== "weekdays"
+  }
+
+  weekdayToggled(event) {
+    const label = event.target.closest("label")
+    if (!label) return
+    const checked = event.target.checked
+    label.classList.toggle("border-accent", checked)
+    label.classList.toggle("bg-accent", checked)
+    label.classList.toggle("text-bg", checked)
+    label.classList.toggle("border-line", !checked)
+    label.classList.toggle("bg-surface", !checked)
+    label.classList.toggle("text-ink-2", !checked)
+  }
+
   get selectedKind() {
     const checked = this.kindRadioTargets.find(r => r.checked)
     return checked ? checked.value : "automatic"
@@ -49,5 +70,10 @@ export default class extends Controller {
   get selectedScopeType() {
     const checked = this.scopeTypeRadioTargets.find(r => r.checked)
     return checked ? checked.value : "order"
+  }
+
+  get selectedValidityMode() {
+    const checked = this.validityModeRadioTargets.find(r => r.checked)
+    return checked ? checked.value : "always"
   }
 }

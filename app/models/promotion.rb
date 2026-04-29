@@ -21,6 +21,8 @@
 #  starts_at          :datetime
 #  total_usage_count  :integer          default(0), not null
 #  total_usage_limit  :integer
+#  valid_weekdays     :integer          default([]), not null, is an Array
+#  validity_mode      :integer          default(0), not null
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  account_id         :bigint           not null
@@ -41,13 +43,17 @@ class Promotion < ApplicationRecord
   include HasPrefixedId.new(prefix: "prm")
   include HasSoftDelete
 
-  KINDS          = { automatic: 0, coupon: 1 }.freeze
-  DISCOUNT_TYPES = { percentage: 0, fixed_amount: 1, bogo: 2 }.freeze
-  SCOPE_TYPES    = { order: 0, recipe: 1, category: 2 }.freeze
+  KINDS           = { automatic: 0, coupon: 1 }.freeze
+  DISCOUNT_TYPES  = { percentage: 0, fixed_amount: 1, bogo: 2 }.freeze
+  SCOPE_TYPES     = { order: 0, recipe: 1, category: 2 }.freeze
+  VALIDITY_MODES  = { always: 0, date_range: 1, weekdays: 2 }.freeze
+
+  WEEKDAY_INDICES = (0..6).to_a.freeze
 
   enum :kind,          KINDS,          prefix: true
   enum :discount_type, DISCOUNT_TYPES, prefix: true
   enum :scope_type,    SCOPE_TYPES,    prefix: true
+  enum :validity_mode, VALIDITY_MODES, prefix: true
 
   has_many :promotion_recipes,    dependent: :destroy
   has_many :recipes,              through: :promotion_recipes
@@ -78,21 +84,40 @@ class Promotion < ApplicationRecord
     if: :discount_type_bogo?
   validate :bogo_requires_item_scope
   validate :date_range_coherent
+  validate :weekdays_present_and_valid
   validate :scope_records_present
 
   scope :active_now, -> {
-    kept.where(active: true)
-      .where("starts_at IS NULL OR starts_at <= ?", Time.current)
-      .where("ends_at IS NULL OR ends_at >= ?", Time.current)
+    now = Time.current
+    kept.where(active: true).where(
+      "validity_mode = :always " \
+      "OR (validity_mode = :date_range AND (starts_at IS NULL OR starts_at <= :now) AND (ends_at IS NULL OR ends_at >= :now)) " \
+      "OR (validity_mode = :weekdays AND :wday = ANY(valid_weekdays))",
+      always: VALIDITY_MODES[:always],
+      date_range: VALIDITY_MODES[:date_range],
+      weekdays: VALIDITY_MODES[:weekdays],
+      now: now,
+      wday: now.to_date.wday
+    )
   }
   scope :automatic, -> { where(kind: :automatic) }
   scope :coupons,   -> { where(kind: :coupon) }
   scope :by_priority, -> { order(priority: :asc, created_at: :asc) }
 
   before_validation :upcase_code
+  before_validation :clear_irrelevant_validity_fields
 
   def expired?
-    ends_at.present? && ends_at < Time.current
+    validity_mode_date_range? && ends_at.present? && ends_at < Time.current
+  end
+
+  def active_today?
+    case validity_mode
+    when "always"     then true
+    when "date_range" then !expired? && (starts_at.nil? || starts_at <= Time.current)
+    when "weekdays"   then valid_weekdays.include?(Date.current.wday)
+    else true
+    end
   end
 
   def usage_limit_reached?
@@ -106,7 +131,7 @@ class Promotion < ApplicationRecord
 
   def eligible?(subtotal_cents:, client: nil)
     return false unless active? && !discarded?
-    return false if expired?
+    return false unless active_today?
     return false if usage_limit_reached?
     return false if client_limit_reached?(client)
     return false if subtotal_cents < min_order_cents
@@ -125,6 +150,10 @@ class Promotion < ApplicationRecord
     I18n.t("promotions.scope_types.#{scope_type}")
   end
 
+  def validity_mode_label
+    I18n.t("promotions.validity_modes.#{validity_mode}")
+  end
+
   private
 
   def upcase_code
@@ -137,9 +166,34 @@ class Promotion < ApplicationRecord
   end
 
   def date_range_coherent
+    return unless validity_mode_date_range?
     return if starts_at.blank? || ends_at.blank?
     return if ends_at >= starts_at
     errors.add(:ends_at, :before_starts_at)
+  end
+
+  def weekdays_present_and_valid
+    return unless validity_mode_weekdays?
+    if valid_weekdays.blank?
+      errors.add(:valid_weekdays, :blank)
+      return
+    end
+    return if valid_weekdays.all? { |d| WEEKDAY_INDICES.include?(d) }
+    errors.add(:valid_weekdays, :invalid)
+  end
+
+  def clear_irrelevant_validity_fields
+    case validity_mode
+    when "always"
+      self.starts_at = nil
+      self.ends_at = nil
+      self.valid_weekdays = []
+    when "date_range"
+      self.valid_weekdays = []
+    when "weekdays"
+      self.starts_at = nil
+      self.ends_at = nil
+    end
   end
 
   def scope_records_present

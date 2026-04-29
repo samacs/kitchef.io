@@ -57,12 +57,21 @@ module Promotions
       end
     end
 
-    def expiry_display
-      if promotion.ends_at.present?
-        I18n.t("promotions.card.ends",
-               date: I18n.l(promotion.ends_at.to_date, format: :long))
-      else
-        I18n.t("promotions.card.no_expiry")
+    def validity_display
+      case promotion.validity_mode
+      when "always"
+        I18n.t("promotions.card.always_active")
+      when "date_range"
+        parts = []
+        parts << I18n.t("promotions.card.starts", date: I18n.l(promotion.starts_at.to_date, format: :long)) if promotion.starts_at.present?
+        parts << I18n.t("promotions.card.ends", date: I18n.l(promotion.ends_at.to_date, format: :long)) if promotion.ends_at.present?
+        parts.any? ? parts.join(" · ") : I18n.t("promotions.card.no_expiry")
+      when "weekdays"
+        labels = I18n.t("promotions.form.weekday_labels")
+        days = [ 1, 2, 3, 4, 5, 6, 0 ]
+          .select { |d| promotion.valid_weekdays.include?(d) }
+          .map { |d| labels[d] }
+        days.any? ? days.join(", ") : I18n.t("promotions.card.no_days")
       end
     end
 

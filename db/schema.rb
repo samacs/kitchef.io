@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_28_170004) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_28_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
@@ -421,6 +421,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_170004) do
     t.integer "total_usage_count", default: 0, null: false
     t.integer "total_usage_limit"
     t.datetime "updated_at", null: false
+    t.integer "valid_weekdays", default: [], null: false, array: true
+    t.integer "validity_mode", default: 0, null: false
     t.index ["account_id", "active", "kind"], name: "idx_promotions_account_active_kind"
     t.index ["account_id", "code"], name: "uniq_promotions_account_code", unique: true, where: "((code IS NOT NULL) AND (discarded_at IS NULL))"
     t.index ["account_id"], name: "index_promotions_on_account_id"
