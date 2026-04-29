@@ -54,7 +54,7 @@
       so columns stretch to fill (via `h-full` on each column) and
       internal card scroll handles overflow. Cancelados lives below
       as a separate horizontal strip. %>
-  <div class="flex gap-4 overflow-x-auto pb-4 -mx-5 lg:-mx-7 px-5 lg:px-7 overscroll-x-contain kc-scroll h-[calc(100vh-220px)] min-h-[360px]"
+  <div class="flex gap-4 overflow-x-auto pb-4 -mx-5 lg:-mx-7 px-5 lg:px-7 overscroll-x-contain kc-scroll h-[calc(100vh-320px)] min-h-[320px]"
        data-controller="drag-scroll">
     <% live_states.each do |state| %>
       <%= render Orders::KanbanColumnComponent.new(state: state, orders: by_state[state].to_a) %>

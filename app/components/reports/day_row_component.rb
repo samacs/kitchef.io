@@ -7,6 +7,7 @@ module Reports
     option :day_stats
     option :show_expenses,    default: -> { false }
     option :show_fixed_costs, default: -> { false }
+    option :show_discounts,   default: -> { false }
 
     def empty?
       day_stats.order_count.zero? && day_stats.purchases_cents.zero? && day_stats.fixed_costs_cents.zero?
@@ -42,6 +43,14 @@ module Reports
 
     def has_fixed?
       day_stats.fixed_costs_cents.positive?
+    end
+
+    def discount
+      Money.new(day_stats.discount_cents, "MXN")
+    end
+
+    def has_discount?
+      day_stats.discount_cents.positive?
     end
   end
 end

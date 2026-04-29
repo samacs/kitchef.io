@@ -2,6 +2,8 @@
 <% content_for :page_title, t("production.show.title") %>
 <% content_for :page_subtitle, t("production.show.subtitle") %>
 
+<%= turbo_stream_from Current.account, :orders %>
+
 <% content_for :page_action do %>
   <% if Current.account.composable_recipes? %>
     <%= link_to production_shopping_list_path,

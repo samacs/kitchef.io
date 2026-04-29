@@ -1747,6 +1747,10 @@ es-MX:
         real_margin_hint: "Ingresos − gastos reales en ingredientes de este periodo"
         drift_hint: "La diferencia con el margen bruto refleja cambios de precio después de cada pedido."
         day_column: "Gastos"
+      discounts:
+        banner_label: "Descuentos aplicados"
+        banner_hint: "Ingreso bruto %{gross} − descuentos = ingreso neto %{net}"
+        day_column: "Desc."
       fixed_costs:
         kpi_label: "Costos fijos"
         kpi_sub: "Prorrateados al periodo"

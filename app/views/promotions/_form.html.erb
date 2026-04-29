@@ -77,14 +77,36 @@
   <div class="flex flex-col gap-1.5"
        data-promotion-form-target="valueSection"
        <%= "hidden" if promotion.discount_type_bogo? %>>
-    <%= f.label :discount_value, t("promotions.form.discount_value_label"), class: "text-[13px] font-medium text-ink" %>
-    <div class="flex items-center gap-2 max-w-[200px]">
-      <span class="text-muted font-mono text-[13px]"
-            data-promotion-form-target="valuePrefix"><%= promotion.discount_type_percentage? ? "%" : "$" %></span>
-      <%= f.number_field :discount_value,
-            min: 1,
-            step: 1,
-            class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.discount_value_label") %></span>
+
+    <%# Percentage: raw integer 1–100 %>
+    <div data-promotion-form-target="valuePctWrap"
+         <%= "hidden" unless promotion.discount_type_percentage? %>
+         class="max-w-[200px]">
+      <span class="relative flex items-center">
+        <input type="number" name="promotion[discount_value]"
+               value="<%= promotion.discount_value if promotion.discount_type_percentage? %>"
+               min="1" max="100" step="1" inputmode="numeric"
+               data-promotion-form-target="valuePctInput"
+               class="w-full bg-surface text-ink border border-line rounded-input px-3 pr-8 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">%</span>
+      </span>
+    </div>
+
+    <%# Fixed amount: operator types pesos, we convert to cents in the controller %>
+    <% fixed_pesos = promotion.discount_type_fixed_amount? && promotion.discount_value.to_i.positive? ? format("%.2f", promotion.discount_value / 100.0) : nil %>
+    <div data-promotion-form-target="valueFixedWrap"
+         <%= "hidden" if promotion.discount_type_percentage? || promotion.discount_type_bogo? %>
+         class="max-w-[200px]">
+      <span class="relative flex items-center">
+        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
+        <input type="text" inputmode="decimal"
+               name="promotion[discount_value_pesos]"
+               value="<%= fixed_pesos %>"
+               placeholder="0.00"
+               data-promotion-form-target="valueFixedInput"
+               class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+      </span>
     </div>
   </div>
 
@@ -154,14 +176,17 @@
       <%= t("promotions.form.section_conditions") %>
     </legend>
 
+    <% min_order_pesos = promotion.min_order_cents.to_i.positive? ? format("%.2f", promotion.min_order_cents / 100.0) : nil %>
+    <% max_discount_pesos = promotion.max_discount_cents.to_i.positive? ? format("%.2f", promotion.max_discount_cents / 100.0) : nil %>
     <div class="grid gap-4 sm:grid-cols-2">
       <div class="flex flex-col gap-1.5">
-        <%= f.label :min_order_cents, t("promotions.form.min_order_label"), class: "text-[13px] font-medium text-ink" %>
+        <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.min_order_label") %></span>
         <span class="relative flex items-center max-w-[200px]">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
-          <input type="number" name="promotion[min_order_cents]"
-                 value="<%= promotion.min_order_cents.to_i %>"
-                 min="0" step="100"
+          <input type="text" inputmode="decimal"
+                 name="promotion[min_order_pesos]"
+                 value="<%= min_order_pesos %>"
+                 placeholder="0.00"
                  class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
         </span>
         <p class="text-[11.5px] text-muted"><%= t("promotions.form.min_order_hint") %></p>
@@ -170,12 +195,13 @@
       <div class="flex flex-col gap-1.5"
            data-promotion-form-target="maxDiscountSection"
            <%= "hidden" unless promotion.discount_type_percentage? %>>
-        <%= f.label :max_discount_cents, t("promotions.form.max_discount_label"), class: "text-[13px] font-medium text-ink" %>
+        <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.max_discount_label") %></span>
         <span class="relative flex items-center max-w-[200px]">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
-          <input type="number" name="promotion[max_discount_cents]"
-                 value="<%= promotion.max_discount_cents %>"
-                 min="0" step="100"
+          <input type="text" inputmode="decimal"
+                 name="promotion[max_discount_pesos]"
+                 value="<%= max_discount_pesos %>"
+                 placeholder="0.00"
                  class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
         </span>
         <p class="text-[11.5px] text-muted"><%= t("promotions.form.max_discount_hint") %></p>

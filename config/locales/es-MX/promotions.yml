@@ -24,6 +24,9 @@ es-MX:
         title: "Aún no tienes promociones"
         body: "Crea tu primera promoción para atraer más pedidos."
         cta: "Crear promoción"
+      count:
+        one: "%{count} promoción"
+        other: "%{count} promociones"
       tabs:
         all: "Todas"
         active: "Activas"
@@ -124,6 +127,11 @@ es-MX:
       scope_recipes: "Recetas: %{names}"
       scope_categories: "Categorías: %{names}"
       bogo_label: "Compra %{buy}, lleva %{get} gratis"
+
+    stats:
+      total_redemptions: "Usos totales"
+      total_discount: "Descuento otorgado"
+      active_count: "Activas"
 
     errors:
       bogo_requires_item_scope: "2×1 requiere aplicar a recetas o categorías específicas"

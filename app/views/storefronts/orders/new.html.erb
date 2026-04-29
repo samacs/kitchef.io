@@ -433,6 +433,42 @@
       </div>
     <% end %>
 
+    <%# ── Coupon code ──────────────────────────────────────── %>
+    <section class="mb-8 rounded-[16px] border border-line bg-surface p-6"
+             data-controller="storefront-coupon"
+             data-storefront-coupon-url-value="<%= validate_storefront_coupons_path(slug: @storefront.slug) %>">
+      <div class="flex items-center gap-2.5 mb-4">
+        <span class="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] shrink-0"
+              style="background: var(--brand-1-soft); color: var(--brand-1);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+        </span>
+        <div>
+          <h2 class="font-serif text-[22px] leading-[1.1] text-ink"><%= t("storefronts.checkout.coupon.heading") %></h2>
+          <p class="text-[13px] text-ink-2"><%= t("storefronts.checkout.coupon.lede") %></p>
+        </div>
+      </div>
+
+      <div class="flex items-stretch gap-2">
+        <input type="text"
+               data-storefront-coupon-target="input"
+               placeholder="<%= t("storefronts.checkout.coupon.placeholder") %>"
+               class="kc-sf-input flex-1 rounded-[7px] border border-line bg-surface px-3 py-2 text-[14px] text-ink font-mono uppercase">
+        <button type="button"
+                data-storefront-coupon-target="button"
+                data-label="<%= t("storefronts.checkout.coupon.apply") %>"
+                data-action="click->storefront-coupon#apply"
+                class="inline-flex items-center justify-center rounded-[7px] px-4 py-2 text-[13px] font-semibold cursor-pointer"
+                style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">
+          <%= t("storefronts.checkout.coupon.apply") %>
+        </button>
+      </div>
+
+      <div data-storefront-coupon-target="feedback" hidden class="mt-3"></div>
+      <input type="hidden" name="order[coupon_code]" value="" data-storefront-coupon-target="hidden">
+    </section>
+
     <section class="mb-8 rounded-[16px] border border-line bg-surface p-6">
       <h2 class="mb-4 font-serif text-[22px] text-ink"><%= t("storefronts.checkout.summary_section") %></h2>
       <div data-storefront-cart-target="summary">

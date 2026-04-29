@@ -91,6 +91,8 @@ es-MX:
       where_label: "Entrega"
       items_label: "Tu pedido"
       subtotal_label: "Productos"
+      packaging_label: "Empaque"
+      discount_label: "Descuento"
       tip_label: "Propina"
       total_label: "Total"
       payment_method_label: "Método de pago"

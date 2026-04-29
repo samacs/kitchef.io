@@ -86,15 +86,15 @@ module Promotions
       end
     end
 
-    def discount_label(promo, cents)
+    def discount_label(promo, _cents)
       type_part = case promo.discount_type
       when "percentage"   then "#{promo.discount_value}% desc."
-      when "fixed_amount" then "-#{Money.new(promo.discount_value, 'MXN').format}"
+      when "fixed_amount" then promo.name
       when "bogo"         then "#{promo.bogo_buy_quantity}×#{promo.bogo_buy_quantity + promo.bogo_get_quantity}"
       end
 
       if promo.kind_coupon? && promo.code.present?
-        "#{type_part} (#{promo.code})"
+        "#{promo.code} · #{type_part}"
       else
         type_part
       end

@@ -116,7 +116,7 @@
       <% end %>
       <% if order.discount_cents.to_i.positive? %>
         <span class="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 font-mono text-[10px] text-accent">
-          −<%= humanized_money_with_symbol(order.discount) %> <%= order.discount_label %>
+          −<%= humanized_money_with_symbol(order.discount) %><% if order.discount_label.present? %> · <%= order.discount_label %><% end %>
         </span>
       <% end %>
       <% if order.payment_method.present? %>

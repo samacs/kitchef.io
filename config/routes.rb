@@ -327,6 +327,11 @@ Rails.application.routes.draw do
     # "pozole-rojo" without collision.
     get "/dishes/:recipe_slug",           to: "storefronts/recipes#show",      as: :recipe
     get "/dishes/:recipe_slug/customize", to: "storefronts/recipes#customize", as: :recipe_customize
+    resources :coupons, only: [], controller: "storefronts/coupons" do
+      collection do
+        post :validate
+      end
+    end
     resources :orders, only: %i[new create show],
       controller: "storefronts/orders" do
       member do

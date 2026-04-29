@@ -2,6 +2,8 @@
 <% content_for :page_title, t("dashboard.title") %>
 <% content_for :page_subtitle, t("dashboard.subtitle") %>
 
+<%= turbo_stream_from Current.account, :orders %>
+
 <div class="mb-4">
   <%= render Dashboards::KitchefUrlComponent.new(account: @account) %>
 </div>

@@ -12,11 +12,7 @@
 # opt-out email lane, the `notify_new_orders` flag on Accounts::Settings
 # is already waiting.
 class StorefrontOrderPlacedNotification < Noticed::Event
-  deliver_by :action_cable do |config|
-    config.channel = "Turbo::StreamsChannel"
-    config.stream  = ->(recipient) { [ recipient, :notifications ] }
-    config.message = ->(_notification) { { kind: "refresh" } }
-  end
+  deliver_by :turbo_broadcast, class: "DeliveryMethods::TurboBroadcast"
 
   required_param :order_id
 

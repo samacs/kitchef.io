@@ -13,6 +13,7 @@ module Storefronts
                   .includes(option_groups: :options, components: :componentable)
                   .friendly.find(params[:recipe_slug])
       @related = related_recipes(@recipe)
+      @promo_badge = @promo_badges&.dig(@recipe.id)
     rescue ActiveRecord::RecordNotFound
       render "storefronts/not_found", status: :not_found
     end

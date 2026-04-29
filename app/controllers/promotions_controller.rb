@@ -5,7 +5,9 @@ class PromotionsController < AuthenticatedController
   }
   expose :promotion, -> { find_or_build_promotion }
 
-  def index; end
+  def index
+    @performance = Promotions::Performance.call(account: Current.account)
+  end
   def new;   end
   def edit;  end
 
@@ -21,16 +23,7 @@ class PromotionsController < AuthenticatedController
   def update
     result = Promotions::Update.call(promotion: promotion, params: promotion_params)
     if result.success?
-      respond_to do |format|
-        format.turbo_stream do
-          flash.now[:notice] = t(".updated")
-          render turbo_stream: [
-            turbo_stream.refresh(request_id: SecureRandom.uuid),
-            turbo_stream.append("flash-region", partial: "shared/flash_region")
-          ]
-        end
-        format.html { redirect_to promotions_path, notice: t(".updated") }
-      end
+      redirect_to promotions_path, notice: t(".updated")
     else
       render :edit, status: :unprocessable_content, locals: { promotion: result.object }
     end
@@ -63,14 +56,28 @@ class PromotionsController < AuthenticatedController
   def promotion_params
     params.require(:promotion).permit(
       :name, :code, :kind, :discount_type, :scope_type,
-      :discount_value, :bogo_buy_quantity, :bogo_get_quantity,
-      :min_order_cents, :max_discount_cents,
+      :discount_value, :discount_value_pesos,
+      :bogo_buy_quantity, :bogo_get_quantity,
+      :min_order_pesos, :max_discount_pesos,
       :validity_mode, :starts_at, :ends_at,
       :total_usage_limit, :per_client_limit, :priority,
       :active,
       valid_weekdays: [],
       recipe_ids: [],
       category_ids: []
-    )
+    ).then { |p| normalize_money_fields(p) }
+  end
+
+  def normalize_money_fields(permitted)
+    pesos_to_cents(permitted, :discount_value_pesos, :discount_value)
+    pesos_to_cents(permitted, :min_order_pesos, :min_order_cents)
+    pesos_to_cents(permitted, :max_discount_pesos, :max_discount_cents)
+    permitted
+  end
+
+  def pesos_to_cents(permitted, peso_key, cents_key)
+    raw = permitted.delete(peso_key)
+    return if raw.blank?
+    permitted[cents_key] = (raw.to_s.gsub(",", ".").to_d * 100).to_i
   end
 end

@@ -19,22 +19,27 @@ module Reports
 
     PRESETS = %i[this_week last_week this_month last_month last_30_days].freeze
 
-    DayStats = Data.define(:date, :revenue_cents, :cogs_cents, :purchases_cents, :fixed_costs_cents, :order_count) do
+    DayStats = Data.define(:date, :gross_revenue_cents, :discount_cents, :revenue_cents, :cogs_cents, :purchases_cents, :fixed_costs_cents, :order_count) do
       def margin_cents = revenue_cents - cogs_cents
 
       def margin_pct
         return nil if revenue_cents.zero?
         (margin_cents.to_f / revenue_cents * 100).round
       end
+
+      def has_discount? = discount_cents.positive?
     end
 
     PeriodStats = Data.define(
       :starting, :ending,
-      :revenue_cents, :cogs_cents, :purchases_cents, :fixed_costs_cents,
+      :gross_revenue_cents, :discount_cents, :revenue_cents,
+      :cogs_cents, :purchases_cents, :fixed_costs_cents,
       :order_count, :purchase_count, :avg_order_cents,
       :fixed_costs_by_category,
       :by_day
     ) do
+      def has_discounts? = discount_cents.positive?
+
       def gross_margin_cents = revenue_cents - cogs_cents
 
       def gross_margin_pct
@@ -140,20 +145,24 @@ module Reports
       by_day = by_day_rows.each_with_index.map do |date, idx|
         row  = rows_by_date[date]
         prow = purchases_by_day[date]
-        # Drizzle the rounding remainder into the last day so the
-        # per-day sum still exactly reconciles to the period total.
         fixed_today = per_day_fixed + (idx == days_in_window - 1 ? remainder : 0)
+        gross    = row ? row[:revenue]  : 0
+        discount = row ? row[:discount] : 0
         DayStats.new(
-          date:              date,
-          revenue_cents:     row  ? row[:revenue]  : 0,
-          cogs_cents:        row  ? row[:cogs]     : 0,
-          purchases_cents:   prow ? prow[:total]   : 0,
-          fixed_costs_cents: fixed_today,
-          order_count:       row  ? row[:orders]   : 0
+          date:                date,
+          gross_revenue_cents: gross,
+          discount_cents:      discount,
+          revenue_cents:       gross - discount,
+          cogs_cents:          row  ? row[:cogs]   : 0,
+          purchases_cents:     prow ? prow[:total]  : 0,
+          fixed_costs_cents:   fixed_today,
+          order_count:         row  ? row[:orders]  : 0
         )
       end
 
-      revenue_total    = by_day.sum(&:revenue_cents)
+      gross_total      = by_day.sum(&:gross_revenue_cents)
+      discount_total   = by_day.sum(&:discount_cents)
+      revenue_total    = gross_total - discount_total
       cogs_total       = by_day.sum(&:cogs_cents)
       purchases_total  = by_day.sum(&:purchases_cents)
       purchase_count   = purchases_by_day.values.sum { |r| r[:purchases_count].to_i }
@@ -161,6 +170,8 @@ module Reports
       PeriodStats.new(
         starting:                starting,
         ending:                  ending,
+        gross_revenue_cents:     gross_total,
+        discount_cents:          discount_total,
         revenue_cents:           revenue_total,
         cogs_cents:              cogs_total,
         purchases_cents:         purchases_total,
@@ -194,7 +205,8 @@ module Reports
         SELECT
           items.date,
           items.revenue,
-          items.cogs + COALESCE(packaging.total, 0) AS cogs,
+          items.cogs + COALESCE(order_level.packaging, 0) AS cogs,
+          COALESCE(order_level.discount, 0) AS discount,
           items.orders
         FROM (
           SELECT
@@ -213,23 +225,25 @@ module Reports
         LEFT JOIN (
           SELECT
             orders.delivery_date AS date,
-            SUM(orders.packaging_cents)::bigint AS total
+            SUM(orders.packaging_cents)::bigint AS packaging,
+            SUM(orders.discount_cents)::bigint  AS discount
           FROM orders
           WHERE orders.account_id = ?
             AND orders.discarded_at IS NULL
             AND orders.delivery_date BETWEEN ? AND ?
             AND orders.state IN (#{placeholders})
           GROUP BY orders.delivery_date
-        ) AS packaging ON packaging.date = items.date
+        ) AS order_level ON order_level.date = items.date
         ORDER BY items.date
       SQL
 
       ActiveRecord::Base.connection.exec_query(sql, "Reports::Finance").map do |row|
         {
-          date:    row["date"].is_a?(Date) ? row["date"] : Date.parse(row["date"].to_s),
-          revenue: row["revenue"].to_i,
-          cogs:    row["cogs"].to_i,
-          orders:  row["orders"].to_i
+          date:     row["date"].is_a?(Date) ? row["date"] : Date.parse(row["date"].to_s),
+          revenue:  row["revenue"].to_i,
+          cogs:     row["cogs"].to_i,
+          discount: row["discount"].to_i,
+          orders:   row["orders"].to_i
         }
       end
     end

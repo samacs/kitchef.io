@@ -6,7 +6,10 @@ export default class extends Controller {
     "codeSection",
     "discountTypeRadio",
     "valueSection",
-    "valuePrefix",
+    "valuePctWrap",
+    "valueFixedWrap",
+    "valuePctInput",
+    "valueFixedInput",
     "bogoSection",
     "maxDiscountSection",
     "scopeTypeRadio",
@@ -28,8 +31,15 @@ export default class extends Controller {
     this.bogoSectionTarget.hidden = dt !== "bogo"
     this.maxDiscountSectionTarget.hidden = dt !== "percentage"
 
-    if (this.hasValuePrefixTarget) {
-      this.valuePrefixTarget.textContent = dt === "percentage" ? "%" : "$"
+    this.valuePctWrapTarget.hidden = dt !== "percentage"
+    this.valueFixedWrapTarget.hidden = dt !== "fixed_amount"
+
+    if (dt === "percentage") {
+      this.valueFixedInputTarget.name = ""
+      this.valuePctInputTarget.name = "promotion[discount_value]"
+    } else if (dt === "fixed_amount") {
+      this.valuePctInputTarget.name = ""
+      this.valueFixedInputTarget.name = "promotion[discount_value_pesos]"
     }
   }
 

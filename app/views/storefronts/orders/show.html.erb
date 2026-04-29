@@ -176,7 +176,7 @@
       <% end %>
     </div>
 
-    <% if @order.tip_cents.to_i.positive? || @order.packaging_cents.to_i.positive? %>
+    <% if @order.tip_cents.to_i.positive? || @order.packaging_cents.to_i.positive? || @order.discount_cents.to_i.positive? %>
       <div class="mt-4 flex flex-col gap-1 border-t border-line pt-3 text-[13px]">
         <div class="flex justify-between">
           <span class="text-ink-2"><%= t("storefronts.confirmation.subtotal_label") %></span>
@@ -186,6 +186,15 @@
           <div class="flex justify-between">
             <span class="text-ink-2"><%= t("storefronts.confirmation.packaging_label") %></span>
             <span class="font-mono text-ink"><%= humanized_money_with_symbol(@order.packaging) %></span>
+          </div>
+        <% end %>
+        <% if @order.discount_cents.to_i.positive? %>
+          <div class="flex justify-between" style="color: var(--brand-1);">
+            <span class="flex items-center gap-1.5">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              <%= @order.discount_label.presence || t("storefronts.confirmation.discount_label") %>
+            </span>
+            <span class="font-mono font-medium">−<%= humanized_money_with_symbol(@order.discount) %></span>
           </div>
         <% end %>
         <% if @order.tip_cents.to_i.positive? %>
