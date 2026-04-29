@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_28_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
@@ -402,6 +402,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_28_180000) do
   create_table "promotions", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.boolean "active", default: true, null: false
+    t.string "badge_color"
+    t.string "badge_label"
     t.integer "bogo_buy_quantity", default: 1
     t.integer "bogo_get_quantity", default: 1
     t.string "code"

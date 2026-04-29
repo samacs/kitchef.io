@@ -1,304 +1,432 @@
 <% recipe_options = Current.account.recipes.kept.saleable.order(:name).pluck(:name, :id) %>
 <% category_options = Category.picker_options_for(account: Current.account, kind: :recipe) %>
+<% selected_recipe_ids = promotion.scope_type_recipe? ? promotion.recipe_ids : [] %>
+<% selected_category_ids = promotion.scope_type_category? ? promotion.category_ids : [] %>
+<% all_recipes = Current.account.recipes.kept.saleable.includes(:category, photos_attachments: :blob).order(:name) %>
+<% preview_data = all_recipes.map { |r|
+     photo = r.photos.first
+     {
+       id: r.id,
+       name: r.name,
+       price: humanized_money_with_symbol(r.sale_price),
+       category_id: r.category_id,
+       photo: (url_for(photo.variant(resize_to_fill: [400, 300])) if photo)
+     }
+   } %>
 
 <%= form_with model: promotion,
       url: promotion.persisted? ? promotion_path(promotion) : promotions_path,
-      class: "flex flex-col gap-6",
-      data: { controller: "promotion-form" } do |f| %>
+      class: "grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start",
+      data: { controller: "promotion-form form-dirty",
+              promotion_form_badge_colors_value: Promotion::BADGE_COLORS.to_json,
+              promotion_form_recipes_value: preview_data.to_json,
+              form_dirty_message_value: t("promotions.form.unsaved_warning") } do |f| %>
 
-  <% if promotion.errors.any? %>
-    <div role="alert"
-         class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
-      <span class="text-[12px] font-mono uppercase tracking-[0.14em]">
-        <%= t("onboarding.shared.errors_title") %>
-      </span>
-      <ul class="text-[13px] leading-[1.4] list-disc list-inside">
-        <% promotion.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
-
-  <%# ── Name ──────────────────────────────────────────────── %>
-  <div class="flex flex-col gap-1.5">
-    <%= f.label :name, t("promotions.form.name_label"), class: "text-[13px] font-medium text-ink" %>
-    <%= f.text_field :name,
-          placeholder: t("promotions.form.name_placeholder"),
-          class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-    <p class="text-[11.5px] text-muted"><%= t("promotions.form.name_hint") %></p>
-  </div>
-
-  <%# ── Kind (automatic / coupon) ─────────────────────────── %>
-  <div class="flex flex-col gap-1.5">
-    <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.kind_label") %></span>
-    <div class="grid grid-cols-2 gap-2">
-      <% Promotion::KINDS.each_key do |kind| %>
-        <label class="flex cursor-pointer items-start gap-2 rounded-[10px] border border-line bg-surface p-3 transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft">
-          <%= f.radio_button :kind, kind,
-                data: { action: "change->promotion-form#kindChanged", promotion_form_target: "kindRadio" },
-                class: "mt-0.5 accent-accent" %>
-          <span>
-            <span class="block text-[14px] font-semibold text-ink"><%= t("promotions.kinds.#{kind}") %></span>
-            <span class="block text-[12px] text-muted"><%= t("promotions.form.kind_hint_#{kind}") %></span>
-          </span>
-        </label>
-      <% end %>
-    </div>
-  </div>
-
-  <%# ── Coupon code (hidden for automatic) ────────────────── %>
-  <div class="flex flex-col gap-1.5"
-       data-promotion-form-target="codeSection"
-       <%= "hidden" unless promotion.kind_coupon? %>>
-    <%= f.label :code, t("promotions.form.code_label"), class: "text-[13px] font-medium text-ink" %>
-    <%= f.text_field :code,
-          placeholder: t("promotions.form.code_placeholder"),
-          class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono uppercase outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-    <p class="text-[11.5px] text-muted"><%= t("promotions.form.code_hint") %></p>
-  </div>
-
-  <%# ── Discount type ─────────────────────────────────────── %>
-  <div class="flex flex-col gap-1.5">
-    <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.discount_type_label") %></span>
-    <div class="grid grid-cols-3 gap-2">
-      <% Promotion::DISCOUNT_TYPES.each_key do |dt| %>
-        <label class="flex cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-line bg-surface px-3 py-2.5 text-[13px] font-medium transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent">
-          <%= f.radio_button :discount_type, dt,
-                data: { action: "change->promotion-form#discountTypeChanged", promotion_form_target: "discountTypeRadio" },
-                class: "hidden" %>
-          <span><%= t("promotions.discount_types.#{dt}") %></span>
-        </label>
-      <% end %>
-    </div>
-  </div>
-
-  <%# ── Discount value ────────────────────────────────────── %>
-  <div class="flex flex-col gap-1.5"
-       data-promotion-form-target="valueSection"
-       <%= "hidden" if promotion.discount_type_bogo? %>>
-    <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.discount_value_label") %></span>
-
-    <%# Percentage: raw integer 1–100 %>
-    <div data-promotion-form-target="valuePctWrap"
-         <%= "hidden" unless promotion.discount_type_percentage? %>
-         class="max-w-[200px]">
-      <span class="relative flex items-center">
-        <input type="number" name="promotion[discount_value]"
-               value="<%= promotion.discount_value if promotion.discount_type_percentage? %>"
-               min="1" max="100" step="1" inputmode="numeric"
-               data-promotion-form-target="valuePctInput"
-               class="w-full bg-surface text-ink border border-line rounded-input px-3 pr-8 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
-        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">%</span>
-      </span>
-    </div>
-
-    <%# Fixed amount: operator types pesos, we convert to cents in the controller %>
-    <% fixed_pesos = promotion.discount_type_fixed_amount? && promotion.discount_value.to_i.positive? ? format("%.2f", promotion.discount_value / 100.0) : nil %>
-    <div data-promotion-form-target="valueFixedWrap"
-         <%= "hidden" if promotion.discount_type_percentage? || promotion.discount_type_bogo? %>
-         class="max-w-[200px]">
-      <span class="relative flex items-center">
-        <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
-        <input type="text" inputmode="decimal"
-               name="promotion[discount_value_pesos]"
-               value="<%= fixed_pesos %>"
-               placeholder="0.00"
-               data-promotion-form-target="valueFixedInput"
-               class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
-      </span>
-    </div>
-  </div>
-
-  <%# ── BOGO quantities (hidden unless bogo) ──────────────── %>
-  <div class="grid grid-cols-2 gap-4"
-       data-promotion-form-target="bogoSection"
-       <%= "hidden" unless promotion.discount_type_bogo? %>>
-    <div class="flex flex-col gap-1.5">
-      <%= f.label :bogo_buy_quantity, t("promotions.form.bogo_buy_label"), class: "text-[13px] font-medium text-ink" %>
-      <%= f.number_field :bogo_buy_quantity,
-            min: 1, step: 1,
-            class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-    </div>
-    <div class="flex flex-col gap-1.5">
-      <%= f.label :bogo_get_quantity, t("promotions.form.bogo_get_label"), class: "text-[13px] font-medium text-ink" %>
-      <%= f.number_field :bogo_get_quantity,
-            min: 1, step: 1,
-            class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-    </div>
-    <p class="col-span-2 text-[11.5px] text-muted"><%= t("promotions.form.bogo_hint") %></p>
-  </div>
-
-  <%# ── Scope type ────────────────────────────────────────── %>
-  <div class="flex flex-col gap-1.5">
-    <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.scope_type_label") %></span>
-    <div class="grid grid-cols-3 gap-2">
-      <% Promotion::SCOPE_TYPES.each_key do |st| %>
-        <label class="flex cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-line bg-surface px-3 py-2.5 text-[13px] font-medium transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent">
-          <%= f.radio_button :scope_type, st,
-                data: { action: "change->promotion-form#scopeTypeChanged", promotion_form_target: "scopeTypeRadio" },
-                class: "hidden" %>
-          <span><%= t("promotions.scope_types.#{st}") %></span>
-        </label>
-      <% end %>
-    </div>
-  </div>
-
-  <%# ── Recipe picker (hidden unless recipe scope) ────────── %>
-  <div class="flex flex-col gap-1.5"
-       data-promotion-form-target="recipesSection"
-       <%= "hidden" unless promotion.scope_type_recipe? %>>
-    <%= f.label :recipe_ids, t("promotions.form.recipes_label"), class: "text-[13px] font-medium text-ink" %>
-    <%= f.collection_check_boxes :recipe_ids, recipe_options, :last, :first do |b| %>
-      <label class="flex items-center gap-2 py-1.5 cursor-pointer">
-        <%= b.check_box(class: "accent-accent rounded") %>
-        <span class="text-[13px] text-ink"><%= b.text %></span>
-      </label>
-    <% end %>
-  </div>
-
-  <%# ── Category picker (hidden unless category scope) ────── %>
-  <div class="flex flex-col gap-1.5"
-       data-promotion-form-target="categoriesSection"
-       <%= "hidden" unless promotion.scope_type_category? %>>
-    <%= f.label :category_ids, t("promotions.form.categories_label"), class: "text-[13px] font-medium text-ink" %>
-    <%= f.collection_check_boxes :category_ids, category_options, :last, :first do |b| %>
-      <label class="flex items-center gap-2 py-1.5 cursor-pointer">
-        <%= b.check_box(class: "accent-accent rounded") %>
-        <span class="text-[13px] text-ink"><%= b.text %></span>
-      </label>
-    <% end %>
-  </div>
-
-  <%# ── Conditions ────────────────────────────────────────── %>
-  <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
-    <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
-      <%= t("promotions.form.section_conditions") %>
-    </legend>
-
-    <% min_order_pesos = promotion.min_order_cents.to_i.positive? ? format("%.2f", promotion.min_order_cents / 100.0) : nil %>
-    <% max_discount_pesos = promotion.max_discount_cents.to_i.positive? ? format("%.2f", promotion.max_discount_cents / 100.0) : nil %>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div class="flex flex-col gap-1.5">
-        <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.min_order_label") %></span>
-        <span class="relative flex items-center max-w-[200px]">
-          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
-          <input type="text" inputmode="decimal"
-                 name="promotion[min_order_pesos]"
-                 value="<%= min_order_pesos %>"
-                 placeholder="0.00"
-                 class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+  <%# ═══ Left column: form fields ═══════════════════════════════ %>
+  <div class="flex flex-col gap-6">
+    <% if promotion.errors.any? %>
+      <div role="alert"
+           class="bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] text-err border border-err/30 rounded-[10px] px-4 py-3 flex flex-col gap-1.5">
+        <span class="text-[12px] font-mono uppercase tracking-[0.14em]">
+          <%= t("onboarding.shared.errors_title") %>
         </span>
-        <p class="text-[11.5px] text-muted"><%= t("promotions.form.min_order_hint") %></p>
+        <ul class="text-[13px] leading-[1.4] list-disc list-inside">
+          <% promotion.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%# ── Identity ────────────────────────────────────────── %>
+    <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
+      <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
+        <%= t("promotions.form.section_identity") %>
+      </legend>
+
+      <div class="flex flex-col gap-1.5">
+        <%= f.label :name, t("promotions.form.name_label"), class: "text-[13px] font-medium text-ink" %>
+        <%= f.text_field :name,
+              placeholder: t("promotions.form.name_placeholder"),
+              class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+        <p class="text-[11.5px] text-muted"><%= t("promotions.form.name_hint") %></p>
       </div>
 
+      <%# Badge label + color (side by side) %>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <%= f.label :badge_label, t("promotions.form.badge_label_label"), class: "text-[13px] font-medium text-ink" %>
+          <%= f.text_field :badge_label,
+                placeholder: t("promotions.form.badge_label_placeholder"),
+                maxlength: 20,
+                data: { action: "input->promotion-form#updatePreview", promotion_form_target: "badgeLabelInput" },
+                class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono uppercase outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+          <p class="text-[11.5px] text-muted"><%= t("promotions.form.badge_label_hint") %></p>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.badge_color_label") %></span>
+          <%= f.hidden_field :badge_color, data: { promotion_form_target: "badgeColorInput" } %>
+          <div class="flex flex-wrap gap-1.5">
+            <% Promotion::BADGE_COLORS.each do |color| %>
+              <button type="button"
+                      data-action="click->promotion-form#pickColor"
+                      data-color="<%= color %>"
+                      class="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 <%= promotion.badge_color == color ? 'border-ink scale-110 ring-2 ring-ink/20' : 'border-transparent' %>"
+                      style="background: <%= color %>;"
+                      aria-label="<%= color %>">
+              </button>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%# Kind (automatic / coupon) %>
+      <div class="flex flex-col gap-1.5">
+        <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.kind_label") %></span>
+        <div class="grid grid-cols-2 gap-2">
+          <% Promotion::KINDS.each_key do |kind| %>
+            <label class="flex cursor-pointer items-start gap-2 rounded-[10px] border border-line bg-bg p-3 transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft">
+              <%= f.radio_button :kind, kind,
+                    data: { action: "change->promotion-form#kindChanged", promotion_form_target: "kindRadio" },
+                    class: "mt-0.5 accent-accent" %>
+              <span>
+                <span class="block text-[14px] font-semibold text-ink"><%= t("promotions.kinds.#{kind}") %></span>
+                <span class="block text-[12px] text-muted"><%= t("promotions.form.kind_hint_#{kind}") %></span>
+              </span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Coupon code (hidden for automatic) %>
       <div class="flex flex-col gap-1.5"
-           data-promotion-form-target="maxDiscountSection"
-           <%= "hidden" unless promotion.discount_type_percentage? %>>
-        <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.max_discount_label") %></span>
-        <span class="relative flex items-center max-w-[200px]">
-          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
-          <input type="text" inputmode="decimal"
-                 name="promotion[max_discount_pesos]"
-                 value="<%= max_discount_pesos %>"
-                 placeholder="0.00"
-                 class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
-        </span>
-        <p class="text-[11.5px] text-muted"><%= t("promotions.form.max_discount_hint") %></p>
+           data-promotion-form-target="codeSection"
+           <%= "hidden" unless promotion.kind_coupon? %>>
+        <%= f.label :code, t("promotions.form.code_label"), class: "text-[13px] font-medium text-ink" %>
+        <%= f.text_field :code,
+              placeholder: t("promotions.form.code_placeholder"),
+              class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono uppercase outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+        <p class="text-[11.5px] text-muted"><%= t("promotions.form.code_hint") %></p>
       </div>
-    </div>
-  </fieldset>
+    </fieldset>
 
-  <%# ── Validity ──────────────────────────────────────────── %>
-  <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
-    <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
-      <%= t("promotions.form.section_validity") %>
-    </legend>
+    <%# ── Discount ────────────────────────────────────────── %>
+    <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
+      <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
+        <%= t("promotions.form.section_discount") %>
+      </legend>
 
-    <div class="grid grid-cols-3 gap-2">
-      <% Promotion::VALIDITY_MODES.each_key do |vm| %>
-        <label class="flex cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-line bg-surface px-3 py-2.5 text-[13px] font-medium transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent">
-          <%= f.radio_button :validity_mode, vm,
-                data: { action: "change->promotion-form#validityModeChanged", promotion_form_target: "validityModeRadio" },
-                class: "hidden" %>
-          <span><%= t("promotions.validity_modes.#{vm}") %></span>
-        </label>
-      <% end %>
-    </div>
-
-    <%# ── Date range fields (visible only for date_range) ── %>
-    <div class="grid gap-4 sm:grid-cols-2"
-         data-promotion-form-target="dateRangeSection"
-         <%= "hidden" unless promotion.validity_mode_date_range? %>>
-      <div class="flex flex-col gap-1.5">
-        <%= f.label :starts_at, t("promotions.form.starts_at_label"), class: "text-[13px] font-medium text-ink" %>
-        <%= f.datetime_local_field :starts_at,
-              class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-        <p class="text-[11.5px] text-muted"><%= t("promotions.form.starts_at_hint") %></p>
-      </div>
-      <div class="flex flex-col gap-1.5">
-        <%= f.label :ends_at, t("promotions.form.ends_at_label"), class: "text-[13px] font-medium text-ink" %>
-        <%= f.datetime_local_field :ends_at,
-              class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-        <p class="text-[11.5px] text-muted"><%= t("promotions.form.ends_at_hint") %></p>
-      </div>
-    </div>
-
-    <%# ── Weekday toggles (visible only for weekdays) ───── %>
-    <% weekday_labels = t("promotions.form.weekday_labels") %>
-    <div data-promotion-form-target="weekdaysSection"
-         <%= "hidden" unless promotion.validity_mode_weekdays? %>>
-      <p class="text-[12.5px] text-muted mb-3"><%= t("promotions.form.weekdays_hint") %></p>
-      <div class="flex items-center gap-2">
-        <%# Sunday=0, Monday=1 … Saturday=6 — display Monday-first %>
-        <% [1, 2, 3, 4, 5, 6, 0].each do |wday| %>
-          <% checked = promotion.valid_weekdays.include?(wday) %>
-          <label class="group relative flex items-center justify-center w-10 h-10 rounded-full border cursor-pointer transition-colors
-                        <%= checked ? 'border-accent bg-accent text-bg' : 'border-line bg-surface text-ink-2 hover:border-line-2' %>">
-            <input type="checkbox" name="promotion[valid_weekdays][]" value="<%= wday %>"
-                   <%= "checked" if checked %>
-                   data-action="change->promotion-form#weekdayToggled"
-                   class="sr-only peer" />
-            <span class="text-[13px] font-semibold peer-checked:text-bg"><%= weekday_labels[wday] %></span>
-            <span class="absolute inset-0 rounded-full peer-checked:bg-accent peer-checked:border-accent border border-transparent transition-colors -z-10"></span>
+      <%# Discount type %>
+      <div class="grid grid-cols-3 gap-2">
+        <% Promotion::DISCOUNT_TYPES.each_key do |dt| %>
+          <label class="flex cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-line bg-bg px-3 py-2.5 text-[13px] font-medium transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent">
+            <%= f.radio_button :discount_type, dt,
+                  data: { action: "change->promotion-form#discountTypeChanged", promotion_form_target: "discountTypeRadio" },
+                  class: "hidden" %>
+            <span><%= t("promotions.discount_types.#{dt}") %></span>
           </label>
         <% end %>
       </div>
-    </div>
-  </fieldset>
 
-  <%# ── Usage limits ──────────────────────────────────────── %>
-  <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
-    <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
-      <%= t("promotions.form.section_limits") %>
-    </legend>
-
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div class="flex flex-col gap-1.5">
-        <%= f.label :total_usage_limit, t("promotions.form.total_usage_limit_label"), class: "text-[13px] font-medium text-ink" %>
-        <%= f.number_field :total_usage_limit,
-              min: 1, step: 1,
-              placeholder: "∞",
-              class: "w-full max-w-[160px] bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-        <p class="text-[11.5px] text-muted"><%= t("promotions.form.total_usage_limit_hint") %></p>
+      <%# Discount value — percentage %>
+      <div data-promotion-form-target="valuePctWrap"
+           <%= "hidden" unless promotion.discount_type_percentage? %>
+           class="max-w-[200px]">
+        <span class="text-[13px] font-medium text-ink block mb-1.5"><%= t("promotions.form.discount_value_label") %></span>
+        <span class="relative flex items-center">
+          <input type="number" name="promotion[discount_value]"
+                 value="<%= promotion.discount_value if promotion.discount_type_percentage? %>"
+                 min="1" max="100" step="1" inputmode="numeric"
+                 data-promotion-form-target="valuePctInput"
+                 class="w-full bg-surface text-ink border border-line rounded-input px-3 pr-8 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">%</span>
+        </span>
       </div>
 
-      <div class="flex flex-col gap-1.5">
-        <%= f.label :per_client_limit, t("promotions.form.per_client_limit_label"), class: "text-[13px] font-medium text-ink" %>
-        <%= f.number_field :per_client_limit,
-              min: 1, step: 1,
-              placeholder: "∞",
-              class: "w-full max-w-[160px] bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
-        <p class="text-[11.5px] text-muted"><%= t("promotions.form.per_client_limit_hint") %></p>
+      <%# Discount value — fixed amount %>
+      <% fixed_pesos = promotion.discount_type_fixed_amount? && promotion.discount_value.to_i.positive? ? format("%.2f", promotion.discount_value / 100.0) : nil %>
+      <div data-promotion-form-target="valueFixedWrap"
+           <%= "hidden" if promotion.discount_type_percentage? || promotion.discount_type_bogo? %>
+           class="max-w-[200px]">
+        <span class="text-[13px] font-medium text-ink block mb-1.5"><%= t("promotions.form.discount_value_label") %></span>
+        <span class="relative flex items-center">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
+          <input type="text" inputmode="decimal"
+                 name="promotion[discount_value_pesos]"
+                 value="<%= fixed_pesos %>"
+                 placeholder="0.00"
+                 data-promotion-form-target="valueFixedInput"
+                 class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+        </span>
+      </div>
+
+      <%# BOGO quantities %>
+      <div class="grid grid-cols-2 gap-4"
+           data-promotion-form-target="bogoSection"
+           <%= "hidden" unless promotion.discount_type_bogo? %>>
+        <div class="flex flex-col gap-1.5">
+          <%= f.label :bogo_buy_quantity, t("promotions.form.bogo_buy_label"), class: "text-[13px] font-medium text-ink" %>
+          <%= f.number_field :bogo_buy_quantity, min: 1, step: 1,
+                class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <%= f.label :bogo_get_quantity, t("promotions.form.bogo_get_label"), class: "text-[13px] font-medium text-ink" %>
+          <%= f.number_field :bogo_get_quantity, min: 1, step: 1,
+                class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+        </div>
+        <p class="col-span-2 text-[11.5px] text-muted"><%= t("promotions.form.bogo_hint") %></p>
+      </div>
+    </fieldset>
+
+    <%# ── Scope ───────────────────────────────────────────── %>
+    <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
+      <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
+        <%= t("promotions.form.scope_type_label") %>
+      </legend>
+
+      <div class="grid grid-cols-3 gap-2">
+        <% Promotion::SCOPE_TYPES.each_key do |st| %>
+          <label class="flex cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-line bg-bg px-3 py-2.5 text-[13px] font-medium transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent">
+            <%= f.radio_button :scope_type, st,
+                  data: { action: "change->promotion-form#scopeTypeChanged", promotion_form_target: "scopeTypeRadio" },
+                  class: "hidden" %>
+            <span><%= t("promotions.scope_types.#{st}") %></span>
+          </label>
+        <% end %>
+      </div>
+
+      <%# Recipe multi-select (tag style) %>
+      <div data-promotion-form-target="recipesSection"
+           <%= "hidden" unless promotion.scope_type_recipe? %>>
+        <span class="text-[13px] font-medium text-ink block mb-2"><%= t("promotions.form.recipes_label") %></span>
+        <div class="flex flex-wrap gap-1.5 p-3 rounded-[10px] border border-line bg-bg min-h-[44px]">
+          <% recipe_options.each do |name, id| %>
+            <% checked = selected_recipe_ids.include?(id) %>
+            <label class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium cursor-pointer transition-colors
+                          <%= checked ? 'border-accent bg-accent text-bg' : 'border-line bg-surface text-ink-2 hover:border-line-2' %>">
+              <input type="checkbox" name="promotion[recipe_ids][]" value="<%= id %>"
+                     <%= "checked" if checked %>
+                     data-action="change->promotion-form#tagToggled"
+                     class="sr-only peer" />
+              <span class="peer-checked:text-bg"><%= name %></span>
+              <span class="peer-checked:block hidden text-[10px] opacity-70">×</span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Category multi-select (tag style) %>
+      <div data-promotion-form-target="categoriesSection"
+           <%= "hidden" unless promotion.scope_type_category? %>>
+        <span class="text-[13px] font-medium text-ink block mb-2"><%= t("promotions.form.categories_label") %></span>
+        <div class="flex flex-wrap gap-1.5 p-3 rounded-[10px] border border-line bg-bg min-h-[44px]">
+          <% category_options.each do |name, id| %>
+            <% checked = selected_category_ids.include?(id) %>
+            <label class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[12px] font-medium cursor-pointer transition-colors
+                          <%= checked ? 'border-accent bg-accent text-bg' : 'border-line bg-surface text-ink-2 hover:border-line-2' %>">
+              <input type="checkbox" name="promotion[category_ids][]" value="<%= id %>"
+                     <%= "checked" if checked %>
+                     data-action="change->promotion-form#tagToggled"
+                     class="sr-only peer" />
+              <span class="peer-checked:text-bg"><%= name %></span>
+              <span class="peer-checked:block hidden text-[10px] opacity-70">×</span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    </fieldset>
+
+    <%# ── Conditions ──────────────────────────────────────── %>
+    <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
+      <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
+        <%= t("promotions.form.section_conditions") %>
+      </legend>
+      <% min_order_pesos = promotion.min_order_cents.to_i.positive? ? format("%.2f", promotion.min_order_cents / 100.0) : nil %>
+      <% max_discount_pesos = promotion.max_discount_cents.to_i.positive? ? format("%.2f", promotion.max_discount_cents / 100.0) : nil %>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.min_order_label") %></span>
+          <span class="relative flex items-center max-w-[200px]">
+            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
+            <input type="text" inputmode="decimal" name="promotion[min_order_pesos]"
+                   value="<%= min_order_pesos %>" placeholder="0.00"
+                   class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+          </span>
+          <p class="text-[11.5px] text-muted"><%= t("promotions.form.min_order_hint") %></p>
+        </div>
+        <div class="flex flex-col gap-1.5"
+             data-promotion-form-target="maxDiscountSection"
+             <%= "hidden" unless promotion.discount_type_percentage? %>>
+          <span class="text-[13px] font-medium text-ink"><%= t("promotions.form.max_discount_label") %></span>
+          <span class="relative flex items-center max-w-[200px]">
+            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted font-mono text-[12px]">$</span>
+            <input type="text" inputmode="decimal" name="promotion[max_discount_pesos]"
+                   value="<%= max_discount_pesos %>" placeholder="0.00"
+                   class="w-full bg-surface text-ink border border-line rounded-input pl-6 pr-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+          </span>
+          <p class="text-[11.5px] text-muted"><%= t("promotions.form.max_discount_hint") %></p>
+        </div>
+      </div>
+    </fieldset>
+
+    <%# ── Validity ────────────────────────────────────────── %>
+    <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
+      <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
+        <%= t("promotions.form.section_validity") %>
+      </legend>
+      <div class="grid grid-cols-3 gap-2">
+        <% Promotion::VALIDITY_MODES.each_key do |vm| %>
+          <label class="flex cursor-pointer items-center justify-center gap-1.5 rounded-[10px] border border-line bg-bg px-3 py-2.5 text-[13px] font-medium transition-colors hover:border-line-2 has-[:checked]:border-accent has-[:checked]:bg-accent-soft has-[:checked]:text-accent">
+            <%= f.radio_button :validity_mode, vm,
+                  data: { action: "change->promotion-form#validityModeChanged", promotion_form_target: "validityModeRadio" },
+                  class: "hidden" %>
+            <span><%= t("promotions.validity_modes.#{vm}") %></span>
+          </label>
+        <% end %>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2"
+           data-promotion-form-target="dateRangeSection"
+           <%= "hidden" unless promotion.validity_mode_date_range? %>>
+        <div class="flex flex-col gap-1.5">
+          <%= f.label :starts_at, t("promotions.form.starts_at_label"), class: "text-[13px] font-medium text-ink" %>
+          <%= f.datetime_local_field :starts_at,
+                class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+          <p class="text-[11.5px] text-muted"><%= t("promotions.form.starts_at_hint") %></p>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <%= f.label :ends_at, t("promotions.form.ends_at_label"), class: "text-[13px] font-medium text-ink" %>
+          <%= f.datetime_local_field :ends_at,
+                class: "w-full bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+          <p class="text-[11.5px] text-muted"><%= t("promotions.form.ends_at_hint") %></p>
+        </div>
+      </div>
+      <% weekday_labels = t("promotions.form.weekday_labels") %>
+      <div data-promotion-form-target="weekdaysSection"
+           <%= "hidden" unless promotion.validity_mode_weekdays? %>>
+        <p class="text-[12.5px] text-muted mb-3"><%= t("promotions.form.weekdays_hint") %></p>
+        <div class="flex items-center gap-2">
+          <% [1, 2, 3, 4, 5, 6, 0].each do |wday| %>
+            <% checked = promotion.valid_weekdays.include?(wday) %>
+            <label class="group relative flex items-center justify-center w-10 h-10 rounded-full border cursor-pointer transition-colors
+                          <%= checked ? 'border-accent bg-accent text-bg' : 'border-line bg-surface text-ink-2 hover:border-line-2' %>">
+              <input type="checkbox" name="promotion[valid_weekdays][]" value="<%= wday %>"
+                     <%= "checked" if checked %>
+                     data-action="change->promotion-form#weekdayToggled"
+                     class="sr-only peer" />
+              <span class="text-[13px] font-semibold peer-checked:text-bg"><%= weekday_labels[wday] %></span>
+              <span class="absolute inset-0 rounded-full peer-checked:bg-accent peer-checked:border-accent border border-transparent transition-colors -z-10"></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    </fieldset>
+
+    <%# ── Usage limits ────────────────────────────────────── %>
+    <fieldset class="flex flex-col gap-4 rounded-[12px] border border-line bg-surface p-5">
+      <legend class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted px-1">
+        <%= t("promotions.form.section_limits") %>
+      </legend>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="flex flex-col gap-1.5">
+          <%= f.label :total_usage_limit, t("promotions.form.total_usage_limit_label"), class: "text-[13px] font-medium text-ink" %>
+          <%= f.number_field :total_usage_limit, min: 1, step: 1, placeholder: "∞",
+                class: "w-full max-w-[160px] bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+          <p class="text-[11.5px] text-muted"><%= t("promotions.form.total_usage_limit_hint") %></p>
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <%= f.label :per_client_limit, t("promotions.form.per_client_limit_label"), class: "text-[13px] font-medium text-ink" %>
+          <%= f.number_field :per_client_limit, min: 1, step: 1, placeholder: "∞",
+                class: "w-full max-w-[160px] bg-surface text-ink border border-line rounded-input px-3 py-2 text-[14px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+          <p class="text-[11.5px] text-muted"><%= t("promotions.form.per_client_limit_hint") %></p>
+        </div>
+      </div>
+    </fieldset>
+
+    <%# ── Submit ──────────────────────────────────────────── %>
+    <div class="flex items-center justify-between gap-3 pt-2">
+      <span hidden
+            data-form-dirty-target="indicator"
+            class="inline-flex items-center gap-1.5 text-[12px] font-medium text-warn">
+        <span class="inline-block w-[6px] h-[6px] rounded-full bg-warn animate-pulse"></span>
+        <%= t("promotions.form.unsaved_indicator") %>
+      </span>
+      <div class="flex items-center gap-3 ml-auto">
+        <%= link_to t("promotions.form.cancel"), promotions_path,
+              class: "inline-flex items-center gap-1 rounded-[9px] border border-line bg-surface px-4 py-2.5 text-[13px] font-medium text-ink-2 no-underline hover:border-line-2" %>
+        <%= f.submit(promotion.persisted? ? t("promotions.form.submit_update") : t("promotions.form.submit_create"),
+              class: "inline-flex items-center justify-center gap-2 rounded-[9px] px-5 py-2.5 text-[13px] font-semibold bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer") %>
       </div>
     </div>
-  </fieldset>
-
-  <%# ── Submit ────────────────────────────────────────────── %>
-  <div class="flex items-center justify-end gap-3 pt-2">
-    <%= link_to t("promotions.form.cancel"), promotions_path,
-          class: "inline-flex items-center gap-1 rounded-[9px] border border-line bg-surface px-4 py-2.5 text-[13px] font-medium text-ink-2 no-underline hover:border-line-2" %>
-    <%= f.submit(promotion.persisted? ? t("promotions.form.submit_update") : t("promotions.form.submit_create"),
-          class: "inline-flex items-center justify-center gap-2 rounded-[9px] px-5 py-2.5 text-[13px] font-semibold bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta cursor-pointer") %>
   </div>
+
+  <%# ═══ Right column: live preview ════════════════════════════ %>
+  <aside class="hidden lg:block sticky top-20">
+    <div class="flex flex-col gap-3">
+      <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+        <%= t("promotions.form.preview_kicker") %>
+      </span>
+
+      <%# Preview card — JS-driven carousel %>
+      <div data-promotion-form-target="previewCard"
+           class="rounded-[14px] border border-line bg-surface overflow-hidden shadow-card">
+        <div class="relative" style="aspect-ratio: 4 / 3; background: var(--color-bg-2);">
+          <img data-promotion-form-target="previewPhoto"
+               src="" alt="" class="w-full h-full object-cover" />
+          <div data-promotion-form-target="previewPhotoFallback"
+               class="absolute inset-0 flex items-center justify-center font-serif italic text-[48px] text-accent">
+            ?
+          </div>
+
+          <%# Badge LABEL — top-right corner of image (automatic promos only) %>
+          <span data-promotion-form-target="previewLabel"
+                class="absolute top-3 right-3 inline-flex items-center rounded-[8px] px-2.5 py-1 text-[12px] font-bold uppercase tracking-[0.06em] text-white shadow-lg"
+                style="background: <%= promotion.badge_color.presence || '#0A5A3C' %>;">
+            <%= promotion.badge_label.presence || "PROMO" %>
+          </span>
+        </div>
+
+        <div class="p-4 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <h3 data-promotion-form-target="previewName"
+                class="font-serif text-[18px] leading-[1.1] tracking-tight text-ink truncate flex-1">
+            </h3>
+            <%# Discount badge — next to name, always uses kitchen palette %>
+            <span data-promotion-form-target="previewBadge"
+                  class="shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-accent text-bg">
+              <%= promotion.auto_badge_label %>
+            </span>
+          </div>
+
+          <span data-promotion-form-target="previewPrice"
+                class="font-serif text-[18px] text-ink"></span>
+
+          <button type="button" disabled
+                  class="mt-1 w-full inline-flex items-center justify-center gap-1.5 rounded-[9px] px-4 py-2.5 text-[14px] font-semibold bg-accent text-bg opacity-60 cursor-not-allowed">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <%= t("storefronts.menu.add") %>
+          </button>
+        </div>
+      </div>
+
+      <%# Carousel nav — dots + arrows %>
+      <div data-promotion-form-target="previewNav"
+           class="flex items-center justify-center gap-3">
+        <button type="button" data-action="click->promotion-form#prevPreview"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-full border border-line bg-surface text-ink-2 hover:border-line-2 hover:text-ink transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span data-promotion-form-target="previewCounter"
+              class="font-mono text-[11px] text-muted tabular-nums"></span>
+        <button type="button" data-action="click->promotion-form#nextPreview"
+                class="inline-flex items-center justify-center w-8 h-8 rounded-full border border-line bg-surface text-ink-2 hover:border-line-2 hover:text-ink transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+
+      <p class="text-[11.5px] text-muted text-center">
+        <%= t("promotions.form.preview_hint") %>
+      </p>
+    </div>
+  </aside>
 <% end %>

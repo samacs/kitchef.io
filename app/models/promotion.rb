@@ -4,6 +4,8 @@
 #
 #  id                 :bigint           not null, primary key
 #  active             :boolean          default(TRUE), not null
+#  badge_color        :string
+#  badge_label        :string
 #  bogo_buy_quantity  :integer          default(1)
 #  bogo_get_quantity  :integer          default(1)
 #  code               :string
@@ -22,7 +24,7 @@
 #  total_usage_count  :integer          default(0), not null
 #  total_usage_limit  :integer
 #  valid_weekdays     :integer          default([]), not null, is an Array
-#  validity_mode      :integer          default(0), not null
+#  validity_mode      :integer          default("always"), not null
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  account_id         :bigint           not null
@@ -50,6 +52,15 @@ class Promotion < ApplicationRecord
 
   WEEKDAY_INDICES = (0..6).to_a.freeze
 
+  BADGE_COLORS = %w[
+    #0A5A3C #1B7A5A #2AA77A
+    #0E7490 #0891B2 #06B6D4
+    #4338CA #6366F1 #8B5CF6
+    #BE185D #E11D48 #F43F5E
+    #C2410C #EA580C #F59E0B
+    #15803D #65A30D #84CC16
+  ].freeze
+
   enum :kind,          KINDS,          prefix: true
   enum :discount_type, DISCOUNT_TYPES, prefix: true
   enum :scope_type,    SCOPE_TYPES,    prefix: true
@@ -69,6 +80,8 @@ class Promotion < ApplicationRecord
   monetize :max_discount_cents, allow_nil: true
 
   validates :name, presence: true, length: { maximum: 100 }
+  validates :badge_label, length: { maximum: 20 }, allow_nil: true
+  validates :badge_color, inclusion: { in: BADGE_COLORS }, allow_nil: true, allow_blank: true
   validates :code, presence: true, if: :kind_coupon?
   validates :code,
     uniqueness: { scope: :account_id, case_sensitive: false },
@@ -152,6 +165,22 @@ class Promotion < ApplicationRecord
 
   def validity_mode_label
     I18n.t("promotions.validity_modes.#{validity_mode}")
+  end
+
+  def display_badge_label
+    badge_label.presence || auto_badge_label
+  end
+
+  def display_badge_color
+    badge_color.presence
+  end
+
+  def auto_badge_label
+    case discount_type
+    when "percentage"   then "#{discount_value}% desc."
+    when "fixed_amount" then "-#{Money.new(discount_value, 'MXN').format}"
+    when "bogo"         then "#{bogo_buy_quantity}×#{bogo_buy_quantity + bogo_get_quantity}"
+    end
   end
 
   private

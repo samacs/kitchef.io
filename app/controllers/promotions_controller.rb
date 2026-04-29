@@ -57,6 +57,7 @@ class PromotionsController < AuthenticatedController
     params.require(:promotion).permit(
       :name, :code, :kind, :discount_type, :scope_type,
       :discount_value, :discount_value_pesos,
+      :badge_label, :badge_color,
       :bogo_buy_quantity, :bogo_get_quantity,
       :min_order_pesos, :max_discount_pesos,
       :validity_mode, :starts_at, :ends_at,

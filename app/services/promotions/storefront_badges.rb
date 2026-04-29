@@ -2,8 +2,11 @@ module Promotions
   class StorefrontBadges < ApplicationService
     option :account
 
-    BadgeInfo = Data.define(:label, :discount_type, :discount_value,
-                            :bogo_buy, :bogo_get)
+    BadgeInfo = Data.define(:label, :discount_text, :color,
+                            :discount_type, :discount_value,
+                            :bogo_buy, :bogo_get) do
+      def has_custom_label? = label != discount_text
+    end
 
     def call
       badges = {}
@@ -20,18 +23,14 @@ module Promotions
     private
 
     def build_badge(promo)
-      label = case promo.discount_type
-      when "percentage"   then "#{promo.discount_value}% desc."
-      when "fixed_amount" then "-#{Money.new(promo.discount_value, 'MXN').format}"
-      when "bogo"         then "#{promo.bogo_buy_quantity}×#{promo.bogo_buy_quantity + promo.bogo_get_quantity}"
-      end
-
       BadgeInfo.new(
-        label:         label,
-        discount_type: promo.discount_type,
+        label:          promo.display_badge_label,
+        discount_text:  promo.auto_badge_label,
+        color:          promo.display_badge_color,
+        discount_type:  promo.discount_type,
         discount_value: promo.discount_value,
-        bogo_buy:      promo.bogo_buy_quantity,
-        bogo_get:      promo.bogo_get_quantity
+        bogo_buy:       promo.bogo_buy_quantity,
+        bogo_get:       promo.bogo_get_quantity
       )
     end
 

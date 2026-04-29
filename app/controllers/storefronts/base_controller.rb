@@ -28,7 +28,7 @@ module Storefronts
           discount_type:  p.discount_type,
           discount_value: p.discount_value,
           scope_type:     p.scope_type,
-          label:          promotion_badge_label(p),
+          label:          p.display_badge_label,
           recipe_ids:     p.scope_type_recipe? ? p.promotion_recipes.pluck(:recipe_id) : [],
           category_ids:   p.scope_type_category? ? p.promotion_categories.pluck(:category_id) : [],
           bogo_buy:       p.bogo_buy_quantity,
@@ -36,14 +36,6 @@ module Storefronts
           max_discount_cents: p.max_discount_cents
         }
       end.to_json
-    end
-
-    def promotion_badge_label(promo)
-      case promo.discount_type
-      when "percentage"   then "#{promo.discount_value}% desc."
-      when "fixed_amount" then "-#{Money.new(promo.discount_value, 'MXN').format}"
-      when "bogo"         then "#{promo.bogo_buy_quantity}×#{promo.bogo_buy_quantity + promo.bogo_get_quantity}"
-      end
     end
 
     def storefront_not_found
