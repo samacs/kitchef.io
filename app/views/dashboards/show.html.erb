@@ -2,6 +2,10 @@
 <% content_for :page_title, t("dashboard.title") %>
 <% content_for :page_subtitle, t("dashboard.subtitle") %>
 
+<div class="mb-4">
+  <%= render Dashboards::KitchefUrlComponent.new(account: @account) %>
+</div>
+
 <% if @recipe_count.zero? %>
   <%= render Recipes::EmptyStateComponent.new(
         headline_key: "dashboard.empty_state.headline",

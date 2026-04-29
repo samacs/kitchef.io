@@ -77,6 +77,10 @@ es-MX:
       headline: "Empieza por tu primer platillo"
       sub: "Agrega tu platillo estrella con foto y precio. Luego súmale los demás y arma tu menú en minutos."
       cta: "Agregar platillo"
+    kitchef_url:
+      label: "Tu cocina"
+      copy: "Copiar"
+      copied: "Copiado"
 
   stubs:
     in_development: "Esta sección está en construcción. Volverá con forma propia en el próximo módulo."
