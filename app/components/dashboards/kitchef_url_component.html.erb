@@ -1,0 +1,26 @@
+<div class="flex items-center gap-3 px-4 py-3 rounded-card bg-surface border border-line shadow-card"
+     data-controller="copy-to-clipboard"
+     data-copy-to-clipboard-value-value="<%= storefront_url %>"
+     data-copy-to-clipboard-success-label-value="<%= t("dashboard.kitchef_url.copied") %>">
+  <span class="flex-shrink-0 w-8 h-8 inline-flex items-center justify-center rounded-full bg-accent-soft text-accent">
+    <%= helpers.icon(:link, size: :sm) %>
+  </span>
+  <div class="min-w-0 flex-1">
+    <p class="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-muted leading-none mb-0.5">
+      <%= t("dashboard.kitchef_url.label") %>
+    </p>
+    <a href="<%= storefront_url %>"
+       target="_blank"
+       rel="noopener"
+       class="block truncate text-[13.5px] font-medium text-ink hover:text-accent transition-colors leading-snug">
+      <%= display_url %>
+    </a>
+  </div>
+  <button type="button"
+          data-action="copy-to-clipboard#copy"
+          data-copy-to-clipboard-target="button"
+          class="flex-shrink-0 inline-flex items-center gap-1.5 text-[12px] font-medium px-3 py-[6px] rounded-button bg-transparent text-ink-2 border border-line hover:border-accent hover:text-accent transition-colors">
+    <%= helpers.icon(:copy, size: :xs) %>
+    <span><%= t("dashboard.kitchef_url.copy") %></span>
+  </button>
+</div>
