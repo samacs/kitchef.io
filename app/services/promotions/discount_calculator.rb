@@ -7,11 +7,11 @@ module Promotions
       return 0 if items.empty?
 
       raw = case promotion.discount_type
-            when "percentage"  then calculate_percentage
-            when "fixed_amount" then calculate_fixed_amount
-            when "bogo"         then calculate_bogo
-            else 0
-            end
+      when "percentage"  then calculate_percentage
+      when "fixed_amount" then calculate_fixed_amount
+      when "bogo"         then calculate_bogo
+      else 0
+      end
 
       raw = [ raw, promotion.max_discount_cents ].min if promotion.max_discount_cents.present?
       [ raw, subtotal_cents ].min
@@ -48,11 +48,11 @@ module Promotions
 
     def qualifying_items
       @qualifying_items ||= case promotion.scope_type
-                            when "order"    then items
-                            when "recipe"   then items_matching_recipes
-                            when "category" then items_matching_categories
-                            else []
-                            end
+      when "order"    then items
+      when "recipe"   then items_matching_recipes
+      when "category" then items_matching_categories
+      else []
+      end
     end
 
     def qualifying_line_total_cents
