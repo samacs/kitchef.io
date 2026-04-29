@@ -39,8 +39,50 @@
       "confidence": "Weak",
       "cwe_id": [79],
       "note": "Dark-variant sibling of the light-variant warning above. Same guarantee: `sanitize_hex!` raises on any value that doesn't match `/\\A#[0-9A-Fa-f]{3,8}\\z/`, so the service is structurally incapable of emitting anything besides a canonical hex color into the inline <style> block."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "1c59c8f05856cff72d1cd7b1441fb78631d2b13a9dc5bd3d2b427bf1274e8c92",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/concerns/searchable.rb",
+      "line": 20,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": null,
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Searchable",
+        "method": "omnisearch"
+      },
+      "user_input": null,
+      "confidence": "Medium",
+      "cwe_id": [89],
+      "note": "Column names come from _searchable_columns, a class_attribute set by developers via `searchable_on :col1, :col2` — never from user input. Each column is quoted with `connection.quote_column_name`. The search term is quoted with `connection.quote`. The threshold uses a bind parameter. No user-controlled string reaches the SQL without quoting."
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "605831c98b34564448d62fd9d055a71c359b4c6797e96e1a2a8672d825ab6bba",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/concerns/searchable.rb",
+      "line": 36,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": null,
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Searchable",
+        "method": "_build_score_expression"
+      },
+      "user_input": null,
+      "confidence": "Medium",
+      "cwe_id": [89],
+      "note": "Inner helper for omnisearch. Same safety guarantees: column names from developer-controlled constants via quote_column_name, search term via connection.quote. Returns Arel.sql node consumed only by omnisearch."
     }
   ],
-  "updated": "2026-04-21 04:00:00 -0700",
+  "updated": "2026-04-28 16:00:00 -0700",
   "brakeman_version": "8.0.4"
 }

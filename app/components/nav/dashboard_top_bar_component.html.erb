@@ -1,11 +1,7 @@
-<header class="kc-chrome sticky top-0 z-30 border-b border-line">
-  <div class="px-5 lg:px-7 py-[14px] flex items-center gap-3 lg:gap-4 flex-wrap">
+<header class="kc-chrome sticky top-0 z-30 border-b border-line"
+        data-controller="top-bar-search">
+  <div class="px-5 lg:px-7 py-[14px] flex items-center gap-3 lg:gap-4">
     <%# ---- Mobile drawer trigger --------------------------------- %>
-    <%# The drawer itself is rendered at body level (panel.html.erb)
-        so it escapes the kc-chrome backdrop-filter stacking context.
-        This button fires the controller's `open` action — Stimulus
-        walks up to the ancestor <div data-controller="drawer"> that
-        wraps the layout. %>
     <div class="lg:hidden">
       <%= render Ui::IconButtonComponent.new(
             icon: :menu,
@@ -14,7 +10,7 @@
     </div>
 
     <%# ---- Title + subtitle --------------------------------------- %>
-    <div class="min-w-0 flex-1 basis-[180px] order-none">
+    <div class="min-w-0 flex-1 order-none">
       <h1 class="font-serif text-[24px] leading-[1.15] tracking-[-0.01em] text-ink truncate">
         <%= display_title %>
       </h1>
@@ -23,20 +19,34 @@
       </p>
     </div>
 
-    <%# ---- Actions (stay on row 1 on mobile; search drops to row 2) %>
+    <%# ---- Desktop search trigger ---- %>
+    <button type="button"
+            data-action="click->top-bar-search#open"
+            class="hidden sm:flex items-center gap-2 pl-3 pr-2.5 py-2
+                   flex-[0_1_280px] min-w-[180px]
+                   bg-surface border border-line rounded-[8px]
+                   text-[13px] text-muted hover:border-line-2 hover:text-ink transition-colors cursor-pointer">
+      <%= helpers.icon(:search, size: :xs) %>
+      <span class="flex-1 text-left truncate"><%= t("search.palette.trigger") %></span>
+      <kbd class="font-mono text-[10.5px] text-muted border border-line rounded-[4px] px-1.5 py-px" data-kbd-shortcut>Ctrl+K</kbd>
+    </button>
+
+    <%# ---- Actions ---- %>
     <div class="flex items-center gap-2 shrink-0 order-none">
-      <%# Theme toggle is moved into the user menu on mobile to keep
-          the top row from wrapping. Still visible on md+ where there's
-          plenty of horizontal space. %>
       <div class="hidden md:inline-flex">
         <%= render Ui::ThemeToggleComponent.new(size: :sm) %>
       </div>
 
       <%= render Nav::NotificationBellComponent.new(current_user: current_user) %>
 
-      <%# Primary action — pages override via content_for :page_action.
-          Inside a ViewComponent, `yield :name` doesn't reach the outer
-          template's content_for store; use helpers.content_for instead. %>
+      <%# Mobile search icon — sits inline with bell + user chip %>
+      <div class="sm:hidden">
+        <%= render Ui::IconButtonComponent.new(
+              icon: :search,
+              label: t("search.palette.trigger"),
+              data: { action: "click->top-bar-search#open" }) %>
+      </div>
+
       <% if helpers.content_for?(:page_action) %>
         <%= helpers.content_for(:page_action) %>
       <% else %>
@@ -47,7 +57,6 @@
         <% end %>
       <% end %>
 
-      <%# Compact user chip (desktop has it in the sidebar). %>
       <div class="lg:hidden">
         <%= render Nav::UserMenuComponent.new(
               current_user: current_user,
@@ -55,16 +64,6 @@
               variant: :chip,
               placement: :bottom_end) %>
       </div>
-    </div>
-
-    <%# ---- Search: last on mobile (own row via basis-full), inline on sm+ %>
-    <div class="relative order-last sm:order-none basis-full sm:basis-auto sm:flex-[0_1_280px] sm:min-w-[180px]">
-      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
-        <%= helpers.icon(:search, size: :xs) %>
-      </span>
-      <input type="search"
-             placeholder="<%= t("panel.top_bar.search_placeholder") %>"
-             class="w-full pl-9 pr-3 py-2 bg-surface border border-line rounded-[8px] text-[13px] text-ink placeholder:text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors">
     </div>
   </div>
 </header>

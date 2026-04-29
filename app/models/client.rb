@@ -23,6 +23,10 @@
 #
 # Indexes
 #
+#  idx_clients_email_trgm                 (email) USING gin
+#  idx_clients_first_name_trgm            (first_name) USING gin
+#  idx_clients_last_name_trgm             (last_name) USING gin
+#  idx_clients_phone_trgm                 (phone_normalized) USING gin
 #  index_clients_on_account_id            (account_id)
 #  index_clients_on_account_id_and_email  (account_id,email)
 #  index_clients_on_account_id_and_rfc    (account_id,rfc) WHERE (rfc IS NOT NULL)
@@ -38,6 +42,9 @@ class Client < ApplicationRecord
   include HasPrefixedId.new(prefix: "cli")
   include HasSoftDelete
   include HasRfc
+  include Searchable
+
+  searchable_on :first_name, :last_name, :phone_normalized, :email
 
   has_paper_trail
 

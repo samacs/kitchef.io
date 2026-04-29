@@ -24,6 +24,7 @@
 #
 # Indexes
 #
+#  idx_recipes_name_trgm                                     (name) USING gin
 #  index_recipes_on_account_id                               (account_id)
 #  index_recipes_on_account_id_and_category_id_and_position  (account_id,category_id,position)
 #  index_recipes_on_account_id_and_is_saleable               (account_id,is_saleable)
@@ -41,6 +42,9 @@ class Recipe < ApplicationRecord
   include AccountScoped
   include HasPrefixedId.new(prefix: "rec")
   include HasSoftDelete
+  include Searchable
+
+  searchable_on :name
 
   friendly_id :name, use: :scoped, scope: :account
   has_paper_trail

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_27_213200) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_28_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
@@ -169,6 +169,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_213200) do
     t.index ["account_id", "rfc"], name: "index_clients_on_account_id_and_rfc", where: "(rfc IS NOT NULL)"
     t.index ["account_id"], name: "index_clients_on_account_id"
     t.index ["discarded_at"], name: "index_clients_on_discarded_at"
+    t.index ["email"], name: "idx_clients_email_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["first_name"], name: "idx_clients_first_name_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["last_name"], name: "idx_clients_last_name_trgm", opclass: :gin_trgm_ops, using: :gin
+    t.index ["phone_normalized"], name: "idx_clients_phone_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "fixed_cost_categories", force: :cascade do |t|
@@ -238,6 +242,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_213200) do
     t.index ["account_id"], name: "index_ingredients_on_account_id"
     t.index ["category_id"], name: "index_ingredients_on_category_id"
     t.index ["discarded_at"], name: "index_ingredients_on_discarded_at"
+    t.index ["name"], name: "idx_ingredients_name_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "noticed_events", force: :cascade do |t|
@@ -464,6 +469,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_213200) do
     t.index ["account_id"], name: "index_recipes_on_account_id"
     t.index ["category_id"], name: "index_recipes_on_category_id"
     t.index ["discarded_at"], name: "index_recipes_on_discarded_at"
+    t.index ["name"], name: "idx_recipes_name_trgm", opclass: :gin_trgm_ops, using: :gin
   end
 
   create_table "schedules", force: :cascade do |t|

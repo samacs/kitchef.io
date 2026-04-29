@@ -1,0 +1,31 @@
+<% content_for :title, t(".title") %>
+<% content_for :page_title, t(".title") %>
+<% content_for :page_subtitle, t(".subtitle") %>
+
+<div class="flex flex-col gap-6">
+  <%= form_with url: search_path,
+        method: :get,
+        html: {
+          class: "flex items-center gap-3",
+          data: {
+            controller: "search-debounce",
+            action: "input->search-debounce#search submit->search-debounce#search",
+            turbo_frame: "search_results",
+            turbo_action: "advance"
+          }
+        } do |form| %>
+    <span class="relative flex-1 max-w-[540px]">
+      <span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none">
+        <%= icon(:search, size: :xs) %>
+      </span>
+      <%= form.search_field :q,
+            value: @term,
+            autofocus: true,
+            autocomplete: "off",
+            placeholder: t(".placeholder"),
+            class: "w-full pl-9 pr-3 py-2.5 bg-surface border border-line rounded-input text-[14px] text-ink placeholder:text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+    </span>
+  <% end %>
+
+  <%= render "results" %>
+</div>

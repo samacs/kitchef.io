@@ -1,0 +1,48 @@
+<%= turbo_frame_tag "command_palette_results" do %>
+  <% if @term.blank? %>
+    <div class="px-4 py-8 text-center">
+      <p class="font-serif text-[18px] text-ink"><%= t("search.show.empty.title") %></p>
+      <p class="text-[12px] text-muted mt-1"><%= t("search.show.empty.hint") %></p>
+    </div>
+
+  <% elsif @result.groups.empty? %>
+    <div class="px-4 py-8 text-center">
+      <p class="text-[13px] text-muted"><%= t("search.show.no_results", term: @term) %></p>
+    </div>
+
+  <% else %>
+    <div class="py-1">
+      <% @result.groups.each do |group| %>
+        <div class="px-4 pt-3 pb-1">
+          <span class="font-mono text-[10.5px] text-muted uppercase tracking-[0.14em]">
+            <%= t("search.show.groups.#{group.kind}") %>
+          </span>
+        </div>
+        <% group.items.each do |item| %>
+          <%= link_to search_result_path(group.kind, item.record),
+                data: { palette_row: true, turbo_frame: "_top", action: "click->command-palette#rowClicked" },
+                class: "relative flex items-center gap-3 px-4 py-2.5 hover:bg-bg-2/40 transition-colors cursor-pointer" do %>
+            <span class="shrink-0 w-7 h-7 rounded-full bg-bg-2 flex items-center justify-center text-muted">
+              <%= icon(search_result_icon(group.kind), size: :xs) %>
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-[13.5px] font-medium text-ink truncate"><%= item.title %></span>
+              <% if item.subtitle.present? %>
+                <span class="block text-[11.5px] text-muted truncate"><%= item.subtitle %></span>
+              <% end %>
+            </span>
+            <% if group.kind == :orders %>
+              <span class="shrink-0">
+                <%= render Orders::StateBadgeComponent.new(state: item.record.state) %>
+              </span>
+            <% elsif group.kind == :recipes && item.record.is_saleable? %>
+              <span class="shrink-0 font-mono text-[12px] text-ink">
+                <%= humanized_money_with_symbol(item.record.sale_price) %>
+              </span>
+            <% end %>
+          <% end %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
