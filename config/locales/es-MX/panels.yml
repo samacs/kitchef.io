@@ -1728,7 +1728,9 @@ es-MX:
         cta: "Exportar a CSV"
         headers:
           date: "Fecha"
-          revenue: "Ingresos MXN"
+          gross_revenue: "Ingreso bruto MXN"
+          discount: "Descuentos MXN"
+          revenue: "Ingreso neto MXN"
           cogs: "Costo MXN"
           margin: "Margen MXN"
           margin_pct: "Margen %"
