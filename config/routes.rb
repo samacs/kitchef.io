@@ -121,6 +121,12 @@ Rails.application.routes.draw do
   # Phase 10 — fixed costs (renta, gas, plataformas). One row per
   # recurring line item; the finance report prorates them against the
   # window to land on "Utilidad neta".
+  resources :promotions do
+    member do
+      post :toggle
+    end
+  end
+
   resources :fixed_costs, path: "fixed-costs"
 
   # Inline creator for the fixed-cost category combobox (same pattern

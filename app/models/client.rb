@@ -54,6 +54,7 @@ class Client < ApplicationRecord
   # Orders outlive their client — if an operator purges a client, we keep
   # the order history with client_id nulled so reports stay correct.
   has_many :orders, dependent: :nullify
+  has_many :promotion_redemptions, dependent: :nullify
 
   # Run BEFORE the strict Phonelib validator so "662 188 4355" and the
   # WhatsApp "+521 ..." variants reach validation as clean E.164.

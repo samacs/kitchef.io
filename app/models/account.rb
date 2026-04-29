@@ -61,8 +61,8 @@ class Account < ApplicationRecord
   RESERVED_SLUGS = %w[
     acerca admin ajustes api app asistencia asistente assets ayuda
     blog buscar
-    categoria categorias como-funciona compra compras contacto cocina costos costos-fijos
-    directorio
+    categoria categorias como-funciona compra compras contacto cocina costos costos-fijos cupones
+    descuentos directorio
     empaque empleos entrar equipo explorar
     facturacion favicon fijos fotos
     gastos
@@ -70,7 +70,7 @@ class Account < ApplicationRecord
     kitchef
     legal
     nosotros nuestra-historia notificaciones
-    pagos panel pedidos plataformas precios prensa privacidad proveedor proveedores preguntas
+    pagos panel pedidos plataformas precios prensa privacidad promociones proveedor proveedores preguntas
     rails recetario recetas recuperar recursos registro renta robots
     salir sesion sitemap soporte suministros
     terminos tickets
@@ -79,8 +79,8 @@ class Account < ApplicationRecord
 
     about account accounts admin-panel api-docs apis auth
     batch batches billing
-    careers cart categories category changelog checkout clients company contact cookies
-    dashboard demo docs docs-api documentation
+    careers cart categories category changelog checkout clients company contact cookies coupons
+    dashboard demo discounts docs docs-api documentation
     enterprise explore expenses expense
     faq features feedback fixed fixed-cost-categories fixed-costs forgot-password
     help home how-it-works
@@ -90,7 +90,7 @@ class Account < ApplicationRecord
     menus
     new news notifications
     onboarding
-    packaging password passwords platform platforms pricing privacy product production products profile purchase purchases
+    packaging password passwords platform platforms pricing privacy product production products profile promotions purchase purchases
     r register rent reports reset-password root
     schedule search settings sign-in signin sign-out signout sign-up signup supplier suppliers
     stats status subscribe subscription support
@@ -140,6 +140,7 @@ class Account < ApplicationRecord
   # other members with it — the owner's `before_destroy :detach_from_account`
   # pre-nulls the circular FK so this doesn't loop back onto itself.
   has_many :users,                  dependent: :destroy
+  has_many :promotions,             dependent: :destroy   # before orders — PromotionRedemption FK → orders
   has_many :orders,                 dependent: :destroy
   has_many :purchases,              dependent: :destroy   # PurchaseItem FK → ingredients (cascade)
   has_many :clients,                dependent: :destroy

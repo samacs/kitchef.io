@@ -30,6 +30,7 @@ class Entitlements
     payment_instructions
     vacation_mode
     notifications
+    promotions
   ].to_set.freeze
 
   # Pro-only capabilities. The literal feature key is what

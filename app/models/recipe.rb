@@ -61,6 +61,9 @@ class Recipe < ApplicationRecord
 
   belongs_to :category
 
+  has_many :promotion_recipes, dependent: :destroy
+  has_many :promotions, through: :promotion_recipes
+
   # Components — the polymorphic join that enables decomposition. A parent
   # Recipe has many components, each pointing at either an Ingredient or
   # another Recipe.

@@ -129,6 +129,7 @@ es-MX:
       fixed_costs: "Costos fijos"
       clients: "Clientes"
       schedule: "Horario"
+      promotions: "Promociones"
       production: "Producción"
       batches: "Lotes"
       reports_section: "Reportes"

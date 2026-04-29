@@ -42,6 +42,8 @@ class Category < ApplicationRecord
   # (ingredients/recipes die first, then categories).
   has_many :ingredients, dependent: :restrict_with_error
   has_many :recipes,     dependent: :restrict_with_error
+  has_many :promotion_categories, dependent: :destroy
+  has_many :promotions, through: :promotion_categories
 
   before_validation :strip_name
 
