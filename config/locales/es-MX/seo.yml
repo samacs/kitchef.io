@@ -1,0 +1,35 @@
+es-MX:
+  meta:
+    default_description: "El sistema operativo de tu cocina. Pedidos, recetas, márgenes y clientes en un solo lugar — en pesos, sin comisión."
+    default_keywords: "cocina casera, pedidos, recetas, costos, menú en línea, cocina mexicana, vender comida"
+
+    offers:
+      free: "Hasta 40 pedidos al mes, menú público, directorio de clientes — gratis para siempre."
+      pro: "Pedidos ilimitados, costeo automático, reportes de finanzas e ingeniería de menú, soporte prioritario."
+
+    storefront:
+      description: "Pide platillos de %{kitchen} directo, sin comisión. Menú, precios y entrega en un solo lugar."
+      description_with_city: "Pide platillos de %{kitchen} en %{city} directo, sin comisión. Menú, precios y entrega en un solo lugar."
+      recipe_description: "%{recipe} de %{kitchen} — %{price}. Pide directo sin comisión."
+      recipe_description_with_detail: "%{recipe} de %{kitchen} — %{price}. %{detail}"
+      payment_accepted: "Efectivo, transferencia, tarjeta"
+      serves_cuisine: "Comida mexicana casera"
+      uncategorized: "Otros"
+      menu_name: "Menú de %{kitchen}"
+
+    pages:
+      home:
+        title: "Kitchef — el sistema operativo de tu cocina"
+        description: "Pedidos, cobros, producción y costos en un solo lugar. Diseñado para cocinas independientes en México — sin comisión por venta, en pesos, en español."
+      pricing:
+        title: "Precios · Kitchef"
+        description: "Arranca gratis. Crece con Pro cuando estés lista. Sin comisión sobre tus ventas, nunca. Desde $0/mes."
+      product:
+        title: "El producto · Kitchef"
+        description: "Pedidos, recetas, costos, clientes y horarios en un solo lugar. Hecho para cocineras mexicanas independientes."
+      how_it_works:
+        title: "Cómo funciona · Kitchef"
+        description: "En tres pasos, de WhatsApp a un sistema. Sin instalar nada, sin curso, sin contadora."
+      faq:
+        title: "Preguntas frecuentes · Kitchef"
+        description: "Respuestas honestas sobre Kitchef: comisiones, prueba gratis, datos, cancelación y más."

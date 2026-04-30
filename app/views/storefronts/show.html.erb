@@ -1,4 +1,25 @@
 <% content_for :title, @storefront.name %>
+<%
+  sf_profile = @storefront.public_profile
+  sf_desc_key = sf_profile.city.present? ? "meta.storefront.description_with_city" : "meta.storefront.description"
+  sf_description = sf_profile.description.presence ||
+    t(sf_desc_key, kitchen: @storefront.name, city: sf_profile.city)
+%>
+<% content_for :description, sf_description %>
+<% if @storefront.cover_photo.attached? %>
+  <% content_for :og_image, url_for(@storefront.cover_photo) %>
+<% elsif @storefront.logo.attached? %>
+  <% content_for :og_image, url_for(@storefront.logo.variant(:card)) %>
+<% end %>
+
+<% content_for :json_ld do %>
+  <%= json_ld_food_establishment(@storefront) %>
+  <%= json_ld_menu(@storefront, @recipes_by_category) %>
+  <%= json_ld_breadcrumb_list([
+    { name: "Kitchef", url: root_url },
+    { name: @storefront.name, url: storefront_url(slug: @storefront.slug) }
+  ]) %>
+<% end %>
 
 <main>
   <%= render Storefronts::HeroComponent.new(storefront: @storefront, ordering_hours: @ordering_hours) %>

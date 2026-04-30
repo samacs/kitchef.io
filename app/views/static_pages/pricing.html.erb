@@ -1,4 +1,10 @@
-<% content_for :title, t("marketing.pricing.title") %>
+<% content_for :title, t("meta.pages.pricing.title") %>
+<% content_for :description, t("meta.pages.pricing.description") %>
+
+<% content_for :json_ld do %>
+  <%= json_ld_software_application %>
+  <%= json_ld_faq_page(t("marketing.pricing.faq.items")) %>
+<% end %>
 
 <%# ── Hero ─────────────────────────────────────────────────────────── %>
 <section class="pt-[88px] pb-12">

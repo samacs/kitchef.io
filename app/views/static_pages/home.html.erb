@@ -1,4 +1,13 @@
-<% content_for :title, t("marketing.home.title") %>
+<% content_for :title, t("meta.pages.home.title") %>
+<% content_for :description, t("meta.pages.home.description") %>
+<% content_for :og_image, image_url("hero.png") %>
+
+<% content_for :json_ld do %>
+  <%= json_ld_website %>
+  <%= json_ld_organization %>
+  <%= json_ld_software_application %>
+  <%= json_ld_faq_page(t("marketing.home.faq.items")) %>
+<% end %>
 
 <%# ── Hero ──────────────────────────────────────────────────────────── %>
 <section class="py-11 lg:py-16">

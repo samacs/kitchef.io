@@ -1,4 +1,9 @@
-<% content_for :title, t("marketing.product.title") %>
+<% content_for :title, t("meta.pages.product.title") %>
+<% content_for :description, t("meta.pages.product.description") %>
+
+<% content_for :json_ld do %>
+  <%= json_ld_software_application %>
+<% end %>
 
 <%# Phase 14, Slice 9 — real feature page replacing the old
     Producto-points-at-how-it-works placeholder. Six surfaces the
