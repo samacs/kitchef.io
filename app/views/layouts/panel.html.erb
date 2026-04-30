@@ -58,7 +58,11 @@
             <%= link_to content_for(:fab_path),
                   class: "sm:hidden fixed bottom-5 right-5 z-40 flex items-center justify-center w-14 h-14 rounded-full bg-accent text-bg shadow-cta active:scale-95 transition-transform",
                   aria: { label: content_for(:fab_label).presence || t("ui.fab.add") } do %>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              <% if content_for?(:fab_icon) %>
+                <%= content_for(:fab_icon) %>
+              <% else %>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              <% end %>
             <% end %>
           <% end %>
         </div>
