@@ -4,7 +4,10 @@ module Onboarding
     option :file
 
     def call
-      return failure(base: [ :cover_missing ]) if file.blank?
+      if file.blank?
+        account.errors.add(:base, :cover_missing)
+        return failure(account.errors)
+      end
 
       account.cover_photo.attach(file)
 

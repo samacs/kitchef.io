@@ -6,6 +6,19 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
+cloudflare:
+  service: CloudflareR2
+  public_host: <%= ENV.fetch('CLOUDFLARE_PUBLIC_HOST', 'https://media.kitchef.mx') %>
+  endpoint: <%= ENV.fetch('CLOUDFLARE_ENDPOINT', '') %>
+  access_key_id: <%= ENV.fetch('CLOUDFLARE_ACCESS_KEY_ID', '') %>
+  secret_access_key: <%= ENV.fetch('CLOUDFLARE_SECRET_ACCESS_KEY', '') %>
+  region: auto
+  bucket: <%= ENV.fetch('CLOUDFLARE_BUCKET', '') %>
+  public: true
+  force_path_style: true
+  request_checksum_calculation: "when_required"
+  response_checksum_validation: "when_required"
+
 # Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 # amazon:
 #   service: S3

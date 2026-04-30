@@ -11,7 +11,7 @@ import { Controller } from "@hotwired/stimulus"
 // The companion live-preview-source controller (onboarding) listens for
 // the same `change` event to update a sibling preview panel.
 export default class extends Controller {
-  static targets = ["input", "preview", "placeholder"]
+  static targets = ["input", "preview", "placeholder", "submit"]
 
   saleableChanged(event) {
     const saleable = event.target.checked
@@ -40,6 +40,11 @@ export default class extends Controller {
     if (!this.hasInputTarget) return
     const file = this.inputTarget.files && this.inputTarget.files[0]
     if (!file) return
+
+    if (this.hasSubmitTarget) {
+      this.submitTarget.disabled = false
+      this.submitTarget.classList.remove("opacity-50", "pointer-events-none")
+    }
 
     const label = this.inputTarget.closest("label")
     if (label) {

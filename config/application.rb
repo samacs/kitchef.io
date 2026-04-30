@@ -36,8 +36,9 @@ module Kitchef
     config.i18n.available_locales = [ :"es-MX", :es ]
     config.i18n.fallbacks = { "es-MX": [ :es ] }
     config.i18n.load_path += Dir[Rails.root.join("config/locales/**/*.{rb,yml}")]
-    config.time_zone = "America/Mexico_City"
+    config.time_zone = "UTC"
     config.active_record.default_timezone = :utc
+    config.time_zone_aware_types = %i[datetime time]
 
     # Our own domain lives under app/ per convention; add the directories we
     # introduce in Phase 5+ so autoloading picks them up without fuss.
@@ -56,6 +57,12 @@ module Kitchef
       url: ENV.fetch("VALKEY_URL", "redis://localhost:6379/0"),
       driver: :hiredis
     }
+
+    config.active_job.queue_adapter = :sidekiq
+
+    config.action_mailer.deliver_later_queue_name = :mailers
+
+    config.assets.css_compressor = nil
 
     # Keep generators quiet — no system tests, no helpers, no fixtures (we
     # defer testing to a later milestone).

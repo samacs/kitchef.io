@@ -1946,9 +1946,10 @@ es-MX:
             - "Inventario y lotes de producción"
         no_card_title: "No te pedimos tarjeta de crédito durante la prueba"
         no_card_body: "Probarás Pro 14 días completos sin método de pago. Sólo te pedimos tarjeta cuando decidas seguir. Si no continúas, tu cuenta vuelve automáticamente al plan Gratis sin perder nada."
-    create:
-      free_chosen: "Tu cocina está lista. ¡Vamos a recibir pedidos!"
-      checkout_failed: "No pudimos abrir el pago. Empezamos en Gratis y puedes activar Pro después: %{message}"
+    completions:
+      create:
+        free_chosen: "Tu cocina está lista. ¡Vamos a recibir pedidos!"
+        checkout_failed: "No pudimos abrir el pago. Empezamos en Gratis y puedes activar Pro después: %{message}"
 
   # Phase 13 — production batches (lotes). Top-level so it doesn't
   # entangle with the existing /production daily-orders surface from

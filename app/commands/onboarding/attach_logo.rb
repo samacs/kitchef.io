@@ -4,7 +4,10 @@ module Onboarding
     option :file
 
     def call
-      return failure(base: [ :logo_missing ]) if file.blank?
+      if file.blank?
+        account.errors.add(:base, :logo_missing)
+        return failure(account.errors)
+      end
 
       account.logo.attach(file)
 

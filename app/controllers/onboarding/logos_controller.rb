@@ -20,7 +20,7 @@ module Onboarding
     end
 
     def destroy
-      current_onboarding_account.logo.purge_later if current_onboarding_account.logo.attached?
+      current_onboarding_account.logo.purge if current_onboarding_account.logo.attached?
       redirect_to onboarding_logo_path
     end
   end
