@@ -462,10 +462,7 @@
 
   .kc-hero-visual {
     position: relative;
-    min-height: 540px;
   }
-  @media (max-width: 1000px) { .kc-hero-visual { min-height: 480px; max-width: 620px; } }
-  @media (max-width: 680px)  { .kc-hero-visual { min-height: 420px; } }
 
   .kc-photo-plate {
     position: absolute;
@@ -504,17 +501,14 @@
   .kc-pulse-dot { animation: kc-pulse-dot 2s ease-in-out infinite; }
 
   .kc-dash {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 72%;
+    position: relative;
+    width: 100%;
     background: var(--color-surface);
     border: 1px solid var(--color-line);
     border-radius: 16px;
     box-shadow: var(--shadow-hero);
     overflow: hidden;
   }
-  @media (max-width: 680px) { .kc-dash { width: 78%; } }
 
   .kc-dash-chart {
     position: relative;

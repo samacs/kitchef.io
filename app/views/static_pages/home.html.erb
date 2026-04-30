@@ -47,26 +47,8 @@
         </div>
       </div>
 
-      <%# Right column: hero visual — photo plate + floating dashboard %>
+      <%# Right column: dashboard mockup %>
       <div class="kc-hero-visual">
-        <%# Photo plate (bottom-left) %>
-        <div class="kc-photo-plate">
-          <div class="absolute left-4 top-4 z-[2] font-mono text-[10.5px] tracking-[0.12em] uppercase text-white/80 bg-[rgba(14,23,20,0.4)] backdrop-blur-[6px] px-2.5 py-[5px] rounded-pill">
-            Cocina de Elena · CDMX
-          </div>
-          <div class="absolute inset-0 flex items-end justify-center">
-            <svg viewBox="0 0 200 240" preserveAspectRatio="xMidYMax slice" class="w-full h-[85%] opacity-45" aria-hidden="true">
-              <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2A1B10" stop-opacity=".35"/><stop offset="100%" stop-color="#0E0906" stop-opacity=".55"/></linearGradient></defs>
-              <path fill="url(#sg)" d="M100 60 C 130 60 140 85 138 105 C 136 120 128 125 125 130 C 125 140 130 145 135 150 L 170 160 C 185 165 195 180 195 200 L 195 240 L 5 240 L 5 200 C 5 180 15 165 30 160 L 65 150 C 70 145 75 140 75 130 C 72 125 64 120 62 105 C 60 85 70 60 100 60 Z"/>
-            </svg>
-          </div>
-          <div class="absolute left-4 bottom-4 right-4 z-[2] text-white">
-            <div class="font-serif italic text-[22px] leading-[1.1]">"Mis tamales ahora cuestan lo que deben."</div>
-            <div class="font-mono text-[11px] tracking-[0.1em] uppercase opacity-85 mt-1">— Elena M. · Tamalería casera</div>
-          </div>
-        </div>
-
-        <%# Dashboard card (top-right, floats) %>
         <div class="kc-dash kc-float">
           <div class="flex items-center gap-2.5 px-4 py-3 border-b border-line bg-bg-2 text-[12.5px] text-muted">
             <div class="flex gap-[5px]">
@@ -81,7 +63,7 @@
             <div class="flex justify-between items-start mb-[18px] gap-3">
               <div class="min-w-0 flex-1">
                 <h3 class="font-serif text-[22px] text-ink tracking-tight truncate">Esta semana</h3>
-                <div class="text-[12px] text-muted mt-0.5 truncate">Lun 13 – Dom 19 abr</div>
+                <div class="text-[12px] text-ink-2 mt-0.5 truncate">Lun 13 – Dom 19 abr</div>
               </div>
               <div class="font-mono text-[11px] bg-bg-2 text-ink-2 px-2.5 py-[5px] rounded-input shrink-0">7D</div>
             </div>
@@ -113,17 +95,17 @@
             <%# Orders list %>
             <div class="flex flex-col border border-line rounded-card-sm overflow-hidden">
               <div class="grid [grid-template-columns:minmax(0,1fr)_auto_auto] gap-2.5 items-center px-3.5 py-2.5 border-b border-line text-[13px]">
-                <div class="min-w-0"><div class="font-semibold text-ink truncate">Doña Carmen</div><div class="text-[11.5px] text-muted mt-px truncate">Tamales verdes · 2kg</div></div>
+                <div class="min-w-0"><div class="font-semibold text-ink truncate">Doña Carmen</div><div class="text-[11.5px] text-ink-2 mt-px truncate">Tamales verdes · 2kg</div></div>
                 <div><span class="kc-status kc-status-ok"><i class="w-[5px] h-[5px] rounded-full bg-current"></i>Listo</span></div>
                 <div class="font-mono text-[12.5px] text-ink font-medium shrink-0">$650</div>
               </div>
               <div class="grid [grid-template-columns:minmax(0,1fr)_auto_auto] gap-2.5 items-center px-3.5 py-2.5 border-b border-line text-[13px]">
-                <div class="min-w-0"><div class="font-semibold text-ink truncate">Lupita H.</div><div class="text-[11.5px] text-muted mt-px truncate">Pastel 3 leches</div></div>
+                <div class="min-w-0"><div class="font-semibold text-ink truncate">Lupita H.</div><div class="text-[11.5px] text-ink-2 mt-px truncate">Pastel 3 leches</div></div>
                 <div><span class="kc-status kc-status-wait"><i class="w-[5px] h-[5px] rounded-full bg-current"></i>Producción</span></div>
                 <div class="font-mono text-[12.5px] text-ink font-medium shrink-0">$850</div>
               </div>
               <div class="grid [grid-template-columns:minmax(0,1fr)_auto_auto] gap-2.5 items-center px-3.5 py-2.5 text-[13px]">
-                <div class="min-w-0"><div class="font-semibold text-ink truncate">Marisol V.</div><div class="text-[11.5px] text-muted mt-px truncate">15 meal preps</div></div>
+                <div class="min-w-0"><div class="font-semibold text-ink truncate">Marisol V.</div><div class="text-[11.5px] text-ink-2 mt-px truncate">15 meal preps</div></div>
                 <div><span class="kc-status kc-status-new"><i class="w-[5px] h-[5px] rounded-full bg-current"></i>Nuevo</span></div>
                 <div class="font-mono text-[12.5px] text-ink font-medium shrink-0">$2,100</div>
               </div>
