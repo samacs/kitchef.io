@@ -8,7 +8,7 @@ image: samacs/kitchef
 servers:
   web:
     - 134.199.216.212
-  job:
+  worker:
     hosts:
       - 134.199.216.212
     cmd: bin/sidekiq -C config/sidekiq.yml
