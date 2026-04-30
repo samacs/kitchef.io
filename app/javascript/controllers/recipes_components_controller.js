@@ -116,6 +116,55 @@ export default class extends Controller {
     this.dispatchChange(row)
   }
 
+  // ── Byproduct toggle ──────────────────────────────────────────────────
+
+  toggleByproduct(event) {
+    event.preventDefault()
+    const row = event.currentTarget.closest("[data-recipes-components-target='row']")
+    if (!row) return
+
+    const field = row.querySelector("[data-field='is_byproduct']")
+    if (!field) return
+
+    const current = field.value === "1"
+    const next = !current
+    field.value = next ? "1" : "0"
+
+    row.classList.toggle("bg-accent-soft/30", next)
+
+    const costEl = row.querySelector(".tabular-nums")
+    if (costEl) {
+      costEl.classList.toggle("text-accent", next)
+      costEl.classList.toggle("line-through", next)
+      costEl.classList.toggle("text-ink-2", !next)
+    }
+
+    const btn = event.currentTarget
+    btn.textContent = next ? "Es subproducto" : "Marcar como subproducto"
+    btn.classList.toggle("text-accent", next)
+    btn.classList.toggle("text-muted", !next)
+
+    const badge = row.querySelector("[data-byproduct-badge]")
+    if (badge) {
+      badge.hidden = !next
+    } else if (next) {
+      const nameDiv = row.querySelector(".flex-1 .flex")
+      if (nameDiv) {
+        const span = document.createElement("span")
+        span.dataset.byproductBadge = "true"
+        span.className = "inline-flex items-center gap-1 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-medium text-accent"
+        span.textContent = "subproducto"
+        nameDiv.appendChild(span)
+      }
+    }
+
+    this.dispatchImmediate()
+  }
+
+  dispatchImmediate() {
+    this.element.dispatchEvent(new CustomEvent("form-autosave:immediate", { bubbles: true }))
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────
 
   #findActiveRowFor(type, id) {

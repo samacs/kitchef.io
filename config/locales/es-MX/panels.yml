@@ -446,6 +446,9 @@ es-MX:
       add_cta: "Agregar componente"
       add_hint: "Ingredientes y recetas base"
       internal_tag: "interna"
+      byproduct_tag: "subproducto"
+      byproduct_mark: "Marcar como subproducto"
+      byproduct_undo: "Es subproducto"
       picker:
         ingredients: "Ingredientes"
         recipes: "Recetas y bases"

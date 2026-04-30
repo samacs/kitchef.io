@@ -182,7 +182,7 @@ class RecipesController < AuthenticatedController
       new_photos: [],
       components_attributes: [
         :id, :componentable_type, :componentable_id,
-        :quantity, :unit, :notes, :position, :is_removable, :_destroy
+        :quantity, :unit, :notes, :position, :is_removable, :is_byproduct, :_destroy
       ],
       option_groups_attributes: [
         :id, :account_id, :label, :sub, :kind, :required, :position, :max_length, :_destroy,

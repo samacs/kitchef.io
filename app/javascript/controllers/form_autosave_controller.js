@@ -40,6 +40,11 @@ export default class extends Controller {
     this.debounceTimer = setTimeout(() => this.#submit(), 600)
   }
 
+  saveNow() {
+    clearTimeout(this.debounceTimer)
+    this.#submit()
+  }
+
   async #submit() {
     this.showStatus("saving")
 
