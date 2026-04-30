@@ -1,6 +1,6 @@
 <header class="kc-chrome sticky top-0 z-30 border-b border-line"
         data-controller="top-bar-search">
-  <div class="px-5 lg:px-7 py-[14px] flex items-center gap-3 lg:gap-4">
+  <div class="px-4 sm:px-5 lg:px-7 py-[14px] flex items-center gap-3 lg:gap-4">
     <%# ---- Mobile drawer trigger --------------------------------- %>
     <div class="lg:hidden">
       <%= render Ui::IconButtonComponent.new(
@@ -47,15 +47,17 @@
               data: { action: "click->top-bar-search#open" }) %>
       </div>
 
-      <% if helpers.content_for?(:page_action) %>
-        <%= helpers.content_for(:page_action) %>
-      <% else %>
-        <%= link_to helpers.new_order_path,
-              class: "hidden sm:inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
-          <%= helpers.icon(:plus, size: :xs) %>
-          <span><%= t("panel.top_bar.new_order") %></span>
+      <div class="hidden sm:flex items-center shrink-0">
+        <% if helpers.content_for?(:page_action) %>
+          <%= helpers.content_for(:page_action) %>
+        <% else %>
+          <%= link_to helpers.new_order_path,
+                class: "inline-flex items-center gap-2 text-[13px] font-semibold px-3.5 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+            <%= helpers.icon(:plus, size: :xs) %>
+            <span><%= t("panel.top_bar.new_order") %></span>
+          <% end %>
         <% end %>
-      <% end %>
+      </div>
 
       <div class="lg:hidden">
         <%= render Nav::UserMenuComponent.new(

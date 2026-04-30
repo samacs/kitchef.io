@@ -21,14 +21,14 @@
          role="dialog"
          aria-modal="true"
          aria-label="<%= t("panel.drawer.label") %>"
-         class="absolute right-0 top-0 h-full w-full sm:w-[640px] lg:w-[720px] max-w-full bg-bg border-l border-line shadow-panel translate-x-full transition-[transform,width] duration-200 ease-out flex flex-col">
-    <header class="flex items-center justify-between px-3 py-2.5 border-b border-line shrink-0">
+         class="absolute right-0 top-0 h-full w-full md:w-[640px] lg:w-[720px] max-w-full bg-bg border-l border-line shadow-panel translate-x-full transition-[transform,width] duration-200 ease-out flex flex-col overflow-hidden">
+    <header class="flex items-center justify-end md:justify-between px-3 py-2.5 border-b border-line shrink-0">
       <button type="button"
               data-action="click->right-drawer#toggleWidth"
               data-right-drawer-target="widthToggle"
               aria-label="<%= t("panel.drawer.expand") %>"
               title="<%= t("panel.drawer.expand") %>"
-              class="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-input text-muted hover:text-ink hover:bg-bg-2 transition-colors">
+              class="hidden md:inline-flex items-center justify-center w-9 h-9 rounded-input text-muted hover:text-ink hover:bg-bg-2 transition-colors">
         <svg data-right-drawer-target="expandIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
         </svg>
@@ -47,6 +47,6 @@
 
     <%= turbo_frame_tag "drawer_content",
           data: { right_drawer_target: "frame" },
-          class: "flex-1 overflow-y-auto" %>
+          class: "flex-1 overflow-y-auto overflow-x-hidden" %>
   </aside>
 </div>

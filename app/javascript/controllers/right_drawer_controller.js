@@ -78,11 +78,11 @@ export default class extends Controller {
   applyWidth() {
     const panel = this.panelTarget
     if (this.isWide) {
-      panel.classList.remove("sm:w-[640px]", "lg:w-[720px]")
-      panel.classList.add("sm:w-[900px]", "lg:w-[1040px]")
+      panel.classList.remove("md:w-[640px]", "lg:w-[720px]")
+      panel.classList.add("md:w-[900px]", "lg:w-[1040px]")
     } else {
-      panel.classList.remove("sm:w-[900px]", "lg:w-[1040px]")
-      panel.classList.add("sm:w-[640px]", "lg:w-[720px]")
+      panel.classList.remove("md:w-[900px]", "lg:w-[1040px]")
+      panel.classList.add("md:w-[640px]", "lg:w-[720px]")
     }
     this.updateWidthIcons()
   }
