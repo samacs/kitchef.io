@@ -105,12 +105,12 @@ module JsonLdHelper
     data["telephone"] = profile.phone if profile.phone.present?
 
     if account.logo.attached?
-      data["logo"] = url_for(account.logo.variant(:thumb))
-      data["image"] = url_for(account.logo.variant(:card))
+      data["logo"] = cdn_image_url(account.logo.variant(:thumb))
+      data["image"] = cdn_image_url(account.logo.variant(:card))
     end
 
     if account.cover_photo.attached?
-      data["image"] = url_for(account.cover_photo)
+      data["image"] = cdn_image_url(account.cover_photo)
     end
 
     if account.street_address.present? && profile.show_pickup_address
@@ -203,7 +203,7 @@ module JsonLdHelper
 
     if recipe.photos.attached?
       data["image"] = recipe.ordered_photos.first(3).map { |photo|
-        url_for(photo.variant(resize_to_limit: [ 1200, 800 ]))
+        cdn_image_url(photo.variant(resize_to_limit: [ 1200, 800 ]))
       }
     end
 
@@ -243,7 +243,7 @@ module JsonLdHelper
 
     if recipe.photos.attached?
       data["image"] = recipe.ordered_photos.first(3).map { |photo|
-        url_for(photo.variant(resize_to_limit: [ 1200, 800 ]))
+        cdn_image_url(photo.variant(resize_to_limit: [ 1200, 800 ]))
       }
     end
 
@@ -304,7 +304,7 @@ module JsonLdHelper
     data["description"] = recipe.description if recipe.description.present?
 
     if recipe.photos.attached?
-      data["image"] = url_for(recipe.ordered_photos.first.variant(resize_to_limit: [ 800, 600 ]))
+      data["image"] = cdn_image_url(recipe.ordered_photos.first.variant(resize_to_limit: [ 800, 600 ]))
     end
 
     data

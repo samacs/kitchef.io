@@ -7,9 +7,9 @@
 %>
 <% content_for :description, sf_description %>
 <% if @storefront.cover_photo.attached? %>
-  <% content_for :og_image, url_for(@storefront.cover_photo) %>
+  <% content_for :og_image, cdn_image_url(@storefront.cover_photo) %>
 <% elsif @storefront.logo.attached? %>
-  <% content_for :og_image, url_for(@storefront.logo.variant(:card)) %>
+  <% content_for :og_image, cdn_image_url(@storefront.logo.variant(:card)) %>
 <% end %>
 
 <% content_for :json_ld do %>

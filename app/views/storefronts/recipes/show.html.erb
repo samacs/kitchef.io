@@ -12,9 +12,9 @@
 %>
 <% content_for :description, recipe_desc %>
 <% if @recipe.photos.attached? %>
-  <% content_for :og_image, url_for(@recipe.ordered_photos.first.variant(resize_to_limit: [1200, 630])) %>
+  <% content_for :og_image, cdn_image_url(@recipe.ordered_photos.first.variant(resize_to_limit: [1200, 630])) %>
 <% elsif @storefront.cover_photo.attached? %>
-  <% content_for :og_image, url_for(@storefront.cover_photo) %>
+  <% content_for :og_image, cdn_image_url(@storefront.cover_photo) %>
 <% end %>
 
 <% content_for :json_ld do %>
