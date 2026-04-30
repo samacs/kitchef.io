@@ -1,4 +1,4 @@
-<% options_component = Storefronts::RecipeOptionsComponent.new(recipe: @recipe) %>
+<% options_component = Storefronts::RecipeOptionsComponent.new(recipe: @recipe, account: @storefront) %>
 <% photo = @recipe.photos.first&.variant(resize_to_fill: [400, 260]) %>
 
 <turbo-frame id="customize-modal-content">

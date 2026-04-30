@@ -29,7 +29,7 @@
 
 <% photo_hero = @recipe.photos.first&.variant(resize_to_limit: [ 1200, 800 ]) %>
 <% back_href = storefront_path(slug: @storefront.slug) %>
-<% options_component = Storefronts::RecipeOptionsComponent.new(recipe: @recipe) %>
+<% options_component = Storefronts::RecipeOptionsComponent.new(recipe: @recipe, account: @storefront) %>
 <% has_options = options_component.render? %>
 
 <main class="mx-auto max-w-[1200px] px-5 pt-8 pb-28 lg:pb-8"

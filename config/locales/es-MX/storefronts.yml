@@ -220,6 +220,7 @@ es-MX:
         required_hint: "Elige una opción para continuar"
         removable_heading: "Ingredientes incluidos"
         removable_hint: "Desmarca los que no quieras"
+        out_of_stock: "Agotado"
         textarea_counter: "%{count}/%{max}"
         price_delta_plus: "+%{amount}"
         price_delta_minus: "-%{amount}"
