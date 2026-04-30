@@ -1,0 +1,141 @@
+# Name of your application. Used to uniquely configure containers.
+service: kitchef
+
+# Name of the container image.
+image: samacs/kitchef
+
+# Deploy to these servers.
+servers:
+  web:
+    - 134.199.216.212
+  job:
+    hosts:
+      - 134.199.216.212
+    cmd: bin/sidekiq -C config/sidekiq.yml
+    proxy: false
+    options:
+      health-cmd: "pidof ruby || exit 1"
+      health-interval: 30s
+      health-timeout: 5s
+      health-retries: 3
+    env:
+      clear:
+        RAILS_MAX_THREADS: 10
+        RUBY_YJIT_ENABLE: 1
+
+# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
+# Remove this section when using multiple web servers and ensure you terminate SSL at your load balancer.
+#
+# Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
+proxy:
+  ssl:
+    certificate_pem: SSL_KITCHEF_MX_CERT_FILE
+    private_key_pem: SSL_KITCHEF_MX_KEY_FILE
+  hosts:
+    - kitchef.mx
+    - www.kitchef.mx
+    - cdn.kitchef.mx
+  # Proxy connects to your container on port 80 by default.
+  # app_port: 3000
+
+# Credentials for your image host.
+registry:
+  server: docker.io
+  username: samacs
+
+  # Always use an access token rather than real password (pulled from .kamal/secrets).
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+# Configure builder setup.
+builder:
+  arch: amd64
+  # Pass in additional build args needed for your Dockerfile.
+  args:
+    RUBY_VERSION: ${RUBY_VERSION:-4.0.2}
+  secrets:
+    - GITHUB_TOKEN
+    - RAILS_MASTER_KEY
+
+# Inject ENV variables into containers (secrets come from .kamal/secrets).
+#
+env:
+  secret:
+    - DATABASE_URL
+    - VALKEY_URL
+    - IP_INFO_API_KEY
+    - GOOGLE_API_KEY
+    - SMTP_USER_NAME
+    - SMTP_PASSWORD
+    - SMTP_ADDRESS
+    - SMTP_HOST
+    - SMTP_PORT
+    - CLOUDFLARE_TOKEN
+    - CLOUDFLARE_ENDPOINT
+    - CLOUDFLARE_ACCESS_KEY_ID
+    - CLOUDFLARE_SECRET_ACCESS_KEY
+    - CLOUDFLARE_BUCKET
+    - GITHUB_TOKEN
+    - RAILS_MASTER_KEY
+  clear:
+    WEB_CONCURRENCY: 2
+    RAILS_MAX_THREADS: 5
+    RUBY_YJIT_ENABLE: 1
+    MALLOC_ARENA_MAX: 2
+    PORT: 80
+    CLOUDFLARE_PUBLIC_HOST: https://media.kitchef.mx
+
+# Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
+# "bin/kamal app logs -r job" will tail logs from the first server in the job section.
+#
+# aliases:
+#   shell: app exec --interactive --reuse "bash"
+
+# Use a different ssh user than root
+#
+ssh:
+  user: deploy
+
+# Use a persistent storage volume.
+#
+volumes:
+  - "kitchef_storage:/rails/storage"
+
+# Bridge fingerprinted assets, like JS and CSS, between versions to avoid
+# hitting 404 on in-flight requests. Combines all files from new and old
+# version inside the asset_path.
+#
+asset_path: /rails/public/assets
+
+# Configure rolling deploys by setting a wait time between batches of restarts.
+#
+# boot:
+#   limit: 10 # Can also specify as a percentage of total hosts, such as "25%"
+#   wait: 2
+
+# Use accessory services (secrets come from .kamal/secrets).
+#
+accessories:
+  postgres:
+    image: samacs/kitchef-postgres
+    host: 134.199.216.212
+    port: "10.124.0.4:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: kitchef
+        POSTGRES_DB: kitchef_production
+      secret:
+        - POSTGRES_PASSWORD
+    files:
+      - ./docker/postgres/.psqlrc:/root/.psqlrc:ro
+      - ./docker/postgres/create_extensions.sql:/docker-entrypoint-initdb.d/create_extensions.sql
+      - ./docker/postgres/init.sh:/docker-entrypoint-initdb.d/init.sh
+    volumes:
+      - postgres-data:/var/lib/postgresql
+  valkey:
+    image: samacs/kitchef-valkey
+    host: 134.199.216.212
+    port: "10.124.0.4:6379:6379"
+    cmd: "valkey-server --bind 0.0.0.0 --maxmemory 64mb --maxmemory-policy allkeys-lru"
+    volumes:
+      - valkey-data:/data

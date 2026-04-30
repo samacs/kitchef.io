@@ -19,10 +19,10 @@ Rails.application.configure do
   config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
+  config.asset_host = "https://cdn.kitchef.mx"
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  config.active_storage.service = :cloudflare
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true
@@ -56,6 +56,14 @@ Rails.application.configure do
     write_timeout:   1.0,
     reconnect_attempts: 2
   )
+  config.session_store :cache_store,
+                        key: ENV.fetch("SESSION_KEY", "_kitchef"),
+                        domain: "kitchef.mx",
+                        secure: true,
+                        compress: true,
+                        pool_size: 5,
+                        expire_after: 1.year,
+                        same_site: :lax
 
   # Route Active Job through Sidekiq (configured in config/initializers/sidekiq.rb).
   config.active_job.queue_adapter = :sidekiq
@@ -67,13 +75,23 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates. The canonical
   # host — storefront and panel live at the same origin.
   config.action_mailer.default_url_options = { host: "kitchef.mx", protocol: "https" }
+  routes.default_url_options = { host: "kitchef.mx", protocol: "https" }
 
   # Resend is the canonical provider in production. The API key lives in Rails
   # credentials under `resend.api_key` (or the `RESEND_API_KEY` env var as a
   # fallback for staging boxes). The Resend gem's Rails mailer adapter is
   # wired in `config/initializers/mail.rb` so it can read credentials at boot
   # without duplicating the conditional here.
-  config.action_mailer.delivery_method = :resend
+  # config.action_mailer.delivery_method = :resend
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = {
+    user_name: ENV["SMTP_USER_NAME"],
+    password: ENV["SMTP_PASSWORD"],
+    address: ENV["SMTP_ADDRESS"],
+    host: ENV["SMTP_HOST"],
+    port: ENV["SMTP_PORT"],
+    authentication: ENV.fetch("SMTP_AUTHENTICATION", :login).to_sym
+  }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
@@ -91,6 +109,11 @@ Rails.application.configure do
   #   /.*\.example\.com/ # Allow requests from subdomains like `www.example.com`
   # ]
   #
+  config.hosts ||= []
+  config.hosts << "kitchef.mx"
+  config.hosts << "www.kitchef.mx"
+  config.hosts << "cdn.kitchef.mx"
+
   # Skip DNS rebinding protection for the default health check endpoint.
-  # config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 end
