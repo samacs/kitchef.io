@@ -636,6 +636,33 @@ gringa.components.create!(componentable: mario_ing["Carne al pastor marinada"], 
 gringa.components.create!(componentable: mario_ing["Queso Oaxaca"],             quantity:  60, unit: "g")
 gringa.components.create!(componentable: mario_ing["Piña"],                     quantity:  25, unit: "g")
 
+# Orden de 3 tacos — single recipe with optional ingredient selection.
+# Instead of creating 3 separate recipes (one per meat), this recipe
+# has one required option group where the customer picks the meat.
+# Each option is linked to an ingredient for inventory tracking.
+#   Base cost (masa+cilantro+cebolla per taco × 3): ~$32
+#   + meat option cost varies by selection.
+orden_3_tacos = taqueria_mario.recipes.create!(
+  name: "Orden de 3 tacos",
+  sale_price_cents: 9500, is_saleable: true, is_published: true,
+  yield_quantity: 3, yield_unit: "piece",
+  category: mario_mains_cat, target_margin_percent: 60
+)
+orden_3_tacos.components.create!(componentable: masa,                          quantity: 84,  unit: "g")
+orden_3_tacos.components.create!(componentable: mario_ing["Cebolla blanca"],   quantity: 18,  unit: "g")
+orden_3_tacos.components.create!(componentable: mario_ing["Cilantro"],         quantity: 9,   unit: "g")
+orden_3_tacos.components.create!(componentable: salsa_verde,                   quantity: 45,  unit: "ml")
+
+# Quesadilla mixta — with optional protein pick (ingredient-linked options).
+quesadilla_mixta = taqueria_mario.recipes.create!(
+  name: "Quesadilla con proteína",
+  sale_price_cents: 5500, is_saleable: true, is_published: true,
+  yield_quantity: 1, yield_unit: "piece",
+  category: mario_mains_cat, target_margin_percent: 60
+)
+quesadilla_mixta.components.create!(componentable: masa,                      quantity: 80, unit: "g")
+quesadilla_mixta.components.create!(componentable: mario_ing["Queso Oaxaca"], quantity: 60, unit: "g")
+
 mario_saleable = taqueria_mario.recipes.saleable.to_a
 
 # Pre-populate cost caches so the recetario and cost-tree pages land
@@ -644,7 +671,10 @@ mario_saleable = taqueria_mario.recipes.saleable.to_a
 # bottom-up, so running it on each saleable recipe also fills every
 # sub-recipe it reaches.
 puts "  …warming cost caches"
-mario_saleable.each { |r| Recipes::CostCalculator.for(recipe: r) }
+mario_saleable.each do |r|
+  Recipes::CostCalculator.for(recipe: r)
+  Recipes::OptionCostCalculator.call(recipe: r)
+end
 
 # Attach a photo to each saleable Mario recipe by name match. The keys
 # below correspond to SEED_PHOTO_IDS entries — names drifting from
@@ -652,12 +682,14 @@ mario_saleable.each { |r| Recipes::CostCalculator.for(recipe: r) }
 # photoless (which simply hides the storefront's "Publicar" CTA until
 # the operator uploads one manually).
 mario_photo_keys = {
-  "Taco al pastor"    => "tacos_al_pastor",
-  "Taco de asada"     => "tacos_arrachera",
-  "Taco de pollo"     => "tacos_pollo",
-  "Quesadilla"        => "quesadillas",
-  "Sope con frijol"   => "frijoles_charros",
-  "Gringa al pastor"  => "tacos_al_pastor"
+  "Taco al pastor"           => "tacos_al_pastor",
+  "Taco de asada"            => "tacos_arrachera",
+  "Taco de pollo"            => "tacos_pollo",
+  "Quesadilla"               => "quesadillas",
+  "Sope con frijol"          => "frijoles_charros",
+  "Gringa al pastor"         => "tacos_al_pastor",
+  "Orden de 3 tacos"         => "tacos_al_pastor",
+  "Quesadilla con proteína"  => "quesadillas"
 }
 puts "  …attaching recipe photos"
 mario_saleable.each do |recipe|
@@ -1088,6 +1120,92 @@ if sope
     comp.update!(is_removable: true) if name.include?("queso")
   end
   puts "  Mario: Sope → #{sope.option_groups.count} groups"
+end
+
+# ── Mario: Orden de 3 tacos (inventory-linked options) ────────────────────
+# The first recipe with options that link to ingredients for inventory
+# tracking. Each meat option depletes that ingredient's stock when ordered.
+orden_3_tacos = taqueria_mario.recipes.kept.saleable.find_by(name: "Orden de 3 tacos")
+if orden_3_tacos
+  meat_group = orden_3_tacos.option_groups.create!(
+    account: taqueria_mario,
+    label:   "Tipo de carne",
+    sub:     "Elige la carne para tus 3 tacos",
+    kind:    :radio,
+    required: true,
+    selection_mode: :uniform
+  )
+  meat_group.options.create!(
+    label: "Al pastor", is_default: true, price_delta_cents: 0,
+    componentable: mario_ing["Carne al pastor marinada"],
+    quantity: 150, unit: "g"
+  )
+  meat_group.options.create!(
+    label: "Arrachera", price_delta_cents: 1500,
+    componentable: mario_ing["Arrachera"],
+    quantity: 150, unit: "g"
+  )
+  meat_group.options.create!(
+    label: "Pollo", price_delta_cents: -500,
+    componentable: mario_ing["Pechuga de pollo"],
+    quantity: 150, unit: "g"
+  )
+
+  salsa_group = orden_3_tacos.option_groups.create!(
+    account: taqueria_mario,
+    label:   "Salsa",
+    sub:     "¿Con cuál salsa?",
+    kind:    :radio,
+    required: false,
+    selection_mode: :uniform
+  )
+  salsa_group.options.create!(
+    label: "Salsa verde", is_default: true, price_delta_cents: 0,
+    componentable: salsa_verde,
+    quantity: 45, unit: "ml"
+  )
+  salsa_group.options.create!(
+    label: "Salsa roja", price_delta_cents: 0,
+    componentable: salsa_roja,
+    quantity: 45, unit: "ml"
+  )
+
+  Recipes::OptionCostCalculator.call(recipe: orden_3_tacos)
+  puts "  Mario: Orden de 3 tacos → #{orden_3_tacos.option_groups.count} groups (inventory-linked)"
+end
+
+# ── Mario: Quesadilla con proteína (inventory-linked options) ─────────────
+quesadilla_mixta = taqueria_mario.recipes.kept.saleable.find_by(name: "Quesadilla con proteína")
+if quesadilla_mixta
+  protein_group = quesadilla_mixta.option_groups.create!(
+    account: taqueria_mario,
+    label:   "Proteína",
+    sub:     "Agrega proteína a tu quesadilla",
+    kind:    :radio,
+    required: false,
+    selection_mode: :uniform
+  )
+  protein_group.options.create!(
+    label: "Sin proteína", is_default: true, price_delta_cents: 0
+  )
+  protein_group.options.create!(
+    label: "Pastor", price_delta_cents: 1000,
+    componentable: mario_ing["Carne al pastor marinada"],
+    quantity: 40, unit: "g"
+  )
+  protein_group.options.create!(
+    label: "Arrachera", price_delta_cents: 1800,
+    componentable: mario_ing["Arrachera"],
+    quantity: 40, unit: "g"
+  )
+  protein_group.options.create!(
+    label: "Pollo", price_delta_cents: 800,
+    componentable: mario_ing["Pechuga de pollo"],
+    quantity: 40, unit: "g"
+  )
+
+  Recipes::OptionCostCalculator.call(recipe: quesadilla_mixta)
+  puts "  Mario: Quesadilla con proteína → #{quesadilla_mixta.option_groups.count} groups (inventory-linked)"
 end
 
 # ---------------------------------------------------------------------------

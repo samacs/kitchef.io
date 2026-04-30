@@ -22,7 +22,7 @@
 
     <% option_groups.each_with_index do |group, gi| %>
       <%= form.fields_for :option_groups, group, child_index: gi do |gf| %>
-        <%= render "recipes/option_group_fields", gf: gf, group: group, index: gi, kind_options: kind_options %>
+        <%= render "recipes/option_group_fields", gf: gf, group: group, index: gi, kind_options: kind_options, composable: composable?, pickable_ingredients: pickable_ingredients, pickable_recipes: pickable_recipes_for_options %>
       <% end %>
     <% end %>
   </div>

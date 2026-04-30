@@ -80,7 +80,17 @@ module DevBootstrap
           { name: "Tamales de elote",       price: 30,  photo_id: "photo-1625938144755-652e08e359b7", cat: "Entradas" },
           { name: "Machaca con huevo",      price: 85,  photo_id: "photo-1565299585323-38d6b0865b47", cat: "Platos fuertes", base: "Guisado de machaca" },
           { name: "Agua de cebada",         price: 25,  photo_id: "photo-1544145945-f90425340c7e", cat: "Bebidas" },
-          { name: "Frijoles charros",       price: 55,  photo_id: "photo-1574894709920-11b28e7367e3", cat: "Entradas" }
+          { name: "Frijoles charros",       price: 55,  photo_id: "photo-1574894709920-11b28e7367e3", cat: "Entradas" },
+          { name: "Orden de 3 burritos",    price: 210, photo_id: "photo-1626700051175-6818013e1d4f", cat: "Platos fuertes",
+            yield_qty: 3, yield_unit: "piece",
+            option_groups: [
+              { label: "Guisado", sub: "Elige el guisado para tus 3 burritos", kind: :radio, required: true,
+                options: [
+                  { label: "Machaca",    default: true, delta: 0,  ingredient: "Machaca de res",  qty: 0.12, unit: "kg" },
+                  { label: "Chile rojo", default: false, delta: 0, base: "Salsa roja sonorense",  qty: 0.10, unit: "l" },
+                  { label: "Frijol",     default: false, delta: -15, base: "Frijoles refritos",   qty: 0.15, unit: "kg" }
+                ] }
+            ] }
         ],
         fixed_costs: [
           { category: "Renta",           amount: 9000,  recurrence: :monthly },
@@ -149,7 +159,17 @@ module DevBootstrap
           { name: "Pollo al carbón",       price: 160, photo_id: "photo-1598515214211-89d3c73ae83b", cat: "Platos fuertes" },
           { name: "Chorizo asado",         price: 120, photo_id: "photo-1555939594-58d7cb561ad1", cat: "Entradas" },
           { name: "Frijoles maneados",     price: 65,  photo_id: "photo-1574894709920-11b28e7367e3", cat: "Entradas", base: "Frijoles maneados" },
-          { name: "Agua de horchata",      price: 30,  photo_id: "photo-1590523741831-ab7e8b8f9c7f", cat: "Bebidas" }
+          { name: "Agua de horchata",      price: 30,  photo_id: "photo-1590523741831-ab7e8b8f9c7f", cat: "Bebidas" },
+          { name: "Plato de carne al carbón", price: 280, photo_id: "photo-1558030006-450675393462", cat: "Platos fuertes",
+            option_groups: [
+              { label: "Corte", sub: "Elige tu corte de carne", kind: :radio, required: true,
+                options: [
+                  { label: "Arrachera",  default: true,  delta: 0,   ingredient: "Arrachera",       qty: 0.25, unit: "kg" },
+                  { label: "Cabrería",   default: false, delta: -30, ingredient: "Cabrería",        qty: 0.25, unit: "kg" },
+                  { label: "Costilla",   default: false, delta: 40,  ingredient: "Costilla de res", qty: 0.30, unit: "kg" },
+                  { label: "Pollo",      default: false, delta: -80, ingredient: "Pollo marinado",  qty: 0.25, unit: "kg" }
+                ] }
+            ] }
         ],
         fixed_costs: [
           { category: "Renta",            amount: 12000, recurrence: :monthly },

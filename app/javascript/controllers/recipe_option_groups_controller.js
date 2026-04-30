@@ -5,7 +5,8 @@ export default class extends Controller {
     "groups", "group", "destroyFlag",
     "groupTemplate", "optionTemplate",
     "optionsList", "optionRow", "optionDestroyFlag",
-    "optionsContainer", "empty"
+    "optionsContainer", "empty",
+    "componentableRow", "componentableQty", "componentableUnit"
   ]
 
   static values = { nextIndex: { type: Number, default: 0 } }
@@ -80,6 +81,37 @@ export default class extends Controller {
     const optionsContainer = group.querySelector("[data-recipe-option-groups-target='optionsContainer']")
     if (optionsContainer) {
       optionsContainer.classList.toggle("hidden", kind === "textarea")
+    }
+  }
+
+  componentableChanged(event) {
+    const row = event.target.closest("[data-recipe-option-groups-target='optionRow']")
+    if (!row) return
+
+    const val = event.target.value
+    const typeInput = row.querySelector("input[name$='[componentable_type]']")
+    const idInput = row.querySelector("input[name$='[componentable_id]']")
+    const qtyInput = row.querySelector("[data-recipe-option-groups-target='componentableQty']")
+    const unitSelect = row.querySelector("[data-recipe-option-groups-target='componentableUnit']")
+
+    if (val) {
+      const [type, id] = val.split(":")
+      if (typeInput) typeInput.value = type
+      if (idInput) idInput.value = id
+
+      const selected = event.target.selectedOptions[0]
+      const defaultUnit = selected?.dataset?.unit || ""
+
+      if (qtyInput) qtyInput.classList.remove("hidden")
+      if (unitSelect) {
+        unitSelect.classList.remove("hidden")
+        if (defaultUnit) unitSelect.value = defaultUnit
+      }
+    } else {
+      if (typeInput) typeInput.value = ""
+      if (idInput) idInput.value = ""
+      if (qtyInput) { qtyInput.classList.add("hidden"); qtyInput.value = "" }
+      if (unitSelect) unitSelect.classList.add("hidden")
     }
   }
 

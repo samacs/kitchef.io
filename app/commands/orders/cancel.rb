@@ -36,8 +36,26 @@ module Orders
     # consumed item.
     def release_consumption(order)
       return unless order.account.inventory_enabled?
+
       order.items.where.not(consumed_batch_id: nil).each do |item|
         item.update_columns(consumed_batch_id: nil, consumed_quantity: 0)
+      end
+
+      restock_option_linked_inventory(order)
+    end
+
+    def restock_option_linked_inventory(order)
+      order.items.includes(recipe: { option_groups: { options: :componentable } }).each do |item|
+        depletions = Orders::OptionInventoryResolver.call(order_item: item)
+
+        depletions.each do |d|
+          d.ingredient.restock!(
+            quantity:      d.quantity,
+            unit:          d.unit,
+            source:        "order_restock",
+            source_record: order
+          )
+        end
       end
     end
 

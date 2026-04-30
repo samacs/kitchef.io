@@ -5,6 +5,7 @@
 #  id                        :bigint           not null, primary key
 #  consumed_quantity         :decimal(12, 3)   default(0.0), not null
 #  notes                     :text
+#  options_cost_delta_cents  :bigint           default(0), not null
 #  options_price_delta_cents :bigint           default(0), not null
 #  oversold                  :boolean          default(FALSE), not null
 #  position                  :integer
@@ -38,6 +39,7 @@ class OrderItem < ApplicationRecord
   monetize :unit_price_cents
   monetize :unit_cost_cents
   monetize :options_price_delta_cents, allow_nil: false
+  monetize :options_cost_delta_cents, allow_nil: false
 
   belongs_to :order
   belongs_to :recipe

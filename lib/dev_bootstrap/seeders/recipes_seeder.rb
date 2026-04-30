@@ -57,8 +57,8 @@ module DevBootstrap
             is_saleable:      true,
             is_published:     true,
             sale_price_cents: cents(rd[:price]),
-            yield_quantity:   1,
-            yield_unit:       "piece",
+            yield_quantity:   rd[:yield_qty] || 1,
+            yield_unit:       rd[:yield_unit] || "piece",
             lead_time_hours:  rd[:lead_time] || 0,
             category:         cat
           )
@@ -70,8 +70,43 @@ module DevBootstrap
             end
           end
 
+          seed_option_groups(account, recipe, rd[:option_groups]) if rd[:option_groups].present?
+
           slug = rd[:name].parameterize
           ImageCache.attach(recipe, :photos, slug: slug, unsplash_id: rd[:photo_id])
+        end
+      end
+
+      def seed_option_groups(account, recipe, groups_defs)
+        groups_defs.each do |gd|
+          group = recipe.option_groups.create!(
+            account:        account,
+            label:          gd[:label],
+            sub:            gd[:sub],
+            kind:           gd[:kind],
+            required:       gd[:required] || false,
+            selection_mode: :uniform
+          )
+
+          (gd[:options] || []).each do |od|
+            componentable = resolve_componentable(account, od)
+            group.options.create!(
+              label:              od[:label],
+              is_default:         od[:default] || false,
+              price_delta_cents:  cents(od[:delta] || 0),
+              componentable:      componentable,
+              quantity:           componentable ? od[:qty] : nil,
+              unit:               componentable ? od[:unit] : nil
+            )
+          end
+        end
+      end
+
+      def resolve_componentable(account, option_def)
+        if option_def[:ingredient]
+          account.ingredients.find_by(name: option_def[:ingredient])
+        elsif option_def[:base]
+          account.recipes.where(is_saleable: false).find_by(name: option_def[:base])
         end
       end
 
@@ -79,6 +114,7 @@ module DevBootstrap
         log "  warming cost caches for #{account.name}"
         account.recipes.kept.find_each do |r|
           Recipes::CostCalculator.for(recipe: r)
+          Recipes::OptionCostCalculator.call(recipe: r)
         rescue StandardError => e
           warn "    ⚠  cost cache failed for #{r.name}: #{e.message}"
         end

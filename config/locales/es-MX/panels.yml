@@ -635,6 +635,10 @@ es-MX:
       add_option_cta: "Agregar opción"
       remove_group_confirm: "¿Eliminar este grupo y todas sus opciones?"
       remove_option_aria: "Quitar opción"
+      no_ingredient_link: "— Sin vincular a ingrediente —"
+      ingredients_group: "Ingredientes"
+      recipes_group: "Recetas internas"
+      quantity_placeholder: "Cant."
       removable_label: "Se puede quitar"
       removable_hint: "Tu cliente podrá desmarcar este ingrediente al personalizar el platillo."
     danger_zone:

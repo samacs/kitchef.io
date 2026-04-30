@@ -2,18 +2,20 @@
 #
 # Table name: recipe_option_groups
 #
-#  id           :bigint           not null, primary key
-#  discarded_at :datetime
-#  kind         :integer          default("radio"), not null
-#  label        :string           not null
-#  max_length   :integer
-#  position     :integer
-#  required     :boolean          default(FALSE), not null
-#  sub          :string
-#  created_at   :datetime         not null
-#  updated_at   :datetime         not null
-#  account_id   :bigint           not null
-#  recipe_id    :bigint           not null
+#  id             :bigint           not null, primary key
+#  discarded_at   :datetime
+#  kind           :integer          default("radio"), not null
+#  label          :string           not null
+#  max_length     :integer
+#  position       :integer
+#  required       :boolean          default(FALSE), not null
+#  selection_mode :integer          default("uniform"), not null
+#  sub            :string
+#  unit_count     :integer
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  account_id     :bigint           not null
+#  recipe_id      :bigint           not null
 #
 # Indexes
 #
@@ -36,8 +38,10 @@ class RecipeOptionGroup < ApplicationRecord
   positioned on: :recipe
 
   KINDS = { radio: 0, check: 1, swatch: 2, textarea: 3 }.freeze
+  SELECTION_MODES = { uniform: 0, per_unit: 1 }.freeze
 
   enum :kind, KINDS
+  enum :selection_mode, SELECTION_MODES
 
   belongs_to :recipe
 
@@ -55,7 +59,14 @@ class RecipeOptionGroup < ApplicationRecord
   validates :max_length,
     numericality: { only_integer: true, greater_than: 0 },
     allow_nil: true
+  validates :unit_count,
+    numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: 12 },
+    allow_nil: true
   validate :account_matches_recipe
+
+  def has_inventory_linked_options?
+    options.any?(&:inventory_linked?)
+  end
 
   private
 

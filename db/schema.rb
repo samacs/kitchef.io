@@ -10,14 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_30_180200) do
   # These are extensions that must be enabled in order to support this database
-  enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
-  enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
   enable_extension "unaccent"
-  enable_extension "vector"
 
   create_table "accounts", force: :cascade do |t|
     t.jsonb "branding", default: {}, null: false
@@ -275,6 +272,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_160000) do
     t.decimal "consumed_quantity", precision: 12, scale: 3, default: "0.0", null: false
     t.datetime "created_at", null: false
     t.text "notes"
+    t.bigint "options_cost_delta_cents", default: 0, null: false
     t.bigint "options_price_delta_cents", default: 0, null: false
     t.bigint "order_id", null: false
     t.boolean "oversold", default: false, null: false
@@ -492,7 +490,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_160000) do
     t.integer "position"
     t.bigint "recipe_id", null: false
     t.boolean "required", default: false, null: false
+    t.integer "selection_mode", default: 0, null: false
     t.string "sub"
+    t.integer "unit_count"
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_recipe_option_groups_on_account_id"
     t.index ["discarded_at"], name: "index_recipe_option_groups_on_discarded_at"
@@ -502,15 +502,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_160000) do
 
   create_table "recipe_options", force: :cascade do |t|
     t.string "color_hex"
+    t.bigint "componentable_id"
+    t.string "componentable_type"
+    t.bigint "cost_delta_cents", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "discarded_at"
     t.boolean "is_default", default: false, null: false
     t.string "label", null: false
     t.integer "position"
     t.bigint "price_delta_cents", default: 0, null: false
+    t.decimal "quantity", precision: 10, scale: 3
     t.bigint "recipe_option_group_id", null: false
     t.string "sub"
+    t.string "unit"
     t.datetime "updated_at", null: false
+    t.index ["componentable_type", "componentable_id"], name: "idx_recipe_options_componentable"
     t.index ["discarded_at"], name: "index_recipe_options_on_discarded_at"
     t.index ["recipe_option_group_id", "position"], name: "index_recipe_options_on_recipe_option_group_id_and_position"
     t.index ["recipe_option_group_id"], name: "index_recipe_options_on_recipe_option_group_id"
