@@ -121,6 +121,15 @@
     font-family: inherit;
   }
 
+  /* iOS Safari auto-zooms inputs with font-size < 16px, which
+     breaks the layout by scrolling horizontally. Pin to 16px on
+     touch devices so the zoom never triggers. */
+  @media (hover: none) {
+    input, select, textarea {
+      font-size: 16px;
+    }
+  }
+
   /* Tailwind v4 drops the legacy `cursor: pointer` default on buttons so
      Preflight matches native browser behavior. We want the pointer back
      on every clickable surface without having to sprinkle `cursor-pointer`
