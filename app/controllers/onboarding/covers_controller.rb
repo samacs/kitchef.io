@@ -20,7 +20,7 @@ module Onboarding
     end
 
     def destroy
-      current_onboarding_account.cover_photo.purge_later if current_onboarding_account.cover_photo.attached?
+      current_onboarding_account.cover_photo.purge if current_onboarding_account.cover_photo.attached?
       redirect_to onboarding_cover_path
     end
   end

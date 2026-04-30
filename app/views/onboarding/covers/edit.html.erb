@@ -41,11 +41,10 @@
               <span class="text-[13.5px] font-medium text-ink"><%= current_onboarding_account.cover_photo.filename.to_s %></span>
               <span class="text-[12px] text-muted"><%= number_to_human_size(current_onboarding_account.cover_photo.byte_size) %></span>
             </div>
-            <%= button_to t("onboarding.cover.remove"),
+            <%= link_to t("onboarding.cover.remove"),
                   onboarding_cover_path,
-                  method: :delete,
-                  class: "text-[13px] font-medium text-err hover:underline",
-                  form: { class: "contents" } %>
+                  data: { turbo_method: :delete },
+                  class: "text-[13px] font-medium text-err hover:underline" %>
           </div>
         <% end %>
 
