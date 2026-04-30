@@ -12,6 +12,7 @@ module Subscriptions
   class CancellationsController < AuthenticatedController
     REASONS = %w[too_expensive not_using missing_feature closing_kitchen other].freeze
 
+    before_action :require_stripe_enabled, only: %i[new create save confirm]
     before_action :require_pro_subscription, only: %i[new create save confirm]
 
     def new
@@ -76,6 +77,12 @@ module Subscriptions
 
     def subscription
       @subscription ||= Current.account.subscription
+    end
+
+    def require_stripe_enabled
+      return if Subscriptions.stripe_enabled?
+
+      redirect_to subscription_path
     end
 
     def require_pro_subscription

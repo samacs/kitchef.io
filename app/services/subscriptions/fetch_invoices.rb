@@ -18,6 +18,8 @@ module Subscriptions
     option :limit, default: -> { 24 }
 
     def call
+      return [] unless Subscriptions.stripe_enabled?
+
       customer_id = account.subscription&.stripe_customer_id
       return [] if customer_id.blank?
 

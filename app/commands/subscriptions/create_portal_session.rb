@@ -15,6 +15,7 @@ module Subscriptions
     option :return_url
 
     def call
+      return failure([ "stripe_not_enabled" ]) unless Subscriptions.stripe_enabled?
       return failure([ "demo_account_blocked" ]) if account.demo?
 
       customer_id = account.subscription&.stripe_customer_id

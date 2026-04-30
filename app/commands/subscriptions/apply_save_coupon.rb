@@ -14,6 +14,7 @@ module Subscriptions
     option :subscription
 
     def call
+      return failure([ "stripe_not_enabled" ]) unless Subscriptions.stripe_enabled?
       return failure([ "no_stripe_subscription" ]) if subscription.stripe_subscription_id.blank?
       return failure([ "not_stripe_managed"     ]) unless subscription.source_stripe?
 

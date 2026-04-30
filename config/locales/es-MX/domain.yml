@@ -110,9 +110,10 @@ es-MX:
       pro_monthly: "Pro · Mensual"
       pro_yearly:  "Pro · Anual"
     sources:
-      free:   "Gratis"
-      stripe: "Pro · Pago"
-      comp:   "Pro · Cortesía"
+      free:    "Gratis"
+      stripe:  "Pro · Pago"
+      comp:    "Pro · Cortesía"
+      sandbox: "Pro · Sandbox"
     status:
       trialing:   "En prueba"
       active:     "Activa"

@@ -17,6 +17,7 @@ module Subscriptions
     option :billing_period
 
     def call
+      return failure([ "stripe_not_enabled" ]) unless Subscriptions.stripe_enabled?
       return failure([ "invalid_billing_period" ]) unless BILLING_PERIODS.include?(billing_period.to_s)
       return failure([ "no_stripe_subscription" ]) if subscription.stripe_subscription_id.blank?
       return failure([ "not_stripe_managed"     ]) unless subscription.source_stripe?
