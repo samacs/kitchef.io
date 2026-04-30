@@ -23,6 +23,8 @@ module Subscriptions
     }.freeze
 
     def call
+      return nil unless Subscriptions.stripe_enabled?
+
       stripe_sub = resolve_stripe_subscription
       return nil if stripe_sub.nil?
 

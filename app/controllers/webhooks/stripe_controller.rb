@@ -22,6 +22,8 @@ module Webhooks
     ].freeze
 
     def create
+      return head(:ok) unless Subscriptions.stripe_enabled?
+
       event = construct_event
       return head(:bad_request) if event.nil?
 

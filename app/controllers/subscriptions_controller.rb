@@ -9,7 +9,7 @@ class SubscriptionsController < AuthenticatedController
   expose :subscription, -> { Current.account.subscription || Current.account.create_subscription! }
 
   def show
-    sync_from_stripe_if_stale!
+    sync_from_stripe_if_stale! if Subscriptions.stripe_enabled?
     @entitlements = Entitlements.for(Current.account)
     @highlight    = sanitize_highlight(params[:highlight])
   end
@@ -22,9 +22,13 @@ class SubscriptionsController < AuthenticatedController
   end
 
   # POST /subscription — open a Stripe Checkout session and redirect
-  # the operator into Stripe-hosted Checkout. Hands back to /subscription
-  # on success, /pricing on cancel.
+  # the operator into Stripe-hosted Checkout. When Stripe is disabled,
+  # toggles the plan locally via SandboxToggle.
   def create
+    unless Subscriptions.stripe_enabled?
+      return sandbox_toggle!
+    end
+
     if Current.account.demo?
       redirect_to subscription_path,
                   alert: t(".demo_blocked")
@@ -59,6 +63,12 @@ class SubscriptionsController < AuthenticatedController
   end
 
   private
+
+  def sandbox_toggle!
+    target = subscription.pro? ? "free" : "pro"
+    Subscriptions::SandboxToggle.call(account: Current.account, plan: target)
+    redirect_to subscription_path, notice: t(".sandbox_toggled")
+  end
 
   # Highlights are passed via `?highlight=composable_recipes` so the
   # show page can flash the right card. Filter to known feature keys

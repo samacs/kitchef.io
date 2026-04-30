@@ -35,12 +35,13 @@ module Accounts
     private
 
     def cancel_stripe_subscription_if_any
+      return unless Subscriptions.stripe_enabled?
+
       sub_id = account.subscription&.stripe_subscription_id
       return if sub_id.blank?
 
       Stripe::Subscription.cancel(sub_id, prorate: false, invoice_now: false)
     rescue Stripe::InvalidRequestError => e
-      # Already canceled / unknown — nothing left to clean up.
       Rails.logger.warn("Accounts::Destroy stripe cancel skipped: #{e.message}")
     end
 

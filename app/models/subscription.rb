@@ -61,10 +61,12 @@ class Subscription < ApplicationRecord
   # entitlement (Free tier). `:stripe` is a paying customer (active
   # subscription, possibly trialing). `:comp` is an admin-donated
   # grant (demo accounts, partner deals, founder cocineras).
+  # `:sandbox` is a local toggle when Stripe keys aren't configured.
   SOURCES = {
-    free:   0,
-    stripe: 1,
-    comp:   2
+    free:    0,
+    stripe:  1,
+    comp:    2,
+    sandbox: 3
   }.freeze
 
   PRO_PLAN_KEYS = %w[pro pro_monthly pro_yearly].freeze
@@ -103,9 +105,10 @@ class Subscription < ApplicationRecord
   # identically to paid-Pro.
   def pro?
     case source
-    when "stripe" then stripe_pro?
-    when "comp"   then comp_active?
-    else               false
+    when "stripe"  then stripe_pro?
+    when "comp"    then comp_active?
+    when "sandbox" then sandbox_pro?
+    else                false
     end
   end
 
@@ -117,6 +120,11 @@ class Subscription < ApplicationRecord
   def stripe_pro?
     return false unless source_stripe?
     return false unless active?
+    PRO_PLAN_KEYS.include?(plan)
+  end
+
+  def sandbox_pro?
+    return false unless source_sandbox?
     PRO_PLAN_KEYS.include?(plan)
   end
 

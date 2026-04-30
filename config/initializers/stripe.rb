@@ -18,5 +18,11 @@ Rails.application.config.to_prepare do
 
   # Module namespace used by Phase 14 services + commands.
   module Subscriptions
+    # True when both Stripe keys are configured. When false, the entire
+    # billing integration is bypassed: operators can switch plans locally
+    # via the subscription dashboard, and all Stripe API calls no-op.
+    def self.stripe_enabled?
+      ENV["STRIPE_SECRET_KEY"].present? && ENV["STRIPE_PUBLIC_KEY"].present?
+    end
   end
 end

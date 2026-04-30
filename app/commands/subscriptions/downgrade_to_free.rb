@@ -15,8 +15,9 @@ module Subscriptions
 
     def call
       case subscription.source
-      when "stripe" then downgrade_stripe!
-      when "comp"   then downgrade_comp!
+      when "stripe"  then downgrade_stripe!
+      when "comp"    then downgrade_comp!
+      when "sandbox" then downgrade_sandbox!
       else
         success(subscription)
       end
@@ -27,9 +28,18 @@ module Subscriptions
 
     private
 
+    def downgrade_sandbox!
+      subscription.update!(
+        source: :free,
+        plan:   :free,
+        status: :active
+      )
+      success(subscription)
+    end
+
     def downgrade_stripe!
       sub_id = subscription.stripe_subscription_id
-      if sub_id.present?
+      if sub_id.present? && Subscriptions.stripe_enabled?
         Stripe::Subscription.cancel(sub_id, prorate: false, invoice_now: false)
       end
 

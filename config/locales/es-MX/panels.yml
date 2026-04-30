@@ -1392,6 +1392,11 @@ es-MX:
           - "Clientes, proveedores y compras"
           - "Recordatorios y notificaciones"
           - "Modo vacaciones"
+      sandbox:
+        kicker: "MODO SANDBOX"
+        body: "Stripe no está configurado. Puedes cambiar entre Gratis y Pro localmente para probar las funciones."
+        upgrade_cta: "Activar Pro"
+        downgrade_cta: "Cambiar a Gratis"
       pro_invite:
         kicker: "ACTIVA PRO"
         title: "Lleva tu cocina al siguiente nivel"
@@ -1448,6 +1453,7 @@ es-MX:
     create:
       demo_blocked: "Esta es una cocina demo — no se puede activar Pro desde aquí."
       checkout_failed: "No pudimos abrir el pago. Intenta de nuevo o escríbenos: %{message}"
+      sandbox_toggled: "Tu plan se actualizó."
     plan_switches:
       create:
         success: "Listo — cambiaste a %{period}."

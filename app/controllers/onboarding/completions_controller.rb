@@ -44,15 +44,17 @@ module Onboarding
     # gentle redirect to /pricing rather than blowing up the
     # onboarding flow.
     def start_pro_checkout
+      unless Subscriptions.stripe_enabled?
+        Subscriptions::SandboxToggle.call(account: current_onboarding_account, plan: "pro")
+        redirect_to authenticated_root_path, notice: t(".free_chosen")
+        return
+      end
+
       result = Subscriptions::CreateCheckoutSession.call(
         account:        current_onboarding_account,
         user:           Current.user,
         billing_period: billing_period,
         success_url:    subscription_url(checkout: "complete"),
-        # Cancel-from-Checkout lands on /subscription (not the
-        # dashboard or /pricing) — she's already onboarded by the
-        # time she reaches Stripe, so the dashboard is the right
-        # place to re-pick or stay on Free.
         cancel_url:     subscription_url(checkout: "canceled")
       )
 

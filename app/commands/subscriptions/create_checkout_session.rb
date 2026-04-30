@@ -23,6 +23,7 @@ module Subscriptions
     option :cancel_url
 
     def call
+      return failure([ "stripe_not_enabled" ]) unless Subscriptions.stripe_enabled?
       return failure([ "demo_account_blocked" ]) if account.demo?
       return failure([ "invalid_billing_period" ]) unless BILLING_PERIODS.include?(billing_period)
 
