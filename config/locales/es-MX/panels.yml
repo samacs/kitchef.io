@@ -450,6 +450,8 @@ es-MX:
       byproduct_mark: "Marcar como subproducto"
       byproduct_undo: "Es subproducto"
       picker:
+        search_placeholder: "Buscar ingrediente o receta…"
+        no_results: "Sin resultados. Prueba con otro nombre."
         ingredients: "Ingredientes"
         recipes: "Recetas y bases"
         empty: "Aún no tienes ingredientes ni recetas base. Agrega primero desde /ingredientes."

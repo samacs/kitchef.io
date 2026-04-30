@@ -26,71 +26,87 @@
       </span>
     </summary>
 
-    <div class="border-t border-line px-4 py-3 flex flex-col gap-3 max-h-[340px] overflow-y-auto kc-scroll">
-      <% if pickable_ingredients.any? %>
-        <div class="flex flex-col gap-1.5">
-          <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
-            <%= t("recipes.components.picker.ingredients") %>
-          </span>
-          <ul class="flex flex-col gap-0.5">
-            <% pickable_ingredients.each do |ing| %>
-              <li>
-                <button type="button"
-                        data-action="click->recipes-components#add"
-                        data-componentable-type="Ingredient"
-                        data-componentable-id="<%= ing.id %>"
-                        data-componentable-name="<%= ing.name %>"
-                        data-componentable-unit="<%= ing.unit %>"
-                        class="w-full flex items-baseline justify-between gap-3 text-left px-2 py-1.5 rounded-input hover:bg-bg-2/60 transition-colors">
-                  <span class="text-[13px] text-ink truncate"><%= ing.name %></span>
-                  <span class="font-mono text-[11.5px] text-muted tabular-nums shrink-0">
-                    <%= helpers.humanized_money_with_symbol(ing.unit_cost) %> / <%= I18n.t("units.#{ing.unit}", default: ing.unit) %>
-                  </span>
-                </button>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
+    <div class="border-t border-line flex flex-col">
+      <div class="px-4 pt-3 pb-2 sticky top-0 bg-surface z-10">
+        <input type="text"
+               data-recipes-components-target="pickerSearch"
+               data-action="input->recipes-components#filterPicker keydown->recipes-components#pickerKeydown"
+               placeholder="<%= t("recipes.components.picker.search_placeholder") %>"
+               autocomplete="off"
+               class="w-full bg-bg text-ink placeholder:text-muted border border-line rounded-input px-3 py-2 text-[13px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" />
+      </div>
 
-      <% if pickable_recipes.any? %>
-        <div class="flex flex-col gap-1.5">
-          <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
-            <%= t("recipes.components.picker.recipes") %>
-          </span>
-          <ul class="flex flex-col gap-0.5">
-            <% pickable_recipes.each do |r| %>
-              <li>
-                <button type="button"
-                        data-action="click->recipes-components#add"
-                        data-componentable-type="Recipe"
-                        data-componentable-id="<%= r.id %>"
-                        data-componentable-name="<%= r.name %>"
-                        data-componentable-unit="<%= r.yield_unit %>"
-                        class="w-full flex items-baseline justify-between gap-3 text-left px-2 py-1.5 rounded-input hover:bg-bg-2/60 transition-colors">
-                  <span class="text-[13px] text-ink truncate">
-                    <%= r.name %>
-                    <% unless r.is_saleable? %>
-                      <span class="ml-1 text-[11px] text-muted italic">· <%= t("recipes.components.internal_tag") %></span>
-                    <% end %>
-                  </span>
-                  <% if r.cost_cents_cached %>
+      <div class="px-4 pb-3 flex flex-col gap-3 max-h-[280px] overflow-y-auto kc-scroll">
+        <% if pickable_ingredients.any? %>
+          <div class="flex flex-col gap-1.5" data-recipes-components-target="pickerGroup">
+            <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+              <%= t("recipes.components.picker.ingredients") %>
+            </span>
+            <ul class="flex flex-col gap-0.5">
+              <% pickable_ingredients.order(:name).each do |ing| %>
+                <li data-recipes-components-target="pickerItem" data-label="<%= ing.name %>">
+                  <button type="button"
+                          data-action="click->recipes-components#add"
+                          data-componentable-type="Ingredient"
+                          data-componentable-id="<%= ing.id %>"
+                          data-componentable-name="<%= ing.name %>"
+                          data-componentable-unit="<%= ing.unit %>"
+                          class="w-full flex items-baseline justify-between gap-3 text-left px-2 py-1.5 rounded-input hover:bg-bg-2/60 data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent transition-colors">
+                    <span class="text-[13px] text-ink truncate"><%= ing.name %></span>
                     <span class="font-mono text-[11.5px] text-muted tabular-nums shrink-0">
-                      <%= helpers.humanized_money_with_symbol(r.cost_cached) %> / <%= r.yield_quantity.to_s.sub(/\.0+\z/, "") %> <%= I18n.t("units.#{r.yield_unit}", default: r.yield_unit) %>
+                      <%= helpers.humanized_money_with_symbol(ing.unit_cost) %> / <%= I18n.t("units.#{ing.unit}", default: ing.unit) %>
                     </span>
-                  <% end %>
-                </button>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
+                  </button>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
 
-      <% if pickable_ingredients.empty? && pickable_recipes.empty? %>
-        <p class="text-[12.5px] text-muted py-2">
-          <%= t("recipes.components.picker.empty") %>
+        <% if pickable_recipes.any? %>
+          <div class="flex flex-col gap-1.5" data-recipes-components-target="pickerGroup">
+            <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+              <%= t("recipes.components.picker.recipes") %>
+            </span>
+            <ul class="flex flex-col gap-0.5">
+              <% pickable_recipes.order(:name).each do |r| %>
+                <li data-recipes-components-target="pickerItem" data-label="<%= r.name %>">
+                  <button type="button"
+                          data-action="click->recipes-components#add"
+                          data-componentable-type="Recipe"
+                          data-componentable-id="<%= r.id %>"
+                          data-componentable-name="<%= r.name %>"
+                          data-componentable-unit="<%= r.yield_unit %>"
+                          class="w-full flex items-baseline justify-between gap-3 text-left px-2 py-1.5 rounded-input hover:bg-bg-2/60 data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent transition-colors">
+                    <span class="text-[13px] text-ink truncate">
+                      <%= r.name %>
+                      <% unless r.is_saleable? %>
+                        <span class="ml-1 text-[11px] text-muted italic">· <%= t("recipes.components.internal_tag") %></span>
+                      <% end %>
+                    </span>
+                    <% if r.cost_cents_cached %>
+                      <span class="font-mono text-[11.5px] text-muted tabular-nums shrink-0">
+                        <%= helpers.humanized_money_with_symbol(r.cost_cached) %> / <%= r.yield_quantity.to_s.sub(/\.0+\z/, "") %> <%= I18n.t("units.#{r.yield_unit}", default: r.yield_unit) %>
+                      </span>
+                    <% end %>
+                  </button>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <% if pickable_ingredients.empty? && pickable_recipes.empty? %>
+          <p class="text-[12.5px] text-muted py-2">
+            <%= t("recipes.components.picker.empty") %>
+          </p>
+        <% end %>
+
+        <p data-recipes-components-target="pickerEmpty" hidden
+           class="text-[12.5px] text-muted py-2 text-center">
+          <%= t("recipes.components.picker.no_results") %>
         </p>
-      <% end %>
+      </div>
     </div>
   </details>
 
