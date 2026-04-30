@@ -7,7 +7,7 @@
       data: {
         controller: autosave ? "image-upload form-autosave reset-files-on-save" : "image-upload",
         action: [
-          (autosave ? "change->form-autosave#save input->form-autosave#save" : nil),
+          (autosave ? "change->form-autosave#save input->form-autosave#save form-autosave:immediate->form-autosave#saveNow" : nil),
           "recipe-photos:changed->image-upload#publishGate"
         ].compact.join(" ")
       } do |form| %>

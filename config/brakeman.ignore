@@ -64,7 +64,7 @@
     {
       "warning_type": "SQL Injection",
       "warning_code": 0,
-      "fingerprint": "605831c98b34564448d62fd9d055a71c359b4c6797e96e1a2a8672d825ab6bba",
+      "fingerprint": "7f911f951536df0aad03e987f233e034c0372a1a1dba31531baeceb5b4ec8b79",
       "check_name": "SQL",
       "message": "Possible SQL injection",
       "file": "app/models/concerns/searchable.rb",

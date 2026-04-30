@@ -136,6 +136,8 @@ module Production
     # internal sub-recipes scaled by their yield).
     def expand_recipe(recipe, factor, buckets, source_recipe:, order_done: false)
       recipe.components.includes(:componentable).each do |component|
+        next if component.is_byproduct?
+
         case component.componentable
         when Ingredient then accumulate_ingredient(component, factor, buckets, source_recipe: source_recipe, order_done: order_done)
         when Recipe     then accumulate_recipe(component, factor, buckets, source_recipe: source_recipe, order_done: order_done)

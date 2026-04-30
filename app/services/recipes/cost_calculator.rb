@@ -52,6 +52,8 @@ module Recipes
     end
 
     def component_cents(component)
+      return 0 if component.is_byproduct?
+
       case component.componentable
       when Ingredient then ingredient_cents(component)
       when Recipe     then recipe_component_cents(component)

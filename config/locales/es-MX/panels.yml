@@ -446,7 +446,12 @@ es-MX:
       add_cta: "Agregar componente"
       add_hint: "Ingredientes y recetas base"
       internal_tag: "interna"
+      byproduct_tag: "subproducto"
+      byproduct_mark: "Marcar como subproducto"
+      byproduct_undo: "Es subproducto"
       picker:
+        search_placeholder: "Buscar ingrediente o receta…"
+        no_results: "Sin resultados. Prueba con otro nombre."
         ingredients: "Ingredientes"
         recipes: "Recetas y bases"
         empty: "Aún no tienes ingredientes ni recetas base. Agrega primero desde /ingredientes."
@@ -471,6 +476,7 @@ es-MX:
         warn: "No te queda inventario para vender hoy. Tus clientes pueden ordenar igual y aparecerá un aviso en tu kanban. Anota un lote cuando puedas cocinar."
         block: "No te queda inventario y tu política bloquea ventas sin stock. Tu cliente verá “Agotado” en el menú. Anota un lote para volver a vender."
     card:
+      cost_suffix: "costo"
       publish_cta: "Publicar en mi tienda"
       unpublish_cta: "Ocultar de mi tienda"
       needs_photo: "Agrega una foto para publicar"

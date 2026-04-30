@@ -30,7 +30,7 @@ module Searchable
 
       similarity_calls = _searchable_columns.map do |col|
         quoted_col = connection.quote_column_name(col)
-        "similarity(COALESCE(LOWER(#{quoted_col}), ''), #{quoted_term})"
+        "similarity(unaccent(COALESCE(LOWER(#{quoted_col}), '')), unaccent(#{quoted_term}))"
       end
 
       Arel.sql("GREATEST(#{similarity_calls.join(', ')})")

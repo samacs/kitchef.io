@@ -40,8 +40,8 @@
         <%= recipe.name %>
       </h3>
       <div class="flex items-center justify-between gap-3">
-        <span class="font-mono text-[14px] font-medium text-ink">
-          <%= price_label %>
+        <span class="font-mono text-[14px] font-medium <%= price_is_cost? ? 'text-muted' : 'text-ink' %>">
+          <%= price_label %><% if price_is_cost? %> <span class="text-[11px]"><%= t("recipes.card.cost_suffix") %></span><% end %>
         </span>
         <%= render Ui::BadgeComponent.new(
               label: category_label,

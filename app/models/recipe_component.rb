@@ -4,6 +4,7 @@
 #
 #  id                 :bigint           not null, primary key
 #  componentable_type :string           not null
+#  is_byproduct       :boolean          default(FALSE), not null
 #  is_removable       :boolean          default(FALSE), not null
 #  notes              :text
 #  position           :integer
@@ -38,6 +39,7 @@ class RecipeComponent < ApplicationRecord
   validate  :cross_account_components_rejected
   validate  :unit_compatible_with_componentable
   validate  :removable_only_for_ingredients
+  validate  :byproduct_only_for_recipes
 
   after_commit :enqueue_parent_cost_refresh, on: %i[create update destroy]
 
@@ -111,5 +113,12 @@ class RecipeComponent < ApplicationRecord
     return if componentable.account_id == recipe.account_id
 
     errors.add(:componentable, :cross_account)
+  end
+
+  def byproduct_only_for_recipes
+    return unless is_byproduct?
+    return if componentable_type == "Recipe"
+
+    errors.add(:is_byproduct, :only_recipes)
   end
 end

@@ -7,9 +7,9 @@ module Recipes
   # recurses into recipe componentables. Cycles are already forbidden
   # at the model layer, so the traversal can assume a DAG.
   class CostTreeNode
-    attr_reader :name, :quantity, :unit, :cost_cents, :children, :kind, :internal
+    attr_reader :name, :quantity, :unit, :cost_cents, :children, :kind, :internal, :byproduct
 
-    def initialize(name:, quantity:, unit:, cost_cents:, children:, kind:, internal: false)
+    def initialize(name:, quantity:, unit:, cost_cents:, children:, kind:, internal: false, byproduct: false)
       @name = name
       @quantity = quantity
       @unit = unit
@@ -17,7 +17,10 @@ module Recipes
       @children = children
       @kind = kind
       @internal = internal
+      @byproduct = byproduct
     end
+
+    def byproduct? = byproduct
 
     def self.build(recipe:)
       total = recipe.cost_cents_cached.to_i
@@ -64,7 +67,8 @@ module Recipes
 
     def self.node_for_recipe(component)
       child = component.componentable
-      cents = child_cents(component, child)
+      is_byproduct = component.is_byproduct?
+      cents = is_byproduct ? 0 : child_cents(component, child)
 
       new(
         name:       child.name,
@@ -73,6 +77,7 @@ module Recipes
         cost_cents: cents,
         kind:       :recipe,
         internal:   !child.is_saleable?,
+        byproduct:  is_byproduct,
         children:   child.components.includes(:componentable).map { |c| node_for(c) }
       )
     end

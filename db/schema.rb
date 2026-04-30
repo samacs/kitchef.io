@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
+  enable_extension "unaccent"
   enable_extension "vector"
 
   create_table "accounts", force: :cascade do |t|
@@ -468,6 +469,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_140000) do
     t.bigint "componentable_id", null: false
     t.string "componentable_type", null: false
     t.datetime "created_at", null: false
+    t.boolean "is_byproduct", default: false, null: false
     t.boolean "is_removable", default: false, null: false
     t.text "notes"
     t.integer "position"

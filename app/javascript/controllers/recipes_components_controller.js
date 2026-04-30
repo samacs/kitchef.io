@@ -28,7 +28,7 @@ const FAMILIES = {
 }
 
 export default class extends Controller {
-  static targets = ["blueprint", "row", "destroyFlag"]
+  static targets = ["blueprint", "row", "destroyFlag", "pickerSearch", "pickerItem", "pickerGroup", "pickerEmpty"]
 
   // ── Index allocation ─────────────────────────────────────────────────
   // Server-rendered rows use indices 0..N from the loop. Client-side
@@ -38,6 +38,100 @@ export default class extends Controller {
   // disconnect when only the inner rows are swapped.
   connect() {
     this.nextIndex = 1_000_000 + Math.floor(Math.random() * 1_000_000)
+    this.pickerHighlightIndex = -1
+
+    const details = this.element.querySelector("details")
+    if (details) {
+      details.addEventListener("toggle", () => {
+        if (details.open && this.hasPickerSearchTarget) {
+          requestAnimationFrame(() => this.pickerSearchTarget.focus())
+        } else {
+          this.pickerHighlightIndex = -1
+          this.#clearPickerHighlight()
+        }
+      })
+    }
+  }
+
+  // ── Picker search + keyboard nav ────────────────────────────────────
+
+  filterPicker() {
+    const query = this.#normalize(this.hasPickerSearchTarget ? this.pickerSearchTarget.value : "")
+    let visible = 0
+
+    this.pickerItemTargets.forEach(li => {
+      const label = this.#normalize(li.dataset.label || "")
+      const match = query === "" || label.includes(query)
+      li.hidden = !match
+      if (match) visible++
+    })
+
+    this.pickerGroupTargets.forEach(group => {
+      const items = group.querySelectorAll("[data-recipes-components-target='pickerItem']")
+      const anyVisible = Array.from(items).some(li => !li.hidden)
+      group.hidden = !anyVisible
+    })
+
+    if (this.hasPickerEmptyTarget) {
+      this.pickerEmptyTarget.hidden = visible > 0 || query === ""
+    }
+
+    this.pickerHighlightIndex = -1
+    this.#clearPickerHighlight()
+  }
+
+  pickerKeydown(event) {
+    const items = this.#visiblePickerItems()
+    if (!items.length) return
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault()
+        this.pickerHighlightIndex = Math.min(this.pickerHighlightIndex + 1, items.length - 1)
+        this.#applyPickerHighlight(items)
+        break
+      case "ArrowUp":
+        event.preventDefault()
+        this.pickerHighlightIndex = Math.max(this.pickerHighlightIndex - 1, 0)
+        this.#applyPickerHighlight(items)
+        break
+      case "Enter":
+        event.preventDefault()
+        if (this.pickerHighlightIndex >= 0 && items[this.pickerHighlightIndex]) {
+          items[this.pickerHighlightIndex].querySelector("button")?.click()
+        }
+        break
+      case "Escape":
+        event.preventDefault()
+        this.#closePicker()
+        break
+    }
+  }
+
+  #visiblePickerItems() {
+    return this.pickerItemTargets.filter(li => !li.hidden)
+  }
+
+  #applyPickerHighlight(items) {
+    items.forEach((li, i) => {
+      const btn = li.querySelector("button")
+      if (i === this.pickerHighlightIndex) {
+        btn?.setAttribute("data-highlighted", "")
+        li.scrollIntoView({ block: "nearest" })
+      } else {
+        btn?.removeAttribute("data-highlighted")
+      }
+    })
+  }
+
+  #clearPickerHighlight() {
+    this.pickerItemTargets.forEach(li => {
+      li.querySelector("button")?.removeAttribute("data-highlighted")
+    })
+  }
+
+  #normalize(str) {
+    return str.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim()
   }
 
   // ── Adding ───────────────────────────────────────────────────────────
@@ -116,6 +210,55 @@ export default class extends Controller {
     this.dispatchChange(row)
   }
 
+  // ── Byproduct toggle ──────────────────────────────────────────────────
+
+  toggleByproduct(event) {
+    event.preventDefault()
+    const row = event.currentTarget.closest("[data-recipes-components-target='row']")
+    if (!row) return
+
+    const field = row.querySelector("[data-field='is_byproduct']")
+    if (!field) return
+
+    const current = field.value === "1"
+    const next = !current
+    field.value = next ? "1" : "0"
+
+    row.classList.toggle("bg-accent-soft/30", next)
+
+    const costEl = row.querySelector(".tabular-nums")
+    if (costEl) {
+      costEl.classList.toggle("text-accent", next)
+      costEl.classList.toggle("line-through", next)
+      costEl.classList.toggle("text-ink-2", !next)
+    }
+
+    const btn = event.currentTarget
+    btn.textContent = next ? "Es subproducto" : "Marcar como subproducto"
+    btn.classList.toggle("text-accent", next)
+    btn.classList.toggle("text-muted", !next)
+
+    const badge = row.querySelector("[data-byproduct-badge]")
+    if (badge) {
+      badge.hidden = !next
+    } else if (next) {
+      const nameDiv = row.querySelector(".flex-1 .flex")
+      if (nameDiv) {
+        const span = document.createElement("span")
+        span.dataset.byproductBadge = "true"
+        span.className = "inline-flex items-center gap-1 rounded-full bg-accent-soft px-1.5 py-0.5 text-[10px] font-medium text-accent"
+        span.textContent = "subproducto"
+        nameDiv.appendChild(span)
+      }
+    }
+
+    this.dispatchImmediate()
+  }
+
+  dispatchImmediate() {
+    this.element.dispatchEvent(new CustomEvent("form-autosave:immediate", { bubbles: true }))
+  }
+
   // ── Helpers ──────────────────────────────────────────────────────────
 
   #findActiveRowFor(type, id) {
@@ -131,6 +274,11 @@ export default class extends Controller {
   #closePicker() {
     const details = this.element.querySelector("details")
     if (details) details.open = false
+    if (this.hasPickerSearchTarget) {
+      this.pickerSearchTarget.value = ""
+      this.filterPicker()
+    }
+    this.pickerHighlightIndex = -1
   }
 
   ensureList() {

@@ -12,7 +12,15 @@ module Recipes
     end
 
     def price_label
-      helpers.humanized_money_with_symbol(recipe.sale_price)
+      if recipe.is_saleable?
+        helpers.humanized_money_with_symbol(recipe.sale_price)
+      elsif recipe.cost_cents_cached.to_i.positive?
+        helpers.humanized_money_with_symbol(recipe.cost_cached)
+      end
+    end
+
+    def price_is_cost?
+      !recipe.is_saleable? && recipe.cost_cents_cached.to_i.positive?
     end
 
     def photo_url
