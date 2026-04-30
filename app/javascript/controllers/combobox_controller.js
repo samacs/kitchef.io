@@ -129,13 +129,17 @@ export default class extends Controller {
 
   // ---- Internals -------------------------------------------------------
 
+  #normalize(str) {
+    return str.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+  }
+
   #renderFilter() {
-    const query = this.searchTarget.value.trim().toLowerCase()
+    const query = this.#normalize(this.searchTarget.value.trim())
     let visible = 0
     let exact = false
 
     this.itemTargets.forEach(li => {
-      const label = (li.dataset.label || "").toLowerCase()
+      const label = this.#normalize(li.dataset.label || "")
       const match = query === "" || label.includes(query)
       li.hidden = !match
       if (match) visible += 1

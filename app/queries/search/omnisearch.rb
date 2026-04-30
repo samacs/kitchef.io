@@ -46,8 +46,8 @@ class Search::Omnisearch < ApplicationQuery
     orders = account.orders.kept
       .left_joins(:client)
       .where(
-        "LOWER(clients.first_name) LIKE #{sanitized} " \
-        "OR LOWER(clients.last_name) LIKE #{sanitized} " \
+        "unaccent(LOWER(clients.first_name)) LIKE unaccent(#{sanitized}) " \
+        "OR unaccent(LOWER(clients.last_name)) LIKE unaccent(#{sanitized}) " \
         "OR LOWER(clients.phone_normalized) LIKE #{sanitized} " \
         "OR CAST(orders.id AS TEXT) LIKE #{sanitized}"
       )
