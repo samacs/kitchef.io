@@ -1,6 +1,7 @@
 <% content_for :title, t("batches.index.title") %>
 <% content_for :page_title, t("batches.index.page_title") %>
 <% content_for :page_subtitle, t("batches.index.page_subtitle") %>
+<% content_for :fab_path, new_batch_path %>
 
 <% content_for :page_action do %>
   <%= link_to new_batch_path,

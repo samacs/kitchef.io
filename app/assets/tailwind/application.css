@@ -122,11 +122,14 @@
   }
 
   /* iOS Safari auto-zooms inputs with font-size < 16px, which
-     breaks the layout by scrolling horizontally. Pin to 16px on
-     touch devices so the zoom never triggers. */
-  @media (hover: none) {
-    input, select, textarea {
-      font-size: 16px;
+     breaks the layout by scrolling horizontally. The !important
+     is needed to override Tailwind utility classes (text-[14px])
+     that would otherwise win on specificity. */
+  @media (hover: none) and (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    select,
+    textarea {
+      font-size: 16px !important;
     }
   }
 

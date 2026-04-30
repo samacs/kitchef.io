@@ -1,6 +1,7 @@
 <% content_for :title, t("promotions.index.title") %>
 <% content_for :page_title, t("promotions.index.title") %>
 <% content_for :page_subtitle, t("promotions.index.subtitle") %>
+<% content_for :fab_path, new_promotion_path %>
 
 <% content_for :page_action do %>
   <%= link_to new_promotion_path,

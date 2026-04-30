@@ -1,6 +1,7 @@
 <% content_for :title, t("purchases.index.title") %>
 <% content_for :page_title, t("purchases.index.title") %>
 <% content_for :page_subtitle, t("purchases.index.subtitle") %>
+<% content_for :fab_path, new_purchase_path %>
 
 <% content_for :page_action do %>
   <%= link_to new_purchase_path,

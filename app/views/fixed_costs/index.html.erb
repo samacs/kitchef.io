@@ -1,6 +1,7 @@
 <% content_for :title, t("fixed_costs.index.title") %>
 <% content_for :page_title, t("fixed_costs.index.title") %>
 <% content_for :page_subtitle, t("fixed_costs.index.subtitle") %>
+<% content_for :fab_path, new_fixed_cost_path %>
 
 <% content_for :page_action do %>
   <%= link_to new_fixed_cost_path,
