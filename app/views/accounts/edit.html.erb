@@ -295,6 +295,61 @@
           </div>
       </section>
 
+      <%# Métodos de entrega — pickup / delivery opt-in %>
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6">
+        <div>
+          <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
+            <%= t("account.sections.fulfillment_kicker") %>
+          </div>
+          <h2 class="mt-1 font-serif text-[22px] leading-tight text-ink">
+            <%= t("account.sections.fulfillment_title") %>
+          </h2>
+          <p class="mt-1 text-[13px] text-ink-2"><%= t("account.sections.fulfillment_lede") %></p>
+        </div>
+
+        <% pp = @account.public_profile %>
+
+        <% unless pp.any_fulfillment? %>
+          <div class="rounded-card-sm border border-warn/40 bg-[color-mix(in_oklab,var(--color-warn)_8%,var(--color-surface))] p-3 flex items-start gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-warn shrink-0 mt-0.5" aria-hidden="true">
+              <path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            </svg>
+            <div class="text-[12.5px] text-ink-2 leading-[1.45]">
+              <strong class="text-warn"><%= t("account.fulfillment.none_warning_title") %></strong>
+              <span class="block mt-0.5"><%= t("account.fulfillment.none_warning_body") %></span>
+            </div>
+          </div>
+        <% end %>
+
+        <div class="flex flex-col gap-3">
+          <div class="rounded-card-sm border border-line bg-bg-2/60">
+            <label class="flex items-start gap-3 p-4 cursor-pointer">
+              <input type="hidden" name="account[public_profile][fulfillment_pickup]" value="0">
+              <input type="checkbox" name="account[public_profile][fulfillment_pickup]" value="1"
+                     <%= "checked" if pp.offers_pickup? %>
+                     class="mt-[3px] w-4 h-4 accent-accent">
+              <div class="flex-1 flex flex-col gap-1">
+                <span class="text-[14px] font-medium text-ink"><%= t("account.fulfillment.pickup_label") %></span>
+                <span class="text-[12px] text-muted"><%= t("account.fulfillment.pickup_hint") %></span>
+              </div>
+            </label>
+          </div>
+
+          <div class="rounded-card-sm border border-line bg-bg-2/60">
+            <label class="flex items-start gap-3 p-4 cursor-pointer">
+              <input type="hidden" name="account[public_profile][fulfillment_delivery]" value="0">
+              <input type="checkbox" name="account[public_profile][fulfillment_delivery]" value="1"
+                     <%= "checked" if pp.offers_delivery? %>
+                     class="mt-[3px] w-4 h-4 accent-accent">
+              <div class="flex-1 flex flex-col gap-1">
+                <span class="text-[14px] font-medium text-ink"><%= t("account.fulfillment.delivery_label") %></span>
+                <span class="text-[12px] text-muted"><%= t("account.fulfillment.delivery_hint") %></span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </section>
+
       <%# Recolección — kitchen pickup address + interactive map %>
       <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6"
                data-controller="kitchen-address-map"
