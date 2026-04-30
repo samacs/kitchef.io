@@ -1,8 +1,8 @@
-<fieldset class="flex flex-col gap-4 rounded-card border border-line bg-bg-2/40 p-5 sm:p-6"
+<fieldset class="flex flex-col gap-4 rounded-card border border-line bg-bg-2/40 p-3 sm:p-5 lg:p-6 min-w-0"
           data-controller="recipes-components">
   <legend class="sr-only"><%= t("recipes.components.legend") %></legend>
 
-  <div class="flex items-baseline justify-between gap-3">
+  <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
     <div class="flex flex-col gap-0.5">
       <%= render Ui::KickerComponent.new(text: t("recipes.components.kicker")) %>
       <h3 class="font-serif text-[20px] leading-[1.2] text-ink">
@@ -113,35 +113,51 @@
   <%# Row template for client-side adds. Stimulus controller clones and
       fills in the hidden fields before inserting into the list. %>
   <template data-recipes-components-target="blueprint">
-    <li class="flex items-center gap-3 px-3 py-3 sm:px-4"
+    <li class="flex flex-col gap-2 px-3 py-3 sm:px-4 sm:flex-row sm:items-center sm:gap-3"
         data-recipes-components-target="row">
       <input type="hidden" name="recipe[components_attributes][NEW_RECORD][componentable_type]" data-field="componentable_type" />
       <input type="hidden" name="recipe[components_attributes][NEW_RECORD][componentable_id]"   data-field="componentable_id" />
       <input type="hidden" name="recipe[components_attributes][NEW_RECORD][_destroy]" value="0" data-recipes-components-target="destroyFlag" />
       <input type="hidden" name="recipe[components_attributes][NEW_RECORD][is_byproduct]" value="0" data-field="is_byproduct" />
 
-      <input type="number"
-             name="recipe[components_attributes][NEW_RECORD][quantity]"
-             step="0.01" min="0" value="1"
-             aria-label="<%= t("recipes.components.quantity_label") %>"
-             class="w-20 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] font-mono text-right tabular-nums focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
+      <div class="flex items-center justify-between gap-2 sm:contents">
+        <div class="flex items-center gap-2">
+          <input type="number"
+                 name="recipe[components_attributes][NEW_RECORD][quantity]"
+                 step="0.01" min="0" value="1"
+                 aria-label="<%= t("recipes.components.quantity_label") %>"
+                 class="w-16 sm:w-20 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] font-mono text-right tabular-nums focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
 
-      <select name="recipe[components_attributes][NEW_RECORD][unit]"
-              aria-label="<%= t("recipes.components.unit_label") %>"
-              data-field="unit"
-              class="w-24 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></select>
+          <select name="recipe[components_attributes][NEW_RECORD][unit]"
+                  aria-label="<%= t("recipes.components.unit_label") %>"
+                  data-field="unit"
+                  class="w-20 sm:w-24 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[13px] focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"></select>
 
-      <div class="flex-1 min-w-0 flex flex-col gap-0.5">
+          <span class="text-[13.5px] text-ink truncate sm:hidden" data-field="name"></span>
+        </div>
+
+        <div class="flex items-center gap-2 sm:hidden">
+          <span class="font-mono text-[12px] text-muted tabular-nums whitespace-nowrap">—</span>
+          <button type="button"
+                  data-action="click->recipes-components#remove"
+                  aria-label="<%= t("recipes.components.remove_aria") %>"
+                  class="inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-err hover:bg-err/5 transition-colors">
+            <%= helpers.icon(:x, size: :sm) %>
+          </button>
+        </div>
+      </div>
+
+      <div class="hidden sm:flex flex-1 min-w-0 flex-col gap-0.5">
         <span class="text-[13.5px] text-ink truncate" data-field="name"></span>
       </div>
 
-      <span class="font-mono text-[13px] text-muted tabular-nums whitespace-nowrap">—</span>
+      <span class="hidden sm:inline font-mono text-[13px] text-muted tabular-nums whitespace-nowrap">—</span>
 
       <button type="button"
               data-action="click->recipes-components#remove"
               aria-label="<%= t("recipes.components.remove_aria") %>"
               title="<%= t("recipes.components.remove_aria") %>"
-              class="inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-err hover:bg-err/5 transition-colors">
+              class="hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-input text-muted hover:text-err hover:bg-err/5 transition-colors">
         <%= helpers.icon(:x, size: :sm) %>
       </button>
     </li>

@@ -1,4 +1,31 @@
 <% content_for :title, "#{@recipe.name} — #{@storefront.name}" %>
+<%
+  recipe_price = humanized_money_with_symbol(@recipe.sale_price)
+  recipe_desc = if @recipe.description.present?
+    t("meta.storefront.recipe_description_with_detail",
+      recipe: @recipe.name, kitchen: @storefront.name,
+      price: recipe_price, detail: @recipe.description.truncate(120))
+  else
+    t("meta.storefront.recipe_description",
+      recipe: @recipe.name, kitchen: @storefront.name, price: recipe_price)
+  end
+%>
+<% content_for :description, recipe_desc %>
+<% if @recipe.photos.attached? %>
+  <% content_for :og_image, cdn_image_url(@recipe.ordered_photos.first.variant(resize_to_limit: [1200, 630])) %>
+<% elsif @storefront.cover_photo.attached? %>
+  <% content_for :og_image, cdn_image_url(@storefront.cover_photo) %>
+<% end %>
+
+<% content_for :json_ld do %>
+  <%= json_ld_menu_item(@recipe, @storefront) %>
+  <%= json_ld_product(@recipe, @storefront) %>
+  <%= json_ld_breadcrumb_list([
+    { name: "Kitchef", url: root_url },
+    { name: @storefront.name, url: storefront_url(slug: @storefront.slug) },
+    { name: @recipe.name, url: storefront_recipe_url(slug: @storefront.slug, recipe_slug: @recipe.slug) }
+  ]) %>
+<% end %>
 
 <% photo_hero = @recipe.photos.first&.variant(resize_to_limit: [ 1200, 800 ]) %>
 <% back_href = storefront_path(slug: @storefront.slug) %>

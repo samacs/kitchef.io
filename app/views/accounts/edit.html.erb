@@ -9,7 +9,7 @@
   <%# ================================================================
       LEFT — form (spans 2 of 3 columns on lg+)
       ================================================================ %>
-  <div class="lg:col-span-2 min-w-0">
+  <div class="col-span-full lg:col-span-2 min-w-0 overflow-hidden">
     <%= form_with model: @account,
                   url: account_path,
                   method: :patch,
@@ -24,7 +24,7 @@
 
       <%# Identity — name, tagline, description, logo, cover, palettes.
           Everything that the public storefront hero shows. %>
-      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6">
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-4 sm:p-6">
         <div class="flex items-start justify-between gap-3">
           <div>
             <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
@@ -107,10 +107,10 @@
                   </div>
                 <% end %>
               </div>
-              <div class="flex flex-1 flex-col gap-2">
+              <div class="flex flex-1 flex-col gap-2 min-w-0 overflow-hidden">
                 <%= f.file_field :logo,
                       accept: "image/jpeg,image/png,image/webp,image/heic",
-                      class: "text-[12px]",
+                      class: "text-[12px] max-w-full",
                       data: {
                         action: "change->live-preview-source#emit",
                         live_preview_source_field_param: "logo"
@@ -142,10 +142,10 @@
                   <%= image_tag @account.cover_photo.variant(:card), class: "h-full w-full object-cover", alt: "" %>
                 <% end %>
               </div>
-              <div class="flex flex-1 flex-col gap-2">
+              <div class="flex flex-1 flex-col gap-2 min-w-0 overflow-hidden">
                 <%= f.file_field :cover_photo,
                       accept: "image/jpeg,image/png,image/webp,image/heic",
-                      class: "text-[12px]",
+                      class: "text-[12px] max-w-full",
                       data: {
                         action: "change->live-preview-source#emit",
                         live_preview_source_field_param: "cover"
@@ -193,7 +193,7 @@
       </section>
 
       <%# Contact — phone/WA/IG/location/zones/payment. %>
-      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6">
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-4 sm:p-6">
         <div>
           <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
             <%= t("account.sections.contact_kicker") %>
@@ -296,7 +296,7 @@
       </section>
 
       <%# Métodos de entrega — pickup / delivery opt-in %>
-      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6">
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-4 sm:p-6">
         <div>
           <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
             <%= t("account.sections.fulfillment_kicker") %>
@@ -351,7 +351,7 @@
       </section>
 
       <%# Recolección — kitchen pickup address + interactive map %>
-      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6"
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-4 sm:p-6"
                data-controller="kitchen-address-map"
                data-kitchen-address-map-api-key-value="<%= ENV["GOOGLE_API_KEY"].to_s %>"
                data-kitchen-address-map-initial-lat-value="<%= @account.latitude || 0 %>"
@@ -466,7 +466,7 @@
       <%= render Accounts::InventorySettingsCardComponent.new(account: @account, form: f) %>
 
       <%# Pagos — accepted methods, SPEI details, tip presets %>
-      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-6"
+      <section class="flex flex-col gap-5 rounded-panel border border-line bg-surface p-4 sm:p-6"
                data-controller="payment-settings">
         <div>
           <div class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted">
@@ -629,12 +629,13 @@
         </div>
       </section>
 
-      <div class="flex items-center justify-start">
+      <div class="hidden lg:flex items-center justify-start">
         <a href="<%= storefront_path(slug: @account.slug) %>" target="_blank" rel="noopener"
            class="inline-flex items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium text-ink-2 hover:border-line-2 no-underline">
           <%= t("account.view_storefront") %>
         </a>
       </div>
+      <div class="h-14 lg:hidden"></div>
     <% end %>
   </div>
 
@@ -644,7 +645,19 @@
       small gap, otherwise the preview header slides under it when
       the page scrolls.
       ================================================================ %>
-  <aside class="lg:col-span-1 lg:sticky lg:top-[84px] w-full">
+  <aside class="hidden lg:block lg:col-span-1 lg:sticky lg:top-[84px] w-full">
     <%= render Accounts::StorefrontPreviewComponent.new(account: @account) %>
   </aside>
+</div>
+
+<%# Mobile sticky bar — quick access to storefront preview since
+    the side-by-side preview is hidden on small screens. %>
+<div class="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-line bg-bg/90 backdrop-blur-xl pb-[max(8px,env(safe-area-inset-bottom))] pt-2 px-4">
+  <a href="<%= storefront_path(slug: @account.slug) %>" target="_blank" rel="noopener"
+     class="flex items-center justify-center gap-2 rounded-[10px] bg-accent text-bg px-4 py-2 text-[13px] font-semibold no-underline shadow-cta active:scale-[0.98] transition-transform">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    <%= t("account.view_storefront") %>
+  </a>
 </div>

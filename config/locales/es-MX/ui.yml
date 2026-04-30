@@ -11,6 +11,8 @@ es-MX:
       toggle: "Abrir opciones"
       empty: "Nada que coincida"
       create_prefix: "Agregar"
+    fab:
+      add: "Agregar"
 
   # Phase 14, Slice 11 — demo banner mounted on operator + storefront
   # layouts when Account#demo? is true.

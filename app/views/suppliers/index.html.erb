@@ -1,6 +1,7 @@
 <% content_for :title, t("suppliers.index.title") %>
 <% content_for :page_title, t("suppliers.index.title") %>
 <% content_for :page_subtitle, t("suppliers.index.subtitle") %>
+<% content_for :fab_path, new_supplier_path %>
 
 <% content_for :page_action do %>
   <%= link_to new_supplier_path,

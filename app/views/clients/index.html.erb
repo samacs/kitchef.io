@@ -1,6 +1,7 @@
 <% content_for :title, t("clients.index.title") %>
 <% content_for :page_title, t("clients.index.title") %>
 <% content_for :page_subtitle, t("clients.index.subtitle") %>
+<% content_for :fab_path, new_client_path %>
 
 <% content_for :page_action do %>
   <%= link_to new_client_path,

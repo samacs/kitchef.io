@@ -121,6 +121,18 @@
     font-family: inherit;
   }
 
+  /* iOS Safari auto-zooms inputs with font-size < 16px, which
+     breaks the layout by scrolling horizontally. The !important
+     is needed to override Tailwind utility classes (text-[14px])
+     that would otherwise win on specificity. */
+  @media (hover: none) and (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
   /* Tailwind v4 drops the legacy `cursor: pointer` default on buttons so
      Preflight matches native browser behavior. We want the pointer back
      on every clickable surface without having to sprinkle `cursor-pointer`
@@ -462,10 +474,7 @@
 
   .kc-hero-visual {
     position: relative;
-    min-height: 540px;
   }
-  @media (max-width: 1000px) { .kc-hero-visual { min-height: 480px; max-width: 620px; } }
-  @media (max-width: 680px)  { .kc-hero-visual { min-height: 420px; } }
 
   .kc-photo-plate {
     position: absolute;
@@ -504,17 +513,14 @@
   .kc-pulse-dot { animation: kc-pulse-dot 2s ease-in-out infinite; }
 
   .kc-dash {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 72%;
+    position: relative;
+    width: 100%;
     background: var(--color-surface);
     border: 1px solid var(--color-line);
     border-radius: 16px;
     box-shadow: var(--shadow-hero);
     overflow: hidden;
   }
-  @media (max-width: 680px) { .kc-dash { width: 78%; } }
 
   .kc-dash-chart {
     position: relative;

@@ -1,6 +1,7 @@
 <% content_for :title, t("ingredients.index.title") %>
 <% content_for :page_title, t("ingredients.index.title") %>
 <% content_for :page_subtitle, t("ingredients.index.subtitle") %>
+<% content_for :fab_path, new_ingredient_path %>
 
 <% content_for :page_action do %>
   <%= link_to new_ingredient_path,
