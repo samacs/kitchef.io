@@ -34,13 +34,13 @@
     forever because Entitlements gates the predicate to Pro. %>
 <% if !Current.account.settings.use_composable_recipes && recipes.size >= 3 && (first_recipe = recipes.first) %>
   <% pro_locked = !Entitlements.for(Current.account).allows?(:composable_recipes) %>
-  <aside class="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-card-sm border border-line bg-surface px-5 py-4 shadow-card">
+  <aside class="mb-6 flex flex-col sm:flex-row sm:items-center gap-4 rounded-card-sm border border-line bg-surface px-4 sm:px-5 py-4 shadow-card">
     <div class="flex items-start gap-3 min-w-0 flex-1">
       <span class="inline-flex h-[32px] w-[32px] items-center justify-center rounded-full bg-accent-soft text-accent shrink-0">
         <%= icon(:scale, size: :sm) %>
       </span>
       <div class="min-w-0 flex flex-col gap-1">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <div class="text-[14px] font-semibold text-ink">
             <%= t("onboarding.decomposition.nudge.title") %>
           </div>
@@ -50,13 +50,13 @@
             </span>
           <% end %>
         </div>
-        <div class="text-[12.5px] text-ink-2 max-w-prose">
+        <div class="text-[12.5px] text-ink-2">
           <%= t("onboarding.decomposition.nudge.lede") %>
         </div>
       </div>
     </div>
     <%= link_to (pro_locked ? subscription_path(highlight: :composable_recipes) : onboarding_decomposition_path(first_recipe)),
-          class: "shrink-0 inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
+          class: "w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 text-[13px] font-semibold px-4 py-2.5 sm:py-[8px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 hover:border-accent-2 transition-colors shadow-cta" do %>
       <% if pro_locked %>
         <%= icon(:sparkles, size: :xs) %>
         <span><%= t("subscriptions.locked.cta") %></span>
