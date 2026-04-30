@@ -16,6 +16,26 @@
     </p>
   </div>
 
+  <% unless @storefront.public_profile.any_fulfillment? %>
+    <div class="mb-8 rounded-[16px] border border-line bg-surface p-8 text-center">
+      <div class="mx-auto mb-4 inline-flex h-[48px] w-[48px] items-center justify-center rounded-full"
+           style="background: var(--brand-1-soft); color: var(--brand-1);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+        </svg>
+      </div>
+      <h2 class="font-serif text-[22px] text-ink mb-2"><%= t("storefronts.checkout.no_fulfillment.title") %></h2>
+      <p class="text-[14px] text-ink-2 leading-[1.55] max-w-[480px] mx-auto mb-6">
+        <%= t("storefronts.checkout.no_fulfillment.body") %>
+      </p>
+      <a href="<%= storefront_menu_path(slug: @storefront.slug) %>"
+         class="inline-flex items-center gap-1 rounded-[9px] px-5 py-2.5 text-[14px] font-semibold no-underline"
+         style="background: var(--brand-1); color: var(--brand-1-ink); border: 1px solid var(--brand-1);">
+        <%= t("storefronts.checkout.no_fulfillment.back_to_menu") %>
+      </a>
+    </div>
+  <% else %>
+
   <% if @order&.errors&.any? %>
     <div class="mb-6 rounded-[12px] border border-err/40 bg-[color-mix(in_oklab,var(--color-err)_10%,var(--color-surface))] px-4 py-3 text-err">
       <div class="text-[12px] font-mono uppercase tracking-[0.14em]">
@@ -494,5 +514,6 @@
         <%= t("storefronts.checkout.submit") %>
       </button>
     </div>
+  <% end %>
   <% end %>
 </main>

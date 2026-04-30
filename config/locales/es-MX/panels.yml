@@ -81,6 +81,10 @@ es-MX:
       label: "Tu cocina"
       copy: "Copiar"
       copied: "Copiado"
+    fulfillment_hint:
+      title: "Tu cocina no tiene método de entrega"
+      body: "Activa recolección, entrega a domicilio o ambos desde tu configuración para que tus clientes puedan hacer pedidos."
+      cta: "Configurar entregas"
 
   stubs:
     in_development: "Esta sección está en construcción. Volverá con forma propia en el próximo módulo."
@@ -1145,6 +1149,9 @@ es-MX:
       payment_kicker: "Pagos"
       payment_title: "Cómo te pagan"
       payment_lede: "Activa los métodos que aceptas. Tu cliente los verá al hacer su pedido."
+      fulfillment_kicker: "Entregas"
+      fulfillment_title: "Cómo entregas tus pedidos"
+      fulfillment_lede: "Activa al menos un método de entrega para que tus clientes puedan hacer pedidos desde tu tienda."
       pickup_kicker: "Recolección"
       pickup_title: "Dónde te recogen"
       pickup_lede: "Si tus clientes pasan por sus pedidos, agrega tu dirección. Decide tú si la mostramos en tu menú público."
@@ -1215,6 +1222,13 @@ es-MX:
       card_instructions_placeholder: "Ej: Acepto tarjeta por Mercado Pago, te mando link por WhatsApp después de confirmar."
       tip_presets_label: "Propina sugerida"
       tip_presets_hint: "Porcentajes que aparecen como opciones rápidas en el checkout. Tu cliente siempre puede escribir un monto diferente."
+    fulfillment:
+      pickup_label: "Recolección"
+      pickup_hint: "Tus clientes pasan a recoger su pedido a tu cocina."
+      delivery_label: "Entrega a domicilio"
+      delivery_hint: "Tú llevas el pedido al domicilio de tu cliente."
+      none_warning_title: "Sin método de entrega"
+      none_warning_body: "Activa al menos uno para que tus clientes puedan hacer pedidos. Mientras tanto, tu menú se muestra pero el checkout está bloqueado."
     pickup:
       show_publicly_label: "Mostrar mi dirección en el menú público"
       show_publicly_hint: "Tus clientes verán la dirección y un mapa al final de tu menú. Útil si pasan por sus pedidos. Si la dejas apagada, sólo se muestra a quienes ya hicieron un pedido para recolección."

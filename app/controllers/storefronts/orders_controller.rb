@@ -11,6 +11,12 @@ module Storefronts
     end
 
     def create
+      unless @storefront.public_profile.any_fulfillment?
+        redirect_to new_storefront_order_path(slug: @storefront.slug),
+          alert: t("storefronts.checkout.no_fulfillment.blocked")
+        return
+      end
+
       payload = order_params.to_h.merge(items_attributes: items_from_cart_payload)
       payload = apply_delivery_window(payload)
       payload = normalize_cash_amount(payload)

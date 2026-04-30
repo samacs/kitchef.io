@@ -26,11 +26,10 @@ module Accounts
     attribute :colonia, :string, default: ""
     attribute :city,    :string, default: ""
 
-    # Comma-separated subset of `FULFILLMENT`. Defaults to pickup+delivery
-    # so a brand-new kitchen can take both without touching settings. The
-    # storefront checkout form reads `#fulfillment_type_options` (see
-    # helper below) so only the operator's picked types render.
-    attribute :fulfillment_types, :string, default: "pickup,delivery"
+    # Comma-separated subset of `FULFILLMENT`. New accounts start blank
+    # so the operator must explicitly opt into pickup and/or delivery.
+    # The storefront checkout blocks until at least one is enabled.
+    attribute :fulfillment_types, :string, default: ""
 
     # Comma-separated colonia names shown on the storefront info strip
     # (stays a flat string for form simplicity; promoted to jsonb-array
@@ -71,6 +70,7 @@ module Accounts
 
     def offers_pickup?   = fulfillment_type_list.include?("pickup")
     def offers_delivery? = fulfillment_type_list.include?("delivery")
+    def any_fulfillment? = fulfillment_type_list.any?
 
     def delivery_zones_list
       delivery_zones.to_s.split(",").map(&:strip).reject(&:empty?)

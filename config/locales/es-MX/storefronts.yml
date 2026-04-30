@@ -146,6 +146,11 @@ es-MX:
       email_hint: "Te enviamos un enlace de confirmación a este correo. Al tocarlo confirmas tu pedido."
       back_to_menu: "Seguir viendo el menú"
       submit: "Hacer pedido"
+      no_fulfillment:
+        title: "Esta cocina aún no abre pedidos"
+        body: "La cocina todavía no ha definido cómo entregar sus pedidos. Mientras tanto, puedes explorar el menú y volver cuando esté lista."
+        back_to_menu: "Ver el menú"
+        blocked: "Esta cocina aún no puede recibir pedidos."
       coupon:
         heading: "¿Tienes un cupón?"
         lede: "Si la cocina te dio un código de descuento, ingrésalo aquí."

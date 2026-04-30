@@ -113,6 +113,7 @@ class AccountsController < AuthenticatedController
         colonia city
         delivery_zones payment_notes pickup_reminder_hours
         show_pickup_address
+        fulfillment_pickup fulfillment_delivery
       ],
       settings: [
         :default_packaging, :default_packaging_cents,
@@ -179,6 +180,13 @@ class AccountsController < AuthenticatedController
 
     if pp.key?(:show_pickup_address)
       pp[:show_pickup_address] = ActiveModel::Type::Boolean.new.cast(pp[:show_pickup_address])
+    end
+
+    if pp.key?(:fulfillment_pickup) || pp.key?(:fulfillment_delivery)
+      types = []
+      types << "pickup"   if ActiveModel::Type::Boolean.new.cast(pp.delete(:fulfillment_pickup))
+      types << "delivery" if ActiveModel::Type::Boolean.new.cast(pp.delete(:fulfillment_delivery))
+      pp[:fulfillment_types] = types.join(",")
     end
 
     permitted
