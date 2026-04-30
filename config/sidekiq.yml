@@ -12,5 +12,5 @@
   - [low, 1]
 
 production:
-  :concurrency: 10
+  :concurrency: 5
   :verbose: false

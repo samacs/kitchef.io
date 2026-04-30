@@ -7,20 +7,24 @@ image: samacs/kitchef
 # Deploy to these servers.
 servers:
   web:
-    - 134.199.216.212
+    hosts:
+      - 134.199.216.212
+    options:
+      memory: 512m
   worker:
     hosts:
       - 134.199.216.212
     cmd: bin/sidekiq -C config/sidekiq.yml
     proxy: false
     options:
+      memory: 512m
       health-cmd: "pidof ruby || exit 1"
       health-interval: 30s
       health-timeout: 5s
       health-retries: 3
     env:
       clear:
-        RAILS_MAX_THREADS: 10
+        RAILS_MAX_THREADS: 5
         RUBY_YJIT_ENABLE: 1
 
 # Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
@@ -35,8 +39,8 @@ proxy:
     - kitchef.mx
     - www.kitchef.mx
     - cdn.kitchef.mx
-  # Proxy connects to your container on port 80 by default.
-  # app_port: 3000
+  deploy_timeout: 30s
+  drain_timeout: 10s
 
 # Credentials for your image host.
 registry:
@@ -78,10 +82,11 @@ env:
     - GITHUB_TOKEN
     - RAILS_MASTER_KEY
   clear:
-    WEB_CONCURRENCY: 2
+    WEB_CONCURRENCY: 1
     RAILS_MAX_THREADS: 5
     RUBY_YJIT_ENABLE: 1
     MALLOC_ARENA_MAX: 2
+    MALLOC_CONF: "dirty_decay_ms:1000,muzzy_decay_ms:1000"
     PORT: 80
     CLOUDFLARE_PUBLIC_HOST: https://media.kitchef.mx
 
