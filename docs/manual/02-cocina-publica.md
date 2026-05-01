@@ -113,6 +113,24 @@ Toca una y la preview de la derecha cambia al instante.
 > mejor se vea con tu logo y tus fotos. Si tu logo es rojo, el verde
 > bosque le va bien. Si tu logo es café, terracota refuerza el tono.
 
+## Sección "Métodos de entrega"
+
+Antes de que tu tienda pueda recibir pedidos, necesitas activar
+**al menos un método de entrega**. Si no lo haces, tu storefront
+muestra un aviso y el checkout queda bloqueado.
+
+- **Recolección** — el cliente pasa por su pedido a tu cocina.
+- **Entrega a domicilio** — tú llevas el pedido.
+
+Puedes activar ambos. El cliente elige cuál al momento de hacer su
+pedido.
+
+> **Importante:** Este paso es obligatorio. Sin un método de
+> entrega activado, tus clientes ven tu menú pero **no pueden
+> ordenar**.
+
+![La sección de métodos de entrega en Mi cocina](images/02-cocina--edit.png)
+
 ## Sección "Contacto"
 
 Cómo tus clientes te encuentran.
@@ -179,6 +197,7 @@ contiene un solo switch:
 
 | Pasó esto | Hacer esto |
 |---|---|
+| Mi tienda dice que no puedo recibir pedidos. | Activa al menos un **método de entrega** (recolección o domicilio) en la sección correspondiente. Sin eso, el checkout queda bloqueado. |
 | Cambié mi nombre y la URL no cambió. | Es normal — la URL queda fija desde el registro. Pide a soporte si necesitas cambiarla. |
 | Mi logo se ve cortado en la preview. | Está hecho para imágenes cuadradas. Si tu logo es horizontal, agrégale espacio en blanco arriba/abajo en Canva o similar antes de subirlo. |
 | El mapa no me deja arrastrar el alfiler. | Recarga la página. Si persiste, es probable que falte la API de Google — avisa a soporte. |

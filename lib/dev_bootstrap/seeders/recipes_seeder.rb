@@ -40,9 +40,25 @@ module DevBootstrap
             recipe.components.create!(
               componentable: ingredient,
               quantity:       comp[:qty],
-              unit:           ingredient.unit
+              unit:           ingredient.unit,
+              is_removable:   comp[:removable] || false
             )
           end
+
+          seed_byproducts(account, recipe, br[:byproducts]) if br[:byproducts].present?
+        end
+      end
+
+      def seed_byproducts(account, recipe, byproduct_names)
+        byproduct_names.each do |name|
+          sub_recipe = account.recipes.where(is_saleable: false).find_by(name: name)
+          next unless sub_recipe
+          recipe.components.create!(
+            componentable: sub_recipe,
+            quantity:       1,
+            unit:           sub_recipe.yield_unit,
+            is_byproduct:   true
+          )
         end
       end
 
@@ -60,6 +76,7 @@ module DevBootstrap
             yield_quantity:   rd[:yield_qty] || 1,
             yield_unit:       rd[:yield_unit] || "piece",
             lead_time_hours:  rd[:lead_time] || 0,
+            made_to_order:    rd[:made_to_order] || false,
             category:         cat
           )
 
@@ -70,10 +87,31 @@ module DevBootstrap
             end
           end
 
+          seed_direct_components(account, recipe, rd[:components]) if rd[:components].present?
           seed_option_groups(account, recipe, rd[:option_groups]) if rd[:option_groups].present?
 
           slug = rd[:name].parameterize
           ImageCache.attach(recipe, :photos, slug: slug, unsplash_id: rd[:photo_id])
+        end
+      end
+
+      def seed_direct_components(account, recipe, components_defs)
+        components_defs.each do |cd|
+          componentable = if cd[:base]
+            account.recipes.where(is_saleable: false).find_by(name: cd[:base])
+          else
+            account.ingredients.find_by(name: cd[:name])
+          end
+          next unless componentable
+
+          unit = cd[:unit] || (componentable.respond_to?(:yield_unit) ? componentable.yield_unit : componentable.unit)
+          recipe.components.create!(
+            componentable: componentable,
+            quantity:       cd[:qty],
+            unit:           unit,
+            is_removable:   cd[:removable] || false,
+            is_byproduct:   cd[:byproduct] || false
+          )
         end
       end
 
@@ -85,7 +123,9 @@ module DevBootstrap
             sub:            gd[:sub],
             kind:           gd[:kind],
             required:       gd[:required] || false,
-            selection_mode: :uniform
+            selection_mode: gd[:selection_mode] || :uniform,
+            unit_count:     gd[:unit_count],
+            max_length:     gd[:max_length]
           )
 
           (gd[:options] || []).each do |od|
@@ -94,6 +134,7 @@ module DevBootstrap
               label:              od[:label],
               is_default:         od[:default] || false,
               price_delta_cents:  cents(od[:delta] || 0),
+              color_hex:          od[:color],
               componentable:      componentable,
               quantity:           componentable ? od[:qty] : nil,
               unit:               componentable ? od[:unit] : nil

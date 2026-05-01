@@ -56,3 +56,5 @@
 !/ssl/.keep
 
 .claude/*
+
+/docs/manual/**/*.pdf

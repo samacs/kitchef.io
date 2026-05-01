@@ -76,8 +76,9 @@ Cuando el cliente toca **Ver** en una tarjeta, va a
 - Descripción completa.
 - Si tiene **opciones removibles** (componentes con toggle), un
   bloque *"Personaliza"* con chips para quitar (*"sin chile"*).
-- Si tiene **grupos de opciones** con precio extra, los chips o
-  radios correspondientes.
+- Si tiene **grupos de opciones**, la interfaz se adapta al tipo:
+  radios para opciones únicas, checkboxes para varias, swatches
+  para variantes con color, o un campo de texto libre.
 - Botón **Agregar al carrito** — confirma cantidad y cualquier
   customización.
 
@@ -106,9 +107,12 @@ Cuando toca **Continuar**, llega a un formulario simple:
    - Nombre, apellido.
    - Teléfono (validamos formato mexicano).
    - Email (obligatorio — es el gate de identidad).
-2. **Tipo de entrega** (sólo aparecen los que ofreces):
+2. **Tipo de entrega** (sólo aparecen los que activaste en
+   **Mi cocina → Métodos de entrega**):
    - **Recolección** — pasa por la cocina.
    - **Entrega a domicilio** — pide dirección + colonia.
+   Si no activaste ningún método, el checkout queda bloqueado
+   (capítulo 2).
 3. **Fecha y hora de entrega** — picker que respeta tu horario y
    lead time. Sólo ve fechas/ventanas válidas.
 4. **Notas para la cocinera** — texto libre.
@@ -123,7 +127,10 @@ Cuando toca **Continuar**, llega a un formulario simple:
    + campo libre.
 7. **Empaque** — sumado al subtotal automáticamente si lo
    configuraste.
-8. **Botón "Confirmar pedido"**.
+8. **Cupón / código de descuento** — si tienes promociones activas,
+   el cliente puede ingresar un código. El descuento se aplica al
+   total y se muestra desglosado.
+9. **Botón "Confirmar pedido"**.
 
 Al confirmar:
 - El pedido entra a tu kanban en estado **Nuevo** (`placed`).

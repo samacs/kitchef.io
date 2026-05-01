@@ -43,9 +43,11 @@ a ese punto y te ayudamos a planear.
 - (Opcional pero recomendado) Una dirección de recolección si tus
   clientes pasan por sus pedidos.
 
-No necesitas tarjeta de crédito para empezar. La cuenta gratuita te
-permite hasta 20 pedidos al mes; cuando los rebases te invitamos a
-pasarte al plan Pro ($150 MXN al mes, sin contrato).
+No necesitas tarjeta de crédito para empezar. Arrancas con una
+**prueba Pro de 14 días** sin tarjeta — y al terminar pasas al plan
+Gratis, que te permite hasta **40 pedidos al mes**. Cuando los
+rebases te invitamos a pasarte al plan Pro ($199 MXN al mes o
+$1,990 MXN al año — 2 meses gratis).
 
 ## Tu panel — un recorrido rápido
 
@@ -141,8 +143,15 @@ tuya. La puedes cambiar después en cualquier momento.
 Ya tienes tu primer platillo en línea. Si vas a `kitchef.mx/tu-cocina`
 desde otro navegador (o de incógnito), lo vas a ver.
 
-### Paso 5 — Configura cómo te pagan · 3 min
-1. Vuelve a **Mi cocina** y baja a la sección **Pagos**.
+### Paso 5 — Elige cómo entregas · 1 min
+1. Vuelve a **Mi cocina** y baja a la sección **Métodos de entrega**.
+2. Marca al menos uno:
+   - **Recolección** — el cliente pasa por su pedido a tu cocina.
+   - **Entrega a domicilio** — tú llevas el pedido.
+3. Sin método de entrega marcado, tu tienda **no acepta pedidos**.
+
+### Paso 6 — Configura cómo te pagan · 3 min
+1. En la misma pantalla, baja a la sección **Pagos**.
 2. Marca los métodos que aceptas:
    - **Efectivo** — tu cliente paga al recibir.
    - **Transferencia (SPEI)** — necesitas tu CLABE de 18 dígitos.
@@ -151,7 +160,7 @@ desde otro navegador (o de incógnito), lo vas a ver.
 4. Si activas **propinas**, deja los porcentajes sugeridos (10/15/20)
    o ajústalos.
 
-### Paso 6 — Cuándo recibes pedidos · 2 min
+### Paso 7 — Cuándo recibes pedidos · 2 min
 1. Ve a **Horario** (`/schedule`).
 2. Marca los días de la semana en los que aceptas pedidos.
 3. Para cada día, indica el rango de **ventanas de entrega** (por
@@ -159,7 +168,7 @@ desde otro navegador (o de incógnito), lo vas a ver.
 4. Pon un **tiempo mínimo de anticipación** si aplica (por ejemplo, 2
    horas para pedir; o "el día anterior" para pedidos para mañana).
 
-### Paso 7 — Comparte tu link · 1 min
+### Paso 8 — Comparte tu link · 1 min
 Tu link público es:
 
 ```

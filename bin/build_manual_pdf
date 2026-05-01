@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Build the Kitchef operations manual as a single PDF.
+# Usage: bin/build_manual_pdf [output_path]
+# Default output: docs/manual/Kitchef-Manual.pdf
+
+MANUAL_DIR="$(cd "$(dirname "$0")/../docs/manual" && pwd)"
+OUTPUT="${1:-$MANUAL_DIR/Kitchef-Manual.pdf}"
+
+# ── Dependencies ──────────────────────────────────────────────────────
+
+check_or_install() {
+  local cmd="$1" pkg="$2" installer="$3"
+
+  if command -v "$cmd" &>/dev/null; then
+    return 0
+  fi
+
+  echo "▸ $cmd not found — installing via $installer..."
+  case "$installer" in
+    apt)
+      sudo apt-get update -qq && sudo apt-get install -y -qq "$pkg"
+      ;;
+    pip)
+      pip3 install --user --quiet "$pkg"
+      ;;
+  esac
+
+  if ! command -v "$cmd" &>/dev/null; then
+    echo "✗ Failed to install $cmd. Install it manually and retry." >&2
+    exit 1
+  fi
+}
+
+check_or_install pandoc pandoc apt
+check_or_install weasyprint weasyprint pip
+
+# WeasyPrint needs a few system libraries. Install them if the import
+# fails (common on fresh Ubuntu/Debian).
+if ! python3 -c "import weasyprint" &>/dev/null; then
+  echo "▸ Installing WeasyPrint system dependencies..."
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq \
+    libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 \
+    libffi-dev libcairo2 2>/dev/null || true
+  # Retry the import
+  if ! python3 -c "import weasyprint" &>/dev/null; then
+    echo "✗ WeasyPrint import still fails. Check: pip3 install weasyprint" >&2
+    exit 1
+  fi
+fi
+
+# ── Ordered chapter list ──────────────────────────────────────────────
+
+CHAPTERS=(
+  README.md
+  01-bienvenida.md
+  02-cocina-publica.md
+  03-menu.md
+  04-recetas-avanzadas.md
+  05-ingredientes-y-costos.md
+  06-horario.md
+  07-pedidos.md
+  08-tienda.md
+  09-produccion.md
+  10-inventario-y-lotes.md
+  11-reportes.md
+  12-clientes.md
+  13-plan.md
+)
+
+# Verify all files exist
+for ch in "${CHAPTERS[@]}"; do
+  if [[ ! -f "$MANUAL_DIR/$ch" ]]; then
+    echo "✗ Missing chapter: $MANUAL_DIR/$ch" >&2
+    exit 1
+  fi
+done
+
+# ── Build ─────────────────────────────────────────────────────────────
+
+INPUT_FILES=()
+for ch in "${CHAPTERS[@]}"; do
+  INPUT_FILES+=("$MANUAL_DIR/$ch")
+done
+
+echo "▸ Building PDF from ${#CHAPTERS[@]} chapters..."
+
+pandoc \
+  "${INPUT_FILES[@]}" \
+  --pdf-engine=weasyprint \
+  --css="$MANUAL_DIR/style.css" \
+  --resource-path="$MANUAL_DIR" \
+  --metadata title="Manual de operaciones · Kitchef" \
+  --metadata author="Kitchef" \
+  --variable=lang:es-MX \
+  --from=markdown+pipe_tables+implicit_figures \
+  --to=pdf \
+  --output="$OUTPUT"
+
+SIZE=$(du -h "$OUTPUT" | cut -f1)
+echo "✓ $OUTPUT ($SIZE)"

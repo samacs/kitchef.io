@@ -35,8 +35,10 @@ Las cuatro alimentan los reportes (Tu menú, Finanzas) — capítulo 11.
 
 Cada ingrediente tiene:
 - **Nombre** — *Harina de trigo*, *Machaca de res*.
-- **Categoría** — Abarrotes, Carnes, Lácteos, Frutas y verduras,
-  Especias, Otros.
+- **Categoría** — cada cocina tiene las suyas. Al crear tu
+  cuenta vienen unas iniciales (*Abarrotes*, *Carnes*, *Lácteos*,
+  *Frutas y verduras*, *Especias*, *Otros*), pero puedes crear las
+  que necesites.
 - **Unidad de compra** — kg, g, l, ml, piece. Es la unidad en la
   que llevas el inventario y en la que ves el precio.
 - **Precio por unidad** — cuánto te cuesta una unidad. *$26 / kg*.

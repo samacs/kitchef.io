@@ -180,14 +180,25 @@ Cuando un componente puede ser **opcional**, marca el toggle
 
 Útil para: *"sin cebolla"*, *"sin chile"*, *"sin queso"*.
 
+> **Nota:** Sólo los componentes de tipo **ingrediente** se pueden
+> marcar como removibles. Los componentes de tipo receta no.
+
 ### Grupos de opciones
+
 Para variantes con precio extra. Ejemplo: el pastel viene en chico
 ($350), mediano ($500) o grande ($700).
 
 1. En la edición de la receta, baja a **Grupos de opciones**.
 2. **+ Agregar grupo**.
 3. **Etiqueta**: *Tamaño*.
-4. **Tipo**: **Una opción** (radio) o **Varias opciones** (checkboxes).
+4. **Tipo**:
+   - **Una opción** (radio) — el cliente elige exactamente una.
+   - **Varias opciones** (checkboxes) — el cliente marca las que
+     quiera.
+   - **Color / visual** (swatch) — chips con color, útil para
+     sabores o variantes con identidad visual.
+   - **Texto libre** (textarea) — campo abierto para
+     instrucciones especiales (*"Escribe el nombre para el pastel"*).
 5. **Obligatorio**: marca si el cliente debe escoger.
 6. Agrega cada **opción** con su nombre y diferencia de precio:
    - *Chico* +$0
@@ -197,6 +208,46 @@ Para variantes con precio extra. Ejemplo: el pastel viene en chico
 
 En el storefront, al agregar el platillo al carrito, aparece un
 modal "Personaliza tu pedido" con el grupo de opciones.
+
+### Opciones vinculadas al inventario
+
+Si tienes inventario activo (capítulo 10), puedes **vincular una
+opción a un ingrediente o receta**. Esto hace que al seleccionar
+esa opción:
+
+- Se **descuente el ingrediente del inventario** al procesar el
+  pedido.
+- Se **sume su costo** al costo total del platillo.
+
+Por ejemplo, si tu pizza tiene la opción "Queso extra +$15", puedes
+vincularla al ingrediente *Queso mozzarella* con cantidad 100 g.
+Cada vez que un cliente elija esa opción, se restan 100 g de tu
+inventario de queso.
+
+Para vincular:
+1. En la opción, activa **Vincular a ingrediente/receta**.
+2. Elige el componente (ingrediente o receta).
+3. Pon la **cantidad** y la **unidad**.
+4. El **costo extra** se calcula automáticamente.
+
+### Receta sobre pedido (hecha al momento)
+
+Si un platillo se prepara al momento del pedido en lugar de
+cocinarse en lotes, activa el toggle **Se hace al momento** en la
+receta. Kitchef ajusta la disponibilidad según los ingredientes en
+inventario en lugar de requerir un lote pre-cocinado.
+
+## Subproductos
+
+Cuando una receta interna produce **más de una cosa** — por
+ejemplo, tu receta de "Caldo de pollo" produce tanto caldo como
+pollo desmenuzado — puedes marcar un componente como
+**subproducto**. Los subproductos se excluyen del cálculo de costo
+de la receta padre (su costo ya fue absorbido por la receta que
+los genera).
+
+Sólo los componentes de tipo **receta** se pueden marcar como
+subproducto.
 
 ## Validaciones que vas a encontrar
 

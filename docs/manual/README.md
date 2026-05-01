@@ -21,7 +21,7 @@ mano una referencia clara y que no te quedes atascada en ningún paso.
 
 ### Para empezar
 1. [Bienvenida y primeros pasos](01-bienvenida.md) — qué es Kitchef, cómo se ve tu panel, tu primera media hora.
-2. [Tu cocina pública](02-cocina-publica.md) — identidad, logo, portada, paletas, slug.
+2. [Tu cocina pública](02-cocina-publica.md) — identidad, logo, portada, paletas, métodos de entrega, slug.
 3. [Tu menú](03-menu.md) — agregar platillos en modo simple, fotos y precios, publicar.
 
 ### Cocina diaria
@@ -40,7 +40,7 @@ mano una referencia clara y que no te quedes atascada en ningún paso.
 12. [Clientes](12-clientes.md) — agregar, buscar, historial, WhatsApp.
 
 ### Cuenta
-13. [Tu plan](13-plan.md) — Gratis vs Pro.
+13. [Tu plan](13-plan.md) — Gratis vs Pro, prueba de 14 días, precios.
 
 ## Convenciones de este manual
 
