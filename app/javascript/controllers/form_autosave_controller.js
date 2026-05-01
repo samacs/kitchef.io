@@ -134,16 +134,22 @@ export default class extends Controller {
         target = document.getElementById(state.id)
       }
 
+      // Prefer the full name attribute over a suffix-only match. The
+      // suffix fallback (below) is too broad when the focused input has
+      // no closer `[id]` ancestor than the form itself — `[name$='[label]']`
+      // would resolve to the first matching field anywhere in the form,
+      // which is the wrong row whenever the form has nested collections
+      // (e.g. recipe option groups, each with their own `[label]` fields).
+      if (!target && state.nameAttr) {
+        target = this.element.querySelector(`[name="${state.nameAttr}"]`)
+      }
+
       if (!target && state.rowId && state.nameAttr) {
         const row = document.getElementById(state.rowId)
         if (row) {
           const suffix = state.nameAttr.replace(/^.*\](\[[^\]]+\])$/, "$1")
           target = row.querySelector(`${state.tag.toLowerCase()}[name$='${suffix}']`)
         }
-      }
-
-      if (!target && state.nameAttr) {
-        target = this.element.querySelector(`[name="${state.nameAttr}"]`)
       }
 
       if (target && typeof target.focus === "function") {

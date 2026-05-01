@@ -118,7 +118,12 @@ export default class extends Controller {
   _groupIndex(groupEl) {
     const nameInput = groupEl.querySelector("input[name*='option_groups_attributes']")
     if (!nameInput) return 0
-    const match = nameInput.name.match(/option_groups_attributes\[(\d+)\]/)
+    // Field names look like `recipe[option_groups_attributes][1][id]` — the
+    // group index sits inside its own bracket pair AFTER the attributes
+    // segment, not appended to it. The previous regex
+    // `option_groups_attributes\[(\d+)\]` never matched, so every new option
+    // got assigned to group 0 and stomped on the first group's data.
+    const match = nameInput.name.match(/option_groups_attributes\]\[(\d+)\]/)
     return match ? match[1] : 0
   }
 }
