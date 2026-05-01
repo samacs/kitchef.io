@@ -29,18 +29,18 @@
     </div>
     <span class="font-mono text-[12px] text-muted">
       <%= l(batch.cooked_on, format: :long) %> ·
-      <%= t("batches.index.units_planned", count: batch.planned_quantity.to_i) %>
+      <%= t("batches.index.units_planned", count: batch.planned_quantity, qty: format_quantity(batch.planned_quantity)) %>
     </span>
   </div>
   <div class="flex items-center gap-3">
     <% unless is_canceled %>
       <div class="text-right">
-        <% remaining = [ batch.units_remaining.to_i, 0 ].max %>
+        <% remaining = [ batch.units_remaining, 0 ].max %>
         <span class="font-mono text-[16px] font-semibold tabular-nums text-ink">
-          <%= t("batches.index.units_remaining", count: remaining) %>
+          <%= t("batches.index.units_remaining", count: remaining, qty: format_quantity(remaining)) %>
         </span>
         <div class="font-mono text-[11px] text-muted">
-          <%= t("batches.index.sold_count", count: batch.units_consumed.to_i) %>
+          <%= t("batches.index.sold_count", count: batch.units_consumed, qty: format_quantity(batch.units_consumed)) %>
         </div>
       </div>
     <% end %>

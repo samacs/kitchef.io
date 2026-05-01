@@ -2026,15 +2026,15 @@ es-MX:
         today: "Hoy"
         week: "Esta semana"
       units_remaining:
-        one: "Queda %{count}"
-        other: "Quedan %{count}"
+        one: "Queda %{qty}"
+        other: "Quedan %{qty}"
       units_planned:
-        one: "%{count} planeado"
-        other: "%{count} planeados"
+        one: "%{qty} planeado"
+        other: "%{qty} planeados"
       sold_count:
         zero: "0 vendidas"
-        one: "%{count} vendida"
-        other: "%{count} vendidas"
+        one: "%{qty} vendida"
+        other: "%{qty} vendidas"
     new:
       title: "Anotar lote"
       page_title: "Nuevo lote"
