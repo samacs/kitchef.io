@@ -58,3 +58,5 @@
 .claude/*
 
 /docs/manual/**/*.pdf
+
+.envrc
