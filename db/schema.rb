@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_30_180200) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_30_180300) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -532,6 +532,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_30_180200) do
     t.boolean "is_published", default: false, null: false
     t.boolean "is_saleable", default: true, null: false
     t.integer "lead_time_hours", default: 0, null: false
+    t.boolean "made_to_order", default: false, null: false
     t.string "name", null: false
     t.bigint "packaging_cents", default: 0, null: false
     t.integer "position"

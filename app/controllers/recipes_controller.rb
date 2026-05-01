@@ -170,7 +170,7 @@ class RecipesController < AuthenticatedController
   def recipe_params
     params.require(:recipe).permit(
       :name, :sale_price, :category_id, :description, :is_published,
-      :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent, :lead_time_hours,
+      :is_saleable, :made_to_order, :yield_quantity, :yield_unit, :target_margin_percent, :lead_time_hours,
       # Phase 14, Slice 12 — multi-photo fields. `photos[]` stays for
       # the legacy single-photo path; `new_photos[]` is the multi-tile
       # grid's file input; `remove_photo_ids` is a CSV of attachment

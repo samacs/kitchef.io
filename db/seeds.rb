@@ -571,6 +571,7 @@ def build_taco(account, name:, carne:, carne_qty:, salsa:, salsa_qty:, price_cen
     sale_price_cents: price_cents,
     is_saleable: true,
     is_published: true,
+    made_to_order: true,
     yield_quantity: 1, yield_unit: "piece",
     category: recipe_category_for(account, :mains),
     target_margin_percent: target_margin_percent
@@ -610,6 +611,7 @@ build_taco(taqueria_mario, name: "Taco de pollo",
 quesadilla = taqueria_mario.recipes.create!(
   name: "Quesadilla",
   sale_price_cents: 4200, is_saleable: true, is_published: true,
+  made_to_order: true,
   yield_quantity: 1, yield_unit: "piece",
   category: mario_mains_cat, target_margin_percent: 65
 )
@@ -652,6 +654,7 @@ gringa.components.create!(componentable: mario_ing["Piña"],                    
 orden_3_tacos = taqueria_mario.recipes.create!(
   name: "Orden de 3 tacos",
   sale_price_cents: 9500, is_saleable: true, is_published: true,
+  made_to_order: true,
   yield_quantity: 3, yield_unit: "piece",
   category: mario_mains_cat, target_margin_percent: 60
 )
@@ -664,6 +667,7 @@ orden_3_tacos.components.create!(componentable: salsa_verde,                   q
 quesadilla_mixta = taqueria_mario.recipes.create!(
   name: "Quesadilla con proteína",
   sale_price_cents: 5500, is_saleable: true, is_published: true,
+  made_to_order: true,
   yield_quantity: 1, yield_unit: "piece",
   category: mario_mains_cat, target_margin_percent: 60
 )

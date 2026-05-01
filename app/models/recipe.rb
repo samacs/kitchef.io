@@ -9,6 +9,7 @@
 #  is_published          :boolean          default(FALSE), not null
 #  is_saleable           :boolean          default(TRUE), not null
 #  lead_time_hours       :integer          default(0), not null
+#  made_to_order         :boolean          default(FALSE), not null
 #  name                  :string           not null
 #  packaging_cents       :bigint           default(0), not null
 #  position              :integer
