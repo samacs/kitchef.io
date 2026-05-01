@@ -97,14 +97,16 @@ gem "sitemap_generator", github: "kjvarga/sitemap_generator", branch: "master"
 # Windows / JRuby
 gem "tzinfo-data", platforms: %i[windows jruby]
 
+# Temporarily available in all envs for dev:bootstrap in production
+gem "database_cleaner-active_record", "~> 2.2"
+gem "faker", "~> 3.8"
+
 group :development, :test do
   gem "brakeman", require: false
   gem "bundler-audit", require: false
   gem "debug", platforms: %i[mri windows], require: "debug/prelude"
   gem "dotenv-rails", "~> 3.2"
-  gem "database_cleaner-active_record", "~> 2.2"
   gem "factory_bot_rails", "~> 6.5"
-  gem "faker", "~> 3.8"
   gem "pry", "~> 0.16.0"
   gem "pry-doc", "~> 1.7"
   gem "pry-rails", "~> 0.3.11"

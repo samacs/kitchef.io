@@ -20,7 +20,9 @@ module DevBootstrap
     end
 
     def call
-      abort "dev:bootstrap is development-only!" unless Rails.env.development?
+      unless Rails.env.development? || ENV["ALLOW_BOOTSTRAP"] == "1"
+        abort "dev:bootstrap requires ALLOW_BOOTSTRAP=1 outside development"
+      end
 
       puts "\n=== dev:bootstrap — 8 Hermosillo kitchens ==="
       started = Time.current
