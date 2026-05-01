@@ -25,7 +25,7 @@
       </span>
       <div class="flex items-baseline gap-3">
         <span class="font-serif text-[32px] tabular-nums text-ink">
-          <%= @batch.actual_quantity.to_i %>
+          <%= format_quantity(@batch.actual_quantity) %>
         </span>
         <span class="text-[13px] text-ink-2"><%= t("batches.show.units_label").downcase %></span>
         <span class="inline-flex items-center gap-1 rounded-pill border <%= state_classes[@batch.state] %> px-2.5 py-0.5 font-mono text-[10.5px] uppercase tracking-[0.08em]">
@@ -34,8 +34,10 @@
         </span>
       </div>
       <span class="font-mono text-[12px] text-muted">
-        <%= t("batches.index.units_remaining", count: [ @batch.units_remaining.to_i, 0 ].max) %>
-        · <%= t("batches.index.sold_count", count: @batch.units_consumed.to_i) %>
+        <% remaining = [ @batch.units_remaining, 0 ].max %>
+        <%= t("batches.index.units_remaining", count: remaining, qty: format_quantity(remaining)) %>
+        · <% consumed = @batch.units_consumed %>
+        <%= t("batches.index.sold_count", count: consumed, qty: format_quantity(consumed)) %>
       </span>
     </div>
 
@@ -66,7 +68,7 @@
           <li class="flex items-center justify-between gap-3 py-2">
             <span class="text-[13px] text-ink"><%= consumption.consumable&.name || "—" %></span>
             <span class="font-mono text-[13px] tabular-nums text-warn">
-              −<%= format("%.3f", consumption.quantity_consumed.to_d).sub(/\.?0+$/, "") %> <%= consumption.unit %>
+              −<%= format_quantity(consumption.quantity_consumed) %> <%= consumption.unit %>
             </span>
           </li>
         <% end %>
@@ -86,7 +88,7 @@
             <%= link_to item.order.prefix_id, order_path(item.order),
                   class: "font-mono text-[12.5px] text-ink-2 hover:underline no-underline" %>
             <span class="font-mono text-[13px] tabular-nums text-ink">
-              <%= item.consumed_quantity.to_i %>
+              <%= format_quantity(item.consumed_quantity) %>
             </span>
           </li>
         <% end %>

@@ -1,4 +1,8 @@
 module ApplicationHelper
+  def format_quantity(value)
+    format("%.3f", value.to_d).sub(/\.?0+$/, "")
+  end
+
   def cdn_image_url(source)
     case source
     when ActiveStorage::VariantWithRecord, ActiveStorage::Variant
