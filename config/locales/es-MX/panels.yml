@@ -658,6 +658,7 @@ es-MX:
       needs_per_batch: "Necesita %{qty} %{unit} por lote"
       no_active_batches: "No hay lotes disponibles para hoy"
       create_batch_cta: "Crear lote"
+      produce_bases_first: "Produce primero tus preparaciones base, y después podrás crear un lote de este platillo."
       create_batch_for_recipe: "Crear lote de este platillo"
     danger_zone:
       title: "¿Ya no lo cocinas?"

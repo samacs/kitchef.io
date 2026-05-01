@@ -75,10 +75,16 @@
   </ul>
 
   <% if recipe.is_saleable? %>
-    <%= link_to new_batch_path(batch: { recipe_id: recipe.id }),
-          class: "inline-flex items-center gap-2 self-start text-[13px] font-semibold px-4 py-[9px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors shadow-cta" do %>
-      <%= helpers.icon(:plus, size: :sm) %>
-      <%= t("recipes.restock.create_batch_for_recipe") %>
+    <% if has_pending_sub_recipes? %>
+      <p class="text-[12.5px] text-muted italic">
+        <%= t("recipes.restock.produce_bases_first") %>
+      </p>
+    <% else %>
+      <%= link_to new_batch_path(batch: { recipe_id: recipe.id }),
+            class: "inline-flex items-center gap-2 self-start text-[13px] font-semibold px-4 py-[9px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors shadow-cta" do %>
+        <%= helpers.icon(:plus, size: :sm) %>
+        <%= t("recipes.restock.create_batch_for_recipe") %>
+      <% end %>
     <% end %>
   <% end %>
 </div>

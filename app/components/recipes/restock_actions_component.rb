@@ -33,6 +33,10 @@ module Recipes
       available_units.positive?
     end
 
+    def has_pending_sub_recipes?
+      alerts.any? { |a| a.type == :sub_recipe }
+    end
+
     def render?
       account.inventory_enabled? && recipe.persisted? && alerts.any?
     end
