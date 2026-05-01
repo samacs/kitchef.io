@@ -988,10 +988,10 @@ batch_defs.each do |bd|
         quantity_consumed: total_consumed,
         unit: comp.unit,
         cost_cents_at_consumption: case comp.componentable
-          when Ingredient then (total_consumed * comp.componentable.unit_cost_cents).to_i
-          when Recipe     then (total_consumed * (comp.componentable.cost_cents_cached || 0)).to_i
-          else 0
-          end
+                                   when Ingredient then (total_consumed * comp.componentable.unit_cost_cents).to_i
+                                   when Recipe     then (total_consumed * (comp.componentable.cost_cents_cached || 0)).to_i
+                                   else 0
+                                   end
       )
 
       # Deplete ingredient stock for completed batches
