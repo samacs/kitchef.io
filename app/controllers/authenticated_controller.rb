@@ -16,6 +16,7 @@ class AuthenticatedController < ApplicationController
   layout "panel"
 
   before_action :require_account
+  around_action :use_account_time_zone
 
   rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
 
@@ -25,6 +26,11 @@ class AuthenticatedController < ApplicationController
     return if Current.account
 
     redirect_to new_session_path, alert: t("panel.errors.account_missing")
+  end
+
+  def use_account_time_zone(&)
+    tz = Current.account&.time_zone.presence || "America/Mexico_City"
+    Time.use_zone(tz, &)
   end
 
   def record_not_found

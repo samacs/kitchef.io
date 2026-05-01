@@ -1,4 +1,4 @@
-<% recipes = Current.account.recipes.kept.saleable.order(:name) %>
+<% recipes = Current.account.recipes.kept.order(:name) %>
 <% window_days = Current.account.inventory_settings.default_batch_window_days.to_i %>
 
 <%= form_with model: batch, url: batch.persisted? ? batch_path(batch) : batches_path,
@@ -23,7 +23,7 @@
     <%= f.label :recipe_id, t("batches.new.recipe_label"),
           class: "block text-[12px] font-medium text-muted mb-1" %>
     <%= f.select :recipe_id,
-          recipes.map { |r| [ r.name, r.id ] },
+          recipes.map { |r| [ r.internal? ? "#{r.name} (#{t("batches.new.internal_label")})" : r.name, r.id ] },
           { prompt: t("batches.new.recipe_prompt"), selected: batch.recipe_id },
           class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[14px] text-ink",
           data: {

@@ -1,0 +1,71 @@
+<div class="rounded-card border border-warn/40 bg-[color-mix(in_oklab,var(--color-warn)_6%,var(--color-surface))] p-5 sm:p-6 flex flex-col gap-4">
+  <div class="flex items-baseline justify-between gap-3">
+    <div class="flex flex-col gap-1">
+      <%= render Ui::KickerComponent.new(text: t("recipes.restock.kicker")) %>
+      <h3 class="font-serif text-[20px] leading-[1.2] text-ink">
+        <%= t("recipes.restock.headline") %>
+      </h3>
+      <p class="text-[12.5px] text-muted">
+        <%= t("recipes.restock.sub") %>
+      </p>
+    </div>
+  </div>
+
+  <ul class="flex flex-col gap-2">
+    <% alerts.each do |alert| %>
+      <li class="flex items-center gap-3 rounded-card-sm border border-line bg-surface px-4 py-3">
+        <% if alert.status == :depleted %>
+          <%= helpers.icon(:alert_triangle, size: :sm, class: "text-err shrink-0") %>
+        <% else %>
+          <%= helpers.icon(:alert_triangle, size: :sm, class: "text-warn shrink-0") %>
+        <% end %>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-[14px] font-medium text-ink truncate"><%= alert.name %></span>
+            <% if alert.type == :sub_recipe %>
+              <span class="text-[11px] font-mono text-muted uppercase tracking-wider"><%= t("recipes.restock.internal_recipe") %></span>
+            <% end %>
+          </div>
+
+          <div class="text-[12px] text-muted mt-0.5">
+            <% if alert.status == :depleted %>
+              <span class="text-err font-medium"><%= t("recipes.restock.status.depleted") %></span>
+              <span class="mx-1">·</span>
+            <% elsif alert.status == :low %>
+              <span class="text-warn font-medium"><%= t("recipes.restock.status.low") %></span>
+              <span class="mx-1">·</span>
+            <% elsif alert.status == :needs_batch %>
+              <span class="text-warn font-medium"><%= t("recipes.restock.status.needs_batch") %></span>
+              <span class="mx-1">·</span>
+            <% end %>
+
+            <% if alert.type == :ingredient %>
+              <%= t("recipes.restock.on_hand", qty: helpers.number_with_precision(alert.stock_qty, precision: 1, strip_insignificant_zeros: true), unit: I18n.t("units.#{alert.unit}", default: alert.unit)) %>
+              <span class="mx-1">·</span>
+              <%= t("recipes.restock.needs_per_batch", qty: helpers.number_with_precision(alert.needed_qty, precision: 1, strip_insignificant_zeros: true), unit: I18n.t("units.#{alert.unit}", default: alert.unit)) %>
+            <% else %>
+              <%= t("recipes.restock.no_active_batches") %>
+            <% end %>
+          </div>
+        </div>
+
+        <% if alert.batch_path %>
+          <%= link_to alert.batch_path,
+                class: "inline-flex items-center gap-1.5 text-[12px] font-semibold px-3 py-[7px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors whitespace-nowrap shrink-0" do %>
+            <%= helpers.icon(:plus, size: :xs) %>
+            <%= t("recipes.restock.create_batch_cta") %>
+          <% end %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <% if recipe.is_saleable? %>
+    <%= link_to new_batch_path(batch: { recipe_id: recipe.id }),
+          class: "inline-flex items-center gap-2 self-start text-[13px] font-semibold px-4 py-[9px] rounded-button bg-accent text-bg border border-accent hover:bg-accent-2 transition-colors shadow-cta" do %>
+      <%= helpers.icon(:plus, size: :sm) %>
+      <%= t("recipes.restock.create_batch_for_recipe") %>
+    <% end %>
+  <% end %>
+</div>
