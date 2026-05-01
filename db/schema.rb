@@ -12,9 +12,12 @@
 
 ActiveRecord::Schema[8.1].define(version: 2026_04_30_180300) do
   # These are extensions that must be enabled in order to support this database
+  enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_stat_statements"
   enable_extension "pg_trgm"
   enable_extension "unaccent"
+  enable_extension "vector"
 
   create_table "accounts", force: :cascade do |t|
     t.jsonb "branding", default: {}, null: false
