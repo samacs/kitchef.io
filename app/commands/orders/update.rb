@@ -9,6 +9,7 @@ module Orders
     def call
       attrs       = params.to_h.deep_symbolize_keys
       items_attrs = attrs.delete(:items_attributes) || {}
+      attrs.delete(:coupon_code)
 
       order.assign_attributes(attrs)
 
