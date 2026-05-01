@@ -170,7 +170,7 @@ class RecipesController < AuthenticatedController
   def recipe_params
     params.require(:recipe).permit(
       :name, :sale_price, :category_id, :description, :is_published,
-      :is_saleable, :yield_quantity, :yield_unit, :target_margin_percent, :lead_time_hours,
+      :is_saleable, :made_to_order, :yield_quantity, :yield_unit, :target_margin_percent, :lead_time_hours,
       # Phase 14, Slice 12 — multi-photo fields. `photos[]` stays for
       # the legacy single-photo path; `new_photos[]` is the multi-tile
       # grid's file input; `remove_photo_ids` is a CSV of attachment
@@ -185,9 +185,12 @@ class RecipesController < AuthenticatedController
         :quantity, :unit, :notes, :position, :is_removable, :is_byproduct, :_destroy
       ],
       option_groups_attributes: [
-        :id, :account_id, :label, :sub, :kind, :required, :position, :max_length, :_destroy,
+        :id, :account_id, :label, :sub, :kind, :required, :position, :max_length,
+        :selection_mode, :unit_count, :_destroy,
         options_attributes: [
-          :id, :label, :sub, :price_delta, :is_default, :color_hex, :position, :_destroy
+          :id, :label, :sub, :price_delta, :is_default, :color_hex, :position,
+          :componentable_type, :componentable_id, :componentable_ref,
+          :quantity, :unit, :_destroy
         ]
       ]
     ).then { |p| normalize_sale_price(p) }
@@ -217,9 +220,19 @@ class RecipesController < AuthenticatedController
 
       opts.each_value do |opt_attrs|
         raw = opt_attrs.delete(:price_delta)
-        next if raw.blank?
-        normalized = raw.to_s.gsub(",", ".").to_d
-        opt_attrs[:price_delta_cents] = (normalized * 100).to_i
+        if raw.present?
+          normalized = raw.to_s.gsub(",", ".").to_d
+          opt_attrs[:price_delta_cents] = (normalized * 100).to_i
+        end
+
+        opt_attrs.delete(:componentable_ref)
+
+        if opt_attrs[:componentable_type].blank? || opt_attrs[:componentable_id].blank?
+          opt_attrs[:componentable_type] = nil
+          opt_attrs[:componentable_id] = nil
+          opt_attrs[:quantity] = nil
+          opt_attrs[:unit] = nil
+        end
       end
     end
 

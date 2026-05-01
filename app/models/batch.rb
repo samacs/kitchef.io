@@ -59,7 +59,6 @@ class Batch < ApplicationRecord
   validates :actual_quantity,  numericality: { greater_than_or_equal_to: 0 }
   validate  :available_window_in_order
   validate  :recipe_belongs_to_account
-  validate  :recipe_is_saleable
 
   scope :for_date,    ->(date) { where(cooked_on: date) }
   scope :for_week,    ->(start_on) { where(cooked_on: start_on..start_on + 6.days) }
@@ -126,12 +125,6 @@ class Batch < ApplicationRecord
     return if recipe.blank? || account_id.blank?
     return if recipe.account_id == account_id
     errors.add(:recipe, :wrong_account)
-  end
-
-  def recipe_is_saleable
-    return if recipe.blank?
-    return if recipe.is_saleable?
-    errors.add(:recipe, :not_saleable)
   end
 
   def stamp_started_at

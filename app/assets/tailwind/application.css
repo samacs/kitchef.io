@@ -468,6 +468,30 @@
     background: transparent;
   }
 
+  /* Sidebar nav: thin scrollbar that fades in only on hover/scroll.
+     Avoids a persistent scrollbar that eats layout width. */
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .sidebar-scroll:hover {
+    scrollbar-color: var(--color-line-2) transparent;
+  }
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 999px;
+    transition: background 150ms;
+  }
+  .sidebar-scroll:hover::-webkit-scrollbar-thumb {
+    background: var(--color-line-2);
+  }
+
   /* ---- Landing page visuals ----------------------------------------
      Dashboard mockup, hero photo plate, feature cards, margin bars,
      calendar grid, and animated decorations for the marketing home. */

@@ -21,6 +21,7 @@ class RecipeCostRefreshJob < ApplicationJob
       next unless recipe
 
       Recipes::CostCalculator.for(recipe: recipe)
+      Recipes::OptionCostCalculator.call(recipe: recipe)
     end
   end
 
@@ -36,6 +37,7 @@ class RecipeCostRefreshJob < ApplicationJob
 
     if componentable_type && componentable_id
       ids.merge(dependents_of(componentable_type, componentable_id))
+      ids.merge(recipes_with_option_linked_to(componentable_type, componentable_id))
     end
 
     ids.to_a
@@ -47,5 +49,12 @@ class RecipeCostRefreshJob < ApplicationJob
     return [] unless record
 
     Recipes::DependencyGraph.recipes_depending_on(componentable: record).ids
+  end
+
+  def recipes_with_option_linked_to(type, id)
+    RecipeOption
+      .where(componentable_type: type, componentable_id: id)
+      .joins(recipe_option_group: :recipe)
+      .pluck("recipes.id")
   end
 end

@@ -74,6 +74,54 @@
             <%= of.text_field :sub,
                   placeholder: t("recipes.options.option_sub_placeholder"),
                   class: "w-full bg-surface text-ink border border-line hover:border-line-2 rounded-input px-3 py-1 text-[12px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20" %>
+
+            <% if local_assigns[:composable] %>
+              <div class="flex items-center gap-2 pt-1" data-recipe-option-groups-target="componentableRow">
+                <select name="recipe[option_groups_attributes][<%= index %>][options_attributes][<%= oi %>][componentable_ref]"
+                        data-action="change->recipe-option-groups#componentableChanged"
+                        class="flex-1 bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[12px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20">
+                  <option value=""><%= t("recipes.options.no_ingredient_link") %></option>
+                  <% if local_assigns[:pickable_ingredients]&.any? %>
+                    <optgroup label="<%= t("recipes.options.ingredients_group") %>">
+                      <% pickable_ingredients.each do |ing| %>
+                        <option value="Ingredient:<%= ing.id %>"
+                                data-unit="<%= ing.unit %>"
+                                <%= "selected" if opt.componentable_type == "Ingredient" && opt.componentable_id == ing.id %>>
+                          <%= ing.name %> (<%= I18n.t("units.#{ing.unit}", default: ing.unit) %>)
+                        </option>
+                      <% end %>
+                    </optgroup>
+                  <% end %>
+                  <% if local_assigns[:pickable_recipes]&.any? %>
+                    <optgroup label="<%= t("recipes.options.recipes_group") %>">
+                      <% pickable_recipes.each do |r| %>
+                        <option value="Recipe:<%= r.id %>"
+                                data-unit="<%= r.yield_unit %>"
+                                <%= "selected" if opt.componentable_type == "Recipe" && opt.componentable_id == r.id %>>
+                          <%= r.name %> (<%= I18n.t("units.#{r.yield_unit}", default: r.yield_unit) %>)
+                        </option>
+                      <% end %>
+                    </optgroup>
+                  <% end %>
+                </select>
+                <%= of.hidden_field :componentable_type, value: opt.componentable_type %>
+                <%= of.hidden_field :componentable_id, value: opt.componentable_id %>
+                <input type="number"
+                       name="recipe[option_groups_attributes][<%= index %>][options_attributes][<%= oi %>][quantity]"
+                       value="<%= opt.quantity %>"
+                       step="0.001" min="0"
+                       placeholder="<%= t("recipes.options.quantity_placeholder") %>"
+                       class="w-[80px] bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[12px] font-mono outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 <%= 'hidden' unless opt.inventory_linked? %>"
+                       data-recipe-option-groups-target="componentableQty" />
+                <select name="recipe[option_groups_attributes][<%= index %>][options_attributes][<%= oi %>][unit]"
+                        class="w-[70px] bg-surface text-ink border border-line hover:border-line-2 rounded-input px-2 py-1.5 text-[12px] outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 <%= 'hidden' unless opt.inventory_linked? %>"
+                        data-recipe-option-groups-target="componentableUnit">
+                  <% (opt.inventory_linked? ? (opt.componentable.is_a?(Ingredient) ? Ingredient::UNITS : Recipe::YIELD_UNITS) : Ingredient::UNITS).each do |u| %>
+                    <option value="<%= u %>" <%= "selected" if opt.unit == u %>><%= I18n.t("units.#{u}", default: u) %></option>
+                  <% end %>
+                </select>
+              </div>
+            <% end %>
           </div>
         <% end %>
       <% end %>

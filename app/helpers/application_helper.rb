@@ -1,14 +1,12 @@
 module ApplicationHelper
   def cdn_image_url(source)
     case source
-    when ActiveStorage::VariantWithRecord
-      source.processed.url
-    when ActiveStorage::Variant
-      source.processed.url
+    when ActiveStorage::VariantWithRecord, ActiveStorage::Variant
+      rails_representation_url(source.processed)
     when ActiveStorage::Blob
-      source.url
+      rails_blob_url(source)
     when ActiveStorage::Attachment
-      source.blob.url
+      rails_blob_url(source.blob)
     else
       url_for(source)
     end

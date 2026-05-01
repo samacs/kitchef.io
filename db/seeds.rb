@@ -399,6 +399,13 @@ taqueria_mario = Account.create!(
     composable_recipes_unlocked_at: 2.weeks.ago,
     onboarding_completed: true,
     default_packaging_cents: 800,
+    inventory_settings: {
+      enabled: true,
+      enabled_at: 10.days.ago,
+      oversell_policy: "warn",
+      low_stock_threshold_pct: 20,
+      default_batch_window_days: 1
+    },
     payment_settings: {
       accepts_cash: true,
       accepts_transfer: true,
@@ -445,7 +452,7 @@ puts "  …attaching cover + logo"
 attach_seed_image(taqueria_mario, :cover_photo, url: seed_photo_url("mario_cover", w: 1600), filename: "taqueria-mario-cover.jpg")
 attach_seed_image(taqueria_mario, :logo,        url: seed_photo_url("mario_logo", w: 400),   filename: "taqueria-mario-logo.jpg")
 
-Subscription.create!(account: taqueria_mario, plan: :pro, status: :active)
+Subscription.create!(account: taqueria_mario, plan: :pro, status: :active, source: :sandbox)
 
 # Mario's supplier network is wholesale-heavy (Central de Abastos GDL +
 # Carnicería Paty for the proteins). Prices reflect wholesale-by-the-
@@ -564,6 +571,7 @@ def build_taco(account, name:, carne:, carne_qty:, salsa:, salsa_qty:, price_cen
     sale_price_cents: price_cents,
     is_saleable: true,
     is_published: true,
+    made_to_order: true,
     yield_quantity: 1, yield_unit: "piece",
     category: recipe_category_for(account, :mains),
     target_margin_percent: target_margin_percent
@@ -603,6 +611,7 @@ build_taco(taqueria_mario, name: "Taco de pollo",
 quesadilla = taqueria_mario.recipes.create!(
   name: "Quesadilla",
   sale_price_cents: 4200, is_saleable: true, is_published: true,
+  made_to_order: true,
   yield_quantity: 1, yield_unit: "piece",
   category: mario_mains_cat, target_margin_percent: 65
 )
@@ -636,6 +645,35 @@ gringa.components.create!(componentable: mario_ing["Carne al pastor marinada"], 
 gringa.components.create!(componentable: mario_ing["Queso Oaxaca"],             quantity:  60, unit: "g")
 gringa.components.create!(componentable: mario_ing["Piña"],                     quantity:  25, unit: "g")
 
+# Orden de 3 tacos — single recipe with optional ingredient selection.
+# Instead of creating 3 separate recipes (one per meat), this recipe
+# has one required option group where the customer picks the meat.
+# Each option is linked to an ingredient for inventory tracking.
+#   Base cost (masa+cilantro+cebolla per taco × 3): ~$32
+#   + meat option cost varies by selection.
+orden_3_tacos = taqueria_mario.recipes.create!(
+  name: "Orden de 3 tacos",
+  sale_price_cents: 9500, is_saleable: true, is_published: true,
+  made_to_order: true,
+  yield_quantity: 3, yield_unit: "piece",
+  category: mario_mains_cat, target_margin_percent: 60
+)
+orden_3_tacos.components.create!(componentable: masa,                          quantity: 84,  unit: "g")
+orden_3_tacos.components.create!(componentable: mario_ing["Cebolla blanca"],   quantity: 18,  unit: "g")
+orden_3_tacos.components.create!(componentable: mario_ing["Cilantro"],         quantity: 9,   unit: "g")
+orden_3_tacos.components.create!(componentable: salsa_verde,                   quantity: 45,  unit: "ml")
+
+# Quesadilla mixta — with optional protein pick (ingredient-linked options).
+quesadilla_mixta = taqueria_mario.recipes.create!(
+  name: "Quesadilla con proteína",
+  sale_price_cents: 5500, is_saleable: true, is_published: true,
+  made_to_order: true,
+  yield_quantity: 1, yield_unit: "piece",
+  category: mario_mains_cat, target_margin_percent: 60
+)
+quesadilla_mixta.components.create!(componentable: masa,                      quantity: 80, unit: "g")
+quesadilla_mixta.components.create!(componentable: mario_ing["Queso Oaxaca"], quantity: 60, unit: "g")
+
 mario_saleable = taqueria_mario.recipes.saleable.to_a
 
 # Pre-populate cost caches so the recetario and cost-tree pages land
@@ -644,7 +682,10 @@ mario_saleable = taqueria_mario.recipes.saleable.to_a
 # bottom-up, so running it on each saleable recipe also fills every
 # sub-recipe it reaches.
 puts "  …warming cost caches"
-mario_saleable.each { |r| Recipes::CostCalculator.for(recipe: r) }
+mario_saleable.each do |r|
+  Recipes::CostCalculator.for(recipe: r)
+  Recipes::OptionCostCalculator.call(recipe: r)
+end
 
 # Attach a photo to each saleable Mario recipe by name match. The keys
 # below correspond to SEED_PHOTO_IDS entries — names drifting from
@@ -652,12 +693,14 @@ mario_saleable.each { |r| Recipes::CostCalculator.for(recipe: r) }
 # photoless (which simply hides the storefront's "Publicar" CTA until
 # the operator uploads one manually).
 mario_photo_keys = {
-  "Taco al pastor"    => "tacos_al_pastor",
-  "Taco de asada"     => "tacos_arrachera",
-  "Taco de pollo"     => "tacos_pollo",
-  "Quesadilla"        => "quesadillas",
-  "Sope con frijol"   => "frijoles_charros",
-  "Gringa al pastor"  => "tacos_al_pastor"
+  "Taco al pastor"           => "tacos_al_pastor",
+  "Taco de asada"            => "tacos_arrachera",
+  "Taco de pollo"            => "tacos_pollo",
+  "Quesadilla"               => "quesadillas",
+  "Sope con frijol"          => "frijoles_charros",
+  "Gringa al pastor"         => "tacos_al_pastor",
+  "Orden de 3 tacos"         => "tacos_al_pastor",
+  "Quesadilla con proteína"  => "quesadillas"
 }
 puts "  …attaching recipe photos"
 mario_saleable.each do |recipe|
@@ -812,6 +855,205 @@ seed_fixed_cost!(
   recurrence:    :monthly,
   start_date:    Date.new(2026, 3, 15)
 )
+
+# ---------------------------------------------------------------------------
+# Phase 13 — inventory, batches, stock movements (Taquería Don Mario only)
+# ---------------------------------------------------------------------------
+# Mario is the advanced operator who has turned on inventory tracking.
+# His seed data models a realistic week of taquería operations:
+#   • Initial stock from his last Central de Abastos + Carnicería Paty run
+#   • Production batches for his saleable recipes (some completed, some planned)
+#   • Batch consumptions that deplete ingredients as he cooks
+#   • Order items linked to batches so the kanban shows "from batch X"
+#   • A near-depleted ingredient to exercise the low-stock badge
+puts "==> seeding inventory + batches for Taquería Don Mario"
+
+# Step 1: Initial stock levels from last purchase run
+# Simulates Mario having done his weekly compra 5 days ago.
+mario_stock = {
+  "Harina de maíz nixtamalizada" => [ 8.0,   "kg" ],
+  "Manteca de cerdo"             => [ 2.5,   "kg" ],
+  "Sal de mar"                   => [ 1.0,   "kg" ],
+  "Aceite de maíz"               => [ 3.0,   "l"  ],
+  "Frijol bayo"                  => [ 4.0,   "kg" ],
+  "Carne al pastor marinada"     => [ 5.0,   "kg" ],
+  "Arrachera"                    => [ 3.0,   "kg" ],
+  "Pechuga de pollo"             => [ 2.5,   "kg" ],
+  "Queso Oaxaca"                 => [ 2.0,   "kg" ],
+  "Tomate verde"                 => [ 3.0,   "kg" ],
+  "Tomate rojo"                  => [ 2.5,   "kg" ],
+  "Chile serrano"                => [ 0.5,   "kg" ],
+  "Chile de árbol"               => [ 0.3,   "kg" ],
+  "Cebolla blanca"               => [ 3.0,   "kg" ],
+  "Cilantro"                     => [ 0.8,   "kg" ],
+  "Piña"                         => [ 2.0,   "kg" ],
+  "Ajo"                          => [ 0.4,   "kg" ],
+  "Tortilla de harina"           => [ 50.0,  "piece" ],
+  "Aguacate"                     => [ 2.0,   "kg" ],
+  "Limón"                        => [ 1.5,   "kg" ]
+}
+
+mario_stock.each do |name, (qty, unit)|
+  ing = mario_ing[name]
+  next unless ing
+  ing.restock!(
+    quantity:      qty,
+    unit:          unit,
+    source:        "purchase",
+    note:          "Compra semanal — Central de Abastos / Carnicería Paty",
+    unit_cost_cents: ing.unit_cost_cents
+  )
+  ing.update!(last_purchase_quantity: qty)
+end
+
+# Step 2: Production batches
+# Mario cooks in daily batches. Here's a realistic 5-day spread:
+#   • Past batches (completed) — consumed by orders
+#   • Today's batch (in progress) — actively cooking
+#   • Tomorrow's batch (planned) — prepped but not started
+
+taco_pastor = taqueria_mario.recipes.saleable.find_by(name: "Taco al pastor")
+taco_asada  = taqueria_mario.recipes.saleable.find_by(name: "Taco de asada")
+taco_pollo  = taqueria_mario.recipes.saleable.find_by(name: "Taco de pollo")
+quesadilla  = taqueria_mario.recipes.saleable.find_by(name: "Quesadilla")
+sope        = taqueria_mario.recipes.saleable.find_by(name: "Sope con frijol")
+gringa      = taqueria_mario.recipes.saleable.find_by(name: "Gringa al pastor")
+orden_tacos = taqueria_mario.recipes.saleable.find_by(name: "Orden de 3 tacos")
+
+batch_window = taqueria_mario.inventory_settings.default_batch_window_days
+
+batch_defs = [
+  # 3 days ago — fully completed, all consumed
+  { recipe: taco_pastor, date: 3.days.ago.to_date, planned: 60, actual: 55, state: :completed },
+  { recipe: taco_asada,  date: 3.days.ago.to_date, planned: 30, actual: 28, state: :completed },
+  { recipe: taco_pollo,  date: 3.days.ago.to_date, planned: 25, actual: 25, state: :completed },
+
+  # 2 days ago — completed, partially consumed
+  { recipe: taco_pastor, date: 2.days.ago.to_date, planned: 60, actual: 58, state: :completed },
+  { recipe: quesadilla,  date: 2.days.ago.to_date, planned: 15, actual: 14, state: :completed },
+  { recipe: gringa,      date: 2.days.ago.to_date, planned: 12, actual: 12, state: :completed },
+
+  # Yesterday — completed, good production day
+  { recipe: taco_pastor, date: 1.day.ago.to_date, planned: 70, actual: 68, state: :completed },
+  { recipe: taco_asada,  date: 1.day.ago.to_date, planned: 35, actual: 33, state: :completed },
+  { recipe: sope,        date: 1.day.ago.to_date, planned: 20, actual: 20, state: :completed },
+  { recipe: orden_tacos, date: 1.day.ago.to_date, planned: 10, actual: 10, state: :completed },
+
+  # Today — in progress
+  { recipe: taco_pastor, date: Date.current, planned: 80, actual: 45, state: :in_progress },
+  { recipe: taco_asada,  date: Date.current, planned: 40, actual: 20, state: :in_progress },
+  { recipe: taco_pollo,  date: Date.current, planned: 30, actual: 0,  state: :in_progress },
+  { recipe: quesadilla,  date: Date.current, planned: 20, actual: 10, state: :in_progress },
+
+  # Tomorrow — planned, not started
+  { recipe: taco_pastor, date: 1.day.from_now.to_date, planned: 80, actual: 0, state: :planned },
+  { recipe: taco_asada,  date: 1.day.from_now.to_date, planned: 40, actual: 0, state: :planned },
+  { recipe: gringa,      date: 1.day.from_now.to_date, planned: 15, actual: 0, state: :planned },
+  { recipe: orden_tacos, date: 1.day.from_now.to_date, planned: 12, actual: 0, state: :planned }
+]
+
+mario_batches = {}
+batch_defs.each do |bd|
+  next unless bd[:recipe]
+  batch = taqueria_mario.batches.create!(
+    recipe:           bd[:recipe],
+    cooked_on:        bd[:date],
+    available_from:   bd[:date],
+    available_until:  bd[:date] + batch_window.days,
+    planned_quantity: bd[:planned],
+    actual_quantity:  bd[:actual]
+  )
+
+  case bd[:state]
+  when :in_progress
+    batch.start!
+  when :completed
+    batch.start!
+    batch.complete!
+  end
+
+  key = "#{bd[:recipe].name}|#{bd[:date]}"
+  mario_batches[key] = batch
+
+  # Create batch consumptions for completed/in-progress batches.
+  # Each batch consumes its recipe's components proportional to actual_quantity.
+  if bd[:actual].positive? && bd[:recipe].components.any?
+    bd[:recipe].components.includes(:componentable).each do |comp|
+      next if comp.is_byproduct?
+      qty_per_yield = comp.quantity / bd[:recipe].yield_quantity.to_d
+      total_consumed = qty_per_yield * bd[:actual]
+
+      batch.consumptions.create!(
+        consumable: comp.componentable,
+        quantity_consumed: total_consumed,
+        unit: comp.unit,
+        cost_cents_at_consumption: case comp.componentable
+                                   when Ingredient then (total_consumed * comp.componentable.unit_cost_cents).to_i
+                                   when Recipe     then (total_consumed * (comp.componentable.cost_cents_cached || 0)).to_i
+                                   else 0
+                                   end
+      )
+
+      # Deplete ingredient stock for completed batches
+      if bd[:state] == :completed && comp.componentable.is_a?(Ingredient)
+        comp.componentable.deplete!(
+          quantity:      total_consumed,
+          unit:          comp.unit,
+          source:        "production_deplete",
+          source_record: batch,
+          unit_cost_cents: comp.componentable.unit_cost_cents
+        )
+      end
+    end
+  end
+end
+
+# Step 3: Link recent orders to batches
+# Walk Mario's orders with delivery dates that match available batches,
+# and attach each order item to the correct batch.
+taqueria_mario.orders.includes(:items).where.not(delivery_date: nil).find_each do |order|
+  order.items.each do |item|
+    key = "#{item.recipe.name}|#{order.delivery_date}"
+    batch = mario_batches[key]
+    next unless batch
+
+    item.update_columns(
+      consumed_batch_id: batch.id,
+      consumed_quantity: item.quantity
+    )
+  end
+end
+
+# Step 4: Simulate near-depletion of a high-turnover ingredient
+# Arrachera is the premium cut — Mario uses it fast and is running low.
+# This exercises the low-stock badge on the ingredients page.
+arrachera = mario_ing["Arrachera"]
+if arrachera
+  arrachera.deplete!(
+    quantity:      2.2,
+    unit:          "kg",
+    source:        "manual_adjust",
+    note:          "Consumo acumulado de la semana — ajuste manual"
+  )
+end
+
+# Step 5: Deplete pastor a bit to show realistic mid-week levels
+pastor = mario_ing["Carne al pastor marinada"]
+if pastor
+  pastor.deplete!(
+    quantity:      3.5,
+    unit:          "kg",
+    source:        "manual_adjust",
+    note:          "Consumo acumulado de la semana — ajuste manual"
+  )
+end
+
+# Print inventory summary
+puts "  batches: #{taqueria_mario.batches.count} (planned: #{taqueria_mario.batches.where(state: 'planned').count}, in_progress: #{taqueria_mario.batches.where(state: 'in_progress').count}, completed: #{taqueria_mario.batches.where(state: 'completed').count})"
+puts "  stock movements: #{taqueria_mario.stock_movements.count}"
+low_stock = taqueria_mario.ingredients.kept.select(&:low_stock?)
+puts "  low stock alerts: #{low_stock.map(&:name).join(', ')}" if low_stock.any?
+puts "  batch-linked order items: #{OrderItem.where(consumed_batch_id: taqueria_mario.batches.select(:id)).count}"
 
 # ---------------------------------------------------------------------------
 # Phase 11 — recipe option groups (personalización de platillos)
@@ -1088,6 +1330,92 @@ if sope
     comp.update!(is_removable: true) if name.include?("queso")
   end
   puts "  Mario: Sope → #{sope.option_groups.count} groups"
+end
+
+# ── Mario: Orden de 3 tacos (inventory-linked options) ────────────────────
+# The first recipe with options that link to ingredients for inventory
+# tracking. Each meat option depletes that ingredient's stock when ordered.
+orden_3_tacos = taqueria_mario.recipes.kept.saleable.find_by(name: "Orden de 3 tacos")
+if orden_3_tacos
+  meat_group = orden_3_tacos.option_groups.create!(
+    account: taqueria_mario,
+    label:   "Tipo de carne",
+    sub:     "Elige la carne para tus 3 tacos",
+    kind:    :radio,
+    required: true,
+    selection_mode: :uniform
+  )
+  meat_group.options.create!(
+    label: "Al pastor", is_default: true, price_delta_cents: 0,
+    componentable: mario_ing["Carne al pastor marinada"],
+    quantity: 150, unit: "g"
+  )
+  meat_group.options.create!(
+    label: "Arrachera", price_delta_cents: 1500,
+    componentable: mario_ing["Arrachera"],
+    quantity: 150, unit: "g"
+  )
+  meat_group.options.create!(
+    label: "Pollo", price_delta_cents: -500,
+    componentable: mario_ing["Pechuga de pollo"],
+    quantity: 150, unit: "g"
+  )
+
+  salsa_group = orden_3_tacos.option_groups.create!(
+    account: taqueria_mario,
+    label:   "Salsa",
+    sub:     "¿Con cuál salsa?",
+    kind:    :radio,
+    required: false,
+    selection_mode: :uniform
+  )
+  salsa_group.options.create!(
+    label: "Salsa verde", is_default: true, price_delta_cents: 0,
+    componentable: salsa_verde,
+    quantity: 45, unit: "ml"
+  )
+  salsa_group.options.create!(
+    label: "Salsa roja", price_delta_cents: 0,
+    componentable: salsa_roja,
+    quantity: 45, unit: "ml"
+  )
+
+  Recipes::OptionCostCalculator.call(recipe: orden_3_tacos)
+  puts "  Mario: Orden de 3 tacos → #{orden_3_tacos.option_groups.count} groups (inventory-linked)"
+end
+
+# ── Mario: Quesadilla con proteína (inventory-linked options) ─────────────
+quesadilla_mixta = taqueria_mario.recipes.kept.saleable.find_by(name: "Quesadilla con proteína")
+if quesadilla_mixta
+  protein_group = quesadilla_mixta.option_groups.create!(
+    account: taqueria_mario,
+    label:   "Proteína",
+    sub:     "Agrega proteína a tu quesadilla",
+    kind:    :radio,
+    required: false,
+    selection_mode: :uniform
+  )
+  protein_group.options.create!(
+    label: "Sin proteína", is_default: true, price_delta_cents: 0
+  )
+  protein_group.options.create!(
+    label: "Pastor", price_delta_cents: 1000,
+    componentable: mario_ing["Carne al pastor marinada"],
+    quantity: 40, unit: "g"
+  )
+  protein_group.options.create!(
+    label: "Arrachera", price_delta_cents: 1800,
+    componentable: mario_ing["Arrachera"],
+    quantity: 40, unit: "g"
+  )
+  protein_group.options.create!(
+    label: "Pollo", price_delta_cents: 800,
+    componentable: mario_ing["Pechuga de pollo"],
+    quantity: 40, unit: "g"
+  )
+
+  Recipes::OptionCostCalculator.call(recipe: quesadilla_mixta)
+  puts "  Mario: Quesadilla con proteína → #{quesadilla_mixta.option_groups.count} groups (inventory-linked)"
 end
 
 # ---------------------------------------------------------------------------

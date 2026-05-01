@@ -104,7 +104,7 @@ class AccountsController < AuthenticatedController
 
   def account_params
     params.require(:account).permit(
-      :name,
+      :name, :time_zone,
       :street_address, :latitude, :longitude,
       branding:       %i[palette secondary_palette],
       public_profile: %i[

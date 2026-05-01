@@ -283,6 +283,7 @@ class Account < ApplicationRecord
 
   GEOCODING_RETRY_COOLDOWN = 1.hour
 
+  before_save :resolve_time_zone_from_coordinates, if: :coordinates_changed?
   after_commit :sync_account_geocoding, on: [ :create, :update ]
 
   def geocoded?
@@ -321,6 +322,19 @@ class Account < ApplicationRecord
   end
 
   private
+
+  def coordinates_changed?
+    will_save_change_to_latitude? || will_save_change_to_longitude?
+  end
+
+  def resolve_time_zone_from_coordinates
+    return unless latitude.present? && longitude.present?
+
+    self.time_zone = Accounts::TimezoneResolver.call(
+      latitude: latitude,
+      longitude: longitude
+    )
+  end
 
   def sync_account_geocoding
     if (saved_change_to_latitude? || saved_change_to_longitude?) && geocoded?

@@ -457,6 +457,19 @@
             </div>
           </div>
         <% end %>
+
+        <%# Timezone — auto-detected from coordinates, manually overridable %>
+        <div class="flex flex-col gap-1.5">
+          <label for="account_time_zone" class="block text-[12px] font-medium text-muted">
+            <%= t("account.fields.time_zone") %>
+          </label>
+          <%= f.select :time_zone,
+                ActiveSupport::TimeZone.country_zones("MX").map { |tz| [tz.to_s, tz.name] },
+                { selected: @account.time_zone },
+                id: "account_time_zone",
+                class: "w-full rounded-input border border-line bg-surface px-3 py-2 text-[13.5px] text-ink" %>
+          <p class="text-[11.5px] text-muted"><%= t("account.fields.time_zone_hint") %></p>
+        </div>
       </section>
 
       <%# Funciones avanzadas — opt-in toggles (Phase 13: inventory).
