@@ -85,7 +85,7 @@ class BatchesController < AuthenticatedController
   # Returns an empty frame when no recipe is picked (the form's empty
   # state). Always 200; never redirects.
   def impact
-    @recipe = Current.account.recipes.kept.saleable.find_by(id: params[:recipe_id])
+    @recipe = Current.account.recipes.kept.find_by(id: params[:recipe_id])
     @quantity = params[:quantity].to_d
     render partial: "impact_preview", locals: { recipe: @recipe, quantity: @quantity }
   end

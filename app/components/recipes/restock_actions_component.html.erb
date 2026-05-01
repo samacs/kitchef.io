@@ -1,14 +1,27 @@
-<div class="rounded-card border border-warn/40 bg-[color-mix(in_oklab,var(--color-warn)_6%,var(--color-surface))] p-5 sm:p-6 flex flex-col gap-4">
-  <div class="flex items-baseline justify-between gap-3">
-    <div class="flex flex-col gap-1">
-      <%= render Ui::KickerComponent.new(text: t("recipes.restock.kicker")) %>
+<% border_color = has_stock? ? "border-line" : "border-warn/40" %>
+<% bg_color = has_stock? ? "bg-bg-2/40" : "bg-[color-mix(in_oklab,var(--color-warn)_6%,var(--color-surface))]" %>
+
+<div class="rounded-card border <%= border_color %> <%= bg_color %> p-5 sm:p-6 flex flex-col gap-4">
+  <div class="flex flex-col gap-1">
+    <%= render Ui::KickerComponent.new(text: t("recipes.restock.kicker")) %>
+
+    <% if has_stock? %>
+      <div class="flex items-baseline gap-3">
+        <h3 class="font-serif text-[20px] leading-[1.2] text-ink">
+          <%= t("recipes.restock.available_headline", count: available_units.to_i) %>
+        </h3>
+      </div>
+      <p class="text-[12.5px] text-muted">
+        <%= t("recipes.restock.available_sub") %>
+      </p>
+    <% else %>
       <h3 class="font-serif text-[20px] leading-[1.2] text-ink">
         <%= t("recipes.restock.headline") %>
       </h3>
       <p class="text-[12.5px] text-muted">
         <%= t("recipes.restock.sub") %>
       </p>
-    </div>
+    <% end %>
   </div>
 
   <ul class="flex flex-col gap-2">
@@ -43,7 +56,7 @@
             <% if alert.type == :ingredient %>
               <%= t("recipes.restock.on_hand", qty: helpers.number_with_precision(alert.stock_qty, precision: 1, strip_insignificant_zeros: true), unit: I18n.t("units.#{alert.unit}", default: alert.unit)) %>
               <span class="mx-1">·</span>
-              <%= t("recipes.restock.needs_per_batch", qty: helpers.number_with_precision(alert.needed_qty, precision: 1, strip_insignificant_zeros: true), unit: I18n.t("units.#{alert.unit}", default: alert.unit)) %>
+              <%= t("recipes.restock.needs_per_batch", qty: helpers.number_with_precision(alert.needed_qty, precision: 3, strip_insignificant_zeros: true), unit: I18n.t("units.#{alert.unit}", default: alert.unit)) %>
             <% else %>
               <%= t("recipes.restock.no_active_batches") %>
             <% end %>

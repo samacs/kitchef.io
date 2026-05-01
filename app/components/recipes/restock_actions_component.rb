@@ -3,6 +3,10 @@ module Recipes
   # recipe (or its sub-recipes) has stock issues. Lists which
   # ingredients are low/depleted and which batches need to be created,
   # with direct CTAs to the batch creation form.
+  #
+  # Adapts its tone based on whether the recipe itself has sellable
+  # stock: when batches exist the section is informational ("to keep
+  # producing…"), not alarming.
   class RestockActionsComponent < ApplicationComponent
     option :recipe
     option :account
@@ -11,6 +15,22 @@ module Recipes
 
     def alerts
       @alerts ||= build_alerts
+    end
+
+    def available_units
+      @available_units ||= if recipe.is_saleable?
+        account.batches
+          .active
+          .where(recipe_id: recipe.id)
+          .available_on(Date.current)
+          .sum(&:units_remaining)
+      else
+        BigDecimal("0")
+      end
+    end
+
+    def has_stock?
+      available_units.positive?
     end
 
     def render?

@@ -643,8 +643,12 @@ es-MX:
       removable_hint: "Tu cliente podrá desmarcar este ingrediente al personalizar el platillo."
     restock:
       kicker: "Inventario"
-      headline: "Ingredientes por resurtir"
-      sub: "Estos ingredientes o preparaciones no tienen stock suficiente para producir este platillo."
+      headline: "No puedes producir este platillo"
+      sub: "Estos ingredientes o preparaciones no tienen stock suficiente. Resurtir antes de cocinar."
+      available_headline:
+        one: "%{count} unidad lista para vender"
+        other: "%{count} unidades listas para vender"
+      available_sub: "Para seguir produciendo, revisa lo siguiente."
       internal_recipe: "preparación"
       status:
         depleted: "Agotado"
