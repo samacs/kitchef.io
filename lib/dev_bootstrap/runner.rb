@@ -82,12 +82,14 @@ module DevBootstrap
 
     def print_summary(kitchen_defs, accounts)
       rows = kitchen_defs.filter_map do |kd|
-        a = accounts[kd[:key]]
+        a = accounts[kd[:key]]&.reload
         next unless a
 
         saleable = a.recipes.kept.saleable.count
         internal = a.recipes.kept.where(is_saleable: false).count
         recipes  = internal.positive? ? "#{saleable}+#{internal}" : saleable.to_s
+        inv = a.inventory_enabled? ? a.settings.inventory_settings.oversell_policy : "-"
+        mto = a.recipes.kept.where(made_to_order: true).count
 
         {
           name:    a.name,
@@ -96,7 +98,9 @@ module DevBootstrap
           history: "#{kd[:history_days]}d",
           recipes: recipes,
           orders:  a.orders.count,
-          clients: a.clients.count
+          clients: a.clients.count,
+          inv:     inv,
+          mto:     mto
         }
       end
 
@@ -107,12 +111,14 @@ module DevBootstrap
         history: 7,
         recipes: 7,
         orders:  6,
-        clients: 7
+        clients: 7,
+        inv:     5,
+        mto:     3
       }
 
       header = format(
-        "  %-#{col_widths[:name]}s  %-#{col_widths[:email]}s  %-#{col_widths[:mode]}s  %#{col_widths[:history]}s  %#{col_widths[:recipes]}s  %#{col_widths[:orders]}s  %#{col_widths[:clients]}s",
-        "Kitchen", "Email", "Mode", "History", "Recipes", "Orders", "Clients"
+        "  %-#{col_widths[:name]}s  %-#{col_widths[:email]}s  %-#{col_widths[:mode]}s  %#{col_widths[:history]}s  %#{col_widths[:recipes]}s  %#{col_widths[:orders]}s  %#{col_widths[:clients]}s  %-#{col_widths[:inv]}s  %#{col_widths[:mto]}s",
+        "Kitchen", "Email", "Mode", "History", "Recipes", "Orders", "Clients", "Inv", "MTO"
       )
       separator = "  " + col_widths.values.map { |w| "-" * w }.join("  ")
 
@@ -121,8 +127,8 @@ module DevBootstrap
       puts separator
       rows.each do |r|
         puts format(
-          "  %-#{col_widths[:name]}s  %-#{col_widths[:email]}s  %-#{col_widths[:mode]}s  %#{col_widths[:history]}s  %#{col_widths[:recipes]}s  %#{col_widths[:orders]}s  %#{col_widths[:clients]}s",
-          r[:name], r[:email], r[:mode], r[:history], r[:recipes], r[:orders], r[:clients]
+          "  %-#{col_widths[:name]}s  %-#{col_widths[:email]}s  %-#{col_widths[:mode]}s  %#{col_widths[:history]}s  %#{col_widths[:recipes]}s  %#{col_widths[:orders]}s  %#{col_widths[:clients]}s  %-#{col_widths[:inv]}s  %#{col_widths[:mto]}s",
+          r[:name], r[:email], r[:mode], r[:history], r[:recipes], r[:orders], r[:clients], r[:inv], r[:mto]
         )
       end
       puts separator

@@ -65,7 +65,8 @@ Cada tarjeta tiene cuatro bloques:
 2. **Items** — qué pidió y cuánto. Si el platillo lleva opciones (sin
    cebolla, salsa picante, etc.), aparecen como chips chiquitos.
 3. **Total y método de pago** — el subtotal, el empaque, la propina,
-   y cómo va a pagar (Efectivo / SPEI / Tarjeta).
+   el descuento (si se aplicó una promoción o cupón), y cómo va a
+   pagar (Efectivo / SPEI / Tarjeta).
 4. **Acciones** — el botón principal (que cambia según el estado) y
    un botón secundario para marcar pagado.
 
@@ -187,6 +188,7 @@ Las tarjetas tienen chips de colores con información rápida:
 - **● Listo** (verde) — empacado.
 - **+$X.XX propina** (gris) — el cliente agregó propina.
 - **+$X.XX empaque** (gris) — empaque cobrado.
+- **−$X.XX descuento** (gris) — se aplicó una promoción o cupón.
 - **SPEI / Efectivo / Tarjeta** (gris) — método de pago elegido.
 - **● Pago pendiente** (rojo claro) — falta cobrar.
 - **✓** (verde) — pagado.

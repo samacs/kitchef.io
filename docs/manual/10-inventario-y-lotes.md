@@ -170,6 +170,22 @@ PLANEADO → EN CURSO → COMPLETADO
   que estaba consumiendo de él se rebincula a otro lote disponible
   (o se marca como *sin stock*).
 
+## Recetas "se hace al momento"
+
+Si un platillo se prepara sobre pedido en lugar de cocinarse en
+lotes (por ejemplo, una pizza o un café), activa el toggle **Se
+hace al momento** en la receta (capítulo 4). Kitchef calcula la
+disponibilidad basándose en los ingredientes en inventario, sin
+requerir un lote pre-cocinado.
+
+## Opciones vinculadas al inventario
+
+Los grupos de opciones de un platillo (capítulo 4) también pueden
+descontar inventario. Si la opción "Queso extra" está vinculada al
+ingrediente *Queso mozzarella* con 100 g, cada pedido que incluya
+esa opción resta 100 g del inventario. El costo extra se suma
+automáticamente al costo del pedido.
+
 ## Cómo se conectan los pedidos con los lotes
 
 Cuando un cliente ordena 3 burritos de machaca para hoy:
@@ -184,6 +200,10 @@ Cuando un cliente ordena 3 burritos de machaca para hoy:
      con un botón **Anotar un lote** que abre el formulario con la
      receta pre-seleccionada.
    - Política **Bloquear**: el pedido se rechaza con error.
+
+Si la receta tiene opciones vinculadas al inventario, los
+ingredientes de esas opciones también se descuentan al procesar el
+pedido.
 
 ## Cuando aparece un *"sin stock"* en el kanban
 

@@ -75,7 +75,8 @@ module DevBootstrap
         )
 
         plan = a[:plan] || :free
-        account.create_subscription!(plan: plan, status: :active)
+        source = plan == :free ? :free : :sandbox
+        account.create_subscription!(plan: plan, status: :active, source: source)
 
         ImageCache.attach(account, :cover_photo, slug: "#{kd[:key]}-cover", unsplash_id: kd[:cover_photo_id])
         ImageCache.attach(account, :logo, slug: "#{kd[:key]}-logo", unsplash_id: kd[:logo_photo_id])

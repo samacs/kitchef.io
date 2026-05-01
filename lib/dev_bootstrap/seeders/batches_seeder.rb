@@ -18,7 +18,7 @@ module DevBootstrap
           account = @accounts[kd[:key]]
           next if account.nil?
 
-          enable_inventory!(account)
+          enable_inventory!(account, kd)
           stamp_baseline_purchase_quantities!(account)
           seed_batches!(account)
           seed_oversold_demo_order!(account)
@@ -27,12 +27,12 @@ module DevBootstrap
 
       private
 
-      def enable_inventory!(account)
+      def enable_inventory!(account, kd)
         settings = account.settings
         inv = settings.inventory_settings
         inv.enabled = true
         inv.enabled_at = Time.current
-        inv.oversell_policy = "warn"
+        inv.oversell_policy = kd[:oversell_policy] || "warn"
         settings.inventory_settings = inv
         account.settings = settings
         account.save!
@@ -65,7 +65,7 @@ module DevBootstrap
       end
 
       def seed_batches!(account)
-        recipes = account.recipes.kept.saleable.limit(4)
+        recipes = account.recipes.kept.saleable.where(made_to_order: false).limit(4)
         return if recipes.empty?
 
         log "  batches for #{account.name}"

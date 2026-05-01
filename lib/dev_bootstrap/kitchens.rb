@@ -71,16 +71,46 @@ module DevBootstrap
         base_recipes: [
           { name: "Salsa roja sonorense", yield_qty: 1, yield_unit: "l", ingredients: [ { name: "Chile colorado seco", qty: 0.15 }, { name: "Tomate bola", qty: 0.5 }, { name: "Ajo", qty: 0.02 }, { name: "Comino", qty: 0.005 } ] },
           { name: "Frijoles refritos",    yield_qty: 1, yield_unit: "kg", ingredients: [ { name: "Frijol pinto", qty: 0.5 }, { name: "Manteca de cerdo", qty: 0.05 }, { name: "Cebolla blanca", qty: 0.1 } ] },
-          { name: "Guisado de machaca",   yield_qty: 1, yield_unit: "kg", ingredients: [ { name: "Machaca de res", qty: 0.4 }, { name: "Chile verde", qty: 0.2 }, { name: "Tomate bola", qty: 0.2 }, { name: "Cebolla blanca", qty: 0.1 } ] }
+          { name: "Guisado de machaca",   yield_qty: 1, yield_unit: "kg", ingredients: [ { name: "Machaca de res", qty: 0.4 }, { name: "Chile verde", qty: 0.2 }, { name: "Tomate bola", qty: 0.2 }, { name: "Cebolla blanca", qty: 0.1 } ] },
+          # Byproduct demo: cooking caldo also yields pollo deshebrado
+          { name: "Pollo deshebrado",     yield_qty: 0.5, yield_unit: "kg", ingredients: [] },
+          { name: "Caldo de pollo base",  yield_qty: 2,   yield_unit: "l",
+            ingredients: [ { name: "Pollo entero", qty: 1 }, { name: "Cebolla blanca", qty: 0.15 }, { name: "Ajo", qty: 0.01 } ],
+            byproducts: [ "Pollo deshebrado" ] }
         ],
         recipes: [
-          { name: "Burrito de machaca",     price: 75,  photo_id: "photo-1626700051175-6818013e1d4f", cat: "Platos fuertes", base: "Guisado de machaca" },
+          { name: "Burrito de machaca",     price: 75,  photo_id: "photo-1626700051175-6818013e1d4f", cat: "Platos fuertes", base: "Guisado de machaca",
+            # Removable ingredient demo: customer can request "sin cebolla"
+            components: [
+              { name: "Cebolla blanca", qty: 0.05, unit: "kg", removable: true }
+            ] },
           { name: "Burrito de chile colorado", price: 70, photo_id: "photo-1584208632869-05fa2b2a5934", cat: "Platos fuertes" },
-          { name: "Caldo de queso",         price: 95,  photo_id: "photo-1559847844-5315695dadae", cat: "Platos fuertes" },
+          { name: "Caldo de queso",         price: 95,  photo_id: "photo-1559847844-5315695dadae", cat: "Platos fuertes",
+            components: [
+              { name: "Queso chihuahua", qty: 0.15, unit: "kg" },
+              { name: "Chile verde",     qty: 0.1,  unit: "kg", removable: true },
+              { name: "Papa blanca",     qty: 0.2,  unit: "kg" },
+              { name: "Leche entera",    qty: 0.3,  unit: "l" },
+              { name: "Cebolla blanca",  qty: 0.05, unit: "kg", removable: true }
+            ],
+            # Check option group demo: multiple extras with inventory tracking
+            option_groups: [
+              { label: "Extras", sub: "Agrega lo que quieras", kind: :check, required: false,
+                options: [
+                  { label: "Extra queso",  delta: 15, ingredient: "Queso chihuahua", qty: 0.05, unit: "kg" },
+                  { label: "Extra papa",   delta: 10, ingredient: "Papa blanca",     qty: 0.1,  unit: "kg" },
+                  { label: "Con chorizo",  delta: 20, ingredient: "Chorizo regional", qty: 0.08, unit: "kg" }
+                ] }
+            ] },
           { name: "Tamales de elote",       price: 30,  photo_id: "photo-1625938144755-652e08e359b7", cat: "Entradas" },
           { name: "Machaca con huevo",      price: 85,  photo_id: "photo-1565299585323-38d6b0865b47", cat: "Platos fuertes", base: "Guisado de machaca" },
           { name: "Agua de cebada",         price: 25,  photo_id: "photo-1544145945-f90425340c7e", cat: "Bebidas" },
-          { name: "Frijoles charros",       price: 55,  photo_id: "photo-1574894709920-11b28e7367e3", cat: "Entradas" },
+          # Byproduct consumer: uses the pollo deshebrado from caldo de pollo
+          { name: "Frijoles charros",       price: 55,  photo_id: "photo-1574894709920-11b28e7367e3", cat: "Entradas",
+            components: [
+              { name: "Frijol pinto", qty: 0.3, unit: "kg" },
+              { base: "Pollo deshebrado", qty: 0.1, unit: "kg" }
+            ] },
           { name: "Orden de 3 burritos",    price: 210, photo_id: "photo-1626700051175-6818013e1d4f", cat: "Platos fuertes",
             yield_qty: 3, yield_unit: "piece",
             option_groups: [
@@ -89,6 +119,22 @@ module DevBootstrap
                   { label: "Machaca",    default: true, delta: 0,  ingredient: "Machaca de res",  qty: 0.12, unit: "kg" },
                   { label: "Chile rojo", default: false, delta: 0, base: "Salsa roja sonorense",  qty: 0.10, unit: "l" },
                   { label: "Frijol",     default: false, delta: -15, base: "Frijoles refritos",   qty: 0.15, unit: "kg" }
+                ] }
+            ] },
+          # Made-to-order demo: assembled fresh per order, no batch needed
+          { name: "Quesadilla al momento", price: 45, photo_id: "photo-1565299585323-38d6b0865b47", cat: "Platos fuertes",
+            made_to_order: true,
+            components: [
+              { name: "Harina de trigo",  qty: 0.08, unit: "kg" },
+              { name: "Queso chihuahua",  qty: 0.1,  unit: "kg" },
+              { name: "Manteca de cerdo", qty: 0.02, unit: "kg" }
+            ],
+            option_groups: [
+              { label: "Relleno", sub: "Elige qué le ponemos", kind: :check, required: false,
+                options: [
+                  { label: "Machaca",  delta: 25, ingredient: "Machaca de res",  qty: 0.06, unit: "kg" },
+                  { label: "Chorizo", delta: 15, ingredient: "Chorizo regional", qty: 0.05, unit: "kg" },
+                  { label: "Rajas",   delta: 10, ingredient: "Chile verde",      qty: 0.04, unit: "kg" }
                 ] }
             ] }
         ],
@@ -152,8 +198,20 @@ module DevBootstrap
           { name: "Tortillas de harina", yield_qty: 12, yield_unit: "piece", ingredients: [ { name: "Harina de trigo", qty: 0.5 }, { name: "Manteca", qty: 0.08 } ] },
           { name: "Frijoles maneados",   yield_qty: 1,  yield_unit: "kg",  ingredients: [ { name: "Frijol pinto", qty: 0.5 }, { name: "Queso chihuahua", qty: 0.15 }, { name: "Manteca", qty: 0.05 } ] }
         ],
+        # El Fogón uses block oversell policy — agotado disables add-to-cart
+        oversell_policy: "block",
         recipes: [
-          { name: "Arrachera al carbón",   price: 280, photo_id: "photo-1558030006-450675393462", cat: "Platos fuertes" },
+          { name: "Arrachera al carbón",   price: 280, photo_id: "photo-1558030006-450675393462", cat: "Platos fuertes",
+            # Swatch option group demo: visual salsa picker with colors
+            option_groups: [
+              { label: "Salsa", sub: "Elige tu salsa", kind: :swatch, required: false,
+                options: [
+                  { label: "Verde",  default: true,  delta: 0, color: "#2D6A4F" },
+                  { label: "Roja",   default: false, delta: 0, color: "#9B2B1E" },
+                  { label: "Negra",  default: false, delta: 0, color: "#2F3A35" },
+                  { label: "Sin salsa", default: false, delta: 0 }
+                ] }
+            ] },
           { name: "Cabrería 500g",         price: 250, photo_id: "photo-1544025162-d76694265947", cat: "Platos fuertes" },
           { name: "Costillar BBQ",         price: 320, photo_id: "photo-1529193591184-b1d58069ecdd", cat: "Platos fuertes" },
           { name: "Pollo al carbón",       price: 160, photo_id: "photo-1598515214211-89d3c73ae83b", cat: "Platos fuertes" },
@@ -168,6 +226,27 @@ module DevBootstrap
                   { label: "Cabrería",   default: false, delta: -30, ingredient: "Cabrería",        qty: 0.25, unit: "kg" },
                   { label: "Costilla",   default: false, delta: 40,  ingredient: "Costilla de res", qty: 0.30, unit: "kg" },
                   { label: "Pollo",      default: false, delta: -80, ingredient: "Pollo marinado",  qty: 0.25, unit: "kg" }
+                ] },
+              # Textarea option group demo: free-text cooking instructions
+              { label: "Instrucciones", sub: "¿Alguna indicación especial?", kind: :textarea, required: false,
+                max_length: 200 }
+            ] },
+          # Made-to-order + per-unit selection: each taco gets its own filling
+          { name: "Tacos al carbón (3 piezas)", price: 120, photo_id: "photo-1555939594-58d7cb561ad1", cat: "Platos fuertes",
+            made_to_order: true,
+            yield_qty: 3, yield_unit: "piece",
+            components: [
+              { name: "Harina de trigo", qty: 0.15, unit: "kg" },
+              { name: "Limón",           qty: 0.05, unit: "kg" },
+              { name: "Cebolla cambray", qty: 3,    unit: "piece" }
+            ],
+            option_groups: [
+              { label: "Relleno por taco", sub: "Elige la carne para cada taco", kind: :radio, required: true,
+                selection_mode: :per_unit, unit_count: 3,
+                options: [
+                  { label: "Arrachera",  default: true,  delta: 0,   ingredient: "Arrachera",       qty: 0.08, unit: "kg" },
+                  { label: "Pollo",      default: false, delta: -20, ingredient: "Pollo marinado",  qty: 0.08, unit: "kg" },
+                  { label: "Chorizo",    default: false, delta: -10, ingredient: "Chorizo sonorense", qty: 0.06, unit: "kg" }
                 ] }
             ] }
         ],

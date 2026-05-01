@@ -1,0 +1,235 @@
+/* Kitchef Manual — PDF stylesheet (WeasyPrint via Pandoc) */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@page {
+  size: letter;
+  margin: 2.2cm 2cm 2.5cm 2cm;
+
+  @bottom-center {
+    content: "Kitchef · Manual de operaciones";
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    color: #6B7670;
+  }
+
+  @bottom-right {
+    content: counter(page);
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    color: #6B7670;
+  }
+}
+
+@page :first {
+  @bottom-center { content: none; }
+  @bottom-right  { content: none; }
+}
+
+/* ── Base ─────────────────────────────────────────────── */
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.6;
+  color: #0E1714;
+  background: #FFFFFF;
+}
+
+/* ── Headings ─────────────────────────────────────────── */
+
+h1 {
+  font-size: 22pt;
+  font-weight: 700;
+  color: #0A5A3C;
+  margin-top: 0;
+  margin-bottom: 0.4em;
+  page-break-before: always;
+}
+
+/* First h1 (cover/intro) should not force a page break */
+body > h1:first-child {
+  page-break-before: avoid;
+}
+
+h2 {
+  font-size: 15pt;
+  font-weight: 600;
+  color: #0E1714;
+  margin-top: 1.4em;
+  margin-bottom: 0.3em;
+  border-bottom: 1px solid #E5E2DB;
+  padding-bottom: 0.2em;
+}
+
+h3 {
+  font-size: 12pt;
+  font-weight: 600;
+  color: #2F3A35;
+  margin-top: 1.2em;
+  margin-bottom: 0.2em;
+}
+
+h4 {
+  font-size: 10.5pt;
+  font-weight: 600;
+  color: #2F3A35;
+  margin-top: 1em;
+  margin-bottom: 0.2em;
+}
+
+/* ── Paragraphs and lists ─────────────────────────────── */
+
+p {
+  margin: 0.5em 0;
+  orphans: 3;
+  widows: 3;
+}
+
+ul, ol {
+  margin: 0.4em 0;
+  padding-left: 1.6em;
+}
+
+li {
+  margin-bottom: 0.2em;
+}
+
+li > p {
+  margin: 0.15em 0;
+}
+
+/* ── Links (remove blue, show as bold text) ───────────── */
+
+a {
+  color: #0A5A3C;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* ── Inline code ──────────────────────────────────────── */
+
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 9pt;
+  background: #F4F2ED;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  color: #2F3A35;
+}
+
+/* ── Code blocks ──────────────────────────────────────── */
+
+pre {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 8.5pt;
+  line-height: 1.5;
+  background: #F4F2ED;
+  border: 1px solid #E5E2DB;
+  border-radius: 6px;
+  padding: 0.8em 1em;
+  page-break-inside: avoid;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* ── Blockquotes (tips) ───────────────────────────────── */
+
+blockquote {
+  margin: 0.8em 0;
+  padding: 0.6em 1em;
+  border-left: 3px solid #0A5A3C;
+  background: #F0F7F4;
+  border-radius: 0 6px 6px 0;
+  color: #2F3A35;
+  font-size: 10pt;
+  page-break-inside: avoid;
+}
+
+blockquote p {
+  margin: 0.2em 0;
+}
+
+/* ── Tables ───────────────────────────────────────────── */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 9.5pt;
+  page-break-inside: avoid;
+}
+
+thead {
+  background: #0A5A3C;
+  color: #FFFFFF;
+}
+
+th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.5em 0.7em;
+}
+
+td {
+  padding: 0.45em 0.7em;
+  border-bottom: 1px solid #E5E2DB;
+  vertical-align: top;
+}
+
+tr:nth-child(even) {
+  background: #FAFAF8;
+}
+
+/* ── Images ───────────────────────────────────────────── */
+
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #E5E2DB;
+  margin: 0.6em 0;
+  page-break-inside: avoid;
+}
+
+figure {
+  margin: 0.8em 0;
+  page-break-inside: avoid;
+}
+
+figcaption {
+  font-size: 9pt;
+  color: #6B7670;
+  text-align: center;
+  margin-top: 0.3em;
+}
+
+/* ── Horizontal rule (chapter separator) ──────────────── */
+
+hr {
+  border: none;
+  border-top: 1px solid #E5E2DB;
+  margin: 1.5em 0;
+}
+
+/* ── Bold and emphasis ────────────────────────────────── */
+
+strong {
+  font-weight: 600;
+  color: #0E1714;
+}
+
+em {
+  font-style: italic;
+}
+
+/* ── Navigation links (hide in PDF) ───────────────────── */
+
+/* The nav links at top/bottom of each chapter are useless in PDF.
+   They contain "← Volver al índice" / "Siguiente:" patterns.
+   We can't reliably hide them with CSS alone since they're just
+   paragraphs, so we leave them — they're small and harmless. */

@@ -119,25 +119,19 @@ perfecto para empezar.
 
 ## Categorías
 
-Las categorías agrupan tus platillos en el menú público. Por defecto
-vienen seis:
-
-1. **Platos fuertes** — comida principal.
-2. **Entradas** — antes del plato fuerte.
-3. **Postres** — los dulces.
-4. **Bebidas** — aguas, cafés, lo que se toma.
-5. **Bases y preparaciones** — recetas internas que no se venden
-   solas. Si activaste modo avanzado, las salsas, masas, caldos van
-   aquí.
-6. **Otros** — todo lo que no encaja.
+Las categorías agrupan tus platillos en el menú público. Cada
+cocina tiene las suyas — cuando creas tu cuenta, Kitchef te pone
+unas iniciales (*Platos fuertes*, *Entradas*, *Postres*, *Bebidas*,
+*Bases y preparaciones*, *Otros*), pero puedes renombrarlas,
+borrarlas o crear las que quieras.
 
 Para crear una categoría nueva: en el formulario de la receta, en el
 campo **Categoría**, escribe el nombre que quieres y presiona ↵.
 Aparece en el listado y se queda guardada.
 
 Para borrar una categoría que ya no usas — no se puede directamente
-si tiene recetas dentro. Mueve primero las recetas a otra y luego
-bórrala desde la consola (o pídenos).
+si tiene recetas dentro. Mueve primero las recetas a otra categoría
+y luego bórrala.
 
 ## Duplicar una receta
 
