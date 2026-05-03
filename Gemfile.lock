@@ -1,9 +1,9 @@
 GIT
   remote: https://github.com/kjvarga/sitemap_generator.git
-  revision: 747988328566c84b0b8aa1ab898ababc371284dc
+  revision: 81ab5604423a0ffa99fe17928ce6237282928915
   branch: master
   specs:
-    sitemap_generator (6.4.0)
+    sitemap_generator (7.0.1)
       builder (~> 3.0)
 
 GEM
@@ -1075,7 +1075,7 @@ CHECKSUMS
   sidekiq (8.1.3) sha256=a42f51aca3705d21cb50f37f5ec07e69de8708e126be4cf94b45cf15b84b3762
   sidekiq-cron (2.3.1) sha256=96ab3da372289a30dc744c1daa2ae2e85960b2444a6f6ed68df1ff7882c44aac
   simple_calendar (3.1.0) sha256=56764606c3804c70e6facb47b6571ec79d7ce941e77b6bd3678869c1350a720c
-  sitemap_generator (6.4.0)
+  sitemap_generator (7.0.1)
   snaky_hash (2.0.3) sha256=25a3d299566e8153fb02fa23fd9a9358845950f7a523ddbbe1fa1e0d79a6d456
   solargraph (0.58.3) sha256=debefdc927d1e72383b2c4add89e71373d902b9904617efdb687749509fe2e69
   solargraph-rails (1.3) sha256=0af6159f4fe2b716857884a9d758d124eae2bd64c27cb43028792027f2973114
