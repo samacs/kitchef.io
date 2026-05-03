@@ -90,7 +90,7 @@ gem "kamal", require: false
 gem "sentry-rails", "~> 6.5"
 gem "sentry-ruby", "~> 6.4"
 gem "sentry-sidekiq", "~> 6.4"
-gem "posthog-rails", "~> 3.6"
+gem "posthog-rails", "~> 3.7"
 gem "posthog-ruby", "~> 3.6"
 gem "sitemap_generator", github: "kjvarga/sitemap_generator", branch: "master"
 
