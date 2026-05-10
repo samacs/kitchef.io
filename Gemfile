@@ -46,7 +46,7 @@ gem "prefixed_ids", "~> 1.8"
 gem "aasm", "~> 5.5"
 gem "discard", "~> 1.4"
 gem "paper_trail", "~> 17.0"
-gem "store_model", "~> 4.5"
+gem "store_model", "~> 4.6"
 gem "ransack", "~> 4.4"
 
 # Background & async
