@@ -441,7 +441,7 @@ GEM
     posthog-rails (3.6.5)
       posthog-ruby (~> 3.6)
       railties (>= 5.2.0)
-    posthog-ruby (3.6.5)
+    posthog-ruby (3.8.0)
       concurrent-ruby (~> 1)
     pp (0.6.3)
       prettyprint
@@ -796,7 +796,7 @@ DEPENDENCIES
   phony_rails (~> 0.15.0)
   positioning (~> 0.4.8)
   posthog-rails (~> 3.6)
-  posthog-ruby (~> 3.6)
+  posthog-ruby (~> 3.8)
   prefixed_ids (~> 1.8)
   propshaft
   pry (~> 0.16.0)
@@ -1012,7 +1012,7 @@ CHECKSUMS
   phony_rails (0.15.0) sha256=30b395499f7975daf8554e2b7c19885c039dba6281ffa93715ec01506f1951dc
   positioning (0.4.8) sha256=c758c061d4121fa6a1051a7fe04e75c5f59982e3dc9c6418e74441a0058ea16e
   posthog-rails (3.6.5) sha256=d7c9d96a5d0e02f7b62b825325ddee6f52098cb3cddc044ccab261bdb9f37049
-  posthog-ruby (3.6.5) sha256=ca96eb337761aa2bfe25c52be22c056bb6c47ce32865e32037cbc1c2f214b6f8
+  posthog-ruby (3.8.0) sha256=133a727ee1ba241442dcc51f547580b04890c2a7f1f7746d4154b396a6bb9290
   pp (0.6.3) sha256=2951d514450b93ccfeb1df7d021cae0da16e0a7f95ee1e2273719669d0ab9df6
   prefixed_ids (1.8.1) sha256=cc327f946a6fc6a610246aa957d6c3b170bfaa1170c8deb445fa466356a6adbb
   prettyprint (0.2.0) sha256=2bc9e15581a94742064a3cc8b0fb9d45aae3d03a1baa6ef80922627a0766f193
